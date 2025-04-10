@@ -3,12 +3,16 @@ import { dev } from '$app/environment';
 
 export const actions: Actions = {
 	signIn: async ({ locals }) => {
-		const baseUrl = dev ? 'http://localhost:5173' : 'http://app-dev.cenov-distribution.fr';
+		const baseUrl = dev
+			? 'http://localhost:5173'
+			: 'http://gc0wo8k0swkgcswkowkkw8o8.151.80.117.67.sslip.io/callback';
 
 		await locals.logtoClient.signIn(`${baseUrl}/callback`);
 	},
 	signOut: async ({ locals }) => {
-		const baseUrl = dev ? 'http://localhost:5173' : 'http://app-dev.cenov-distribution.fr';
+		const baseUrl = dev
+			? 'http://localhost:5173'
+			: 'http://gc0wo8k0swkgcswkowkkw8o8.151.80.117.67.sslip.io/callback';
 
 		await locals.logtoClient.signOut(`${baseUrl}/`);
 	}
