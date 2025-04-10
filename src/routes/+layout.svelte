@@ -24,7 +24,7 @@
 >
 	<header class="bg-white shadow">
 		<div class="container mx-auto flex items-center justify-between px-4 py-4">
-			<a href="/" class="text-xl font-bold text-[#e31206]">CenovDistribution2</a>
+			<a href="/" class="text-xl font-bold text-[#e31206]">CenovDistribution</a>
 			<div class="flex items-center space-x-4">
 				{#if isAuthenticated(user)}
 					<span>Bonjour, {user.name || 'Client'}</span>
