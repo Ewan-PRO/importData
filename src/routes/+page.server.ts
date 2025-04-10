@@ -1,11 +1,15 @@
-// src/routes/+page.server.ts
 import type { Actions } from './$types';
+import { dev } from '$app/environment';
 
 export const actions: Actions = {
 	signIn: async ({ locals }) => {
-		await locals.logtoClient.signIn('http://localhost:5173/callback');
+		const baseUrl = dev ? 'http://localhost:5173' : 'http://app-dev.cenov-distribution.fr';
+
+		await locals.logtoClient.signIn(`${baseUrl}/callback`);
 	},
 	signOut: async ({ locals }) => {
-		await locals.logtoClient.signOut('http://localhost:5173/');
+		const baseUrl = dev ? 'http://localhost:5173' : 'http://app-dev.cenov-distribution.fr';
+
+		await locals.logtoClient.signOut(`${baseUrl}/`);
 	}
 };

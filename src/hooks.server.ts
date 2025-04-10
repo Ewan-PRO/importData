@@ -8,6 +8,6 @@ export const handle = handleLogto(
 		scopes: [UserScope.Email, UserScope.Profile]
 	},
 	{
-		encryptionKey: env.LOGTO_COOKIE_ENCRYPTION_KEY
+		encryptionKey: env.LOGTO_COOKIE_ENCRYPTION_KEY ?? ''
 	}
 );

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { onMount } from 'svelte'; // Ajoutez cet import
+	import { onMount } from 'svelte';
 	import AuthButton from '$lib/components/AuthButton.svelte';
 	import { isAuthenticated } from '$lib/auth';
 
