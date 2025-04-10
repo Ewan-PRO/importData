@@ -4,6 +4,23 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<style>
+			body {
+				background-color: #f9fafb;
+				margin: 0;
+				font-family:
+					system-ui,
+					-apple-system,
+					sans-serif;
+			}
+			.page-transition-container {
+				opacity: 0;
+				transition: opacity 0.2s;
+			}
+			.page-transition-container.loaded {
+				opacity: 1;
+			}
+		</style>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

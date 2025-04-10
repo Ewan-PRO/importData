@@ -64,7 +64,7 @@ importers:
         specifier: ^3.1.2
         version: 3.1.2(rollup@4.39.0)
       flowbite-svelte:
-        specifier: ^0.48.4
+        specifier: ^0.48.6
         version: 0.48.6(rollup@4.39.0)(svelte@5.25.9)
       flowbite-svelte-icons:
         specifier: ^2.1.0
