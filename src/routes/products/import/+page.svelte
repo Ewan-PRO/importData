@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { Fileupload, Button, Alert, Spinner, Select, Toast } from 'flowbite-svelte';
 	import {
-		ChevronRightOutline,
 		CheckCircleSolid,
 		ExclamationCircleSolid,
 		CloudArrowUpSolid
@@ -48,12 +46,12 @@
 			resetStatus();
 			// Simuler un aperçu des données
 			setTimeout(() => {
-				generatePreview(file);
+				generatePreview();
 			}, 500);
 		}
 	};
 
-	const generatePreview = (file: File) => {
+	const generatePreview = () => {
 		// Simulation d'un aperçu des données - à remplacer par votre logique réelle
 		// Dans un cas réel, vous utiliseriez FileReader et parserez le contenu selon le format
 		previewData = {
@@ -249,15 +247,15 @@
 				<table class="w-full text-left text-sm text-gray-700">
 					<thead class="bg-gray-100 text-xs uppercase">
 						<tr>
-							{#each previewData.headers as header}
+							{#each previewData.headers as header, index (index)}
 								<th class="px-4 py-2">{header}</th>
 							{/each}
 						</tr>
 					</thead>
 					<tbody>
-						{#each previewData.rows as row, i}
-							<tr class={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-								{#each previewData.headers as header}
+						{#each previewData.rows as row, index (index)}
+							<tr class={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+								{#each previewData.headers as header, index (index)}
 									<td class="px-4 py-2">{row[header] || '-'}</td>
 								{/each}
 							</tr>
@@ -291,39 +289,13 @@
 				fill="currentColor"
 				viewBox="0 0 20 20"
 				xmlns="http://www.w3.org/2000/svg"
-				><path
+			>
+				<path
 					fill-rule="evenodd"
 					d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
 					clip-rule="evenodd"
-				></path></svg
-			>
+				></path>
+			</svg>
 		</button>
 	</Toast>
 {/if}
-
-<style>
-	:global(body) {
-		background-color: #f9fafb;
-	}
-
-	/* Personnalisation des couleurs selon les spécifications du projet */
-	:global(.btn-blue) {
-		background-color: #2563eb !important;
-	}
-
-	:global(.btn-blue:hover) {
-		background-color: #3c24ac !important;
-	}
-
-	:global(.text-red-500) {
-		color: #e31206 !important;
-	}
-
-	:global(.bg-red-500) {
-		background-color: #e31206 !important;
-	}
-
-	:global(.bg-red-500:hover) {
-		background-color: #af301f !important;
-	}
-</style>

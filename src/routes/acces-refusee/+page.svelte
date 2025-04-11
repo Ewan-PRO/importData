@@ -1,10 +1,10 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 
 	onMount(() => {
 		console.log("Page d'erreur chargée");
-		console.log("Paramètres d'erreur:", $page.url.searchParams.get('error'));
+		console.log("Paramètres d'erreur:", page.url.searchParams.get('error'));
 	});
 </script>
 
@@ -31,10 +31,10 @@
 			Une erreur s'est produite lors de votre authentification.
 		</p>
 
-		{#if $page.url.searchParams.get('error')}
+		{#if page.url.searchParams.get('error')}
 			<div class="mb-4 rounded bg-gray-100 p-3 text-sm">
 				<p class="font-medium">Détail de l'erreur:</p>
-				<p class="text-red-600">{$page.url.searchParams.get('error')}</p>
+				<p class="text-red-600">{page.url.searchParams.get('error')}</p>
 			</div>
 		{/if}
 
