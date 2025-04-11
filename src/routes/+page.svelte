@@ -14,6 +14,7 @@
 		<div class="mb-6 rounded-md bg-blue-100 p-4">
 			<p class="mb-2">
 				Connectez-vous pour accéder à notre catalogue de pompes et moteurs industriels.
+				TEST CI
 			</p>
 			<form method="POST" action="?/signIn">
 				<button
