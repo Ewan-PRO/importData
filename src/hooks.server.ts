@@ -1,5 +1,6 @@
 import { handleLogto, UserScope } from '@logto/sveltekit';
 import { env } from '$env/dynamic/private';
+
 export const handle = handleLogto(
 	{
 		endpoint: env.LOGTO_ENDPOINT,
@@ -8,6 +9,8 @@ export const handle = handleLogto(
 		scopes: [UserScope.Email, UserScope.Profile]
 	},
 	{
-		encryptionKey: env.LOGTO_COOKIE_ENCRYPTION_KEY ?? ''
+		encryptionKey: env.LOGTO_COOKIE_ENCRYPTION_KEY ?? '',
+		// La propriété cookiePrefix n'existe pas, vous devez utiliser cookieKey à la place
+		cookieKey: 'cenov_logto'
 	}
 );

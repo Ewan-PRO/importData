@@ -1,18 +1,18 @@
+// src/routes/callback/+page.server.ts
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
+	console.log('URL de callback reçue:', url.toString());
+	console.log('Client Logto:', !!locals.logtoClient);
 	try {
-		// Cette ligne est essentielle pour traiter le callback OAuth
+		// Cette ligne est CRITIQUE pour traiter la redirection OAuth
 		await locals.logtoClient.handleSignInCallback(url.toString());
 
-		// Une fois l'authentification traitée, redirigez vers la page d'accueil
+		// Rediriger vers la page d'accueil après succès
 		throw redirect(302, '/');
 	} catch (error) {
-		if (error instanceof redirect) {
-			throw error;
-		}
-		console.error('Erreur lors de la gestion du callback:', error);
+		console.error('Erreur lors du traitement du callback:', error);
 		throw redirect(302, '/acces-refuse');
 	}
 };
