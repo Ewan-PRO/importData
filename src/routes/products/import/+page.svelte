@@ -46,7 +46,7 @@
 			resetStatus();
 			// Simuler un aperçu des données
 			setTimeout(() => {
-				generatePreview(file);
+				generatePreview();
 			}, 500);
 		}
 	};
