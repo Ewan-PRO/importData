@@ -5,10 +5,7 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
 	preprocess: vitePreprocess(),
 	kit: {
-		adapter: adapter(),
-		csrf: {
-			checkOrigin: false // Désactive temporairement la vérification CSRF
-		}
+		adapter: adapter()
 	}
 };
 
