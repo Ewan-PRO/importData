@@ -5,7 +5,11 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
 	preprocess: vitePreprocess(),
 	kit: {
-		adapter: adapter()
+		adapter: adapter(),
+		// Ajout de cette configuration pour résoudre le problème CORS
+		csrf: {
+			checkOrigin: false // Désactive la vérification d'origine CSRF
+		}
 	}
 };
 
