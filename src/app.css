@@ -1,1 +1,19 @@
 @import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+	--color-primary-50: #f3f7fc;
+	--color-primary-100: #e5eff9;
+	--color-primary-200: #c6ddf1;
+	--color-primary-300: #93c2e6;
+	--color-primary-400: #5aa3d6;
+	--color-primary-500: #3487c3;
+	--color-primary-600: #246ba5;
+	--color-primary-700: #1f5685;
+	--color-primary-800: #1d496f;
+	--color-primary-900: #1b3a56;
+	--color-primary-950: #13283e;
+}
+
+@source "../node_modules/flowbite-svelte/dist";

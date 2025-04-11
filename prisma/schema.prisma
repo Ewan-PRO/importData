@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("SECRET_DATABASE_URL")
 }
 
 model attribute {
@@ -34,7 +34,7 @@ model kit {
   kit_label                          String?         @db.VarChar(100)
   created_at                         DateTime?       @default(now()) @db.Timestamp(6)
   updated_at                         DateTime?       @default(now()) @db.Timestamp(6)
-  kit_attribute                      kit_attribute[] 
+  kit_attribute                      kit_attribute[]
   kit_document                       kit_document[]
   kit_kit_kit_kit_fk_kit_childTokit  kit_kit[]       @relation("kit_kit_fk_kit_childTokit")
   kit_kit_kit_kit_fk_kit_parentTokit kit_kit[]       @relation("kit_kit_fk_kit_parentTokit")
@@ -42,7 +42,7 @@ model kit {
 }
 
 model kit_attribute {
-  kat_id                                                Int       @id @default(autoincrement())
+  kat_id                                                Int        @id @default(autoincrement())
   fk_kit                                                Int?
   fk_attribute_carac                                    Int?
   fk_attribute                                          Int?
