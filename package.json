@@ -13,7 +13,14 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run"
+		"test": "npm run test:unit -- --run",
+		"prisma:transform": "node scripts/transform-prisma-schema.mjs",
+		"prisma:generate": "npm run prisma:transform && prisma generate --schema=./prisma/schema.transformed.prisma",
+		"prisma:migrate": "npm run prisma:transform && prisma migrate dev --schema=./prisma/schema.transformed.prisma",
+		"prisma:studio": "npm run prisma:transform && prisma studio --schema=./prisma/schema.transformed.prisma",
+		"prisma:push": "npm run prisma:transform && prisma db push --schema=./prisma/schema.transformed.prisma",
+		"prisma:pull": "prisma db pull --schema=./prisma/schema.prisma && npm run prisma:transform",
+		"postinstall": "npm run prisma:generate"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
