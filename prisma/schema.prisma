@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -70,9 +71,9 @@ model kit_kit {
   fk_kit_parent                  Int?
   fk_kit_child                   Int?
   kik_qty                        Int?
-  kik_index                      Int?
   created_at                     DateTime? @default(now()) @db.Timestamp(6)
   updated_at                     DateTime? @default(now()) @db.Timestamp(6)
+  kik_index                      Int?
   kit_kit_kit_fk_kit_childTokit  kit?      @relation("kit_kit_fk_kit_childTokit", fields: [fk_kit_child], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
   kit_kit_kit_fk_kit_parentTokit kit?      @relation("kit_kit_fk_kit_parentTokit", fields: [fk_kit_parent], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -92,4 +93,26 @@ model supplier {
   sup_label String? @db.VarChar(50)
 
   @@index([sup_code], map: "supplier_sup_code_index")
+}
+
+view v_categories {
+  atr_0_label String @db.VarChar(100)
+  atr_1_label String @db.VarChar(100)
+  atr_2_label String @db.VarChar(100)
+  atr_3_label String @db.VarChar(100)
+  atr_4_label String @db.VarChar(100)
+  atr_5_label String @db.VarChar(100)
+  atr_6_label String @db.VarChar(100)
+  atr_7_label String @db.VarChar(100)
+
+  @@unique([atr_0_label, atr_1_label, atr_2_label, atr_3_label, atr_4_label, atr_5_label, atr_6_label, atr_7_label], name: "v_categories_unique")
+}
+
+view v_kit_carac {
+  kit_label  String @db.VarChar(100)
+  atr_label  String @db.VarChar(100)
+  atr_val    String @db.VarChar(60)
+  kat_valeur Float
+
+  @@unique([kit_label, atr_label, atr_val], name: "v_kit_carac_unique")
 }
