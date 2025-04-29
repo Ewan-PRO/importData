@@ -6,19 +6,7 @@ const prisma = new PrismaClient();
 
 export const GET: RequestHandler = async () => {
 	try {
-		const categories = await prisma.v_categories.findMany({
-			orderBy: [
-				{ atr_0_label: 'asc' },
-				{ atr_1_label: 'asc' },
-				{ atr_2_label: 'asc' },
-				{ atr_3_label: 'asc' },
-				{ atr_4_label: 'asc' },
-				{ atr_5_label: 'asc' },
-				{ atr_6_label: 'asc' },
-				{ atr_7_label: 'asc' }
-			]
-		});
-
+		const categories = await prisma.v_categories.findMany();
 		return json(categories);
 	} catch (error) {
 		console.error('Erreur lors de la récupération des catégories:', error);

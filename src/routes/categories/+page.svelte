@@ -45,6 +45,11 @@
 		};
 	}
 
+	// Définition de l'interface pour les données du formulaire
+	interface CategoryFormData {
+		[key: string]: string;
+	}
+
 	// Pour le filtrage
 	let filteredCategories: Category[] = [...data.categories];
 
@@ -146,6 +151,7 @@
 
 	function handleFilter(event: FilterEvent): void {
 		const { field, term } = event.detail;
+		console.log('Filter event:', { field, term });
 
 		if (!term) {
 			filteredCategories = [...data.categories];
@@ -153,9 +159,29 @@
 		}
 
 		const searchTerm = term.toLowerCase();
+		console.log('Searching for:', searchTerm, 'in field:', field);
+		console.log('Current categories:', data.categories);
+
 		filteredCategories = data.categories.filter((category: Category) => {
-			return category[field]?.toLowerCase().includes(searchTerm);
+			// Vérifie tous les champs de catégorie
+			return Object.entries(category).some(([key, value]) => {
+				// Ne vérifie que les champs de catégorie (commençant par atr_)
+				if (!key.startsWith('atr_')) return false;
+
+				// Si un champ spécifique est sélectionné, vérifie aussi les autres champs
+				if (field && field !== key) {
+					// Si c'est un champ de niveau supérieur, vérifie aussi les niveaux inférieurs
+					const currentLevel = parseInt(key.split('_')[1]);
+					const selectedLevel = parseInt(field.split('_')[1]);
+					if (currentLevel < selectedLevel) return false;
+				}
+
+				const match = value?.toLowerCase().includes(searchTerm);
+				console.log('Checking', key, value, 'Match:', match);
+				return match;
+			});
 		});
+		console.log('Filtered results:', filteredCategories);
 	}
 
 	function handleFilterReset(): void {
@@ -163,21 +189,27 @@
 	}
 
 	async function handleEditSubmit(event: FormEvent): Promise<void> {
+		console.log('Edit submission event:', event.detail);
+		console.log('Selected category:', selectedCategory);
+
 		const { data: formData } = event.detail;
 
 		if (selectedCategory && selectedCategory.atr_id) {
-			const submitData = new FormData();
-			submitData.append('id', selectedCategory.atr_id);
-			submitData.append('atr_val', event.detail.data.atr_val);
-			submitData.append('atr_label', event.detail.data.atr_label);
-
 			try {
-				const response = await fetch('?/update', {
-					method: 'POST',
-					body: submitData
+				const response = await fetch(`/api/categories/${selectedCategory.atr_id}`, {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						atr_val: formData.atr_val,
+						atr_label: formData.atr_label
+					})
 				});
 
+				console.log('Edit API Response status:', response.status);
 				const result = await response.json();
+				console.log('Edit API Response data:', result);
 
 				if (response.ok) {
 					showAlert('Catégorie modifiée avec succès', 'success');
@@ -187,6 +219,7 @@
 					showAlert(result.error || 'Erreur lors de la modification', 'error');
 				}
 			} catch (error) {
+				console.error('Error in edit submission:', error);
 				showAlert('Erreur lors de la modification', 'error');
 			}
 		}
@@ -260,18 +293,39 @@
 		title="Ajouter une catégorie"
 		fields={addFormFields}
 		submitLabel="Ajouter"
-		on:submit={(e) => {
-			const formData = new FormData();
-			for (const field of addFormFields) {
-				formData.append(field.key, e.detail.data[field.key]);
-			}
-			fetch('?/create', {
-				method: 'POST',
-				body: formData
-			}).then(() => {
+		on:submit={async (e) => {
+			try {
+				console.log('Form submission event:', e.detail);
+				const formData: CategoryFormData = {};
+				for (const field of addFormFields) {
+					formData[field.key] = e.detail.data[field.key] || '';
+				}
+				console.log('Prepared form data:', formData);
+
+				const response = await fetch('/api/categories', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(formData)
+				});
+
+				console.log('API Response status:', response.status);
+				const responseData = await response.json();
+				console.log('API Response data:', responseData);
+
+				if (!response.ok) {
+					showAlert(responseData.error || "Erreur lors de l'ajout de la catégorie", 'error');
+					return;
+				}
+
+				showAlert('Catégorie ajoutée avec succès', 'success');
 				addFormOpen = false;
 				invalidateAll();
-			});
+			} catch (error) {
+				console.error('Error in form submission:', error);
+				showAlert("Erreur lors de l'ajout de la catégorie", 'error');
+			}
 		}}
 		on:cancel={() => (addFormOpen = false)}
 	/>
