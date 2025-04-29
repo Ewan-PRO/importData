@@ -86,7 +86,7 @@
 					{/each}
 					{#if actions}
 						<td class="space-x-2 px-6 py-4 text-right">
-							<Button color="green" size="xs" on:click={() => handleEdit(item)}>
+							<Button size="xs" color="blue" on:click={() => handleEdit(item)}>
 								<SquarePen class="mr-2 h-4 w-4" />
 								Modifier
 							</Button>
