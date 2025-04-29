@@ -1,0 +1,308 @@
+<script lang="ts">
+	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
+	import { Button, Alert } from 'flowbite-svelte';
+	import { CirclePlus } from 'lucide-svelte';
+	import DataTable from '$lib/components/DataTable.svelte';
+	import Filter from '$lib/components/Filter.svelte';
+	import Form from '$lib/components/Form.svelte';
+	import { superForm } from 'sveltekit-superforms/client';
+
+	export let data;
+
+	// Définition de l'interface pour les catégories
+	interface Category {
+		atr_id?: string;
+		atr_0_label?: string;
+		atr_1_label?: string;
+		atr_2_label?: string;
+		atr_3_label?: string;
+		atr_4_label?: string;
+		atr_5_label?: string;
+		atr_6_label?: string;
+		atr_7_label?: string;
+		atr_val?: string;
+		atr_label?: string;
+		[key: string]: string | undefined;
+	}
+
+	// Définition de l'interface pour les événements de formulaire
+	interface FormEvent {
+		detail: {
+			data: {
+				atr_val: string;
+				atr_label: string;
+				[key: string]: string;
+			};
+		};
+	}
+
+	// Interface pour les événements de filtre
+	interface FilterEvent {
+		detail: {
+			field: string;
+			term: string;
+		};
+	}
+
+	// Pour le filtrage
+	let filteredCategories: Category[] = [...data.categories];
+
+	// Colonnes pour le tableau
+	const columns = [
+		{ key: 'atr_0_label', header: 'Niveau 1' },
+		{ key: 'atr_1_label', header: 'Niveau 2' },
+		{ key: 'atr_2_label', header: 'Niveau 3' },
+		{ key: 'atr_3_label', header: 'Niveau 4' },
+		{ key: 'atr_4_label', header: 'Niveau 5' },
+		{ key: 'atr_5_label', header: 'Niveau 6' },
+		{ key: 'atr_6_label', header: 'Niveau 7' },
+		{ key: 'atr_7_label', header: 'Niveau 8' }
+	];
+
+	// Champs pour le filtrage
+	const filterFields = [
+		{ key: 'atr_0_label', label: 'Niveau 1' },
+		{ key: 'atr_1_label', label: 'Niveau 2' },
+		{ key: 'atr_2_label', label: 'Niveau 3' },
+		{ key: 'atr_3_label', label: 'Niveau 4' }
+	];
+
+	// SuperForm pour la création
+	const { form, enhance: formEnhance } = superForm(data.form, {
+		onResult: ({ result }) => {
+			if (result.type === 'success') {
+				addFormOpen = false;
+				invalidateAll();
+			}
+		}
+	});
+
+	// État pour les formulaires
+	let addFormOpen = false;
+	let editFormOpen = false;
+	let deleteConfirmOpen = false;
+	let selectedCategory: Category | null = null;
+	let alertMessage = '';
+	let alertType: 'success' | 'error' = 'success';
+	let alertVisible = false;
+
+	// Type pour les champs de formulaire
+	type FormFieldType = 'text' | 'number' | 'select' | 'textarea' | 'email';
+
+	// Interface pour les champs de formulaire
+	interface FormField {
+		key: string;
+		label: string;
+		type: FormFieldType;
+		required?: boolean;
+		placeholder?: string;
+		options?: Array<{ value: string; label: string }>;
+		value?: any;
+	}
+
+	// Champs pour le formulaire d'ajout
+	const addFormFields: FormField[] = [
+		{ key: 'atr_0_label', label: 'Niveau 1', type: 'text', required: true },
+		{ key: 'atr_1_label', label: 'Niveau 2', type: 'text' },
+		{ key: 'atr_2_label', label: 'Niveau 3', type: 'text' },
+		{ key: 'atr_3_label', label: 'Niveau 4', type: 'text' },
+		{ key: 'atr_4_label', label: 'Niveau 5', type: 'text' },
+		{ key: 'atr_5_label', label: 'Niveau 6', type: 'text' },
+		{ key: 'atr_6_label', label: 'Niveau 7', type: 'text' },
+		{ key: 'atr_7_label', label: 'Niveau 8', type: 'text' }
+	];
+
+	// Champs pour le formulaire d'édition
+	const editFormFields: FormField[] = [
+		{ key: 'atr_val', label: 'Valeur', type: 'text', required: true },
+		{ key: 'atr_label', label: 'Libellé', type: 'text', required: true }
+	];
+
+	function openAddForm(): void {
+		addFormOpen = true;
+	}
+
+	function openEditForm(item: Category): void {
+		selectedCategory = item;
+		editFormOpen = true;
+	}
+
+	function confirmDelete(item: Category): void {
+		selectedCategory = item;
+		deleteConfirmOpen = true;
+	}
+
+	function hideAlert(): void {
+		alertVisible = false;
+	}
+
+	function showAlert(message: string, type: 'success' | 'error' = 'success'): void {
+		alertMessage = message;
+		alertType = type;
+		alertVisible = true;
+		setTimeout(hideAlert, 5000);
+	}
+
+	function handleFilter(event: FilterEvent): void {
+		const { field, term } = event.detail;
+
+		if (!term) {
+			filteredCategories = [...data.categories];
+			return;
+		}
+
+		const searchTerm = term.toLowerCase();
+		filteredCategories = data.categories.filter((category: Category) => {
+			return category[field]?.toLowerCase().includes(searchTerm);
+		});
+	}
+
+	function handleFilterReset(): void {
+		filteredCategories = [...data.categories];
+	}
+
+	async function handleEditSubmit(event: FormEvent): Promise<void> {
+		const { data: formData } = event.detail;
+
+		if (selectedCategory && selectedCategory.atr_id) {
+			const submitData = new FormData();
+			submitData.append('id', selectedCategory.atr_id);
+			submitData.append('atr_val', event.detail.data.atr_val);
+			submitData.append('atr_label', event.detail.data.atr_label);
+
+			try {
+				const response = await fetch('?/update', {
+					method: 'POST',
+					body: submitData
+				});
+
+				const result = await response.json();
+
+				if (response.ok) {
+					showAlert('Catégorie modifiée avec succès', 'success');
+					editFormOpen = false;
+					invalidateAll();
+				} else {
+					showAlert(result.error || 'Erreur lors de la modification', 'error');
+				}
+			} catch (error) {
+				showAlert('Erreur lors de la modification', 'error');
+			}
+		}
+	}
+
+	async function handleDeleteConfirm(): Promise<void> {
+		if (selectedCategory && selectedCategory.atr_id) {
+			const formData = new FormData();
+			formData.append('id', selectedCategory.atr_id);
+
+			try {
+				const response = await fetch('?/delete', {
+					method: 'POST',
+					body: formData
+				});
+
+				const result = await response.json();
+
+				if (response.ok) {
+					showAlert('Catégorie supprimée avec succès', 'success');
+					deleteConfirmOpen = false;
+					invalidateAll();
+				} else {
+					showAlert(result.error || 'Erreur lors de la suppression', 'error');
+				}
+			} catch (error) {
+				showAlert('Erreur lors de la suppression', 'error');
+			}
+		}
+	}
+</script>
+
+<div class="container mx-auto py-6">
+	<h1 class="mb-6 text-3xl font-bold">Gestion des Catégories</h1>
+
+	{#if alertVisible}
+		<Alert
+			color={alertType === 'success' ? 'green' : 'red'}
+			dismissable
+			on:dismiss={hideAlert}
+			class="mb-4"
+		>
+			{alertMessage}
+		</Alert>
+	{/if}
+
+	<div class="mb-6 flex items-center justify-between">
+		<Filter
+			fields={filterFields}
+			placeholder="Rechercher une catégorie..."
+			on:filter={handleFilter}
+			on:reset={handleFilterReset}
+		/>
+
+		<Button color="green" on:click={openAddForm}>
+			<CirclePlus class="mr-2 h-4 w-4" />
+			Ajouter une catégorie
+		</Button>
+	</div>
+
+	<DataTable
+		data={filteredCategories}
+		{columns}
+		on:edit={(e) => openEditForm(e.detail.item)}
+		on:delete={(e) => confirmDelete(e.detail.item)}
+	/>
+
+	<!-- Formulaire d'ajout -->
+	<Form
+		bind:isOpen={addFormOpen}
+		title="Ajouter une catégorie"
+		fields={addFormFields}
+		submitLabel="Ajouter"
+		on:submit={(e) => {
+			const formData = new FormData();
+			for (const field of addFormFields) {
+				formData.append(field.key, e.detail.data[field.key]);
+			}
+			fetch('?/create', {
+				method: 'POST',
+				body: formData
+			}).then(() => {
+				addFormOpen = false;
+				invalidateAll();
+			});
+		}}
+		on:cancel={() => (addFormOpen = false)}
+	/>
+
+	<!-- Formulaire d'édition -->
+	<Form
+		bind:isOpen={editFormOpen}
+		title="Modifier la catégorie"
+		fields={editFormFields}
+		data={selectedCategory || {}}
+		isEdit={true}
+		submitLabel="Modifier"
+		on:submit={handleEditSubmit}
+		on:cancel={() => (editFormOpen = false)}
+	/>
+
+	<!-- Confirmation de suppression -->
+	<Form
+		bind:isOpen={deleteConfirmOpen}
+		title="Confirmer la suppression"
+		fields={[
+			{
+				key: 'confirmation',
+				label: 'Confirmation',
+				type: 'text',
+				value: 'Êtes-vous sûr de vouloir supprimer cette catégorie ? Cette action est irréversible.'
+			}
+		]}
+		submitLabel="Supprimer"
+		cancelLabel="Annuler"
+		on:submit={handleDeleteConfirm}
+		on:cancel={() => (deleteConfirmOpen = false)}
+	/>
+</div>
