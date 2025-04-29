@@ -8,16 +8,11 @@
 
 	onMount(async () => {
 		try {
-			console.log("Traitement du callback d'authentification");
-
 			// Passer une URL de redirection comme argument
 			await logtoClient.handleSignInCallback(window.location.href);
 
-			console.log('Authentification réussie, redirection...');
-			loading = false;
 			goto('/');
 		} catch (err) {
-			console.error("Erreur d'authentification:", err);
 			loading = false;
 			error = err instanceof Error ? err.message : 'Erreur inconnue';
 		}

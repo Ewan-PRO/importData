@@ -10,5 +10,3 @@ export const handle = handleLogto(
 	},
 	{ encryptionKey: env.SECRET_LOGTO_COOKIE_ENCRYPTION_KEY }
 );
-
-console.log('Middleware Logto initialisé');
