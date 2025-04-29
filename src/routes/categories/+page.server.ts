@@ -45,7 +45,8 @@ export const load = (async ({ fetch, depends }) => {
 
 export const actions: Actions = {
 	create: async ({ request, fetch }) => {
-		const form = await superValidate(request, zod(categorySchema));
+		const formData = await request.formData();
+		const form = await superValidate(formData, zod(categorySchema));
 
 		if (!form.valid) {
 			return fail(400, { form });

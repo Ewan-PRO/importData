@@ -8,6 +8,8 @@
 	import Form from '$lib/components/Form.svelte';
 	import { superForm } from 'sveltekit-superforms/client';
 
+	console.log('Script de la page catégories chargé');
+
 	export let data;
 
 	// Définition de l'interface pour les catégories
@@ -91,6 +93,7 @@
 	let alertMessage = '';
 	let alertType: 'success' | 'error' = 'success';
 	let alertVisible = false;
+	let formData: Record<string, any> = {};
 
 	// Type pour les champs de formulaire
 	type FormFieldType = 'text' | 'number' | 'select' | 'textarea' | 'email';
@@ -124,8 +127,18 @@
 		{ key: 'atr_label', label: 'Libellé', type: 'text', required: true }
 	];
 
+	$: {
+		console.log("État du formulaire d'ajout:", { addFormOpen });
+		if (!addFormOpen) {
+			// Réinitialiser les données quand le formulaire est fermé
+			formData = {};
+		}
+	}
+
 	function openAddForm(): void {
+		console.log('Bouton "Ajouter une catégorie" cliqué - État actuel:', { addFormOpen });
 		addFormOpen = true;
+		console.log('Nouvel état après ouverture:', { addFormOpen });
 	}
 
 	function openEditForm(item: Category): void {
@@ -250,6 +263,47 @@
 			}
 		}
 	}
+
+	async function handleAddSubmit(event: FormEvent): Promise<void> {
+		console.log('Add submission event:', event.detail);
+		try {
+			const formData = new FormData();
+			for (const field of addFormFields) {
+				const value = event.detail.data[field.key] || '';
+				formData.append(field.key, value);
+				console.log(`Champ ${field.key} traité:`, value);
+			}
+			console.log('Prepared form data:', Object.fromEntries(formData));
+
+			const response = await fetch('?/create', {
+				method: 'POST',
+				body: formData
+			});
+
+			console.log('API Response status:', response.status);
+			const responseData = await response.json();
+			console.log('API Response data:', responseData);
+
+			if (!response.ok) {
+				showAlert(responseData.error || "Erreur lors de l'ajout de la catégorie", 'error');
+				return;
+			}
+
+			showAlert('Catégorie ajoutée avec succès', 'success');
+			addFormOpen = false;
+
+			// Mettre à jour les données localement
+			const newCategory = event.detail.data;
+			filteredCategories = [...filteredCategories, newCategory];
+			data.categories = [...data.categories, newCategory];
+
+			// Rafraîchir les données du serveur
+			await invalidateAll();
+		} catch (error) {
+			console.error('Error in form submission:', error);
+			showAlert("Erreur lors de l'ajout de la catégorie", 'error');
+		}
+	}
 </script>
 
 <div class="container mx-auto py-6">
@@ -270,7 +324,10 @@
 		<Filter
 			fields={filterFields}
 			placeholder="Rechercher une catégorie..."
-			on:filter={handleFilter}
+			on:filter={(event) => {
+				console.log('Événement filter reçu:', event);
+				handleFilter(event);
+			}}
 			on:reset={handleFilterReset}
 		/>
 
@@ -293,41 +350,11 @@
 		title="Ajouter une catégorie"
 		fields={addFormFields}
 		submitLabel="Ajouter"
-		on:submit={async (e) => {
-			try {
-				console.log('Form submission event:', e.detail);
-				const formData: CategoryFormData = {};
-				for (const field of addFormFields) {
-					formData[field.key] = e.detail.data[field.key] || '';
-				}
-				console.log('Prepared form data:', formData);
-
-				const response = await fetch('/api/categories', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify(formData)
-				});
-
-				console.log('API Response status:', response.status);
-				const responseData = await response.json();
-				console.log('API Response data:', responseData);
-
-				if (!response.ok) {
-					showAlert(responseData.error || "Erreur lors de l'ajout de la catégorie", 'error');
-					return;
-				}
-
-				showAlert('Catégorie ajoutée avec succès', 'success');
-				addFormOpen = false;
-				invalidateAll();
-			} catch (error) {
-				console.error('Error in form submission:', error);
-				showAlert("Erreur lors de l'ajout de la catégorie", 'error');
-			}
+		on:submit={handleAddSubmit}
+		on:cancel={() => {
+			console.log('Formulaire annulé');
+			addFormOpen = false;
 		}}
-		on:cancel={() => (addFormOpen = false)}
 	/>
 
 	<!-- Formulaire d'édition -->
@@ -338,8 +365,14 @@
 		data={selectedCategory || {}}
 		isEdit={true}
 		submitLabel="Modifier"
-		on:submit={handleEditSubmit}
-		on:cancel={() => (editFormOpen = false)}
+		on:submit={(e) => {
+			console.log('Form edit submit event triggered');
+			handleEditSubmit(e);
+		}}
+		on:cancel={() => {
+			console.log('Form edit cancel triggered');
+			editFormOpen = false;
+		}}
 	/>
 
 	<!-- Confirmation de suppression -->
