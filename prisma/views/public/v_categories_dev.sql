@@ -14,18 +14,18 @@ FROM
         (
           (
             (
-              attribute atr_0
-              LEFT JOIN attribute atr_1 ON (((atr_0.atr_val) :: text = (atr_1.atr_nat) :: text))
+              attribute_dev atr_0
+              LEFT JOIN attribute_dev atr_1 ON (((atr_0.atr_val) :: text = (atr_1.atr_nat) :: text))
             )
-            LEFT JOIN attribute atr_2 ON (((atr_1.atr_val) :: text = (atr_2.atr_nat) :: text))
+            LEFT JOIN attribute_dev atr_2 ON (((atr_1.atr_val) :: text = (atr_2.atr_nat) :: text))
           )
-          LEFT JOIN attribute atr_3 ON (((atr_2.atr_val) :: text = (atr_3.atr_nat) :: text))
+          LEFT JOIN attribute_dev atr_3 ON (((atr_2.atr_val) :: text = (atr_3.atr_nat) :: text))
         )
-        LEFT JOIN attribute atr_4 ON (((atr_3.atr_val) :: text = (atr_4.atr_nat) :: text))
+        LEFT JOIN attribute_dev atr_4 ON (((atr_3.atr_val) :: text = (atr_4.atr_nat) :: text))
       )
-      LEFT JOIN attribute atr_5 ON (((atr_4.atr_val) :: text = (atr_5.atr_nat) :: text))
+      LEFT JOIN attribute_dev atr_5 ON (((atr_4.atr_val) :: text = (atr_5.atr_nat) :: text))
     )
-    LEFT JOIN attribute atr_6 ON (((atr_5.atr_val) :: text = (atr_6.atr_nat) :: text))
+    LEFT JOIN attribute_dev atr_6 ON (((atr_5.atr_val) :: text = (atr_6.atr_nat) :: text))
   )
 WHERE
   ((atr_0.atr_nat) :: text = 'CATEGORIE' :: text)
