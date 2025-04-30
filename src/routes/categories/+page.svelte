@@ -203,13 +203,16 @@
 	}
 
 	async function handleEditSubmit(event: FormEvent): Promise<void> {
-		console.log('Edit submission event:', event.detail);
-		console.log('Selected category:', selectedCategory);
+		console.log('=== Début handleEditSubmit ===');
+		console.log('Données du formulaire:', event.detail);
+		console.log('Catégorie sélectionnée:', selectedCategory);
 
 		const { data: formData } = event.detail;
+		console.log('Données à envoyer:', formData);
 
 		if (selectedCategory && selectedCategory.atr_id) {
 			try {
+				console.log('Envoi de la requête PUT à:', `/api/categories/${selectedCategory.atr_id}`);
 				const response = await fetch(`/api/categories/${selectedCategory.atr_id}`, {
 					method: 'PUT',
 					headers: {
@@ -221,22 +224,27 @@
 					})
 				});
 
-				console.log('Edit API Response status:', response.status);
+				console.log('Statut de la réponse:', response.status);
 				const result = await response.json();
-				console.log('Edit API Response data:', result);
+				console.log('Données de la réponse:', result);
 
 				if (response.ok) {
+					console.log('Modification réussie');
 					showAlert('Catégorie modifiée avec succès', 'success');
 					editFormOpen = false;
 					invalidateAll();
 				} else {
+					console.log('Erreur lors de la modification:', result.error);
 					showAlert(result.error || 'Erreur lors de la modification', 'error');
 				}
 			} catch (error) {
-				console.error('Error in edit submission:', error);
+				console.error('Erreur dans handleEditSubmit:', error);
 				showAlert('Erreur lors de la modification', 'error');
 			}
+		} else {
+			console.log('Erreur: Catégorie ou ID manquant');
 		}
+		console.log('=== Fin handleEditSubmit ===');
 	}
 
 	async function handleDeleteConfirm(): Promise<void> {
