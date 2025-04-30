@@ -83,7 +83,7 @@ export const actions: Actions = {
 
 	update: async ({ request, fetch }) => {
 		const formData = await request.formData();
-		const id = formData.get('id')?.toString();
+		const id = String(formData.get('id') || '');
 
 		if (!id) {
 			return fail(400, { error: 'ID de catégorie manquant' });
@@ -91,8 +91,8 @@ export const actions: Actions = {
 
 		// Extraire les données du formulaire pour la mise à jour
 		const updateData = {
-			atr_val: formData.get('atr_val')?.toString() ?? '',
-			atr_label: formData.get('atr_label')?.toString() ?? ''
+			atr_val: String(formData.get('atr_val') || ''),
+			atr_label: String(formData.get('atr_label') || '')
 		};
 
 		try {
@@ -120,7 +120,7 @@ export const actions: Actions = {
 
 	delete: async ({ request, fetch }) => {
 		const formData = await request.formData();
-		const id = formData.get('id')?.toString();
+		const id = String(formData.get('id') || '');
 
 		if (!id) {
 			return fail(400, { error: 'ID de catégorie manquant' });
