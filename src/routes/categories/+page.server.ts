@@ -91,8 +91,8 @@ export const actions: Actions = {
 
 		// Extraire les données du formulaire pour la mise à jour
 		const updateData = {
-			atr_val: String(formData.get('atr_val') || ''),
-			atr_label: String(formData.get('atr_label') || '')
+			atr_val: String(formData.get('atr_val') ?? ''),
+			atr_label: String(formData.get('atr_label') ?? '')
 		};
 
 		try {
