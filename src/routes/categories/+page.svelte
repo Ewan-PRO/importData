@@ -1,3 +1,4 @@
+<!-- src/routes/categories/+page.svelte -->
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';

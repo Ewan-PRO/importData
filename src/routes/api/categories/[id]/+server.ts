@@ -1,3 +1,4 @@
+// src/routes/api/categories/[id]/+server.ts
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { PrismaClient } from '@prisma/client';

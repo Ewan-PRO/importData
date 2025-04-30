@@ -1,3 +1,4 @@
+// src/routes/categories/+page.server.ts
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { z } from 'zod';
