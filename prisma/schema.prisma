@@ -97,14 +97,14 @@ model supplier {
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model attribute_dev {
-  atr_id     Int?
+  atr_id     Int       @id @default(autoincrement())
   atr_nat    String?   @db.VarChar(60)
   atr_val    String?   @db.VarChar(60)
   atr_label  String?   @db.VarChar(100)
   created_at DateTime? @db.Timestamp(6)
   updated_at DateTime? @db.Timestamp(6)
 
-  @@ignore
+  @@unique([atr_nat, atr_val], map: "idx_attribute_dev")
 }
 
 view v_categories {
@@ -131,7 +131,7 @@ view v_kit_carac {
 
 /// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 view v_categories_dev {
-  atr_0_label String? @db.VarChar(100)
+  atr_0_label String @db.VarChar(100)
   atr_1_label String? @db.VarChar(100)
   atr_2_label String? @db.VarChar(100)
   atr_3_label String? @db.VarChar(100)
@@ -140,5 +140,5 @@ view v_categories_dev {
   atr_6_label String? @db.VarChar(100)
   atr_7_label String? @db.VarChar(100)
 
-  @@ignore
+  @@id([atr_0_label], name: "v_categories_dev_pkey")
 }

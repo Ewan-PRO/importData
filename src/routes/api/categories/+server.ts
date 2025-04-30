@@ -6,14 +6,14 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const createRootCategory = async () => {
-	const rootCategory = await prisma.attribute.findFirst({
+	const rootCategory = await prisma.attribute_dev.findFirst({
 		where: {
 			atr_val: 'CATEGORIE'
 		}
 	});
 
 	if (!rootCategory) {
-		await prisma.attribute.create({
+		await prisma.attribute_dev.create({
 			data: {
 				atr_nat: 'ROOT',
 				atr_val: 'CATEGORIE',
@@ -24,7 +24,7 @@ const createRootCategory = async () => {
 };
 
 const handleLevel0Attribute = async (label: string) => {
-	const existingLevel0 = await prisma.attribute.findFirst({
+	const existingLevel0 = await prisma.attribute_dev.findFirst({
 		where: {
 			atr_nat: 'CATEGORIE',
 			atr_label: label
@@ -35,7 +35,7 @@ const handleLevel0Attribute = async (label: string) => {
 		return { attribute: existingLevel0, nextLevel: existingLevel0.atr_val ?? '' };
 	}
 
-	const newAttr = await prisma.attribute.create({
+	const newAttr = await prisma.attribute_dev.create({
 		data: {
 			atr_nat: 'CATEGORIE',
 			atr_val: label.toLowerCase().replace(/\s+/g, '_'),
@@ -47,7 +47,7 @@ const handleLevel0Attribute = async (label: string) => {
 };
 
 const handleSubLevelAttribute = async (label: string, previousLevel: string) => {
-	const existingAttr = await prisma.attribute.findFirst({
+	const existingAttr = await prisma.attribute_dev.findFirst({
 		where: {
 			atr_nat: previousLevel,
 			atr_label: label
@@ -59,7 +59,7 @@ const handleSubLevelAttribute = async (label: string, previousLevel: string) => 
 	}
 
 	const attrVal = `${previousLevel}_${label.toLowerCase().replace(/\s+/g, '_')}`;
-	const newAttr = await prisma.attribute.create({
+	const newAttr = await prisma.attribute_dev.create({
 		data: {
 			atr_nat: previousLevel,
 			atr_val: attrVal,
@@ -72,7 +72,7 @@ const handleSubLevelAttribute = async (label: string, previousLevel: string) => 
 
 export const GET: RequestHandler = async () => {
 	try {
-		const categories = await prisma.v_categories.findMany();
+		const categories = await prisma.v_categories_dev.findMany();
 		return json(categories);
 	} catch (error) {
 		console.error('Erreur lors de la récupération des catégories:', error);

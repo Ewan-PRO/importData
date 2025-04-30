@@ -16,7 +16,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		// Récupérer la catégorie à modifier
 		const categoryId = parseInt(id);
 		console.log('ID converti en nombre:', categoryId);
-		const category = await prisma.attribute.findUnique({
+		const category = await prisma.attribute_dev.findUnique({
 			where: {
 				atr_id: categoryId
 			}
@@ -34,7 +34,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		});
 
 		// Mise à jour de l'attribut
-		const updatedAttribute = await prisma.attribute.update({
+		const updatedAttribute = await prisma.attribute_dev.update({
 			where: {
 				atr_id: categoryId
 			},
@@ -70,7 +70,7 @@ export const DELETE: RequestHandler = async ({ params }) => {
 		}
 
 		// Supprimer l'attribut
-		await prisma.attribute.delete({
+		await prisma.attribute_dev.delete({
 			where: {
 				atr_id: categoryId
 			}
