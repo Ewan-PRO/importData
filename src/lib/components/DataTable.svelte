@@ -120,12 +120,13 @@
 		</thead>
 		<tbody>
 			{#each data as item, i}
-				<tr
-					class="border-b bg-white hover:bg-gray-50 {i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}"
-					class:bg-blue-100={selectedItems.includes(item)}
-				>
+				<tr class="border-b" class:bg-blue-100={selectedItems.includes(item)}>
 					{#if selectable}
-						<td class="px-6 py-4">
+						<td
+							class="px-6 py-4 {i % 2 === 0
+								? 'bg-white'
+								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-100"
+						>
 							<input
 								type="checkbox"
 								class="h-4 w-4 rounded text-blue-600 focus:ring-blue-600"
@@ -135,13 +136,21 @@
 						</td>
 					{/if}
 					{#each columns as column}
-						<td class="px-6 py-4">
+						<td
+							class="px-6 py-4 {i % 2 === 0
+								? 'bg-white'
+								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-100"
+						>
 							{formatValue(item, column)}
 						</td>
 					{/each}
 					{#if actions}
-						<td class="px-6 py-4 text-right">
-							<div class="w-25=8 flex flex-col items-end space-y-2">
+						<td
+							class="px-6 py-4 text-right {i % 2 === 0
+								? 'bg-white'
+								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-100"
+						>
+							<div class="flex w-28 flex-col items-end space-y-2">
 								<Button size="xs" color="blue" class="w-full" on:click={() => handleEdit(item)}>
 									<SquarePen class="mr-2 h-4 w-4" />
 									Modifier
