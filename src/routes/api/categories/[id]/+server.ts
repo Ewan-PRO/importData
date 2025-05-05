@@ -22,7 +22,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 			return json({ error: 'Catégorie non trouvée' }, { status: 404 });
 		}
 
-		// Déterminer le niveau de la catégorie et mise à jour du label actuel
+		// Déterminer le niveau de la catégorie
 		let level = 0;
 		if (category.atr_nat === 'CATEGORIE') {
 			level = 1;
@@ -34,7 +34,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 		console.log(`Cette catégorie est de niveau ${level}`);
 
-		// Mettre à jour le niveau actuel
+		// Mettre à jour la catégorie principale
 		const updateData: Record<string, string> = {};
 		const labelField = `atr_${level}_label`;
 
@@ -42,30 +42,48 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 			updateData.atr_label = data[labelField];
 
 			// Mise à jour de l'attribut principal
-			const updatedAttribute = await prisma.attribute_dev.update({
+			await prisma.attribute_dev.update({
 				where: { atr_id: categoryId },
 				data: updateData
 			});
 
-			console.log('Catégorie principale mise à jour:', updatedAttribute);
+			console.log('Catégorie principale mise à jour');
 		}
 
-		// Pour les sous-niveaux, rechercher et mettre à jour les catégories enfants
-		// Par exemple, si on est au niveau 1, chercher et mettre à jour le niveau 2
-		if (level === 1 && data.atr_2_label !== undefined && category.atr_val) {
-			// Trouver l'enfant direct
-			const childCategory = await prisma.attribute_dev.findFirst({
-				where: {
-					atr_nat: category.atr_val
-				}
-			});
-
-			if (childCategory) {
-				await prisma.attribute_dev.update({
-					where: { atr_id: childCategory.atr_id },
-					data: { atr_label: data.atr_2_label }
+		// Traiter les niveaux suivants
+		let currentNat = category.atr_val ?? '';
+		for (let i = level + 1; i <= 7; i++) {
+			const nextLevelField = `atr_${i}_label`;
+			if (data[nextLevelField] !== undefined && data[nextLevelField] !== null) {
+				// Vérifier si une sous-catégorie existe déjà
+				let childCategory = await prisma.attribute_dev.findFirst({
+					where: { atr_nat: currentNat }
 				});
-				console.log('Sous-catégorie de niveau 2 mise à jour');
+
+				if (childCategory) {
+					// Mettre à jour la sous-catégorie existante
+					await prisma.attribute_dev.update({
+						where: { atr_id: childCategory.atr_id },
+						data: { atr_label: data[nextLevelField] }
+					});
+					currentNat = childCategory.atr_val ?? '';
+					console.log(`Sous-catégorie de niveau ${i} mise à jour`);
+				} else if (data[nextLevelField].trim() !== '') {
+					// Créer une nouvelle sous-catégorie si la valeur n'est pas vide
+					const newValue = `${currentNat}_${data[nextLevelField].toLowerCase().replace(/\s+/g, '_')}`;
+					childCategory = await prisma.attribute_dev.create({
+						data: {
+							atr_nat: currentNat,
+							atr_val: newValue,
+							atr_label: data[nextLevelField]
+						}
+					});
+					currentNat = newValue;
+					console.log(`Nouvelle sous-catégorie de niveau ${i} créée`);
+				}
+			} else {
+				// Arrêter le traitement si on rencontre un niveau null ou undefined
+				break;
 			}
 		}
 
