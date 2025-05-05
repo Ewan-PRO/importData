@@ -269,9 +269,22 @@
 
 				if (response.ok) {
 					console.log('Modification réussie');
+
+					// Mettre à jour les données localement sans recharger la page
+					const updatedCategories = data.categories.map((cat: Category) => {
+						if (selectedCategory && cat.atr_id === selectedCategory.atr_id) {
+							// Mettre à jour tous les champs modifiés
+							return { ...cat, ...formData };
+						}
+						return cat;
+					});
+
+					// Mettre à jour les données de la page et le tableau filtré
+					data.categories = updatedCategories;
+					filteredCategories = [...updatedCategories];
+
 					showAlert('Catégorie modifiée avec succès', 'success');
 					editFormOpen = false;
-					invalidateAll();
 				} else {
 					console.log('Erreur lors de la modification:', result.error);
 					showAlert(result.error || 'Erreur lors de la modification', 'error');
