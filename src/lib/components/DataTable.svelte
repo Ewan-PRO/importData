@@ -69,7 +69,9 @@
 
 <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
 	{#if hasSelection}
-		<div class="mb-4 flex items-center justify-between rounded-lg bg-blue-50 p-4">
+		<div
+			class="mb-4 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-4"
+		>
 			<div class="flex items-center space-x-2">
 				<span class="text-sm font-medium text-blue-700"
 					>{selectedCount} élément{selectedCount > 1 ? 's' : ''} sélectionné{selectedCount > 1
@@ -88,7 +90,7 @@
 		<thead class="bg-blue-700 text-xs text-white uppercase">
 			<tr>
 				{#if selectable}
-					<th scope="col" class="px-6 py-3">
+					<th scope="col" class="w-14 px-4 py-3">
 						{#if multiSelect}
 							<button
 								class="flex items-center"
@@ -107,12 +109,12 @@
 					</th>
 				{/if}
 				{#each columns as column}
-					<th scope="col" class="px-6 py-3">
+					<th scope="col" class="w-14 px-4 py-3 whitespace-nowrap">
 						{column.header}
 					</th>
 				{/each}
 				{#if actions}
-					<th scope="col" class="px-6 py-3">
+					<th scope="col" class="w-14 px-4 py-3 text-right">
 						<span class="sr-only">Actions</span>
 					</th>
 				{/if}
@@ -123,9 +125,9 @@
 				<tr class="border-b" class:bg-blue-100={selectedItems.includes(item)}>
 					{#if selectable}
 						<td
-							class="px-6 py-4 {i % 2 === 0
+							class="w-14 px-4 py-3 {i % 2 === 0
 								? 'bg-white'
-								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-100"
+								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-50"
 						>
 							<input
 								type="checkbox"
@@ -137,20 +139,21 @@
 					{/if}
 					{#each columns as column}
 						<td
-							class="px-6 py-4 {i % 2 === 0
+							class="w-14 px-4 py-3 {i % 2 === 0
 								? 'bg-white'
-								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-100"
+								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-50"
+							title={formatValue(item, column)}
 						>
 							{formatValue(item, column)}
 						</td>
 					{/each}
 					{#if actions}
 						<td
-							class="px-6 py-4 text-right {i % 2 === 0
+							class="w-14 px-4 py-3 text-right {i % 2 === 0
 								? 'bg-white'
-								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-100"
+								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-50"
 						>
-							<div class="flex w-28 flex-col items-end space-y-2">
+							<div class="flex flex-col items-end space-y-2">
 								<Button size="xs" color="blue" class="w-full" on:click={() => handleEdit(item)}>
 									<SquarePen class="mr-2 h-4 w-4" />
 									Modifier
