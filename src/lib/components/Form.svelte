@@ -64,9 +64,10 @@
 	function handleSubmit() {
 		console.log('handleSubmit appelé - État actuel:', { formData, errors });
 		if (validateForm()) {
-			console.log('Formulaire valide, dispatch de submit avec:', { data: formData, isEdit });
+			const finalData = { ...data, ...formData };
+			console.log('Formulaire valide, dispatch de submit avec:', { data: finalData, isEdit });
 			dispatch('submit', {
-				data: formData,
+				data: finalData,
 				isEdit
 			});
 			isOpen = false;

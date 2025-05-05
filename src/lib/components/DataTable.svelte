@@ -31,7 +31,10 @@
 	}
 
 	function handleDelete(item: any) {
+		console.log('=== Début handleDelete ===');
+		console.log('Item à supprimer:', item);
 		dispatch('delete', { item });
+		console.log('=== Fin handleDelete ===');
 	}
 
 	function formatValue(item: any, column: any) {

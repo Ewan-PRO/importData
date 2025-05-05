@@ -15,7 +15,7 @@
 
 	// Définition de l'interface pour les catégories
 	interface Category {
-		atr_id?: string;
+		atr_id?: number;
 		atr_0_label?: string;
 		atr_1_label?: string;
 		atr_2_label?: string;
@@ -26,7 +26,7 @@
 		atr_7_label?: string;
 		atr_val?: string;
 		atr_label?: string;
-		[key: string]: string | undefined;
+		[key: string]: string | number | undefined;
 	}
 
 	// Définition de l'interface pour les événements de formulaire
@@ -124,8 +124,14 @@
 
 	// Champs pour le formulaire d'édition
 	const editFormFields: FormField[] = [
-		{ key: 'atr_val', label: 'Valeur', type: 'text', required: true },
-		{ key: 'atr_label', label: 'Libellé', type: 'text', required: true }
+		{ key: 'atr_0_label', label: 'Niveau 1', type: 'text', required: true },
+		{ key: 'atr_1_label', label: 'Niveau 2', type: 'text' },
+		{ key: 'atr_2_label', label: 'Niveau 3', type: 'text' },
+		{ key: 'atr_3_label', label: 'Niveau 4', type: 'text' },
+		{ key: 'atr_4_label', label: 'Niveau 5', type: 'text' },
+		{ key: 'atr_5_label', label: 'Niveau 6', type: 'text' },
+		{ key: 'atr_6_label', label: 'Niveau 7', type: 'text' },
+		{ key: 'atr_7_label', label: 'Niveau 8', type: 'text' }
 	];
 
 	$: {
@@ -143,13 +149,44 @@
 	}
 
 	function openEditForm(item: Category): void {
-		selectedCategory = item;
+		console.log('=== Début openEditForm ===');
+		console.log('Item reçu du DataTable:', item);
+		console.log('Type de atr_id:', typeof item.atr_id);
+		console.log('Valeur de atr_id:', item.atr_id);
+
+		// Si l'ID n'est pas dans l'objet item, vérifier si on peut le trouver dans les données originales
+		if (!item.atr_id) {
+			console.log("ID non trouvé dans l'objet reçu, recherche dans les données originales");
+			const originalCategory = data.categories.find(
+				(cat: Category) =>
+					cat.atr_0_label === item.atr_0_label &&
+					cat.atr_1_label === item.atr_1_label &&
+					cat.atr_2_label === item.atr_2_label
+			);
+			console.log('Catégorie originale trouvée:', originalCategory);
+
+			// Si trouvé, utiliser l'objet original au lieu de l'objet partiel
+			if (originalCategory && originalCategory.atr_id) {
+				selectedCategory = originalCategory;
+			} else {
+				selectedCategory = item;
+			}
+		} else {
+			selectedCategory = item;
+		}
+
+		console.log('selectedCategory avec ID:', selectedCategory);
+		console.log('=== Fin openEditForm ===');
+
 		editFormOpen = true;
 	}
 
 	function confirmDelete(item: Category): void {
+		console.log('=== Début confirmDelete ===');
+		console.log('Catégorie sélectionnée pour suppression:', item);
 		selectedCategory = item;
 		deleteConfirmOpen = true;
+		console.log('=== Fin confirmDelete ===');
 	}
 
 	function hideAlert(): void {
@@ -190,7 +227,7 @@
 					if (currentLevel < selectedLevel) return false;
 				}
 
-				const match = value?.toLowerCase().includes(searchTerm);
+				const match = value?.toString().toLowerCase().includes(searchTerm);
 				console.log('Checking', key, value, 'Match:', match);
 				return match;
 			});
@@ -208,9 +245,14 @@
 		console.log('Catégorie sélectionnée:', selectedCategory);
 
 		const { data: formData } = event.detail;
-		console.log('Données à envoyer:', formData);
 
+		// Ajouter l'ID à formData si selectedCategory existe
 		if (selectedCategory && selectedCategory.atr_id) {
+			// Important: Ajouter l'ID à formData
+			formData.atr_id = selectedCategory.atr_id.toString();
+
+			console.log('Données à envoyer avec ID:', formData);
+
 			try {
 				console.log('Envoi de la requête PUT à:', `/api/categories/${selectedCategory.atr_id}`);
 				const response = await fetch(`/api/categories/${selectedCategory.atr_id}`, {
@@ -218,10 +260,7 @@
 					headers: {
 						'Content-Type': 'application/json'
 					},
-					body: JSON.stringify({
-						atr_val: formData.atr_val,
-						atr_label: formData.atr_label
-					})
+					body: JSON.stringify(formData)
 				});
 
 				console.log('Statut de la réponse:', response.status);
@@ -243,34 +282,45 @@
 			}
 		} else {
 			console.log('Erreur: Catégorie ou ID manquant');
+			showAlert('Erreur: Informations de catégorie incomplètes', 'error');
 		}
 		console.log('=== Fin handleEditSubmit ===');
 	}
 
 	async function handleDeleteConfirm(): Promise<void> {
+		console.log('=== Début handleDeleteConfirm ===');
 		if (selectedCategory && selectedCategory.atr_id) {
+			console.log('ID de la catégorie à supprimer:', selectedCategory.atr_id);
 			const formData = new FormData();
-			formData.append('id', selectedCategory.atr_id);
+			formData.append('id', selectedCategory.atr_id.toString());
 
 			try {
-				const response = await fetch('?/delete', {
-					method: 'POST',
-					body: formData
+				console.log('Envoi de la requête de suppression...');
+				const response = await fetch(`/api/categories/${selectedCategory.atr_id}`, {
+					method: 'DELETE'
 				});
 
+				console.log('Statut de la réponse:', response.status);
 				const result = await response.json();
+				console.log('Résultat de la suppression:', result);
 
 				if (response.ok) {
+					console.log('Suppression réussie');
 					showAlert('Catégorie supprimée avec succès', 'success');
 					deleteConfirmOpen = false;
 					invalidateAll();
 				} else {
+					console.log('Erreur lors de la suppression:', result.error);
 					showAlert(result.error || 'Erreur lors de la suppression', 'error');
 				}
 			} catch (error) {
+				console.error('Erreur dans handleDeleteConfirm:', error);
 				showAlert('Erreur lors de la suppression', 'error');
 			}
+		} else {
+			console.log('Erreur: Catégorie ou ID manquant');
 		}
+		console.log('=== Fin handleDeleteConfirm ===');
 	}
 
 	async function handleAddSubmit(event: FormEvent): Promise<void> {
