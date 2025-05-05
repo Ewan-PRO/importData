@@ -5,6 +5,14 @@ import { z } from 'zod';
 import { superValidate } from 'sveltekit-superforms/server';
 import { zod } from 'sveltekit-superforms/adapters';
 
+// Fonction utilitaire pour convertir en toute sécurité les valeurs FormData en string
+function safeFormDataToString(value: FormDataEntryValue | null): string {
+	if (value === null) return '';
+	if (typeof value === 'string') return value;
+	if (value instanceof File) return value.name;
+	return '';
+}
+
 // Schéma de validation pour les catégories
 const categorySchema = z.object({
 	atr_0_label: z.string().min(1, { message: 'Le premier niveau est requis' }),
@@ -83,7 +91,7 @@ export const actions: Actions = {
 
 	update: async ({ request, fetch }) => {
 		const formData = await request.formData();
-		const id = String(formData.get('id') || '');
+		const id = safeFormDataToString(formData.get('id'));
 
 		if (!id) {
 			return fail(400, { error: 'ID de catégorie manquant' });
@@ -91,8 +99,8 @@ export const actions: Actions = {
 
 		// Extraire les données du formulaire pour la mise à jour
 		const updateData = {
-			atr_val: String(formData.get('atr_val') ?? ''),
-			atr_label: String(formData.get('atr_label') ?? '')
+			atr_val: safeFormDataToString(formData.get('atr_val')),
+			atr_label: safeFormDataToString(formData.get('atr_label'))
 		};
 
 		try {
@@ -120,7 +128,7 @@ export const actions: Actions = {
 
 	delete: async ({ request, fetch }) => {
 		const formData = await request.formData();
-		const id = String(formData.get('id') || '');
+		const id = safeFormDataToString(formData.get('id'));
 
 		if (!id) {
 			return fail(400, { error: 'ID de catégorie manquant' });
