@@ -22,40 +22,54 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 			return json({ error: 'Catégorie non trouvée' }, { status: 404 });
 		}
 
-		// Déterminer le niveau de la catégorie basé sur son atr_nat
+		// Déterminer le niveau de la catégorie et mise à jour du label actuel
 		let level = 0;
 		if (category.atr_nat === 'CATEGORIE') {
-			level = 1; // Premier niveau (après la racine)
+			level = 1;
 		} else if (category.atr_nat?.startsWith('CATEGORIE_')) {
-			level = 2; // Deuxième niveau
+			level = 2;
 		} else if (category.atr_nat?.includes('_')) {
-			// Compter le nombre de segments pour déterminer le niveau
 			level = category.atr_nat?.split('_').length || 0;
 		}
 
 		console.log(`Cette catégorie est de niveau ${level}`);
 
-		// Préparer les données à mettre à jour
+		// Mettre à jour le niveau actuel
 		const updateData: Record<string, string> = {};
-
-		// Mise à jour du label (seul champ modifiable dans la plupart des cas)
 		const labelField = `atr_${level}_label`;
+
 		if (data[labelField] !== undefined) {
 			updateData.atr_label = data[labelField];
+
+			// Mise à jour de l'attribut principal
+			const updatedAttribute = await prisma.attribute_dev.update({
+				where: { atr_id: categoryId },
+				data: updateData
+			});
+
+			console.log('Catégorie principale mise à jour:', updatedAttribute);
 		}
 
-		console.log('Données préparées pour mise à jour:', updateData);
+		// Pour les sous-niveaux, rechercher et mettre à jour les catégories enfants
+		// Par exemple, si on est au niveau 1, chercher et mettre à jour le niveau 2
+		if (level === 1 && data.atr_2_label !== undefined && category.atr_val) {
+			// Trouver l'enfant direct
+			const childCategory = await prisma.attribute_dev.findFirst({
+				where: {
+					atr_nat: category.atr_val
+				}
+			});
 
-		// Mise à jour de l'attribut
-		const updatedAttribute = await prisma.attribute_dev.update({
-			where: { atr_id: categoryId },
-			data: updateData
-		});
+			if (childCategory) {
+				await prisma.attribute_dev.update({
+					where: { atr_id: childCategory.atr_id },
+					data: { atr_label: data.atr_2_label }
+				});
+				console.log('Sous-catégorie de niveau 2 mise à jour');
+			}
+		}
 
-		console.log('Catégorie mise à jour avec succès');
-
-		// Invalider le cache et retourner la réponse
-		return json({ success: true, attribute: updatedAttribute }, { status: 200 });
+		return json({ success: true }, { status: 200 });
 	} catch (error) {
 		console.error('Erreur lors de la mise à jour de la catégorie:', error);
 		return json({ error: 'Erreur lors de la mise à jour de la catégorie' }, { status: 500 });
