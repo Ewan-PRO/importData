@@ -145,11 +145,11 @@
 		{/each}
 
 		<div class="flex justify-end space-x-2 pt-4">
-			<Button color="light" on:click={handleCancel}>
+			<Button color="red" on:click={handleCancel}>
 				<CircleX class="mr-2 h-4 w-4" />
 				{cancelLabel}
 			</Button>
-			<Button type="submit" color={isEdit ? 'blue' : 'green'}>
+			<Button type="submit" color="green">
 				<CircleCheck class="mr-2 h-4 w-4" />
 				{submitLabel}
 			</Button>

@@ -140,15 +140,17 @@
 						</td>
 					{/each}
 					{#if actions}
-						<td class="space-x-2 px-6 py-4 text-right">
-							<Button size="xs" color="blue" on:click={() => handleEdit(item)}>
-								<SquarePen class="mr-2 h-4 w-4" />
-								Modifier
-							</Button>
-							<Button size="xs" color="red" on:click={() => handleDelete(item)}>
-								<Trash2 class="mr-2 h-4 w-4" />
-								Supprimer
-							</Button>
+						<td class="px-6 py-4 text-right">
+							<div class="w-25=8 flex flex-col items-end space-y-2">
+								<Button size="xs" color="blue" class="w-full" on:click={() => handleEdit(item)}>
+									<SquarePen class="mr-2 h-4 w-4" />
+									Modifier
+								</Button>
+								<Button size="xs" color="red" class="w-full" on:click={() => handleDelete(item)}>
+									<Trash2 class="mr-2 h-4 w-4" />
+									Supprimer
+								</Button>
+							</div>
 						</td>
 					{/if}
 				</tr>
