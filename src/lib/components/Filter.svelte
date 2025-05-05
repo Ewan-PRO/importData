@@ -57,8 +57,8 @@
 	<div class="flex w-full gap-2 md:w-1/4">
 		<Button color="blue" class="w-full" on:click={handleSearch}>
 			<Funnel class="mr-2 h-4 w-4" />
-			Filtrer1
+			Filtrer
 		</Button>
-		<Button color="light" class="w-full" on:click={handleReset}>Réinitialiser</Button>
+		<Button color="dark" class="w-full" on:click={handleReset}>Réinitialiser</Button>
 	</div>
 </div>

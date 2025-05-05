@@ -86,11 +86,11 @@
 		</div>
 	{/if}
 
-	<table class="w-full text-left text-sm">
+	<table class="w-full border-x border-black text-left text-sm">
 		<thead class="bg-blue-700 text-xs text-white uppercase">
 			<tr>
 				{#if selectable}
-					<th scope="col" class="w-14 px-4 py-3">
+					<th scope="col" class="w-14 border-x border-black px-4 py-3">
 						{#if multiSelect}
 							<button
 								class="flex items-center"
@@ -109,12 +109,12 @@
 					</th>
 				{/if}
 				{#each columns as column}
-					<th scope="col" class="w-14 px-4 py-3 whitespace-nowrap">
+					<th scope="col" class="w-14 border-x border-black px-4 py-3 whitespace-nowrap">
 						{column.header}
 					</th>
 				{/each}
 				{#if actions}
-					<th scope="col" class="w-14 px-4 py-3 text-right">
+					<th scope="col" class="w-14 border-x border-black px-4 py-3 text-right">
 						<span class="sr-only">Actions</span>
 					</th>
 				{/if}
@@ -139,7 +139,7 @@
 					{/if}
 					{#each columns as column}
 						<td
-							class="w-14 px-4 py-3 {i % 2 === 0
+							class="w-14 border-x border-black px-4 py-3 {i % 2 === 0
 								? 'bg-white'
 								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-50"
 							title={formatValue(item, column)}
@@ -149,7 +149,7 @@
 					{/each}
 					{#if actions}
 						<td
-							class="w-14 px-4 py-3 text-right {i % 2 === 0
+							class="w-14 border-x border-black px-4 py-3 text-right {i % 2 === 0
 								? 'bg-white'
 								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-50"
 						>
