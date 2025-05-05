@@ -34,8 +34,15 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 		console.log(`Cette catégorie est de niveau ${level}`);
 
+		// Convertir les chaînes vides en null pour tous les champs
+		Object.keys(data).forEach((key) => {
+			if (data[key] === '' || data[key] === undefined) {
+				data[key] = null;
+			}
+		});
+
 		// Mettre à jour la catégorie principale
-		const updateData: Record<string, string> = {};
+		const updateData: Record<string, string | null> = {};
 		const labelField = `atr_${level}_label`;
 
 		if (data[labelField] !== undefined) {
@@ -54,22 +61,31 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		let currentNat = category.atr_val ?? '';
 		for (let i = level + 1; i <= 7; i++) {
 			const nextLevelField = `atr_${i}_label`;
-			if (data[nextLevelField] !== undefined && data[nextLevelField] !== null) {
+
+			// Gérer les trois cas: valeur définie, valeur null explicite, ou valeur undefined
+			if (data[nextLevelField] !== undefined) {
 				// Vérifier si une sous-catégorie existe déjà
 				let childCategory = await prisma.attribute_dev.findFirst({
 					where: { atr_nat: currentNat }
 				});
 
 				if (childCategory) {
-					// Mettre à jour la sous-catégorie existante
+					// Mettre à jour la sous-catégorie existante avec null si la valeur est null ou chaîne vide
 					await prisma.attribute_dev.update({
 						where: { atr_id: childCategory.atr_id },
 						data: { atr_label: data[nextLevelField] }
 					});
-					currentNat = childCategory.atr_val ?? '';
-					console.log(`Sous-catégorie de niveau ${i} mise à jour`);
-				} else if (data[nextLevelField].trim() !== '') {
-					// Créer une nouvelle sous-catégorie si la valeur n'est pas vide
+
+					// Si la valeur n'est pas null, on continue avec le niveau suivant
+					if (data[nextLevelField] !== null) {
+						currentNat = childCategory.atr_val ?? '';
+						console.log(`Sous-catégorie de niveau ${i} mise à jour`);
+					} else {
+						// Arrêter le traitement si on rencontre une valeur null
+						break;
+					}
+				} else if (data[nextLevelField] !== null) {
+					// Créer une nouvelle sous-catégorie seulement si la valeur n'est pas null
 					const newValue = `${currentNat}_${data[nextLevelField].toLowerCase().replace(/\s+/g, '_')}`;
 					childCategory = await prisma.attribute_dev.create({
 						data: {
@@ -80,9 +96,12 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 					});
 					currentNat = newValue;
 					console.log(`Nouvelle sous-catégorie de niveau ${i} créée`);
+				} else {
+					// Ne pas créer de nouvelle sous-catégorie si la valeur est null
+					break;
 				}
 			} else {
-				// Arrêter le traitement si on rencontre un niveau null ou undefined
+				// Arrêter le traitement si on rencontre un niveau undefined
 				break;
 			}
 		}
