@@ -388,6 +388,43 @@
 			showAlert("Erreur lors de l'ajout de la catégorie", 'error');
 		}
 	}
+
+	async function confirmDeleteMultiple(items: Category[]): Promise<void> {
+		console.log('=== Début confirmDeleteMultiple ===');
+		console.log('Items à supprimer:', items);
+
+		try {
+			// Supprimer chaque élément sélectionné
+			for (const item of items) {
+				if (item.atr_id) {
+					const response = await fetch(`/api/categories/${item.atr_id}`, {
+						method: 'DELETE'
+					});
+
+					if (!response.ok) {
+						const errorData = await response.json();
+						showAlert(errorData.error || 'Erreur lors de la suppression', 'error');
+						return;
+					}
+				}
+			}
+
+			// Mettre à jour les données localement
+			const updatedCategories = data.categories.filter(
+				(cat: Category) => !items.some((item) => item.atr_id === cat.atr_id)
+			);
+
+			// Mettre à jour les données de la page et le tableau filtré
+			data.categories = updatedCategories;
+			filteredCategories = [...updatedCategories];
+
+			showAlert(`${items.length} catégorie(s) supprimée(s) avec succès`, 'success');
+		} catch (error) {
+			console.error('Erreur dans confirmDeleteMultiple:', error);
+			showAlert('Erreur lors de la suppression multiple', 'error');
+		}
+		console.log('=== Fin confirmDeleteMultiple ===');
+	}
 </script>
 
 <div class="container mx-auto py-6">
@@ -424,8 +461,11 @@
 	<DataTable
 		data={filteredCategories}
 		{columns}
+		selectable={true}
+		multiSelect={true}
 		on:edit={(e) => openEditForm(e.detail.item)}
 		on:delete={(e) => confirmDelete(e.detail.item)}
+		on:deleteSelected={(e) => confirmDeleteMultiple(e.detail.items)}
 	/>
 
 	<!-- Formulaire d'ajout -->
