@@ -319,9 +319,21 @@
 
 				if (response.ok) {
 					console.log('Suppression réussie');
+
+					// Mettre à jour les données localement sans recharger la page
+					const updatedCategories = data.categories.filter(
+						(cat: Category) => cat.atr_id !== selectedCategory?.atr_id
+					);
+
+					// Mettre à jour les données de la page et le tableau filtré
+					data.categories = updatedCategories;
+					filteredCategories = [...updatedCategories];
+
 					showAlert('Catégorie supprimée avec succès', 'success');
 					deleteConfirmOpen = false;
-					invalidateAll();
+
+					// Ne plus recharger la page après la suppression
+					// invalidateAll();
 				} else {
 					console.log('Erreur lors de la suppression:', result.error);
 					showAlert(result.error || 'Erreur lors de la suppression', 'error');
