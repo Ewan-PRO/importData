@@ -1,4 +1,4 @@
-<!-- DataTable.svelte - Solution cartes -->
+<!-- DataTable.svelte - Solution cartes améliorée -->
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { Button } from 'flowbite-svelte';
@@ -59,9 +59,15 @@
 		const value = item[column.key];
 		return column.formatter ? column.formatter(value) : value;
 	}
+
+	// Fonction pour extraire le numéro de niveau
+	function getNiveauNumber(key: string): number | null {
+		const match = key.match(/atr_(\d+)_label/);
+		return match ? parseInt(match[1]) : null;
+	}
 </script>
 
-<div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+<div class="relative overflow-x-auto sm:rounded-lg">
 	{#if hasSelection}
 		<div
 			class="mb-4 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-4"
@@ -163,9 +169,9 @@
 	</div>
 
 	<!-- Affichage mobile sous forme de cartes -->
-	<div class="sm:hidden">
+	<div class="px-2 sm:hidden">
 		{#each data as item, i}
-			<div class="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow">
+			<div class="mb-4 rounded-lg border border-gray-200 bg-white p-4">
 				<div class="mb-2 flex justify-between">
 					{#if selectable}
 						<div class="flex items-center">
@@ -175,10 +181,10 @@
 								checked={selectedItems.includes(item)}
 								on:change={() => handleSelect(item)}
 							/>
-							<h3 class="font-bold">{item.atr_0_label || ''}</h3>
+							<h3 class="font-bold">Niveau 1 : {item.atr_0_label || ''}</h3>
 						</div>
 					{:else}
-						<h3 class="font-bold">{item.atr_0_label || ''}</h3>
+						<h3 class="font-bold">Niveau 1 : {item.atr_0_label || ''}</h3>
 					{/if}
 					<div class="flex space-x-2">
 						<button class="text-blue-600" on:click={() => handleEdit(item)}>
@@ -191,12 +197,27 @@
 				</div>
 
 				<!-- Affichage des données par niveau -->
-				{#each columns as column}
-					{#if item[column.key] && column.key !== 'atr_0_label'}
-						<div class="mb-1 flex">
-							<span class="mr-2 font-medium">{column.header}:</span>
-							<span>{formatValue(item, column)}</span>
-						</div>
+				{#each columns as column, colIndex}
+					{#if item[column.key] && column.key !== 'atr_0_label' && colIndex > 0}
+						{#if colIndex < 7}
+							<div class="mb-1 whitespace-nowrap">
+								<span class="font-medium"
+									>Niveau {getNiveauNumber(column.key) !== null
+										? getNiveauNumber(column.key)! + 1
+										: ''} :
+								</span>
+								<span>{formatValue(item, column)}</span>
+							</div>
+						{:else}
+							<div class="mb-1">
+								<div class="font-medium whitespace-nowrap">
+									Niveau {getNiveauNumber(column.key) !== null
+										? getNiveauNumber(column.key)! + 1
+										: ''} :
+								</div>
+								<div class="ml-2">{formatValue(item, column)}</div>
+							</div>
+						{/if}
 					{/if}
 				{/each}
 
@@ -216,3 +237,10 @@
 		{/each}
 	</div>
 </div>
+
+<style>
+	/* Suppression de l'ombre latérale et ajout d'un peu d'espace en bas */
+	.sm\:hidden {
+		margin-bottom: 1rem;
+	}
+</style>

@@ -441,21 +441,25 @@
 		</Alert>
 	{/if}
 
-	<div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-		<Filter
-			fields={filterFields}
-			placeholder="Rechercher une catégorie..."
-			on:filter={(event) => {
-				handleFilter(event);
-			}}
-			on:reset={handleFilterReset}
-			--class="w-full sm:w-auto"
-		/>
+	<div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:gap-3">
+		<!-- Filtres - Inchangé pour mobile -->
+		<div class="w-full sm:flex-1">
+			<Filter
+				fields={filterFields}
+				placeholder="Rechercher une catégorie..."
+				on:filter={(event) => {
+					handleFilter(event);
+				}}
+				on:reset={handleFilterReset}
+			/>
+		</div>
 
-		<Button color="green" on:click={openAddForm} class="mx-auto max-w-[220px] sm:mx-0 sm:w-auto ">
-			<CirclePlus class="mr-2 h-4 w-4" />
-			Ajouter une catégorie
-		</Button>
+		<div class="flex justify-center sm:gap-4 sm:self-start">
+			<Button color="green" on:click={openAddForm} class="w-full max-w-[220px] sm:w-auto ">
+				<CirclePlus class="mr-2 h-4 w-4" />
+				Ajouter une catégorie
+			</Button>
+		</div>
 	</div>
 
 	<DataTable
