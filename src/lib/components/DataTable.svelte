@@ -1,4 +1,4 @@
-<!-- src/lib/components/DataTable.svelte -->
+<!-- DataTable.svelte - Solution cartes -->
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { Button } from 'flowbite-svelte';
@@ -46,17 +46,11 @@
 	}
 
 	function handleDelete(item: any) {
-		console.log('=== Début handleDelete ===');
-		console.log('Item à supprimer:', item);
 		dispatch('delete', { item });
-		console.log('=== Fin handleDelete ===');
 	}
 
 	function handleDeleteSelected() {
-		console.log('=== Début handleDeleteSelected ===');
-		console.log('Items à supprimer:', selectedItems);
 		dispatch('deleteSelected', { items: selectedItems });
-		console.log('=== Fin handleDeleteSelected ===');
 		selectedItems = [];
 		selectAll = false;
 	}
@@ -86,87 +80,139 @@
 		</div>
 	{/if}
 
-	<table class="w-full border-x border-black text-left text-sm">
-		<thead class="bg-blue-700 text-xs text-white uppercase">
-			<tr>
-				{#if selectable}
-					<th scope="col" class="w-14 border-x border-black px-4 py-3">
-						{#if multiSelect}
-							<button
-								class="flex items-center"
-								on:click={handleSelectAll}
-								title={selectAll ? 'Désélectionner tout' : 'Sélectionner tout'}
-							>
-								{#if selectAll}
-									<CheckSquare class="h-4 w-4" />
-								{:else}
-									<Square class="h-4 w-4" />
-								{/if}
-							</button>
-						{:else}
-							<span class="sr-only">Select</span>
-						{/if}
-					</th>
-				{/if}
-				{#each columns as column}
-					<th scope="col" class="w-14 border-x border-black px-4 py-3 whitespace-nowrap">
-						{column.header}
-					</th>
-				{/each}
-				{#if actions}
-					<th scope="col" class="w-14 border-x border-black px-4 py-3 text-right">
-						<span class="sr-only">Actions</span>
-					</th>
-				{/if}
-			</tr>
-		</thead>
-		<tbody>
-			{#each data as item, i}
-				<tr class="border-b" class:bg-blue-100={selectedItems.includes(item)}>
+	<!-- Affichage bureau reste inchangé -->
+	<div class="hidden sm:block">
+		<table class="w-full border-x border-black text-left text-sm">
+			<thead class="bg-blue-700 text-xs text-white uppercase">
+				<tr>
 					{#if selectable}
-						<td
-							class="w-14 px-4 py-3 {i % 2 === 0
-								? 'bg-white'
-								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-50"
-						>
+						<th scope="col" class="w-14 border-x border-black px-4 py-3">
+							{#if multiSelect}
+								<button
+									class="flex items-center"
+									on:click={handleSelectAll}
+									title={selectAll ? 'Désélectionner tout' : 'Sélectionner tout'}
+								>
+									{#if selectAll}
+										<CheckSquare class="h-4 w-4" />
+									{:else}
+										<Square class="h-4 w-4" />
+									{/if}
+								</button>
+							{:else}
+								<span class="sr-only">Select</span>
+							{/if}
+						</th>
+					{/if}
+					{#each columns as column}
+						<th scope="col" class="w-14 border-x border-black px-4 py-3 whitespace-nowrap">
+							{column.header}
+						</th>
+					{/each}
+					{#if actions}
+						<th scope="col" class="w-14 border-x border-black px-4 py-3 text-right">
+							<span class="sr-only">Actions</span>
+						</th>
+					{/if}
+				</tr>
+			</thead>
+			<tbody>
+				{#each data as item, i}
+					<tr class="border-b" class:bg-blue-100={selectedItems.includes(item)}>
+						{#if selectable}
+							<td class="w-14 px-4 py-3 {i % 2 === 0 ? 'bg-white' : 'bg-gray-100'}">
+								<input
+									type="checkbox"
+									class="h-4 w-4 rounded text-blue-600"
+									checked={selectedItems.includes(item)}
+									on:change={() => handleSelect(item)}
+								/>
+							</td>
+						{/if}
+						{#each columns as column}
+							<td
+								class="w-14 border-x border-black px-4 py-3 {i % 2 === 0
+									? 'bg-white'
+									: 'bg-gray-100'}"
+							>
+								{formatValue(item, column)}
+							</td>
+						{/each}
+						{#if actions}
+							<td
+								class="w-14 border-x border-black px-4 py-3 text-right {i % 2 === 0
+									? 'bg-white'
+									: 'bg-gray-100'}"
+							>
+								<div class="flex flex-col items-end space-y-2">
+									<Button size="xs" color="blue" class="w-full" on:click={() => handleEdit(item)}>
+										<SquarePen class="mr-2 h-4 w-4" />
+										Modifier
+									</Button>
+									<Button size="xs" color="red" class="w-full" on:click={() => handleDelete(item)}>
+										<Trash2 class="mr-2 h-4 w-4" />
+										Supprimer
+									</Button>
+								</div>
+							</td>
+						{/if}
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+
+	<!-- Affichage mobile sous forme de cartes -->
+	<div class="sm:hidden">
+		{#each data as item, i}
+			<div class="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow">
+				<div class="mb-2 flex justify-between">
+					{#if selectable}
+						<div class="flex items-center">
 							<input
 								type="checkbox"
-								class="h-4 w-4 rounded text-blue-600 focus:ring-blue-600"
+								class="mr-3 h-4 w-4 rounded text-blue-600"
 								checked={selectedItems.includes(item)}
 								on:change={() => handleSelect(item)}
 							/>
-						</td>
+							<h3 class="font-bold">{item.atr_0_label || ''}</h3>
+						</div>
+					{:else}
+						<h3 class="font-bold">{item.atr_0_label || ''}</h3>
 					{/if}
-					{#each columns as column}
-						<td
-							class="w-14 border-x border-black px-4 py-3 {i % 2 === 0
-								? 'bg-white'
-								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-50"
-							title={formatValue(item, column)}
-						>
-							{formatValue(item, column)}
-						</td>
-					{/each}
-					{#if actions}
-						<td
-							class="w-14 border-x border-black px-4 py-3 text-right {i % 2 === 0
-								? 'bg-white'
-								: 'bg-gray-100'} transition-colors duration-200 hover:bg-blue-50"
-						>
-							<div class="flex flex-col items-end space-y-2">
-								<Button size="xs" color="blue" class="w-full" on:click={() => handleEdit(item)}>
-									<SquarePen class="mr-2 h-4 w-4" />
-									Modifier
-								</Button>
-								<Button size="xs" color="red" class="w-full" on:click={() => handleDelete(item)}>
-									<Trash2 class="mr-2 h-4 w-4" />
-									Supprimer
-								</Button>
-							</div>
-						</td>
+					<div class="flex space-x-2">
+						<button class="text-blue-600" on:click={() => handleEdit(item)}>
+							<SquarePen class="h-4 w-4" />
+						</button>
+						<button class="text-red-600" on:click={() => handleDelete(item)}>
+							<Trash2 class="h-4 w-4" />
+						</button>
+					</div>
+				</div>
+
+				<!-- Affichage des données par niveau -->
+				{#each columns as column}
+					{#if item[column.key] && column.key !== 'atr_0_label'}
+						<div class="mb-1 flex">
+							<span class="mr-2 font-medium">{column.header}:</span>
+							<span>{formatValue(item, column)}</span>
+						</div>
 					{/if}
-				</tr>
-			{/each}
-		</tbody>
-	</table>
+				{/each}
+
+				{#if actions}
+					<div class="mt-4 flex space-x-2">
+						<Button size="xs" color="blue" class="w-1/2" on:click={() => handleEdit(item)}>
+							<SquarePen class="mr-2 h-4 w-4" />
+							Modifier
+						</Button>
+						<Button size="xs" color="red" class="w-1/2" on:click={() => handleDelete(item)}>
+							<Trash2 class="mr-2 h-4 w-4" />
+							Supprimer
+						</Button>
+					</div>
+				{/if}
+			</div>
+		{/each}
+	</div>
 </div>

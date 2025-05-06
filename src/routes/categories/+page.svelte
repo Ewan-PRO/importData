@@ -441,18 +441,18 @@
 		</Alert>
 	{/if}
 
-	<div class="mb-6 flex items-center justify-between">
+	<div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
 		<Filter
 			fields={filterFields}
 			placeholder="Rechercher une catégorie..."
 			on:filter={(event) => {
-				console.log('Événement filter reçu:', event);
 				handleFilter(event);
 			}}
 			on:reset={handleFilterReset}
+			--class="w-full sm:w-auto"
 		/>
 
-		<Button color="green" on:click={openAddForm}>
+		<Button color="green" on:click={openAddForm} class="mx-auto max-w-[220px] sm:mx-0 sm:w-auto ">
 			<CirclePlus class="mr-2 h-4 w-4" />
 			Ajouter une catégorie
 		</Button>
