@@ -181,10 +181,10 @@
 								checked={selectedItems.includes(item)}
 								on:change={() => handleSelect(item)}
 							/>
-							<h3 class="font-bold">Niveau 1 : {item.atr_0_label || ''}</h3>
+							<h3 class="font-bold">Niv 1 : {item.atr_0_label || ''}</h3>
 						</div>
 					{:else}
-						<h3 class="font-bold">Niveau 1 : {item.atr_0_label || ''}</h3>
+						<h3 class="font-bold">Niv 1 : {item.atr_0_label || ''}</h3>
 					{/if}
 					<div class="flex space-x-2">
 						<button class="text-blue-600" on:click={() => handleEdit(item)}>
@@ -199,25 +199,16 @@
 				<!-- Affichage des données par niveau -->
 				{#each columns as column, colIndex}
 					{#if item[column.key] && column.key !== 'atr_0_label' && colIndex > 0}
-						{#if colIndex < 7}
-							<div class="mb-1 whitespace-nowrap">
-								<span class="font-medium"
+						<div class="mb-2">
+							<div class="font-medium">
+								<span class="inline"
 									>Niveau {getNiveauNumber(column.key) !== null
 										? getNiveauNumber(column.key)! + 1
 										: ''} :
 								</span>
-								<span>{formatValue(item, column)}</span>
+								<span class="inline break-words">{formatValue(item, column)}</span>
 							</div>
-						{:else}
-							<div class="mb-1">
-								<div class="font-medium whitespace-nowrap">
-									Niveau {getNiveauNumber(column.key) !== null
-										? getNiveauNumber(column.key)! + 1
-										: ''} :
-								</div>
-								<div class="ml-2">{formatValue(item, column)}</div>
-							</div>
-						{/if}
+						</div>
 					{/if}
 				{/each}
 
@@ -239,8 +230,13 @@
 </div>
 
 <style>
-	/* Suppression de l'ombre latérale et ajout d'un peu d'espace en bas */
 	.sm\:hidden {
 		margin-bottom: 1rem;
+	}
+
+	.break-words {
+		overflow-wrap: break-word;
+		word-wrap: break-word;
+		hyphens: auto;
 	}
 </style>
