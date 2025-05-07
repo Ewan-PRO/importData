@@ -75,16 +75,16 @@ export const actions: Actions = {
 			};
 
 			// Obtenir la structure de la table cible
-			const validationRules = getValidationRules(targetTable as string);
+			const validationRules = getValidationRules(targetTable);
 
 			// Préparation pour le traitement
-			const columnMap = prepareColumnMap(mappedFields as Record<string, string>);
+			const columnMap = prepareColumnMap(mappedFields);
 			const uniqueEntries = new Set<string>();
 
 			// Validation ligne par ligne
 			if (Array.isArray(data)) {
 				for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
-					const row = data[rowIndex] as unknown[];
+					const row = data[rowIndex];
 					const validationResult = validateRow(
 						rowIndex,
 						row,
@@ -96,11 +96,7 @@ export const actions: Actions = {
 
 					// Vérification des doublons avec la base de données
 					if (validationResult) {
-						const existingRecord = await checkExistingRecord(
-							targetTable as string,
-							mappedFields as Record<string, string>,
-							row
-						);
+						const existingRecord = await checkExistingRecord(targetTable, mappedFields, row);
 
 						if (existingRecord) {
 							result.duplicates++;
@@ -153,18 +149,18 @@ export const actions: Actions = {
 			};
 
 			// Préparation pour le traitement
-			const columnMap = prepareColumnMap(mappedFields as Record<string, string>);
+			const columnMap = prepareColumnMap(mappedFields);
 
 			// Traitement des données en transaction
 			await prisma.$transaction(async (tx) => {
 				if (Array.isArray(data)) {
 					for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
-						const row = data[rowIndex] as unknown[];
+						const row = data[rowIndex];
 						await processRow(
 							row,
 							rowIndex,
 							columnMap,
-							targetTable as string,
+							targetTable,
 							tx as PrismaTransactionClient,
 							result
 						);
