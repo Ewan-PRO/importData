@@ -78,62 +78,47 @@
 
 	// Gestion du drag and drop
 	function handleDragEnter(e: DragEvent) {
-		console.log('DragEnter event triggered');
 		e.preventDefault();
 		dragActive = true;
 	}
 
 	function handleDragLeave(e: DragEvent) {
-		console.log('DragLeave event triggered');
 		e.preventDefault();
 		dragActive = false;
 	}
 
 	function handleDragOver(e: DragEvent) {
-		console.log('DragOver event triggered');
 		e.preventDefault();
 		dragActive = true;
 	}
 
 	function handleDrop(e: DragEvent) {
-		console.log('Drop event triggered');
 		e.preventDefault();
 		dragActive = false;
 
 		if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-			console.log('Files detected in drop:', e.dataTransfer.files);
 			handleFiles(e.dataTransfer.files);
-		} else {
-			console.log('No files detected in drop event');
 		}
 	}
 
 	function handleFileInput(e: Event) {
-		console.log('File input change event triggered');
 		const input = e.target as HTMLInputElement;
 		if (input.files && input.files.length > 0) {
-			console.log('Files selected through input:', input.files);
 			handleFiles(input.files);
-		} else {
-			console.log('No files selected through input');
 		}
 	}
 
 	function handleFiles(files: FileList) {
-		console.log('handleFiles called with files:', files);
 		file = files[0];
 		fileName = file.name;
-		console.log('File name:', fileName);
 
 		// Vérification du type de fichier
 		if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
-			console.log('Invalid file type detected');
 			errorMessage = 'Format de fichier non supporté. Veuillez utiliser un fichier CSV ou Excel.';
 			file = null;
 			return;
 		}
 
-		console.log('File type is valid');
 		errorMessage = '';
 		readFile();
 	}
@@ -149,16 +134,32 @@
 				const result = e.target?.result;
 				if (!result) throw new Error('Échec de lecture du fichier');
 
+				console.log('Type de fichier:', file?.type);
+				console.log('Nom du fichier:', file?.name);
+
 				const workbook = read(result, { type: 'array' });
+				console.log('Workbook créé:', workbook);
+
 				const firstSheetName = workbook.SheetNames[0];
+				console.log('Nom de la première feuille:', firstSheetName);
+
 				const worksheet = workbook.Sheets[firstSheetName];
+				console.log('Worksheet:', worksheet);
+
 				data = utils.sheet_to_json(worksheet, { header: 1 });
+				console.log('Données brutes:', data);
 
 				if (data.length < 2) {
 					throw new Error('Le fichier ne contient pas assez de données');
 				}
 
 				headers = data[0] as string[];
+				console.log('En-têtes:', headers);
+				console.log(
+					'Type des en-têtes:',
+					headers.map((h) => typeof h)
+				);
+
 				previewData = data.slice(1, Math.min(data.length, 6)) as any[];
 
 				// Mappage automatique des champs
@@ -166,6 +167,7 @@
 
 				step = 2;
 			} catch (err) {
+				console.error('Erreur détaillée:', err);
 				errorMessage = `Erreur lors de la lecture du fichier: ${err instanceof Error ? err.message : 'Erreur inconnue'}`;
 			} finally {
 				isProcessing = false;
@@ -173,6 +175,7 @@
 		};
 
 		reader.onerror = () => {
+			console.error('Erreur de lecture du fichier');
 			errorMessage = 'Échec de lecture du fichier';
 			isProcessing = false;
 		};
@@ -181,12 +184,21 @@
 	}
 
 	function guessFieldMapping() {
+		console.log('Début du mappage des champs');
+		console.log('En-têtes à mapper:', headers);
+		console.log('Champs disponibles:', tableFields[targetTable]);
+
 		mappedFields = {};
 		const fields = tableFields[targetTable];
 
 		headers.forEach((header, index) => {
+			console.log("Traitement de l'en-tête:", header, 'Type:', typeof header);
+
 			// Normalisation pour la comparaison
-			const normalizedHeader = header.toLowerCase().replace(/[^a-z0-9]/g, '');
+			const normalizedHeader = String(header)
+				.toLowerCase()
+				.replace(/[^a-z0-9]/g, '');
+			console.log('En-tête normalisé:', normalizedHeader);
 
 			// Recherche du meilleur match
 			let bestMatch = '';
@@ -213,8 +225,13 @@
 
 			if (bestScore > 0.5) {
 				mappedFields[index.toString()] = bestMatch;
+				console.log('Match trouvé:', header, '->', bestMatch, 'Score:', bestScore);
+			} else {
+				console.log('Pas de match trouvé pour:', header);
 			}
 		});
+
+		console.log('Mappage final:', mappedFields);
 	}
 
 	function validateData() {
@@ -311,7 +328,7 @@
 	}
 </script>
 
-<div class="mx-auto my-8 max-w-5xl">
+<div class="mx-auto my-8 max-w-6xl">
 	<h1 class="mb-6 text-2xl font-bold">Importation de données</h1>
 
 	{#if errorMessage}
@@ -356,7 +373,7 @@
 		</div>
 	</div>
 
-	<Card class="mb-6">
+	<Card class="mx-auto w-full max-w-6xl">
 		{#if step === 1}
 			<div class="mb-6">
 				<h2 class="mb-2 text-xl font-semibold">Sélection du fichier</h2>
@@ -389,7 +406,6 @@
 							<Button
 								color="blue"
 								on:click={() => {
-									console.log('Button clicked');
 									document.getElementById('fileInput')?.click();
 								}}
 							>
