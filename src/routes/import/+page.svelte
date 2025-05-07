@@ -1,634 +1,571 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Button, Card, Label, Select, Progressbar, Alert } from 'flowbite-svelte';
-	import { Upload, RefreshCw, CheckCircleIcon, XCircleIcon } from 'lucide-svelte';
-	import { browser } from '$app/environment';
-	import { onMount } from 'svelte';
-	import * as XLSX from 'xlsx';
+	import { read, utils } from 'xlsx';
+	import { fade } from 'svelte/transition';
+	import {
+		Button,
+		Card,
+		Table,
+		TableBody,
+		TableBodyCell,
+		TableBodyRow,
+		TableHead,
+		TableHeadCell,
+		Alert,
+		Progressbar,
+		Select,
+		Spinner,
+		Fileupload
+	} from 'flowbite-svelte';
+	import {
+		Upload,
+		Database,
+		FileCheck,
+		AlertCircle,
+		ArrowRight,
+		CornerDownRight,
+		Check,
+		X
+	} from 'lucide-svelte';
 
-	type ColumnMapping = {
-		fileColumn: string;
-		dbField: string;
-		required: boolean;
-		valid: boolean;
-		errorMessage?: string;
-	};
-
-	type ImportTable = {
-		name: string;
-		label: string;
-		fields: {
-			name: string;
-			label: string;
-			required: boolean;
-			type: string;
-		}[];
-	};
-
-	type ValidationResult = {
-		valid: boolean;
-		errors: {
-			row: number;
-			column: string;
-			message: string;
-		}[];
-		duplicates: {
-			rows: number[];
-			key: string;
-		}[];
-		totalRows: number;
-		validRows: number;
-	};
-
-	let tables: ImportTable[] = [
-		{
-			name: 'attribute',
-			label: 'Attributs',
-			fields: [
-				{ name: 'atr_nat', label: 'Nature', required: true, type: 'string' },
-				{ name: 'atr_val', label: 'Valeur', required: true, type: 'string' },
-				{ name: 'atr_label', label: 'Libellé', required: true, type: 'string' }
-			]
-		},
-		{
-			name: 'supplier',
-			label: 'Fournisseurs',
-			fields: [
-				{ name: 'sup_code', label: 'Code', required: true, type: 'string' },
-				{ name: 'sup_label', label: 'Nom', required: true, type: 'string' }
-			]
-		},
-		{
-			name: 'v_categories',
-			label: 'Catégories',
-			fields: [
-				{ name: 'atr_0_label', label: 'Catégorie niveau 0', required: true, type: 'string' },
-				{ name: 'atr_1_label', label: 'Catégorie niveau 1', required: false, type: 'string' },
-				{ name: 'atr_2_label', label: 'Catégorie niveau 2', required: false, type: 'string' },
-				{ name: 'atr_3_label', label: 'Catégorie niveau 3', required: false, type: 'string' },
-				{ name: 'atr_4_label', label: 'Catégorie niveau 4', required: false, type: 'string' },
-				{ name: 'atr_5_label', label: 'Catégorie niveau 5', required: false, type: 'string' },
-				{ name: 'atr_6_label', label: 'Catégorie niveau 6', required: false, type: 'string' },
-				{ name: 'atr_7_label', label: 'Catégorie niveau 7', required: false, type: 'string' }
-			]
-		}
+	let dragActive = false;
+	let isProcessing = false;
+	let step = 1;
+	let errorMessage = '';
+	let file: File | null = null;
+	let fileName = '';
+	let data: any[] = [];
+	let headers: string[] = [];
+	let previewData: any[] = [];
+	let targetTable = 'attribute';
+	let mappedFields: Record<string, string> = {};
+	let availableTables = [
+		{ value: 'attribute', name: 'Attributs' },
+		{ value: 'attribute_dev', name: 'Attributs (Dev)' },
+		{ value: 'supplier', name: 'Fournisseurs' },
+		{ value: 'v_categories', name: 'Catégories' }
 	];
 
-	let selectedTable: ImportTable = tables[0];
-	let file: File | null = null;
-	let fileData: any[] = [];
-	let fileName: string = '';
-	let fileColumns: string[] = [];
-	let columnMappings: ColumnMapping[] = [];
-	let validationResult: ValidationResult | null = null;
-	let importStatus: 'idle' | 'mapping' | 'validating' | 'importing' | 'success' | 'error' = 'idle';
-	let importError: string = '';
-	let importResult: any = null;
+	let tableFields: Record<string, string[]> = {
+		attribute: ['atr_nat', 'atr_val', 'atr_label'],
+		attribute_dev: ['atr_nat', 'atr_val', 'atr_label'],
+		supplier: ['sup_code', 'sup_label'],
+		v_categories: [
+			'atr_0_label',
+			'atr_1_label',
+			'atr_2_label',
+			'atr_3_label',
+			'atr_4_label',
+			'atr_5_label',
+			'atr_6_label',
+			'atr_7_label'
+		]
+	};
 
-	$: availableDbFields = selectedTable?.fields || [];
+	let validationResults: {
+		totalRows: number;
+		validRows: number;
+		duplicates: number;
+		invalidData: { row: number; field: string; value: string; error: string }[];
+		processed: boolean;
+	} = {
+		totalRows: 0,
+		validRows: 0,
+		duplicates: 0,
+		invalidData: [],
+		processed: false
+	};
 
-	onMount(() => {
-		initializeDropZone();
-	});
-
-	function initializeDropZone() {
-		if (!browser) return;
-
-		const dropZone = document.getElementById('drop-zone');
-
-		if (!dropZone) return;
-
-		dropZone.addEventListener('dragover', (e) => {
-			e.preventDefault();
-			dropZone.classList.add('border-blue-500');
-		});
-
-		dropZone.addEventListener('dragleave', () => {
-			dropZone.classList.remove('border-blue-500');
-		});
-
-		dropZone.addEventListener('drop', (e) => {
-			e.preventDefault();
-			dropZone.classList.remove('border-blue-500');
-
-			if (e.dataTransfer?.files.length) {
-				handleFileUpload(e.dataTransfer.files[0]);
-			}
-		});
+	// Gestion du drag and drop
+	function handleDragEnter(e: DragEvent) {
+		e.preventDefault();
+		dragActive = true;
 	}
 
-	function handleTableSelect(event: Event) {
-		const select = event.target as HTMLSelectElement;
-		selectedTable = tables.find((t) => t.name === select.value) || tables[0];
+	function handleDragLeave(e: DragEvent) {
+		e.preventDefault();
+		dragActive = false;
+	}
 
-		if (fileColumns.length > 0) {
-			generateColumnMappings();
+	function handleDragOver(e: DragEvent) {
+		e.preventDefault();
+		dragActive = true;
+	}
+
+	function handleDrop(e: DragEvent) {
+		e.preventDefault();
+		dragActive = false;
+
+		if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+			handleFiles(e.dataTransfer.files);
 		}
 	}
 
-	function handleFileInput(event: Event) {
-		const input = event.target as HTMLInputElement;
+	function handleFileInput(e: Event) {
+		const input = e.target as HTMLInputElement;
 		if (input.files && input.files.length > 0) {
-			handleFileUpload(input.files[0]);
+			handleFiles(input.files);
 		}
 	}
 
-	function handleFileUpload(uploadedFile: File) {
-		const validTypes = [
-			'application/vnd.ms-excel',
-			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-			'text/csv',
-			'application/csv'
-		];
+	function handleFiles(files: FileList) {
+		file = files[0];
+		fileName = file.name;
 
-		if (
-			!validTypes.includes(uploadedFile.type) &&
-			!uploadedFile.name.endsWith('.csv') &&
-			!uploadedFile.name.endsWith('.xlsx') &&
-			!uploadedFile.name.endsWith('.xls')
-		) {
-			importError = 'Format de fichier non supporté. Utilisez CSV ou Excel.';
-			importStatus = 'error';
+		// Vérification du type de fichier
+		if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+			errorMessage = 'Format de fichier non supporté. Veuillez utiliser un fichier CSV ou Excel.';
+			file = null;
 			return;
 		}
 
-		file = uploadedFile;
-		fileName = uploadedFile.name;
-		importStatus = 'mapping';
-		importError = '';
+		errorMessage = '';
+		readFile();
+	}
 
+	function readFile() {
+		if (!file) return;
+
+		isProcessing = true;
 		const reader = new FileReader();
 
 		reader.onload = (e) => {
 			try {
-				const data = new Uint8Array(e.target?.result as ArrayBuffer);
-				const workbook = XLSX.read(data, { type: 'array' });
+				const result = e.target?.result;
+				if (!result) throw new Error('Échec de lecture du fichier');
 
+				const workbook = read(result, { type: 'array' });
 				const firstSheetName = workbook.SheetNames[0];
 				const worksheet = workbook.Sheets[firstSheetName];
+				data = utils.sheet_to_json(worksheet, { header: 1 });
 
-				fileData = XLSX.utils.sheet_to_json(worksheet, { header: 'A' });
-
-				if (fileData.length === 0) {
-					throw new Error('Le fichier ne contient aucune donnée');
+				if (data.length < 2) {
+					throw new Error('Le fichier ne contient pas assez de données');
 				}
 
-				const headerRow = fileData[0];
-				fileColumns = Object.values(headerRow);
+				headers = data[0] as string[];
+				previewData = data.slice(1, Math.min(data.length, 6)) as any[];
 
-				fileData = fileData.slice(1);
+				// Mappage automatique des champs
+				guessFieldMapping();
 
-				generateColumnMappings();
-			} catch (error) {
-				console.error('Erreur lors de la lecture du fichier:', error);
-				importError = `Erreur lors de la lecture du fichier: ${error instanceof Error ? error.message : 'Format invalide'}`;
-				importStatus = 'error';
+				step = 2;
+			} catch (err) {
+				errorMessage = `Erreur lors de la lecture du fichier: ${err instanceof Error ? err.message : 'Erreur inconnue'}`;
+			} finally {
+				isProcessing = false;
 			}
 		};
 
 		reader.onerror = () => {
-			importError = 'Erreur lors de la lecture du fichier';
-			importStatus = 'error';
+			errorMessage = 'Échec de lecture du fichier';
+			isProcessing = false;
 		};
 
 		reader.readAsArrayBuffer(file);
 	}
 
-	function generateColumnMappings() {
-		columnMappings = [];
+	function guessFieldMapping() {
+		mappedFields = {};
+		const fields = tableFields[targetTable];
 
-		availableDbFields.forEach((field) => {
-			let matchIndex = fileColumns.findIndex(
-				(col) =>
-					col.toLowerCase() === field.name.toLowerCase() ||
-					col.toLowerCase() === field.label.toLowerCase()
-			);
+		headers.forEach((header, index) => {
+			// Normalisation pour la comparaison
+			const normalizedHeader = header.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-			if (matchIndex === -1) {
-				matchIndex = fileColumns.findIndex(
-					(col) =>
-						col.toLowerCase().includes(field.name.toLowerCase()) ||
-						field.name.toLowerCase().includes(col.toLowerCase()) ||
-						col.toLowerCase().includes(field.label.toLowerCase()) ||
-						field.label.toLowerCase().includes(col.toLowerCase())
-				);
-			}
+			// Recherche du meilleur match
+			let bestMatch = '';
+			let bestScore = 0;
 
-			columnMappings.push({
-				fileColumn: matchIndex !== -1 ? fileColumns[matchIndex] : '',
-				dbField: field.name,
-				required: field.required,
-				valid: !field.required || matchIndex !== -1
+			fields.forEach((field) => {
+				const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+				// Vérifier si le nom du champ est contenu dans l'en-tête ou vice-versa
+				if (
+					normalizedHeader.includes(normalizedField) ||
+					normalizedField.includes(normalizedHeader)
+				) {
+					const score =
+						Math.min(normalizedHeader.length, normalizedField.length) /
+						Math.max(normalizedHeader.length, normalizedField.length);
+
+					if (score > bestScore) {
+						bestScore = score;
+						bestMatch = field;
+					}
+				}
 			});
-		});
-	}
 
-	function updateMapping(index: number, newColumn: string) {
-		columnMappings[index].fileColumn = newColumn;
-		columnMappings[index].valid = !columnMappings[index].required || newColumn !== '';
-		columnMappings = [...columnMappings];
+			if (bestScore > 0.5) {
+				mappedFields[index.toString()] = bestMatch;
+			}
+		});
 	}
 
 	function validateData() {
-		importStatus = 'validating';
+		isProcessing = true;
 
-		const invalidMappings = columnMappings.filter(
-			(m) => m.required && (!m.fileColumn || m.fileColumn === '')
-		);
-
-		if (invalidMappings.length > 0) {
-			importError = `Certains champs obligatoires n'ont pas été mappés: ${invalidMappings.map((m) => availableDbFields.find((f) => f.name === m.dbField)?.label).join(', ')}`;
-			importStatus = 'mapping';
-			return;
-		}
-
-		const mappingByFileColumn: Record<
-			string,
-			{ dbField: string; required: boolean; type: string }
-		> = {};
-		columnMappings.forEach((m) => {
-			if (m.fileColumn) {
-				const fieldInfo = availableDbFields.find((f) => f.name === m.dbField);
-				if (fieldInfo) {
-					mappingByFileColumn[m.fileColumn] = {
-						dbField: m.dbField,
-						required: fieldInfo.required,
-						type: fieldInfo.type
-					};
-				}
-			}
-		});
-
-		const errors: { row: number; column: string; message: string }[] = [];
-		const processedKeys = new Set<string>();
-		const duplicates: { rows: number[]; key: string }[] = [];
-		let validRows = 0;
-
-		fileData.forEach((row: any, rowIndex: number) => {
-			let rowValid = true;
-			let uniqueKey = '';
-
-			Object.entries(row).forEach(([col, val]) => {
-				const colName = fileData[0][col];
-				if (colName in mappingByFileColumn) {
-					const fieldInfo = mappingByFileColumn[colName];
-
-					if (fieldInfo.required && (val === undefined || val === null || val === '')) {
-						errors.push({
-							row: rowIndex + 2,
-							column: colName,
-							message: 'Valeur obligatoire manquante'
-						});
-						rowValid = false;
-					}
-
-					if (val !== undefined && val !== null && val !== '') {
-						if (fieldInfo.type === 'number' && isNaN(Number(val))) {
-							errors.push({
-								row: rowIndex + 2,
-								column: colName,
-								message: 'Valeur numérique invalide'
-							});
-							rowValid = false;
-						}
-					}
-
-					if (
-						fieldInfo.dbField === 'atr_nat' ||
-						fieldInfo.dbField === 'atr_val' ||
-						fieldInfo.dbField === 'sup_code' ||
-						fieldInfo.dbField === 'atr_0_label'
-					) {
-						uniqueKey += `${fieldInfo.dbField}:${val};`;
-					}
-				}
+		fetch('/import/validate', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				data: data.slice(1), // Exclure les en-têtes
+				mappedFields,
+				targetTable
+			})
+		})
+			.then((response) => response.json())
+			.then((result) => {
+				validationResults = result;
+				step = 3;
+			})
+			.catch((err) => {
+				errorMessage = `Erreur lors de la validation: ${err.message}`;
+			})
+			.finally(() => {
+				isProcessing = false;
 			});
-
-			if (uniqueKey && processedKeys.has(uniqueKey)) {
-				let duplicate = duplicates.find((d) => d.key === uniqueKey);
-				if (!duplicate) {
-					duplicate = { rows: [], key: uniqueKey };
-					duplicates.push(duplicate);
-				}
-				duplicate.rows.push(rowIndex + 2);
-			} else if (uniqueKey) {
-				processedKeys.add(uniqueKey);
-			}
-
-			if (rowValid) validRows++;
-		});
-
-		fileData.forEach((row: any, rowIndex: number) => {
-			let uniqueKey = '';
-			Object.entries(row).forEach(([col, val]) => {
-				const colName = fileData[0][col];
-				if (colName in mappingByFileColumn) {
-					const fieldInfo = mappingByFileColumn[colName];
-					if (
-						fieldInfo.dbField === 'atr_nat' ||
-						fieldInfo.dbField === 'atr_val' ||
-						fieldInfo.dbField === 'sup_code' ||
-						fieldInfo.dbField === 'atr_0_label'
-					) {
-						uniqueKey += `${fieldInfo.dbField}:${val};`;
-					}
-				}
-			});
-
-			const duplicate = duplicates.find((d) => d.key === uniqueKey);
-			if (duplicate && !duplicate.rows.includes(rowIndex + 2)) {
-				duplicate.rows.push(rowIndex + 2);
-			}
-		});
-
-		validationResult = {
-			valid: errors.length === 0,
-			errors,
-			duplicates,
-			totalRows: fileData.length,
-			validRows
-		};
-
-		if (errors.length === 0 && duplicates.length === 0) {
-			importStatus = 'mapping';
-		} else {
-			importStatus = 'mapping';
-		}
 	}
 
-	async function startImport() {
-		importStatus = 'importing';
+	function importData() {
+		isProcessing = true;
 
-		try {
-			const formData = new FormData();
-			formData.append('file', file as File);
-			formData.append('tableName', selectedTable.name);
-			formData.append('columnMappings', JSON.stringify(columnMappings));
-
-			const response = await fetch('/api/import', {
-				method: 'POST',
-				body: formData
+		fetch('/import/process', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				data: data.slice(1), // Exclure les en-têtes
+				mappedFields,
+				targetTable
+			})
+		})
+			.then((response) => response.json())
+			.then((result) => {
+				// Mise à jour des résultats avec les infos d'importation
+				validationResults = { ...validationResults, ...result };
+			})
+			.catch((err) => {
+				errorMessage = `Erreur lors de l'importation: ${err.message}`;
+			})
+			.finally(() => {
+				isProcessing = false;
 			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.message || "Erreur lors de l'importation");
-			}
-
-			importResult = await response.json();
-			importStatus = 'success';
-		} catch (error) {
-			importError =
-				error instanceof Error ? error.message : "Erreur inconnue lors de l'importation";
-			importStatus = 'error';
-		}
 	}
 
 	function resetImport() {
 		file = null;
 		fileName = '';
-		fileData = [];
-		fileColumns = [];
-		columnMappings = [];
-		validationResult = null;
-		importStatus = 'idle';
-		importError = '';
-		importResult = null;
+		data = [];
+		headers = [];
+		previewData = [];
+		mappedFields = {};
+		validationResults = {
+			totalRows: 0,
+			validRows: 0,
+			duplicates: 0,
+			invalidData: [],
+			processed: false
+		};
+		step = 1;
+		errorMessage = '';
+	}
+
+	function handleTableChange() {
+		// Réinitialiser le mappage lors du changement de table
+		mappedFields = {};
+		guessFieldMapping();
+	}
+
+	function getRequiredFields(): string[] {
+		if (targetTable === 'attribute' || targetTable === 'attribute_dev') {
+			return ['atr_nat', 'atr_val'];
+		} else if (targetTable === 'supplier') {
+			return ['sup_code'];
+		} else if (targetTable === 'v_categories') {
+			return ['atr_0_label'];
+		}
+		return [];
+	}
+
+	function isFieldMapped(fieldName: string): boolean {
+		return Object.values(mappedFields).includes(fieldName);
 	}
 </script>
 
-<div class="container mx-auto px-4 py-8">
-	<div class="mb-8">
-		<h1 class="mb-2 text-2xl font-bold">Importation de données</h1>
-		<p class="text-gray-600">Importez vos données depuis un fichier CSV ou Excel</p>
-	</div>
+<div class="mx-auto my-8 max-w-5xl">
+	<h1 class="mb-6 text-2xl font-bold">Importation de données</h1>
 
-	{#if importStatus === 'error'}
-		<Alert color="red" class="mb-6">
-			<XCircleIcon slot="icon" class="h-4 w-4" />
-			<span class="font-medium">Erreur:</span>
-			{importError}
+	{#if errorMessage}
+		<Alert color="red" class="mb-4">
+			<AlertCircle slot="icon" class="h-4 w-4" />
+			{errorMessage}
 		</Alert>
 	{/if}
 
-	{#if importStatus === 'success'}
-		<Alert color="green" class="mb-6">
-			<CheckCircleIcon slot="icon" class="h-4 w-4" />
-			<span class="font-medium">Succès:</span> Importation réalisée avec succès!
-		</Alert>
+	<div class="steps mb-8 flex justify-between">
+		<div class={`step-item ${step >= 1 ? 'text-blue-700' : ''} flex-1`}>
+			<div class="flex items-center">
+				<div
+					class={`mr-2 flex h-8 w-8 items-center justify-center rounded-full ${step >= 1 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
+				>
+					1
+				</div>
+				<span>Sélection du fichier</span>
+			</div>
+		</div>
+		<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
+		<div class={`step-item ${step >= 2 ? 'text-blue-700' : ''} flex-1`}>
+			<div class="flex items-center">
+				<div
+					class={`mr-2 flex h-8 w-8 items-center justify-center rounded-full ${step >= 2 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
+				>
+					2
+				</div>
+				<span>Mappage des colonnes</span>
+			</div>
+		</div>
+		<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
+		<div class={`step-item ${step >= 3 ? 'text-blue-700' : ''} flex-1`}>
+			<div class="flex items-center">
+				<div
+					class={`mr-2 flex h-8 w-8 items-center justify-center rounded-full ${step >= 3 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
+				>
+					3
+				</div>
+				<span>Validation & Import</span>
+			</div>
+		</div>
+	</div>
 
-		<Card class="mb-6">
-			<div class="p-4">
-				<h2 class="mb-3 text-xl font-semibold">Rapport d'importation</h2>
-				<div class="grid grid-cols-2 gap-4">
-					<div>
-						<p><span class="font-medium">Table:</span> {importResult.tableName}</p>
-						<p><span class="font-medium">Lignes traitées:</span> {importResult.totalRows}</p>
-						<p><span class="font-medium">Lignes importées:</span> {importResult.importedRows}</p>
-						<p><span class="font-medium">Doublons détectés:</span> {importResult.duplicates}</p>
-						<p><span class="font-medium">Erreurs:</span> {importResult.errors}</p>
+	<Card class="mb-6">
+		{#if step === 1}
+			<div class="mb-6">
+				<h2 class="mb-2 text-xl font-semibold">Sélection du fichier</h2>
+				<p class="mb-4 text-gray-600">
+					Sélectionnez un fichier CSV ou Excel contenant les données à importer.
+				</p>
+
+				<!-- Zone de drop -->
+				<div
+					role="button"
+					tabindex="0"
+					class={`mb-4 rounded-lg border-2 border-dashed p-8 text-center transition-colors ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
+					on:dragenter={handleDragEnter}
+					on:dragleave={handleDragLeave}
+					on:dragover={handleDragOver}
+					on:drop={handleDrop}
+				>
+					<Upload class="mx-auto mb-2 h-12 w-12 text-gray-400" />
+					<p class="mb-2 text-lg">Glissez-déposez votre fichier ici</p>
+					<p class="mb-4 text-sm text-gray-500">ou</p>
+					<label class="cursor-pointer">
+						<Button color="blue">
+							<Upload class="mr-2 h-5 w-5" />
+							Parcourir les fichiers
+						</Button>
+						<input
+							type="file"
+							class="hidden"
+							accept=".csv,.xlsx,.xls"
+							on:change={handleFileInput}
+						/>
+					</label>
+				</div>
+
+				{#if file}
+					<div class="mt-4 flex items-center justify-between rounded-lg bg-gray-50 p-4">
+						<div class="flex items-center">
+							<FileCheck class="mr-2 h-6 w-6 text-green-500" />
+							<div>
+								<p class="font-medium">{fileName}</p>
+								<p class="text-sm text-gray-500">{(file.size / 1024).toFixed(2)} Ko</p>
+							</div>
+						</div>
+						<Button color="blue" on:click={readFile}>
+							Continuer <ArrowRight class="ml-2 h-4 w-4" />
+						</Button>
 					</div>
+				{/if}
+			</div>
+		{:else if step === 2}
+			<div class="mb-6">
+				<h2 class="mb-4 text-xl font-semibold">Mappage des colonnes</h2>
+
+				<div class="mb-6">
+					<label for="targetTable" class="mb-2 block font-medium text-gray-700"
+						>Table de destination</label
+					>
+					<Select
+						id="targetTable"
+						bind:value={targetTable}
+						on:change={handleTableChange}
+						class="w-full md:w-1/2"
+					>
+						{#each availableTables as table}
+							<option value={table.value}>{table.name}</option>
+						{/each}
+					</Select>
+				</div>
+
+				<h3 class="mb-2 font-medium">Aperçu des données</h3>
+				<div class="mb-6 overflow-x-auto">
+					<Table>
+						<TableHead>
+							{#each headers as header, i}
+								<TableHeadCell>
+									<div class="mb-2">{header}</div>
+									<Select bind:value={mappedFields[i.toString()]} class="min-w-[12rem] text-sm">
+										<option value="">Ne pas importer</option>
+										{#each tableFields[targetTable] as field}
+											<option value={field}>{field}</option>
+										{/each}
+									</Select>
+								</TableHeadCell>
+							{/each}
+						</TableHead>
+						<TableBody>
+							{#each previewData as row}
+								<TableBodyRow>
+									{#each headers as _, i}
+										<TableBodyCell>
+											{row[i] !== undefined ? row[i] : ''}
+										</TableBodyCell>
+									{/each}
+								</TableBodyRow>
+							{/each}
+						</TableBody>
+					</Table>
+				</div>
+
+				<!-- Champs requis -->
+				<div class="mb-6">
+					<h3 class="mb-2 font-medium">Champs requis</h3>
+					<div class="flex flex-wrap gap-2">
+						{#each getRequiredFields() as field}
+							<div
+								class={`rounded-full px-3 py-1 text-sm font-medium ${isFieldMapped(field) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+							>
+								{#if isFieldMapped(field)}
+									<Check class="mr-1 inline h-4 w-4" />
+								{:else}
+									<X class="mr-1 inline h-4 w-4" />
+								{/if}
+								{field}
+							</div>
+						{/each}
+					</div>
+				</div>
+
+				<div class="flex justify-between">
+					<Button color="light" on:click={resetImport}>Retour</Button>
+					<Button
+						color="blue"
+						on:click={validateData}
+						disabled={getRequiredFields().some((field) => !isFieldMapped(field))}
+					>
+						Valider les données
+					</Button>
 				</div>
 			</div>
-		</Card>
+		{:else if step === 3}
+			<div class="mb-6">
+				<h2 class="mb-4 text-xl font-semibold">Validation et importation</h2>
 
-		<Button color="blue" on:click={resetImport}>Nouvelle importation</Button>
-	{:else}
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-			<!-- Étape 1: Sélection de la table et du fichier -->
-			<Card class="col-span-1 h-full {importStatus !== 'idle' ? 'opacity-75' : ''}">
-				<div class="p-4">
-					<h2 class="mb-4 text-lg font-semibold">1. Sélection de la table</h2>
-
-					<div class="mb-4">
-						<Label for="table-select" class="mb-2">Table cible</Label>
-						<Select
-							id="table-select"
-							class="w-full"
-							on:change={handleTableSelect}
-							disabled={importStatus !== 'idle'}
-						>
-							{#each tables as table}
-								<option value={table.name}>{table.label}</option>
-							{/each}
-						</Select>
+				{#if !validationResults.processed}
+					<div class="mb-4 rounded-md border border-blue-200 bg-blue-50 p-4">
+						<h3 class="mb-2 font-medium text-blue-800">Résumé de la validation</h3>
+						<ul class="space-y-2">
+							<li class="flex items-center">
+								<CornerDownRight class="mr-2 h-4 w-4 text-gray-500" />
+								Lignes totales :
+								<span class="ml-1 font-semibold">{validationResults.totalRows}</span>
+							</li>
+							<li class="flex items-center">
+								<CornerDownRight class="mr-2 h-4 w-4 text-gray-500" />
+								Lignes valides :
+								<span class="ml-1 font-semibold text-green-600">{validationResults.validRows}</span>
+							</li>
+							<li class="flex items-center">
+								<CornerDownRight class="mr-2 h-4 w-4 text-gray-500" />
+								Doublons détectés :
+								<span class="ml-1 font-semibold text-amber-600">{validationResults.duplicates}</span
+								>
+							</li>
+							<li class="flex items-center">
+								<CornerDownRight class="mr-2 h-4 w-4 text-gray-500" />
+								Erreurs de validation :
+								<span class="ml-1 font-semibold text-red-600"
+									>{validationResults.invalidData.length}</span
+								>
+							</li>
+						</ul>
 					</div>
 
-					<div class="mb-4">
-						<Label class="mb-2">Fichier à importer</Label>
-
-						<div
-							id="drop-zone"
-							class="cursor-pointer rounded-md border-2 border-dashed border-gray-300 p-6 text-center transition-colors hover:border-blue-300"
-							class:pointer-events-none={importStatus !== 'idle'}
-						>
-							{#if fileName}
-								<p class="break-all text-blue-600">{fileName}</p>
-							{:else}
-								<Upload class="mx-auto mb-2 h-12 w-12 text-gray-400" />
-								<p class="text-gray-600">Glissez votre fichier CSV/Excel ici</p>
-								<p class="mb-3 text-sm text-gray-500">ou</p>
-								<Button color="blue" size="sm" disabled={importStatus !== 'idle'}>
-									Parcourir
-									<input
-										type="file"
-										class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-										accept=".csv,.xlsx,.xls"
-										on:change={handleFileInput}
-										disabled={importStatus !== 'idle'}
-									/>
-								</Button>
-							{/if}
-						</div>
-					</div>
-				</div>
-			</Card>
-
-			<!-- Étape 2: Mappage des colonnes -->
-			<Card class="col-span-1 md:col-span-2 {importStatus === 'idle' ? 'opacity-75' : ''}">
-				<div class="p-4">
-					<h2 class="mb-4 text-lg font-semibold">2. Mappage des colonnes</h2>
-
-					{#if fileColumns.length > 0}
-						<div class="overflow-x-auto">
-							<table class="w-full text-left text-sm">
-								<thead class="bg-gray-100 text-xs text-gray-700 uppercase">
-									<tr>
-										<th class="px-4 py-2">Champ de la base de données</th>
-										<th class="px-4 py-2">Obligatoire</th>
-										<th class="px-4 py-2">Colonne du fichier</th>
-									</tr>
-								</thead>
-								<tbody>
-									{#each columnMappings as mapping, i}
-										<tr class="border-b hover:bg-gray-50">
-											<td class="px-4 py-3 font-medium">
-												{availableDbFields.find((f) => f.name === mapping.dbField)?.label ||
-													mapping.dbField}
-											</td>
-											<td class="px-4 py-3">
-												{mapping.required ? 'Oui' : 'Non'}
-											</td>
-											<td class="px-4 py-3">
-												<Select
-													class="w-full {!mapping.valid ? 'border-red-500' : ''}"
-													value={mapping.fileColumn}
-													on:change={(e) => {
-														const target = e.target as HTMLSelectElement;
-														updateMapping(i, target.value);
-													}}
-												>
-													<option value="">-- Sélectionner --</option>
-													{#each fileColumns as column}
-														<option value={column}>{column}</option>
-													{/each}
-												</Select>
-												{#if !mapping.valid}
-													<p class="mt-1 text-xs text-red-500">Ce champ est obligatoire</p>
-												{/if}
-											</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
-						</div>
-
-						{#if validationResult}
-							<div class="mt-6">
-								<h3 class="text-md mb-3 font-semibold">Résultat de la validation</h3>
-
-								<div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-									<div class="rounded-md bg-gray-100 p-3">
-										<p class="text-sm">
-											Lignes totales: <span class="font-bold">{validationResult.totalRows}</span>
-										</p>
-									</div>
-									<div class="rounded-md bg-green-100 p-3">
-										<p class="text-sm">
-											Lignes valides: <span class="font-bold">{validationResult.validRows}</span>
-										</p>
-									</div>
-									<div class="rounded-md bg-red-100 p-3">
-										<p class="text-sm">
-											Erreurs: <span class="font-bold">{validationResult.errors.length}</span>
-										</p>
-									</div>
-								</div>
-
-								{#if validationResult.errors.length > 0}
-									<div class="mb-4">
-										<h4 class="mb-2 text-sm font-semibold">Erreurs détectées:</h4>
-										<div class="max-h-32 overflow-y-auto rounded-md bg-red-50 p-3">
-											{#each validationResult.errors.slice(0, 10) as error}
-												<p class="mb-1 text-sm text-red-600">
-													Ligne {error.row}: {error.column} - {error.message}
-												</p>
-											{/each}
-											{#if validationResult.errors.length > 10}
-												<p class="text-sm text-gray-600">
-													... et {validationResult.errors.length - 10} autres erreurs
-												</p>
-											{/if}
-										</div>
-									</div>
-								{/if}
-
-								{#if validationResult.duplicates.length > 0}
-									<div>
-										<h4 class="mb-2 text-sm font-semibold">Doublons détectés:</h4>
-										<div class="max-h-32 overflow-y-auto rounded-md bg-yellow-50 p-3">
-											{#each validationResult.duplicates.slice(0, 5) as duplicate}
-												<p class="mb-1 text-sm text-yellow-700">
-													Lignes {duplicate.rows.join(', ')} ont la même clé
-												</p>
-											{/each}
-											{#if validationResult.duplicates.length > 5}
-												<p class="text-sm text-gray-600">
-													... et {validationResult.duplicates.length - 5} autres doublons
-												</p>
-											{/if}
-										</div>
-									</div>
-								{/if}
+					{#if validationResults.invalidData.length > 0}
+						<div class="mb-6">
+							<h3 class="mb-2 font-medium">Erreurs de validation</h3>
+							<div class="overflow-x-auto">
+								<Table>
+									<TableHead>
+										<TableHeadCell>Ligne</TableHeadCell>
+										<TableHeadCell>Champ</TableHeadCell>
+										<TableHeadCell>Valeur</TableHeadCell>
+										<TableHeadCell>Erreur</TableHeadCell>
+									</TableHead>
+									<TableBody>
+										{#each validationResults.invalidData as error}
+											<TableBodyRow>
+												<TableBodyCell>{error.row + 1}</TableBodyCell>
+												<TableBodyCell>{error.field}</TableBodyCell>
+												<TableBodyCell>{error.value}</TableBodyCell>
+												<TableBodyCell>{error.error}</TableBodyCell>
+											</TableBodyRow>
+										{/each}
+									</TableBody>
+								</Table>
 							</div>
-						{/if}
-
-						<div class="mt-6 flex gap-2">
-							<Button color="blue" on:click={validateData} disabled={importStatus === 'importing'}>
-								Valider les données
-							</Button>
-
-							<Button
-								color="green"
-								on:click={startImport}
-								disabled={importStatus === 'importing' ||
-									!validationResult ||
-									validationResult.errors.length > 0}
-							>
-								{#if importStatus === 'importing'}
-									<RefreshCw class="mr-2 h-4 w-4 animate-spin" />
-									Importation en cours...
-								{:else}
-									Importer les données
-								{/if}
-							</Button>
-
-							<Button color="red" on:click={resetImport} disabled={importStatus === 'importing'}>
-								Annuler
-							</Button>
-						</div>
-					{:else if importStatus !== 'idle'}
-						<div class="py-6 text-center">
-							<p class="text-gray-500">Chargement des données en cours...</p>
-							<Progressbar progress={0} size="h-2" color="blue" class="mt-2" />
-						</div>
-					{:else}
-						<div class="py-6 text-center">
-							<p class="text-gray-500">Sélectionnez un fichier pour commencer</p>
 						</div>
 					{/if}
-				</div>
-			</Card>
+
+					<div class="flex justify-between">
+						<Button color="light" on:click={() => (step = 2)}>Retour</Button>
+						<Button
+							color={validationResults.validRows > 0 ? 'blue' : 'light'}
+							on:click={importData}
+							disabled={validationResults.validRows === 0}
+						>
+							Importer {validationResults.validRows} lignes
+						</Button>
+					</div>
+				{:else}
+					<div class="rounded-md border border-green-200 bg-green-50 p-6 text-center">
+						<Check class="mx-auto mb-2 h-12 w-12 text-green-500" />
+						<h3 class="mb-2 text-xl font-medium text-green-800">
+							Importation terminée avec succès
+						</h3>
+						<p class="mb-4">
+							{validationResults.validRows} lignes ont été importées dans la table {targetTable}.
+						</p>
+						<Button color="blue" on:click={resetImport}>Nouvelle importation</Button>
+					</div>
+				{/if}
+			</div>
+		{/if}
+	</Card>
+
+	{#if isProcessing}
+		<div
+			transition:fade
+			class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
+		>
+			<div class="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+				<Spinner class="mx-auto mb-4" size="xl" />
+				<p class="text-center font-medium">Traitement en cours...</p>
+			</div>
 		</div>
 	{/if}
 </div>
