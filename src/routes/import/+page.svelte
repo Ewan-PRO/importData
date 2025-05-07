@@ -78,47 +78,62 @@
 
 	// Gestion du drag and drop
 	function handleDragEnter(e: DragEvent) {
+		console.log('DragEnter event triggered');
 		e.preventDefault();
 		dragActive = true;
 	}
 
 	function handleDragLeave(e: DragEvent) {
+		console.log('DragLeave event triggered');
 		e.preventDefault();
 		dragActive = false;
 	}
 
 	function handleDragOver(e: DragEvent) {
+		console.log('DragOver event triggered');
 		e.preventDefault();
 		dragActive = true;
 	}
 
 	function handleDrop(e: DragEvent) {
+		console.log('Drop event triggered');
 		e.preventDefault();
 		dragActive = false;
 
 		if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+			console.log('Files detected in drop:', e.dataTransfer.files);
 			handleFiles(e.dataTransfer.files);
+		} else {
+			console.log('No files detected in drop event');
 		}
 	}
 
 	function handleFileInput(e: Event) {
+		console.log('File input change event triggered');
 		const input = e.target as HTMLInputElement;
 		if (input.files && input.files.length > 0) {
+			console.log('Files selected through input:', input.files);
 			handleFiles(input.files);
+		} else {
+			console.log('No files selected through input');
 		}
 	}
 
 	function handleFiles(files: FileList) {
+		console.log('handleFiles called with files:', files);
 		file = files[0];
 		fileName = file.name;
+		console.log('File name:', fileName);
 
 		// Vérification du type de fichier
 		if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+			console.log('Invalid file type detected');
 			errorMessage = 'Format de fichier non supporté. Veuillez utiliser un fichier CSV ou Excel.';
 			file = null;
 			return;
 		}
 
+		console.log('File type is valid');
 		errorMessage = '';
 		readFile();
 	}
@@ -354,26 +369,35 @@
 					role="button"
 					tabindex="0"
 					class={`mb-4 rounded-lg border-2 border-dashed p-8 text-center transition-colors ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
-					on:dragenter={handleDragEnter}
-					on:dragleave={handleDragLeave}
-					on:dragover={handleDragOver}
-					on:drop={handleDrop}
+					on:dragenter|preventDefault={handleDragEnter}
+					on:dragleave|preventDefault={handleDragLeave}
+					on:dragover|preventDefault={handleDragOver}
+					on:drop|preventDefault={handleDrop}
 				>
-					<Upload class="mx-auto mb-2 h-12 w-12 text-gray-400" />
-					<p class="mb-2 text-lg">Glissez-déposez votre fichier ici</p>
-					<p class="mb-4 text-sm text-gray-500">ou</p>
-					<label class="cursor-pointer">
-						<Button color="blue">
-							<Upload class="mr-2 h-5 w-5" />
-							Parcourir les fichiers
-						</Button>
-						<input
-							type="file"
-							class="hidden"
-							accept=".csv,.xlsx,.xls"
-							on:change={handleFileInput}
-						/>
-					</label>
+					<div class="flex flex-col items-center">
+						<Upload class="mx-auto mb-2 h-12 w-12 text-gray-400" />
+						<p class="mb-2 text-lg">Glissez-déposez votre fichier ici</p>
+						<p class="mb-4 text-sm text-gray-500">ou</p>
+						<div class="flex flex-col items-center">
+							<input
+								type="file"
+								id="fileInput"
+								class="hidden"
+								accept=".csv,.xlsx,.xls"
+								on:change={handleFileInput}
+							/>
+							<Button
+								color="blue"
+								on:click={() => {
+									console.log('Button clicked');
+									document.getElementById('fileInput')?.click();
+								}}
+							>
+								<Upload class="mr-2 h-5 w-5" />
+								Parcourir les fichiers
+							</Button>
+						</div>
+					</div>
 				</div>
 
 				{#if file}
