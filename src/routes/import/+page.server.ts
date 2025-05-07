@@ -1,26 +1,25 @@
-import type { RequestHandler } from '@sveltejs/kit';
-import { error, json } from '@sveltejs/kit';
-import { PrismaClient, type Prisma } from '@prisma/client';
+import type { Actions, ServerLoad } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
+import { PrismaClient } from '@prisma/client';
+import { superValidate } from 'sveltekit-superforms/server';
+import { z } from 'zod';
+import { zod } from 'sveltekit-superforms/adapters';
 
 const prisma = new PrismaClient();
 
-// Types pour les données d'importation
-interface ImportData {
-	data: unknown[][];
-	mappedFields: Record<string, string>;
-	targetTable: string;
-}
+// Types pour les données et les fonctions
+type ColumnMap = Record<string, number>;
 
 interface ValidationResult {
 	totalRows: number;
 	validRows: number;
 	duplicates: number;
-	invalidData: {
+	invalidData: Array<{
 		row: number;
 		field: string;
 		value: string;
 		error: string;
-	}[];
+	}>;
 	processed: boolean;
 }
 
@@ -30,88 +29,165 @@ interface ImportResult extends ValidationResult {
 	errors: string[];
 }
 
-// Types pour les validateurs
-type Validator = (value: unknown) => boolean;
 interface ValidationRules {
 	requiredFields: string[];
 	uniqueFields: string[];
-	validators: Record<string, Validator>;
+	validators: Record<string, (value: unknown) => boolean>;
 }
 
-// Action handler - pour SvelteKit
-export const actions = {
+// Type pour la transaction Prisma
+type PrismaTransactionClient = Omit<
+	PrismaClient,
+	'$connect' | '$disconnect' | '$on' | '$transaction' | '$use'
+>;
+
+// Schéma de validation pour les données d'importation
+const importSchema = z.object({
+	data: z.array(z.array(z.unknown())),
+	mappedFields: z.record(z.string()),
+	targetTable: z.string()
+});
+
+type AttributeData = {
+	atr_nat: string;
+	atr_val: string;
+	atr_label?: string;
+};
+
+export const actions: Actions = {
 	validate: async ({ request }) => {
-		return handleValidation(request);
-	},
-	process: async ({ request }) => {
-		return handleImport(request);
-	}
-} satisfies Record<string, RequestHandler>;
+		try {
+			// Validation du formulaire avec SuperForms
+			const form = await superValidate(request, zod(importSchema));
 
-// Fonction de validation des données
-async function handleValidation(request: Request) {
-	try {
-		const requestData: ImportData = await request.json();
-		const { data, mappedFields, targetTable } = requestData;
+			if (!form.valid) {
+				return fail(400, { form });
+			}
 
-		const result: ValidationResult = {
-			totalRows: data.length,
-			validRows: 0,
-			duplicates: 0,
-			invalidData: [],
-			processed: false
-		};
+			const { data, mappedFields, targetTable } = form.data;
 
-		// Obtenir la structure de la table cible
-		const validationRules = getValidationRules(targetTable);
+			const result: ValidationResult = {
+				totalRows: Array.isArray(data) ? data.length : 0,
+				validRows: 0,
+				duplicates: 0,
+				invalidData: [],
+				processed: false
+			};
 
-		// Préparation pour le traitement
-		const columnMap = prepareColumnMap(mappedFields);
-		const uniqueEntries = new Set<string>();
+			// Obtenir la structure de la table cible
+			const validationRules = getValidationRules(targetTable as string);
 
-		// Validation ligne par ligne
-		for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
-			const row = data[rowIndex];
-			const validationResult = validateRow(
-				rowIndex,
-				row,
-				columnMap,
-				validationRules,
-				uniqueEntries,
-				result
-			);
+			// Préparation pour le traitement
+			const columnMap = prepareColumnMap(mappedFields as Record<string, string>);
+			const uniqueEntries = new Set<string>();
 
-			// Vérification des doublons avec la base de données
-			if (validationResult) {
-				const existingRecord = await checkExistingRecord(targetTable, mappedFields, row);
-				if (existingRecord) {
-					result.duplicates++;
+			// Validation ligne par ligne
+			if (Array.isArray(data)) {
+				for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
+					const row = data[rowIndex] as unknown[];
+					const validationResult = validateRow(
+						rowIndex,
+						row,
+						columnMap,
+						validationRules,
+						uniqueEntries,
+						result
+					);
 
-					result.invalidData.push({
-						row: rowIndex,
-						field: validationRules.uniqueFields.join(', '),
-						value: existingRecord,
-						error: 'Existe déjà dans la base de données'
-					});
-				} else {
-					result.validRows++;
+					// Vérification des doublons avec la base de données
+					if (validationResult) {
+						const existingRecord = await checkExistingRecord(
+							targetTable as string,
+							mappedFields as Record<string, string>,
+							row
+						);
+
+						if (existingRecord) {
+							result.duplicates++;
+
+							result.invalidData.push({
+								row: rowIndex,
+								field: validationRules.uniqueFields.join(', '),
+								value: existingRecord,
+								error: 'Existe déjà dans la base de données'
+							});
+						} else {
+							result.validRows++;
+						}
+					}
 				}
 			}
-		}
 
-		return json(result);
-	} catch (err) {
-		console.error('Erreur lors de la validation:', err);
-		throw error(
-			500,
-			`Erreur de validation: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
-		);
+			// Retourner un formulaire avec le résultat intégré
+			return {
+				form: { ...form, data: { ...form.data, result } }
+			};
+		} catch (err) {
+			console.error('Erreur lors de la validation:', err);
+			return fail(500, {
+				error: `Erreur de validation: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+			});
+		}
+	},
+
+	process: async ({ request }) => {
+		try {
+			// Validation du formulaire avec SuperForms
+			const form = await superValidate(request, zod(importSchema));
+
+			if (!form.valid) {
+				return fail(400, { form });
+			}
+
+			const { data, mappedFields, targetTable } = form.data;
+
+			const result: ImportResult = {
+				totalRows: Array.isArray(data) ? data.length : 0,
+				validRows: 0,
+				duplicates: 0,
+				invalidData: [],
+				inserted: 0,
+				updated: 0,
+				errors: [],
+				processed: true
+			};
+
+			// Préparation pour le traitement
+			const columnMap = prepareColumnMap(mappedFields as Record<string, string>);
+
+			// Traitement des données en transaction
+			await prisma.$transaction(async (tx) => {
+				if (Array.isArray(data)) {
+					for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
+						const row = data[rowIndex] as unknown[];
+						await processRow(
+							row,
+							rowIndex,
+							columnMap,
+							targetTable as string,
+							tx as PrismaTransactionClient,
+							result
+						);
+					}
+				}
+			});
+
+			// Retourner un formulaire avec le résultat intégré
+			return {
+				form: { ...form, data: { ...form.data, result } }
+			};
+		} catch (err) {
+			console.error("Erreur lors de l'importation:", err);
+			return fail(500, {
+				error: `Erreur d'importation: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+			});
+		}
 	}
-}
+};
 
 // Prépare le mappage inversé des colonnes
-function prepareColumnMap(mappedFields: Record<string, string>): Record<string, number> {
-	const columnMap: Record<string, number> = {};
+function prepareColumnMap(mappedFields: Record<string, string>): ColumnMap {
+	const columnMap: ColumnMap = {};
 	Object.entries(mappedFields).forEach(([index, field]) => {
 		if (field) columnMap[field] = parseInt(index);
 	});
@@ -122,7 +198,7 @@ function prepareColumnMap(mappedFields: Record<string, string>): Record<string, 
 function validateRow(
 	rowIndex: number,
 	row: unknown[],
-	columnMap: Record<string, number>,
+	columnMap: ColumnMap,
 	validationRules: ValidationRules,
 	uniqueEntries: Set<string>,
 	result: ValidationResult
@@ -155,7 +231,7 @@ function validateRow(
 function validateRequiredFields(
 	rowIndex: number,
 	row: unknown[],
-	columnMap: Record<string, number>,
+	columnMap: ColumnMap,
 	validationRules: ValidationRules,
 	result: ValidationResult
 ): boolean {
@@ -180,7 +256,7 @@ function validateRequiredFields(
 function validateDataFormat(
 	rowIndex: number,
 	row: unknown[],
-	columnMap: Record<string, number>,
+	columnMap: ColumnMap,
 	validationRules: ValidationRules,
 	result: ValidationResult
 ): boolean {
@@ -211,7 +287,7 @@ function validateDataFormat(
 function validateUniqueEntries(
 	rowIndex: number,
 	row: unknown[],
-	columnMap: Record<string, number>,
+	columnMap: ColumnMap,
 	validationRules: ValidationRules,
 	uniqueEntries: Set<string>,
 	result: ValidationResult
@@ -240,51 +316,13 @@ function validateUniqueEntries(
 	return true;
 }
 
-// Fonction d'importation des données
-async function handleImport(request: Request) {
-	try {
-		const requestData: ImportData = await request.json();
-		const { data, mappedFields, targetTable } = requestData;
-
-		const result: ImportResult = {
-			totalRows: data.length,
-			validRows: 0,
-			duplicates: 0,
-			invalidData: [],
-			inserted: 0,
-			updated: 0,
-			errors: [],
-			processed: true
-		};
-
-		// Préparation pour le traitement
-		const columnMap = prepareColumnMap(mappedFields);
-
-		// Traitement des données en transaction
-		await prisma.$transaction(async (tx) => {
-			for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
-				const row = data[rowIndex];
-				await processRow(row, rowIndex, columnMap, targetTable, tx, result);
-			}
-		});
-
-		return json(result);
-	} catch (err) {
-		console.error("Erreur lors de l'importation:", err);
-		throw error(
-			500,
-			`Erreur d'importation: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
-		);
-	}
-}
-
 // Traite une ligne pour l'importation
 async function processRow(
 	row: unknown[],
 	rowIndex: number,
-	columnMap: Record<string, number>,
+	columnMap: ColumnMap,
 	targetTable: string,
-	tx: Prisma.TransactionClient,
+	tx: PrismaTransactionClient,
 	result: ImportResult
 ): Promise<void> {
 	try {
@@ -326,7 +364,7 @@ async function processRow(
 
 // Fonction pour mettre à jour un enregistrement existant
 async function updateRecord(
-	tx: Prisma.TransactionClient,
+	tx: PrismaTransactionClient,
 	targetTable: string,
 	recordData: Record<string, unknown>
 ): Promise<void> {
@@ -335,20 +373,20 @@ async function updateRecord(
 	switch (targetTable) {
 		case 'attribute':
 			await tx.attribute.updateMany({
-				where: uniqueConstraint as Prisma.attributeWhereInput,
-				data: recordData as Prisma.attributeUpdateManyMutationInput
+				where: uniqueConstraint,
+				data: recordData
 			});
 			break;
 		case 'attribute_dev':
 			await tx.attribute_dev.updateMany({
-				where: uniqueConstraint as Prisma.attribute_devWhereInput,
-				data: recordData as Prisma.attribute_devUpdateManyMutationInput
+				where: uniqueConstraint,
+				data: recordData
 			});
 			break;
 		case 'supplier':
 			await tx.supplier.updateMany({
-				where: uniqueConstraint as Prisma.supplierWhereInput,
-				data: recordData as Prisma.supplierUpdateManyMutationInput
+				where: uniqueConstraint,
+				data: recordData
 			});
 			break;
 		// Les vues ne peuvent pas être mises à jour directement
@@ -357,19 +395,19 @@ async function updateRecord(
 
 // Fonction pour créer un nouvel enregistrement
 async function createRecord(
-	tx: Prisma.TransactionClient,
+	tx: PrismaTransactionClient,
 	targetTable: string,
 	recordData: Record<string, unknown>
 ): Promise<void> {
 	switch (targetTable) {
 		case 'attribute':
 			await tx.attribute.create({
-				data: recordData as Prisma.attributeCreateInput
+				data: recordData as AttributeData
 			});
 			break;
 		case 'attribute_dev':
 			await tx.attribute_dev.create({
-				data: recordData as Prisma.attribute_devCreateInput
+				data: recordData as AttributeData
 			});
 			break;
 		case 'supplier':
@@ -378,7 +416,10 @@ async function createRecord(
 				throw new Error('Le champ sup_code est obligatoire pour les fournisseurs');
 			}
 			await tx.supplier.create({
-				data: recordData as Prisma.supplierCreateInput
+				data: {
+					sup_code: recordData.sup_code as string,
+					sup_label: recordData.sup_label as string | null
+				}
 			});
 			break;
 		case 'v_categories':
@@ -388,7 +429,176 @@ async function createRecord(
 	}
 }
 
-// Fonctions utilitaires
+// Fonction sécurisée pour convertir en string pour affichage
+function formatDisplayValue(value: unknown): string {
+	if (value === null || value === undefined) {
+		return '';
+	}
+
+	if (typeof value === 'object') {
+		try {
+			return JSON.stringify(value, null, 2);
+		} catch {
+			return '[Object]';
+		}
+	}
+
+	return String(value);
+}
+
+async function checkExistingRecord(
+	tableName: string,
+	mappedFields: Record<string, string>,
+	row: unknown[],
+	tx: PrismaTransactionClient = prisma
+): Promise<string | null> {
+	// Préparation de la condition de recherche
+	const whereCondition: Record<string, unknown> = {};
+	const uniqueFields = getValidationRules(tableName).uniqueFields;
+
+	// Construction de la condition avec les champs uniques
+	uniqueFields.forEach((field) => {
+		const colIndex = Object.entries(mappedFields).find(([, f]) => f === field)?.[0];
+		if (colIndex !== undefined) {
+			whereCondition[field] = formatValueForDatabase(field, row[parseInt(colIndex)]);
+		}
+	});
+
+	// Si aucun champ unique trouvé, on ne peut pas vérifier
+	if (Object.keys(whereCondition).length === 0) {
+		return null;
+	}
+
+	try {
+		// Recherche dans la table appropriée
+		let existingRecord: Record<string, unknown> | null = null;
+
+		switch (tableName) {
+			case 'attribute':
+				existingRecord = await tx.attribute.findFirst({
+					where: whereCondition
+				});
+				break;
+			case 'attribute_dev':
+				existingRecord = await tx.attribute_dev.findFirst({
+					where: whereCondition
+				});
+				break;
+			case 'supplier':
+				existingRecord = await tx.supplier.findFirst({
+					where: whereCondition
+				});
+				break;
+			case 'v_categories':
+				existingRecord = await tx.v_categories.findFirst({
+					where: whereCondition
+				});
+				break;
+		}
+
+		// Retourner une représentation textuelle de l'enregistrement trouvé
+		if (existingRecord) {
+			return uniqueFields
+				.map((field) => {
+					const value = existingRecord?.[field];
+					return formatDisplayValue(value);
+				})
+				.join(', ');
+		}
+
+		return null;
+	} catch (err) {
+		console.error('Erreur lors de la vérification des doublons:', err);
+		return null;
+	}
+}
+
+function formatValueForDatabase(field: string, value: unknown): unknown {
+	// Si la valeur est null ou undefined, retourner null
+	if (value === null || value === undefined || value === '') {
+		return null;
+	}
+
+	// Conversion selon le type de champ
+	if (field.includes('_valeur') || field.includes('_qty')) {
+		// Conversion en nombre
+		const numValue = parseFloat(String(value).replace(',', '.'));
+		return isNaN(numValue) ? null : numValue;
+	}
+
+	// Par défaut, retourner la valeur comme chaîne de caractères
+	return String(value);
+}
+
+function getUniqueConstraint(
+	tableName: string,
+	data: Record<string, unknown>
+): Record<string, unknown> {
+	const uniqueFields = getValidationRules(tableName).uniqueFields;
+	const constraint: Record<string, unknown> = {};
+
+	uniqueFields.forEach((field) => {
+		if (data[field] !== undefined) {
+			constraint[field] = data[field];
+		}
+	});
+
+	return constraint;
+}
+
+async function handleCategoryInsert(
+	tx: PrismaTransactionClient,
+	data: Record<string, unknown>
+): Promise<void> {
+	// Insertion dans la table attribute pour chaque niveau de catégorie
+	// Pour v_categories, on doit insérer dans les tables sous-jacentes
+
+	// Niveau 0 (catégorie principale)
+	if (data.atr_0_label) {
+		await tx.attribute.upsert({
+			where: {
+				atr_nat_atr_val: {
+					atr_nat: 'Catégorie des produits',
+					atr_val: formatDisplayValue(data.atr_0_label)
+				}
+			},
+			update: {
+				atr_label: formatDisplayValue(data.atr_0_label)
+			},
+			create: {
+				atr_nat: 'Catégorie des produits',
+				atr_val: formatDisplayValue(data.atr_0_label),
+				atr_label: formatDisplayValue(data.atr_0_label)
+			}
+		});
+	}
+
+	// Niveau 1-7 (sous-catégories)
+	for (let i = 1; i <= 7; i++) {
+		const labelField = `atr_${i}_label`;
+		const prevLabelField = `atr_${i - 1}_label`;
+
+		if (data[labelField] && data[prevLabelField]) {
+			await tx.attribute.upsert({
+				where: {
+					atr_nat_atr_val: {
+						atr_nat: 'Catégorie des produits',
+						atr_val: formatDisplayValue(data[labelField])
+					}
+				},
+				update: {
+					atr_label: formatDisplayValue(data[labelField])
+				},
+				create: {
+					atr_nat: 'Catégorie des produits',
+					atr_val: formatDisplayValue(data[labelField]),
+					atr_label: formatDisplayValue(data[labelField])
+				}
+			});
+		}
+	}
+}
+
 function getValidationRules(tableName: string): ValidationRules {
 	switch (tableName) {
 		case 'attribute':
@@ -442,167 +652,10 @@ function getValidationRules(tableName: string): ValidationRules {
 	}
 }
 
-// Fonction sécurisée pour convertir en string pour affichage
-function formatDisplayValue(value: unknown): string {
-	if (value === null || value === undefined) {
-		return '';
-	}
+// Pour SuperForms, nous devons également fournir la fonction de chargement
+export const load: ServerLoad = async () => {
+	// Initialisation d'un formulaire vide
+	const form = await superValidate(zod(importSchema));
 
-	if (typeof value === 'object') {
-		try {
-			return JSON.stringify(value);
-		} catch {
-			return Object.prototype.toString.call(value);
-		}
-	}
-
-	return String(value);
-}
-
-async function checkExistingRecord(
-	tableName: string,
-	mappedFields: Record<string, string>,
-	row: unknown[],
-	tx: Prisma.TransactionClient = prisma
-): Promise<string | null> {
-	// Préparation de la condition de recherche
-	const whereCondition: Record<string, unknown> = {};
-	const uniqueFields = getValidationRules(tableName).uniqueFields;
-
-	// Construction de la condition avec les champs uniques
-	uniqueFields.forEach((field) => {
-		const colIndex = Object.entries(mappedFields).find(([, f]) => f === field)?.[0];
-		if (colIndex !== undefined) {
-			whereCondition[field] = formatValueForDatabase(field, row[parseInt(colIndex)]);
-		}
-	});
-
-	// Si aucun champ unique trouvé, on ne peut pas vérifier
-	if (Object.keys(whereCondition).length === 0) {
-		return null;
-	}
-
-	try {
-		// Recherche dans la table appropriée
-		let existingRecord: Record<string, unknown> | null = null;
-
-		switch (tableName) {
-			case 'attribute':
-				existingRecord = await tx.attribute.findFirst({
-					where: whereCondition as Prisma.attributeWhereInput
-				});
-				break;
-			case 'attribute_dev':
-				existingRecord = await tx.attribute_dev.findFirst({
-					where: whereCondition as Prisma.attribute_devWhereInput
-				});
-				break;
-			case 'supplier':
-				existingRecord = await tx.supplier.findFirst({
-					where: whereCondition as Prisma.supplierWhereInput
-				});
-				break;
-			case 'v_categories':
-				existingRecord = await tx.v_categories.findFirst({
-					where: whereCondition as Prisma.v_categoriesWhereInput
-				});
-				break;
-		}
-
-		// Retourner une représentation textuelle de l'enregistrement trouvé
-		if (existingRecord) {
-			return uniqueFields.map((field) => formatDisplayValue(existingRecord?.[field])).join(', ');
-		}
-
-		return null;
-	} catch (err) {
-		console.error('Erreur lors de la vérification des doublons:', err);
-		return null;
-	}
-}
-
-function formatValueForDatabase(field: string, value: unknown): unknown {
-	// Si la valeur est null ou undefined, retourner null
-	if (value === null || value === undefined || value === '') {
-		return null;
-	}
-
-	// Conversion selon le type de champ
-	if (field.includes('_valeur') || field.includes('_qty')) {
-		// Conversion en nombre
-		const numValue = parseFloat(String(value).replace(',', '.'));
-		return isNaN(numValue) ? null : numValue;
-	}
-
-	// Par défaut, retourner la valeur comme chaîne de caractères
-	return String(value);
-}
-
-function getUniqueConstraint(
-	tableName: string,
-	data: Record<string, unknown>
-): Record<string, unknown> {
-	const uniqueFields = getValidationRules(tableName).uniqueFields;
-	const constraint: Record<string, unknown> = {};
-
-	uniqueFields.forEach((field) => {
-		if (data[field] !== undefined) {
-			constraint[field] = data[field];
-		}
-	});
-
-	return constraint;
-}
-
-async function handleCategoryInsert(
-	tx: Prisma.TransactionClient,
-	data: Record<string, unknown>
-): Promise<void> {
-	// Insertion dans la table attribute pour chaque niveau de catégorie
-	// Pour v_categories, on doit insérer dans les tables sous-jacentes
-
-	// Niveau 0 (catégorie principale)
-	if (data.atr_0_label) {
-		await tx.attribute.upsert({
-			where: {
-				atr_nat_atr_val: {
-					atr_nat: 'Catégorie des produits',
-					atr_val: formatDisplayValue(data.atr_0_label)
-				}
-			},
-			update: {
-				atr_label: formatDisplayValue(data.atr_0_label)
-			},
-			create: {
-				atr_nat: 'Catégorie des produits',
-				atr_val: formatDisplayValue(data.atr_0_label),
-				atr_label: formatDisplayValue(data.atr_0_label)
-			}
-		});
-	}
-
-	// Niveau 1-7 (sous-catégories)
-	for (let i = 1; i <= 7; i++) {
-		const labelField = `atr_${i}_label`;
-		const prevLabelField = `atr_${i - 1}_label`;
-
-		if (data[labelField] && data[prevLabelField]) {
-			await tx.attribute.upsert({
-				where: {
-					atr_nat_atr_val: {
-						atr_nat: 'Catégorie des produits',
-						atr_val: formatDisplayValue(data[labelField])
-					}
-				},
-				update: {
-					atr_label: formatDisplayValue(data[labelField])
-				},
-				create: {
-					atr_nat: 'Catégorie des produits',
-					atr_val: formatDisplayValue(data[labelField]),
-					atr_label: formatDisplayValue(data[labelField])
-				}
-			});
-		}
-	}
-}
+	return { form };
+};

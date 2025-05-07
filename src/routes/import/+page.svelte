@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { read, utils } from 'xlsx';
 	import { fade } from 'svelte/transition';
+	import { superForm } from 'sveltekit-superforms/client';
 	import {
 		Button,
 		Card,
@@ -28,16 +29,72 @@
 		X
 	} from 'lucide-svelte';
 
+	export let data;
+
+	// Définition du type de résultat attendu
+	type ValidationResult = {
+		totalRows: number;
+		validRows: number;
+		duplicates: number;
+		invalidData: { row: number; field: string; value: string; error: string }[];
+		processed: boolean;
+		inserted?: number;
+		updated?: number;
+		errors?: string[];
+	};
+
+	// Initialisation du formulaire avec SuperForms
+	const {
+		form,
+		enhance: superEnhance,
+		submitting,
+		errors,
+		reset
+	} = superForm(data.form, {
+		dataType: 'json',
+		onUpdated: ({ form }) => {
+			// Mise à jour de l'interface après soumission
+			const result = form.data as unknown as { result?: ValidationResult };
+			if (result && result.result) {
+				validationResults = result.result;
+				if (result.result.processed) {
+					step = 3;
+				} else if (step === 2) {
+					step = 3;
+				}
+			}
+		},
+		onError: (event) => {
+			// Gestion des erreurs avec conversion de type appropriée
+			const errorResult = event.result as unknown as {
+				error?: string | { message: string } | Error;
+			};
+
+			// Extraction du message d'erreur selon le type
+			let errorMsg = 'Une erreur est survenue';
+
+			if (errorResult?.error) {
+				if (typeof errorResult.error === 'string') {
+					errorMsg = errorResult.error;
+				} else if (typeof errorResult.error === 'object' && 'message' in errorResult.error) {
+					errorMsg = errorResult.error.message;
+				}
+			}
+
+			errorMessage = errorMsg;
+		}
+	});
+
 	let dragActive = false;
 	let isProcessing = false;
 	let step = 1;
 	let errorMessage = '';
 	let file: File | null = null;
 	let fileName = '';
-	let data: any[] = [];
+	let rawData: any[] = [];
 	let headers: string[] = [];
 	let previewData: any[] = [];
-	let targetTable = 'attribute';
+	let targetTable = 'attribute_dev'; // Par défaut
 	let mappedFields: Record<string, string> = {};
 	let availableTables = [
 		{ value: 'attribute', name: 'Attributs' },
@@ -62,13 +119,8 @@
 		]
 	};
 
-	let validationResults: {
-		totalRows: number;
-		validRows: number;
-		duplicates: number;
-		invalidData: { row: number; field: string; value: string; error: string }[];
-		processed: boolean;
-	} = {
+	// Utilisons le type défini précédemment
+	let validationResults: ValidationResult = {
 		totalRows: 0,
 		validRows: 0,
 		duplicates: 0,
@@ -146,24 +198,31 @@
 				const worksheet = workbook.Sheets[firstSheetName];
 				console.log('Worksheet:', worksheet);
 
-				data = utils.sheet_to_json(worksheet, { header: 1 });
-				console.log('Données brutes:', data);
+				rawData = utils.sheet_to_json(worksheet, { header: 1 });
+				console.log('Données brutes:', rawData);
 
-				if (data.length < 2) {
+				if (rawData.length < 2) {
 					throw new Error('Le fichier ne contient pas assez de données');
 				}
 
-				headers = data[0] as string[];
+				headers = rawData[0] as string[];
 				console.log('En-têtes:', headers);
 				console.log(
 					'Type des en-têtes:',
 					headers.map((h) => typeof h)
 				);
 
-				previewData = data.slice(1, Math.min(data.length, 6)) as any[];
+				previewData = rawData.slice(1, Math.min(rawData.length, 6)) as any[];
 
 				// Mappage automatique des champs
 				guessFieldMapping();
+
+				// Mise à jour du formulaire SuperForms
+				$form = {
+					data: rawData.slice(1), // On exclut les en-têtes
+					mappedFields,
+					targetTable
+				};
 
 				step = 2;
 			} catch (err) {
@@ -192,13 +251,10 @@
 		const fields = tableFields[targetTable];
 
 		headers.forEach((header, index) => {
-			console.log("Traitement de l'en-tête:", header, 'Type:', typeof header);
-
 			// Normalisation pour la comparaison
 			const normalizedHeader = String(header)
 				.toLowerCase()
 				.replace(/[^a-z0-9]/g, '');
-			console.log('En-tête normalisé:', normalizedHeader);
 
 			// Recherche du meilleur match
 			let bestMatch = '';
@@ -207,7 +263,6 @@
 			fields.forEach((field) => {
 				const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-				// Vérifier si le nom du champ est contenu dans l'en-tête ou vice-versa
 				if (
 					normalizedHeader.includes(normalizedField) ||
 					normalizedField.includes(normalizedHeader)
@@ -225,91 +280,20 @@
 
 			if (bestScore > 0.5) {
 				mappedFields[index.toString()] = bestMatch;
-				console.log('Match trouvé:', header, '->', bestMatch, 'Score:', bestScore);
-			} else {
-				console.log('Pas de match trouvé pour:', header);
 			}
 		});
 
 		console.log('Mappage final:', mappedFields);
 	}
 
-	function validateData() {
-		isProcessing = true;
-
-		fetch('/import/validate', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				data: data.slice(1), // Exclure les en-têtes
-				mappedFields,
-				targetTable
-			})
-		})
-			.then((response) => response.json())
-			.then((result) => {
-				validationResults = result;
-				step = 3;
-			})
-			.catch((err) => {
-				errorMessage = `Erreur lors de la validation: ${err.message}`;
-			})
-			.finally(() => {
-				isProcessing = false;
-			});
-	}
-
-	function importData() {
-		isProcessing = true;
-
-		fetch('/import/process', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				data: data.slice(1), // Exclure les en-têtes
-				mappedFields,
-				targetTable
-			})
-		})
-			.then((response) => response.json())
-			.then((result) => {
-				// Mise à jour des résultats avec les infos d'importation
-				validationResults = { ...validationResults, ...result };
-			})
-			.catch((err) => {
-				errorMessage = `Erreur lors de l'importation: ${err.message}`;
-			})
-			.finally(() => {
-				isProcessing = false;
-			});
-	}
-
-	function resetImport() {
-		file = null;
-		fileName = '';
-		data = [];
-		headers = [];
-		previewData = [];
-		mappedFields = {};
-		validationResults = {
-			totalRows: 0,
-			validRows: 0,
-			duplicates: 0,
-			invalidData: [],
-			processed: false
-		};
-		step = 1;
-		errorMessage = '';
-	}
-
 	function handleTableChange() {
 		// Réinitialiser le mappage lors du changement de table
 		mappedFields = {};
 		guessFieldMapping();
+
+		// Mise à jour du formulaire
+		$form.targetTable = targetTable;
+		$form.mappedFields = mappedFields;
 	}
 
 	function getRequiredFields(): string[] {
@@ -325,6 +309,27 @@
 
 	function isFieldMapped(fieldName: string): boolean {
 		return Object.values(mappedFields).includes(fieldName);
+	}
+
+	function resetImport() {
+		file = null;
+		fileName = '';
+		rawData = [];
+		headers = [];
+		previewData = [];
+		mappedFields = {};
+		validationResults = {
+			totalRows: 0,
+			validRows: 0,
+			duplicates: 0,
+			invalidData: [],
+			processed: false
+		};
+		step = 1;
+		errorMessage = '';
+
+		// Réinitialiser le formulaire SuperForms
+		reset();
 	}
 </script>
 
@@ -432,85 +437,101 @@
 				{/if}
 			</div>
 		{:else if step === 2}
-			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-semibold">Mappage des colonnes</h2>
-
+			<form method="POST" action="?/validate" use:superEnhance>
 				<div class="mb-6">
-					<label for="targetTable" class="mb-2 block font-medium text-gray-700"
-						>Table de destination</label
-					>
-					<Select
-						id="targetTable"
-						bind:value={targetTable}
-						on:change={handleTableChange}
-						class="w-full md:w-1/2"
-					>
-						{#each availableTables as table}
-							<option value={table.value}>{table.name}</option>
-						{/each}
-					</Select>
-				</div>
+					<h2 class="mb-4 text-xl font-semibold">Mappage des colonnes</h2>
 
-				<h3 class="mb-2 font-medium">Aperçu des données</h3>
-				<div class="mb-6 overflow-x-auto">
-					<Table>
-						<TableHead>
-							{#each headers as header, i}
-								<TableHeadCell>
-									<div class="mb-2">{header}</div>
-									<Select bind:value={mappedFields[i.toString()]} class="min-w-[12rem] text-sm">
-										<option value="">Ne pas importer</option>
-										{#each tableFields[targetTable] as field}
-											<option value={field}>{field}</option>
+					<div class="mb-6">
+						<label for="targetTable" class="mb-2 block font-medium text-gray-700"
+							>Table de destination</label
+						>
+						<Select
+							id="targetTable"
+							bind:value={targetTable}
+							on:change={handleTableChange}
+							class="w-full md:w-1/2"
+						>
+							{#each availableTables as table}
+								<option value={table.value}>{table.name}</option>
+							{/each}
+						</Select>
+					</div>
+
+					<h3 class="mb-2 font-medium">Aperçu des données</h3>
+					<div class="mb-6 overflow-x-auto">
+						<Table>
+							<TableHead>
+								{#each headers as header, i}
+									<TableHeadCell>
+										<div class="mb-2">{header}</div>
+										<Select
+											bind:value={mappedFields[i.toString()]}
+											on:change={() => ($form.mappedFields = mappedFields)}
+											class="min-w-[12rem] text-sm"
+										>
+											<option value="">Ne pas importer</option>
+											{#each tableFields[targetTable] as field}
+												<option value={field}>{field}</option>
+											{/each}
+										</Select>
+									</TableHeadCell>
+								{/each}
+							</TableHead>
+							<TableBody>
+								{#each previewData as row}
+									<TableBodyRow>
+										{#each headers as _, i}
+											<TableBodyCell>
+												{row[i] !== undefined ? row[i] : ''}
+											</TableBodyCell>
 										{/each}
-									</Select>
-								</TableHeadCell>
-							{/each}
-						</TableHead>
-						<TableBody>
-							{#each previewData as row}
-								<TableBodyRow>
-									{#each headers as _, i}
-										<TableBodyCell>
-											{row[i] !== undefined ? row[i] : ''}
-										</TableBodyCell>
-									{/each}
-								</TableBodyRow>
-							{/each}
-						</TableBody>
-					</Table>
-				</div>
+									</TableBodyRow>
+								{/each}
+							</TableBody>
+						</Table>
+					</div>
 
-				<!-- Champs requis -->
-				<div class="mb-6">
-					<h3 class="mb-2 font-medium">Champs requis</h3>
-					<div class="flex flex-wrap gap-2">
-						{#each getRequiredFields() as field}
-							<div
-								class={`rounded-full px-3 py-1 text-sm font-medium ${isFieldMapped(field) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
-							>
-								{#if isFieldMapped(field)}
-									<Check class="mr-1 inline h-4 w-4" />
-								{:else}
-									<X class="mr-1 inline h-4 w-4" />
-								{/if}
-								{field}
-							</div>
-						{/each}
+					<!-- Champs requis -->
+					<div class="mb-6">
+						<h3 class="mb-2 font-medium">Champs requis</h3>
+						<div class="flex flex-wrap gap-2">
+							{#each getRequiredFields() as field}
+								<div
+									class={`rounded-full px-3 py-1 text-sm font-medium ${isFieldMapped(field) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+								>
+									{#if isFieldMapped(field)}
+										<Check class="mr-1 inline h-4 w-4" />
+									{:else}
+										<X class="mr-1 inline h-4 w-4" />
+									{/if}
+									{field}
+								</div>
+							{/each}
+						</div>
+					</div>
+
+					<!-- Champs cachés pour le formulaire -->
+					<input type="hidden" name="data" value={JSON.stringify($form.data)} />
+					<input type="hidden" name="mappedFields" value={JSON.stringify(mappedFields)} />
+					<input type="hidden" name="targetTable" value={targetTable} />
+
+					<div class="flex justify-between">
+						<Button color="light" on:click={resetImport}>Retour</Button>
+						<Button
+							type="submit"
+							color="blue"
+							disabled={getRequiredFields().some((field) => !isFieldMapped(field)) || $submitting}
+						>
+							{#if $submitting}
+								<Spinner class="mr-2 h-4 w-4" />
+								Validation en cours...
+							{:else}
+								Valider les données
+							{/if}
+						</Button>
 					</div>
 				</div>
-
-				<div class="flex justify-between">
-					<Button color="light" on:click={resetImport}>Retour</Button>
-					<Button
-						color="blue"
-						on:click={validateData}
-						disabled={getRequiredFields().some((field) => !isFieldMapped(field))}
-					>
-						Valider les données
-					</Button>
-				</div>
-			</div>
+			</form>
 		{:else if step === 3}
 			<div class="mb-6">
 				<h2 class="mb-4 text-xl font-semibold">Validation et importation</h2>
@@ -571,16 +592,28 @@
 						</div>
 					{/if}
 
-					<div class="flex justify-between">
-						<Button color="light" on:click={() => (step = 2)}>Retour</Button>
-						<Button
-							color={validationResults.validRows > 0 ? 'blue' : 'light'}
-							on:click={importData}
-							disabled={validationResults.validRows === 0}
-						>
-							Importer {validationResults.validRows} lignes
-						</Button>
-					</div>
+					<form method="POST" action="?/process" use:superEnhance>
+						<!-- Champs cachés pour le formulaire -->
+						<input type="hidden" name="data" value={JSON.stringify($form.data)} />
+						<input type="hidden" name="mappedFields" value={JSON.stringify(mappedFields)} />
+						<input type="hidden" name="targetTable" value={targetTable} />
+
+						<div class="flex justify-between">
+							<Button color="light" on:click={() => (step = 2)}>Retour</Button>
+							<Button
+								type="submit"
+								color={validationResults.validRows > 0 ? 'blue' : 'light'}
+								disabled={validationResults.validRows === 0 || $submitting}
+							>
+								{#if $submitting}
+									<Spinner class="mr-2 h-4 w-4" />
+									Importation en cours...
+								{:else}
+									Importer {validationResults.validRows} lignes
+								{/if}
+							</Button>
+						</div>
+					</form>
 				{:else}
 					<div class="rounded-md border border-green-200 bg-green-50 p-6 text-center">
 						<Check class="mx-auto mb-2 h-12 w-12 text-green-500" />
@@ -589,6 +622,9 @@
 						</h3>
 						<p class="mb-4">
 							{validationResults.validRows} lignes ont été importées dans la table {targetTable}.
+							{#if validationResults.inserted && validationResults.updated}
+								({validationResults.inserted} insertions et {validationResults.updated} mises à jour)
+							{/if}
 						</p>
 						<Button color="blue" on:click={resetImport}>Nouvelle importation</Button>
 					</div>
@@ -597,7 +633,7 @@
 		{/if}
 	</Card>
 
-	{#if isProcessing}
+	{#if isProcessing || ($submitting && !isProcessing)}
 		<div
 			transition:fade
 			class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
