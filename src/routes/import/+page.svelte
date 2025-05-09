@@ -54,15 +54,16 @@
 		dataType: 'json',
 		onUpdated: ({ form }) => {
 			console.log('Formulaire mis à jour:', form);
-			// Mise à jour de l'interface après soumission
-			const result = form.data as unknown as { result?: ValidationResult };
-			console.log('Résultat reçu:', result);
-			if (result && result.result) {
-				validationResults = result.result;
-				if (result.result.processed) {
-					step = 3;
+
+			if (form && form.data && 'result' in form.data) {
+				const result = form.data.result as ValidationResult;
+				console.log('Résultat traité correctement:', result);
+				updateFormWithResult(result);
+
+				if (result.processed) {
+					step = 3; // Importation terminée
 				} else if (step === 2) {
-					step = 3;
+					step = 3; // Validation terminée, prêt pour l'importation
 				}
 			}
 		},
@@ -335,6 +336,15 @@
 
 		// Réinitialiser le formulaire SuperForms
 		reset();
+	}
+
+	function updateFormWithResult(result: ValidationResult) {
+		validationResults = result;
+		$form = {
+			data: rawData.slice(1),
+			mappedFields,
+			targetTable
+		};
 	}
 </script>
 

@@ -128,7 +128,15 @@ export const actions: Actions = {
 			console.log('Résultat final de validation:', result);
 			// Retourner un formulaire avec le résultat intégré
 			return {
-				form: { ...form, data: { ...form.data, result } }
+				form: {
+					...form,
+					data: {
+						data: data || [],
+						mappedFields: mappedFields || {},
+						targetTable: targetTable || '',
+						result // Inclure explicitement le résultat ici
+					}
+				}
 			};
 		} catch (err) {
 			console.error('Erreur lors de la validation:', err);
@@ -182,7 +190,15 @@ export const actions: Actions = {
 
 			// Retourner un formulaire avec le résultat intégré
 			return {
-				form: { ...form, data: { ...form.data, result } }
+				form: {
+					...form,
+					data: {
+						data: data || [],
+						mappedFields: mappedFields || {},
+						targetTable: targetTable || '',
+						result // Inclure explicitement le résultat ici
+					}
+				}
 			};
 		} catch (err) {
 			console.error("Erreur lors de l'importation:", err);
