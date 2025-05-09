@@ -53,8 +53,10 @@
 	} = superForm(data.form, {
 		dataType: 'json',
 		onUpdated: ({ form }) => {
+			console.log('Formulaire mis à jour:', form);
 			// Mise à jour de l'interface après soumission
 			const result = form.data as unknown as { result?: ValidationResult };
+			console.log('Résultat reçu:', result);
 			if (result && result.result) {
 				validationResults = result.result;
 				if (result.result.processed) {
@@ -65,6 +67,7 @@
 			}
 		},
 		onError: (event) => {
+			console.error('Erreur de soumission:', event);
 			// Gestion des erreurs avec conversion de type appropriée
 			const errorResult = event.result as unknown as {
 				error?: string | { message: string } | Error;
@@ -218,11 +221,13 @@
 				guessFieldMapping();
 
 				// Mise à jour du formulaire SuperForms
-				$form = {
+				const formData = {
 					data: rawData.slice(1), // On exclut les en-têtes
 					mappedFields,
 					targetTable
 				};
+				console.log('Données du formulaire à envoyer:', formData);
+				$form = formData;
 
 				step = 2;
 			} catch (err) {

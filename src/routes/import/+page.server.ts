@@ -57,14 +57,18 @@ type AttributeData = {
 export const actions: Actions = {
 	validate: async ({ request }) => {
 		try {
+			console.log('Début de la validation côté serveur');
 			// Validation du formulaire avec SuperForms
 			const form = await superValidate(request, zod(importSchema));
+			console.log('Formulaire reçu:', form);
 
 			if (!form.valid) {
+				console.error('Formulaire invalide:', form.errors);
 				return fail(400, { form });
 			}
 
 			const { data, mappedFields, targetTable } = form.data;
+			console.log('Données extraites:', { data, mappedFields, targetTable });
 
 			const result: ValidationResult = {
 				totalRows: Array.isArray(data) ? data.length : 0,
@@ -73,18 +77,23 @@ export const actions: Actions = {
 				invalidData: [],
 				processed: false
 			};
+			console.log('Résultat initial:', result);
 
 			// Obtenir la structure de la table cible
 			const validationRules = getValidationRules(targetTable);
+			console.log('Règles de validation:', validationRules);
 
 			// Préparation pour le traitement
 			const columnMap = prepareColumnMap(mappedFields);
+			console.log('Mappage des colonnes:', columnMap);
 			const uniqueEntries = new Set<string>();
 
 			// Validation ligne par ligne
 			if (Array.isArray(data)) {
+				console.log('Début de la validation des lignes');
 				for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
 					const row = data[rowIndex];
+					console.log(`Validation de la ligne ${rowIndex}:`, row);
 					const validationResult = validateRow(
 						rowIndex,
 						row,
@@ -93,10 +102,12 @@ export const actions: Actions = {
 						uniqueEntries,
 						result
 					);
+					console.log(`Résultat de validation pour la ligne ${rowIndex}:`, validationResult);
 
 					// Vérification des doublons avec la base de données
 					if (validationResult) {
 						const existingRecord = await checkExistingRecord(targetTable, mappedFields, row);
+						console.log(`Vérification des doublons pour la ligne ${rowIndex}:`, existingRecord);
 
 						if (existingRecord) {
 							result.duplicates++;
@@ -114,6 +125,7 @@ export const actions: Actions = {
 				}
 			}
 
+			console.log('Résultat final de validation:', result);
 			// Retourner un formulaire avec le résultat intégré
 			return {
 				form: { ...form, data: { ...form.data, result } }
