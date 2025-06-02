@@ -123,6 +123,7 @@ view v_categories {
 }
 
 view v_kit_carac {
+  id         Int    @id @default(autoincrement())
   kit_label  String @db.VarChar(100)
   atr_label  String @db.VarChar(100)
   atr_val    String @db.VarChar(60)
