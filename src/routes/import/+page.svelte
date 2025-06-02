@@ -100,6 +100,8 @@
 	let previewData: any[] = [];
 	let targetTable = 'attribute_dev'; // Par défaut
 	let mappedFields: Record<string, string> = {};
+	let hasHeaders = true; // Détection automatique
+	let showNoHeaderAlert = false; // Nouvelle variable pour l'alerte
 	let availableTables = [
 		{ value: 'attribute', name: 'Attributs' },
 		{ value: 'attribute_dev', name: 'Attributs (Dev)' },
@@ -205,25 +207,39 @@
 				rawData = utils.sheet_to_json(worksheet, { header: 1 });
 				console.log('Données brutes:', rawData);
 
-				if (rawData.length < 2) {
-					throw new Error('Le fichier ne contient pas assez de données');
+				if (rawData.length < 1) {
+					throw new Error('Le fichier ne contient pas de données');
 				}
 
-				headers = rawData[0] as string[];
-				console.log('En-têtes:', headers);
-				console.log(
-					'Type des en-têtes:',
-					headers.map((h) => typeof h)
-				);
+				// Détection automatique des en-têtes
+				hasHeaders = detectHeaders(rawData);
+				showNoHeaderAlert = !hasHeaders;
 
-				previewData = rawData.slice(1, Math.min(rawData.length, 6)) as any[];
+				if (hasHeaders) {
+					// Mode avec en-têtes (comportement normal)
+					if (rawData.length < 2) {
+						throw new Error(
+							'Le fichier ne contient pas assez de données (en-têtes + au moins 1 ligne)'
+						);
+					}
+					headers = rawData[0] as string[];
+					previewData = rawData.slice(1, Math.min(rawData.length, 6)) as any[];
+				} else {
+					// Mode sans en-têtes - générer des en-têtes génériques
+					const firstRow = rawData[0] as any[];
+					headers = firstRow.map((_, index) => `Colonne ${index + 1}`);
+					previewData = rawData.slice(0, Math.min(rawData.length, 5)) as any[];
+				}
+
+				console.log('En-têtes:', headers);
+				console.log('Mode avec en-têtes:', hasHeaders);
 
 				// Mappage automatique des champs
 				guessFieldMapping();
 
 				// Mise à jour du formulaire SuperForms
 				const formData = {
-					data: rawData.slice(1), // On exclut les en-têtes
+					data: hasHeaders ? rawData.slice(1) : rawData, // Exclure les en-têtes seulement si présents
 					mappedFields,
 					targetTable
 				};
@@ -248,6 +264,46 @@
 		reader.readAsArrayBuffer(file);
 	}
 
+	// Nouvelle fonction pour détecter automatiquement les en-têtes
+	function detectHeaders(data: any[][]): boolean {
+		if (data.length < 2) return false;
+
+		const firstRow = data[0];
+		const secondRow = data[1];
+
+		// Vérifier si la première ligne contient des chaînes qui ressemblent à des noms de champs
+		const hasStringHeaders = firstRow.every((cell, index) => {
+			if (typeof cell !== 'string') return false;
+
+			// Vérifier si c'est un nom de champ connu
+			const knownFields = [
+				...tableFields.attribute,
+				...tableFields.supplier,
+				...tableFields.v_categories
+			];
+			const normalizedCell = String(cell)
+				.toLowerCase()
+				.replace(/[^a-z0-9]/g, '');
+
+			return knownFields.some((field) => {
+				const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
+				return normalizedCell.includes(normalizedField) || normalizedField.includes(normalizedCell);
+			});
+		});
+
+		// Si pas de correspondance avec des champs connus, vérifier si la première ligne a un type différent de la seconde
+		if (!hasStringHeaders && secondRow) {
+			const firstRowTypes = firstRow.map((cell) => typeof cell);
+			const secondRowTypes = secondRow.map((cell) => typeof cell);
+
+			// Si les types sont différents, probablement des en-têtes
+			const typesDifferent = firstRowTypes.some((type, index) => type !== secondRowTypes[index]);
+			return typesDifferent;
+		}
+
+		return hasStringHeaders;
+	}
+
 	function guessFieldMapping() {
 		console.log('Début du mappage des champs');
 		console.log('En-têtes à mapper:', headers);
@@ -256,38 +312,42 @@
 		mappedFields = {};
 		const fields = tableFields[targetTable];
 
-		headers.forEach((header, index) => {
-			// Normalisation pour la comparaison
-			const normalizedHeader = String(header)
-				.toLowerCase()
-				.replace(/[^a-z0-9]/g, '');
+		if (hasHeaders) {
+			// Mappage automatique basé sur les en-têtes
+			headers.forEach((header, index) => {
+				// Normalisation pour la comparaison
+				const normalizedHeader = String(header)
+					.toLowerCase()
+					.replace(/[^a-z0-9]/g, '');
 
-			// Recherche du meilleur match
-			let bestMatch = '';
-			let bestScore = 0;
+				// Recherche du meilleur match
+				let bestMatch = '';
+				let bestScore = 0;
 
-			fields.forEach((field) => {
-				const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
+				fields.forEach((field) => {
+					const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-				if (
-					normalizedHeader.includes(normalizedField) ||
-					normalizedField.includes(normalizedHeader)
-				) {
-					const score =
-						Math.min(normalizedHeader.length, normalizedField.length) /
-						Math.max(normalizedHeader.length, normalizedField.length);
+					if (
+						normalizedHeader.includes(normalizedField) ||
+						normalizedField.includes(normalizedHeader)
+					) {
+						const score =
+							Math.min(normalizedHeader.length, normalizedField.length) /
+							Math.max(normalizedHeader.length, normalizedField.length);
 
-					if (score > bestScore) {
-						bestScore = score;
-						bestMatch = field;
+						if (score > bestScore) {
+							bestScore = score;
+							bestMatch = field;
+						}
 					}
+				});
+
+				if (bestScore > 0.5) {
+					mappedFields[index.toString()] = bestMatch;
 				}
 			});
-
-			if (bestScore > 0.5) {
-				mappedFields[index.toString()] = bestMatch;
-			}
-		});
+		}
+		// Si pas d'en-têtes, le mappage sera fait manuellement par l'utilisateur
 
 		console.log('Mappage final:', mappedFields);
 	}
@@ -324,6 +384,8 @@
 		headers = [];
 		previewData = [];
 		mappedFields = {};
+		hasHeaders = true;
+		showNoHeaderAlert = false;
 		validationResults = {
 			totalRows: 0,
 			validRows: 0,
@@ -341,7 +403,7 @@
 	function updateFormWithResult(result: ValidationResult) {
 		validationResults = result;
 		$form = {
-			data: rawData.slice(1),
+			data: hasHeaders ? rawData.slice(1) : rawData,
 			mappedFields,
 			targetTable
 		};
@@ -455,6 +517,14 @@
 			<form method="POST" action="?/validate" use:superEnhance>
 				<div class="mb-6">
 					<h2 class="mb-4 text-xl font-semibold">Mappage des colonnes</h2>
+
+					{#if showNoHeaderAlert}
+						<Alert color="red" class="mb-4">
+							<AlertCircle slot="icon" class="h-4 w-4" />
+							<strong>Attention :</strong> Les données importées n'ont pas d'en-têtes. Les colonnes ont
+							été nommées automatiquement.
+						</Alert>
+					{/if}
 
 					<div class="mb-6">
 						<label for="targetTable" class="mb-2 block font-medium text-gray-700"
