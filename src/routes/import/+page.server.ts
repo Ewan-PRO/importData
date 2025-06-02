@@ -54,6 +54,59 @@ type AttributeData = {
 	atr_label?: string;
 };
 
+// Nouvelle fonction pour valider le format CSV
+function validateCSVFormat(
+	data: unknown[][]
+): Array<{ row: number; field: string; value: string; error: string }> {
+	const errors: Array<{ row: number; field: string; value: string; error: string }> = [];
+
+	data.forEach((row, rowIndex) => {
+		if (!Array.isArray(row)) return;
+
+		row.forEach((cell, cellIndex) => {
+			if (typeof cell === 'string') {
+				// Vérifier les guillemets malformés
+				const quoteCount = (cell.match(/"/g) || []).length;
+
+				// Si nombre impair de guillemets, c'est malformé
+				if (quoteCount % 2 !== 0) {
+					errors.push({
+						row: rowIndex,
+						field: `Colonne ${cellIndex}`,
+						value: cell,
+						error: 'Guillemets malformés dans le CSV'
+					});
+				}
+
+				// Vérifier si la cellule commence ou finit par des guillemets non échappés
+				if (
+					cell.includes('"""') ||
+					(cell.startsWith('"') && !cell.endsWith('"') && quoteCount > 1)
+				) {
+					errors.push({
+						row: rowIndex,
+						field: `Colonne ${cellIndex}`,
+						value: cell,
+						error: 'Format CSV invalide - guillemets incorrects'
+					});
+				}
+
+				// Vérifier les séquences de guillemets suspectes
+				if (cell.includes('""') && !cell.match(/^".*"$/)) {
+					errors.push({
+						row: rowIndex,
+						field: `Colonne ${cellIndex}`,
+						value: cell,
+						error: "Séquence de guillemets suspecte - vérifiez l'encodage du fichier"
+					});
+				}
+			}
+		});
+	});
+
+	return errors;
+}
+
 export const actions: Actions = {
 	validate: async ({ request }) => {
 		try {
@@ -78,6 +131,27 @@ export const actions: Actions = {
 				processed: false
 			};
 			console.log('Résultat initial:', result);
+
+			// Validation du format CSV d'abord
+			if (Array.isArray(data)) {
+				const csvErrors = validateCSVFormat(data);
+				if (csvErrors.length > 0) {
+					result.invalidData.push(...csvErrors);
+					console.log('Erreurs de format CSV détectées:', csvErrors);
+
+					return {
+						form: {
+							...form,
+							data: {
+								data: data || [],
+								mappedFields: mappedFields || {},
+								targetTable: targetTable || '',
+								result
+							}
+						}
+					};
+				}
+			}
 
 			// Obtenir la structure de la table cible
 			const validationRules = getValidationRules(targetTable);
@@ -167,6 +241,27 @@ export const actions: Actions = {
 				errors: [],
 				processed: true
 			};
+
+			// Validation du format CSV avant traitement
+			if (Array.isArray(data)) {
+				const csvErrors = validateCSVFormat(data);
+				if (csvErrors.length > 0) {
+					result.invalidData.push(...csvErrors);
+					result.errors.push(`${csvErrors.length} erreur(s) de format CSV détectée(s)`);
+
+					return {
+						form: {
+							...form,
+							data: {
+								data: data || [],
+								mappedFields: mappedFields || {},
+								targetTable: targetTable || '',
+								result
+							}
+						}
+					};
+				}
+			}
 
 			// Préparation pour le traitement
 			const columnMap = prepareColumnMap(mappedFields);
