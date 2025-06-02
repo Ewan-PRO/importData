@@ -58,7 +58,6 @@ export const actions: Actions = {
 	validate: async ({ request }) => {
 		try {
 			console.log('Début de la validation côté serveur');
-			// Validation du formulaire avec SuperForms
 			const form = await superValidate(request, zod(importSchema));
 			console.log('Formulaire reçu:', form);
 
@@ -68,65 +67,8 @@ export const actions: Actions = {
 			}
 
 			const { data, mappedFields, targetTable } = form.data;
-			console.log('Données extraites:', { data, mappedFields, targetTable });
+			const result = await validateImportData(data, mappedFields, targetTable);
 
-			const result: ValidationResult = {
-				totalRows: Array.isArray(data) ? data.length : 0,
-				validRows: 0,
-				duplicates: 0,
-				invalidData: [],
-				processed: false
-			};
-			console.log('Résultat initial:', result);
-
-			// Obtenir la structure de la table cible
-			const validationRules = getValidationRules(targetTable);
-			console.log('Règles de validation:', validationRules);
-
-			// Préparation pour le traitement
-			const columnMap = prepareColumnMap(mappedFields);
-			console.log('Mappage des colonnes:', columnMap);
-			const uniqueEntries = new Set<string>();
-
-			// Validation ligne par ligne
-			if (Array.isArray(data)) {
-				console.log('Début de la validation des lignes');
-				for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
-					const row = data[rowIndex];
-					console.log(`Validation de la ligne ${rowIndex}:`, row);
-					const validationResult = validateRow(
-						rowIndex,
-						row,
-						columnMap,
-						validationRules,
-						uniqueEntries,
-						result
-					);
-					console.log(`Résultat de validation pour la ligne ${rowIndex}:`, validationResult);
-
-					// Vérification des doublons avec la base de données
-					if (validationResult) {
-						const existingRecord = await checkExistingRecord(targetTable, mappedFields, row);
-						console.log(`Vérification des doublons pour la ligne ${rowIndex}:`, existingRecord);
-
-						if (existingRecord) {
-							result.duplicates++;
-
-							result.invalidData.push({
-								row: rowIndex,
-								field: validationRules.uniqueFields.join(', '),
-								value: existingRecord,
-								error: 'Existe déjà dans la base de données'
-							});
-						} else {
-							result.validRows++;
-						}
-					}
-				}
-			}
-
-			console.log('Résultat final de validation:', result);
-			// Retourner un formulaire avec le résultat intégré
 			return {
 				form: {
 					...form,
@@ -134,7 +76,7 @@ export const actions: Actions = {
 						data: data || [],
 						mappedFields: mappedFields || {},
 						targetTable: targetTable || '',
-						result // Inclure explicitement le résultat ici
+						result
 					}
 				}
 			};
@@ -176,6 +118,8 @@ export const actions: Actions = {
 				if (Array.isArray(data)) {
 					for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
 						const row = data[rowIndex];
+						if (!Array.isArray(row)) continue;
+
 						await processRow(
 							row,
 							rowIndex,
@@ -467,7 +411,7 @@ function formatDisplayValue(value: unknown): string {
 		}
 	}
 
-	return String(value);
+	return formatDisplayValue(value);
 }
 
 async function checkExistingRecord(
@@ -546,12 +490,12 @@ function formatValueForDatabase(field: string, value: unknown): unknown {
 	// Conversion selon le type de champ
 	if (field.includes('_valeur') || field.includes('_qty')) {
 		// Conversion en nombre
-		const numValue = parseFloat(String(value).replace(',', '.'));
+		const numValue = parseFloat(formatDisplayValue(value).replace(',', '.'));
 		return isNaN(numValue) ? null : numValue;
 	}
 
 	// Par défaut, retourner la valeur comme chaîne de caractères
-	return String(value);
+	return formatDisplayValue(value);
 }
 
 function getUniqueConstraint(
@@ -674,6 +618,58 @@ function getValidationRules(tableName: string): ValidationRules {
 				validators: {}
 			};
 	}
+}
+
+// Nouvelle fonction extraite
+async function validateImportData(
+	data: unknown[],
+	mappedFields: Record<string, string>,
+	targetTable: string
+) {
+	const result: ValidationResult = {
+		totalRows: Array.isArray(data) ? data.length : 0,
+		validRows: 0,
+		duplicates: 0,
+		invalidData: [],
+		processed: false
+	};
+
+	const validationRules = getValidationRules(targetTable);
+	const columnMap = prepareColumnMap(mappedFields);
+	const uniqueEntries = new Set<string>();
+
+	if (Array.isArray(data)) {
+		for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
+			const row = data[rowIndex];
+			if (!Array.isArray(row)) continue;
+
+			const validationResult = validateRow(
+				rowIndex,
+				row,
+				columnMap,
+				validationRules,
+				uniqueEntries,
+				result
+			);
+
+			if (validationResult) {
+				const existingRecord = await checkExistingRecord(targetTable, mappedFields, row);
+				if (existingRecord) {
+					result.duplicates++;
+					result.invalidData.push({
+						row: rowIndex,
+						field: validationRules.uniqueFields.join(', '),
+						value: existingRecord,
+						error: 'Existe déjà dans la base de données'
+					});
+				} else {
+					result.validRows++;
+				}
+			}
+		}
+	}
+
+	return result;
 }
 
 // Pour SuperForms, nous devons également fournir la fonction de chargement
