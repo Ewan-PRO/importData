@@ -107,6 +107,43 @@ function validateCSVFormat(
 	return errors;
 }
 
+// Nouvelle fonction pour valider atr_0_label spécifiquement
+function validateAtr0Label(
+	data: unknown[][],
+	mappedFields: Record<string, string>,
+	result: ValidationResult
+): void {
+	const expectedValue = 'Catégorie des produits';
+
+	// Trouver l'index de la colonne atr_0_label
+	const atr0ColumnIndex = Object.entries(mappedFields).find(
+		([, field]) => field === 'atr_0_label'
+	)?.[0];
+
+	if (atr0ColumnIndex === undefined) {
+		return;
+	}
+
+	const columnIndex = parseInt(atr0ColumnIndex);
+
+	data.forEach((row, rowIndex) => {
+		if (!Array.isArray(row)) return;
+
+		const value = row[columnIndex];
+		const stringValue = typeof value === 'string' ? value.trim() : String(value ?? '');
+
+		// Vérifier si la valeur n'est pas "Catégorie des produits"
+		if (stringValue && stringValue !== expectedValue) {
+			result.invalidData.push({
+				row: rowIndex,
+				field: 'atr_0_label',
+				value: stringValue,
+				error: `Valeur non conforme - doit être "${expectedValue}"`
+			});
+		}
+	});
+}
+
 export const actions: Actions = {
 	validate: async ({ request }) => {
 		try {
@@ -150,6 +187,29 @@ export const actions: Actions = {
 							}
 						}
 					};
+				}
+
+				// Validation spécifique pour atr_0_label si c'est la table v_categories
+				if (targetTable === 'v_categories') {
+					validateAtr0Label(data, mappedFields, result);
+
+					// Si des erreurs atr_0_label sont détectées, arrêter ici
+					const atr0Errors = result.invalidData.filter((error) => error.field === 'atr_0_label');
+					if (atr0Errors.length > 0) {
+						console.log('Erreurs atr_0_label détectées:', atr0Errors);
+
+						return {
+							form: {
+								...form,
+								data: {
+									data: data || [],
+									mappedFields: mappedFields || {},
+									targetTable: targetTable || '',
+									result
+								}
+							}
+						};
+					}
 				}
 			}
 
@@ -260,6 +320,31 @@ export const actions: Actions = {
 							}
 						}
 					};
+				}
+
+				// Validation spécifique pour atr_0_label si c'est la table v_categories
+				if (targetTable === 'v_categories') {
+					validateAtr0Label(data, mappedFields, result);
+
+					// Si des erreurs atr_0_label sont détectées, arrêter le traitement
+					const atr0Errors = result.invalidData.filter((error) => error.field === 'atr_0_label');
+					if (atr0Errors.length > 0) {
+						result.errors.push(
+							`${atr0Errors.length} ligne(s) rejetée(s) - valeur atr_0_label non conforme`
+						);
+
+						return {
+							form: {
+								...form,
+								data: {
+									data: data || [],
+									mappedFields: mappedFields || {},
+									targetTable: targetTable || '',
+									result
+								}
+							}
+						};
+					}
 				}
 			}
 
