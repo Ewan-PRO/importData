@@ -16,27 +16,37 @@ export const GET: RequestHandler = async () => {
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
+		console.log('=== API POST /api/kits appelée ===');
 		const data = await request.json();
+		console.log('Données reçues:', data);
 
 		// Validation des données requises
 		if (!data.kit_label || data.kit_label.trim() === '') {
+			console.log('Erreur: kit_label manquant');
 			return json({ error: 'Le nom du kit est obligatoire' }, { status: 400 });
 		}
 
 		if (!data.atr_label || data.atr_label.trim() === '') {
+			console.log('Erreur: atr_label manquant');
 			return json({ error: 'La caractéristique est obligatoire' }, { status: 400 });
 		}
 
 		if (!data.atr_val || data.atr_val.trim() === '') {
+			console.log('Erreur: atr_val manquant');
 			return json({ error: "L'unité est obligatoire" }, { status: 400 });
 		}
 
 		if (!data.kat_valeur || data.kat_valeur.trim() === '') {
+			console.log('Erreur: kat_valeur manquant');
 			return json({ error: 'La valeur est obligatoire' }, { status: 400 });
 		}
 
+		console.log('Validation OK, début de la transaction');
+
 		// Utilisation d'une transaction pour créer toutes les entités nécessaires
 		const result = await prisma.$transaction(async (tx) => {
+			console.log('Transaction démarrée');
+
 			// 1. Vérifier si le kit existe, sinon le créer
 			const kit =
 				(await tx.kit.findFirst({
@@ -45,6 +55,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				(await tx.kit.create({
 					data: { kit_label: data.kit_label }
 				}));
+			console.log('Kit créé/trouvé:', kit);
 
 			// 2. Vérifier si l'attribut caractéristique existe, sinon le créer
 			const attributeCarac =
@@ -61,6 +72,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						atr_label: data.atr_label
 					}
 				}));
+			console.log('Attribut caractéristique créé/trouvé:', attributeCarac);
 
 			// 3. Vérifier si l'attribut valeur existe, sinon le créer
 			const attributeVal =
@@ -76,6 +88,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						atr_label: data.atr_val
 					}
 				}));
+			console.log('Attribut valeur créé/trouvé:', attributeVal);
 
 			// 4. Créer la relation kit_attribute
 			const kitAttribute = await tx.kit_attribute.create({
@@ -86,6 +99,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					kat_valeur: parseFloat(data.kat_valeur) || 0
 				}
 			});
+			console.log('Kit_attribute créé:', kitAttribute);
 
 			return {
 				kit,
@@ -95,6 +109,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			};
 		});
 
+		console.log('Transaction terminée avec succès');
 		return json({
 			success: true,
 			message: 'Kit créé avec succès',

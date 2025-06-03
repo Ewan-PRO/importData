@@ -17,7 +17,7 @@ function safeFormDataToString(value: FormDataEntryValue | null): string {
 const kitSchema = z.object({
 	kit_label: z.string().min(1, { message: 'Le nom du kit est requis' }),
 	atr_label: z.string().min(1, { message: 'La caractéristique est requise' }),
-	atr_val: z.string().min(1, { message: 'La valeur est requise' }),
+	atr_val: z.string().min(1, { message: "L'unité est requise" }),
 	kat_valeur: z.string().min(1, { message: 'La valeur numérique est requise' })
 });
 
@@ -50,14 +50,24 @@ export const load = (async ({ fetch, depends }) => {
 
 export const actions: Actions = {
 	create: async ({ request, fetch }) => {
+		console.log('=== Action CREATE appelée ===');
 		const formData = await request.formData();
+		console.log('FormData reçu:', Object.fromEntries(formData.entries()));
+
 		const form = await superValidate(formData, zod(kitSchema));
+		console.log('Validation SuperForms:', {
+			valid: form.valid,
+			errors: form.errors,
+			data: form.data
+		});
 
 		if (!form.valid) {
+			console.log('Formulaire invalide, retour fail(400)');
 			return fail(400, { form });
 		}
 
 		try {
+			console.log('Envoi vers API avec données:', form.data);
 			const response = await fetch('/api/kits', {
 				method: 'POST',
 				headers: {
@@ -66,13 +76,19 @@ export const actions: Actions = {
 				body: JSON.stringify(form.data)
 			});
 
+			console.log('Réponse API:', { ok: response.ok, status: response.status });
+
 			if (!response.ok) {
 				const errorData = await response.json();
+				console.log('Erreur API:', errorData);
 				return fail(response.status, {
 					form,
 					error: errorData.error ?? 'Erreur lors de la création du kit'
 				});
 			}
+
+			const result = await response.json();
+			console.log('Succès API:', result);
 
 			// Réinitialiser le formulaire après succès
 			return { form, success: true };

@@ -267,21 +267,25 @@
 			return;
 		}
 
-		// Créer un FormData avec les données du formulaire
-		const formData = new FormData(formElement);
+		// Remplir les champs cachés avec les données du formulaire
+		const kitLabelInput = formElement.querySelector('input[name="kit_label"]') as HTMLInputElement;
+		const atrLabelInput = formElement.querySelector('input[name="atr_label"]') as HTMLInputElement;
+		const atrValInput = formElement.querySelector('input[name="atr_val"]') as HTMLInputElement;
+		const katValeurInput = formElement.querySelector(
+			'input[name="kat_valeur"]'
+		) as HTMLInputElement;
 
-		// Ajouter les données du formulaire
-		Object.entries(event.detail.data).forEach(([key, value]) => {
-			formData.set(key, String(value));
+		if (kitLabelInput) kitLabelInput.value = event.detail.data.kit_label || '';
+		if (atrLabelInput) atrLabelInput.value = event.detail.data.atr_label || '';
+		if (atrValInput) atrValInput.value = event.detail.data.atr_val || '';
+		if (katValeurInput) katValeurInput.value = event.detail.data.kat_valeur || '';
+
+		console.log('Champs cachés remplis avec:', {
+			kit_label: kitLabelInput?.value,
+			atr_label: atrLabelInput?.value,
+			atr_val: atrValInput?.value,
+			kat_valeur: katValeurInput?.value
 		});
-
-		// Si c'est une modification, ajouter l'ID
-		if (selectedKit?.id) {
-			formData.set('id', String(selectedKit.id));
-			console.log('ID ajouté pour modification:', selectedKit.id);
-		}
-
-		console.log('FormData préparé:', Object.fromEntries(formData.entries()));
 
 		// Soumettre le formulaire
 		formElement.requestSubmit();
@@ -418,7 +422,13 @@
 		}}
 		style="display: none;"
 	>
-		<!-- Les champs seront ajoutés dynamiquement par JavaScript -->
+		<input type="hidden" name="kit_label" value="" />
+		<input type="hidden" name="atr_label" value="" />
+		<input type="hidden" name="atr_val" value="" />
+		<input type="hidden" name="kat_valeur" value="" />
+		{#if selectedKit?.id}
+			<input type="hidden" name="id" value={selectedKit.id} />
+		{/if}
 	</form>
 
 	<!-- Formulaire de suppression -->
