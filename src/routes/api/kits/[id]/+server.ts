@@ -107,25 +107,37 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 export const DELETE: RequestHandler = async ({ params }) => {
 	try {
+		console.log('=== API DELETE /api/kits/[id] appelée ===');
+		console.log('Params reçus:', params);
+
 		const id = parseInt(params.id);
+		console.log('ID parsé:', id);
+
 		if (isNaN(id)) {
+			console.log('Erreur: ID invalide');
 			return json({ error: 'ID invalide' }, { status: 400 });
 		}
 
+		console.log("Recherche de l'enregistrement avec ID:", id);
 		// Vérifier que l'enregistrement existe
 		const existingRecord = await prisma.kit_attribute.findUnique({
 			where: { kat_id: id }
 		});
 
+		console.log('Enregistrement trouvé:', existingRecord);
+
 		if (!existingRecord) {
+			console.log('Erreur: Kit non trouvé');
 			return json({ error: 'Kit non trouvé' }, { status: 404 });
 		}
 
+		console.log("Suppression de l'enregistrement kit_attribute avec ID:", id);
 		// Supprimer l'enregistrement kit_attribute
 		await prisma.kit_attribute.delete({
 			where: { kat_id: id }
 		});
 
+		console.log('Suppression réussie');
 		return json({
 			success: true,
 			message: 'Kit supprimé avec succès'

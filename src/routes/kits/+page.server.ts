@@ -141,25 +141,36 @@ export const actions: Actions = {
 	},
 
 	delete: async ({ request, fetch }) => {
+		console.log('=== Action DELETE appelée ===');
 		const formData = await request.formData();
+		console.log('FormData reçu:', Object.fromEntries(formData.entries()));
+
 		const id = safeFormDataToString(formData.get('id'));
+		console.log('ID extrait:', id);
 
 		if (!id) {
+			console.log('Erreur: ID de kit manquant');
 			return fail(400, { error: 'ID de kit manquant' });
 		}
 
 		try {
+			console.log('Envoi vers API DELETE avec ID:', id);
 			const response = await fetch(`/api/kits/${id}`, {
 				method: 'DELETE'
 			});
 
+			console.log('Réponse API DELETE:', { ok: response.ok, status: response.status });
+
 			if (!response.ok) {
 				const errorData = await response.json();
+				console.log('Erreur API DELETE:', errorData);
 				return fail(response.status, {
 					error: errorData.error ?? 'Erreur lors de la suppression du kit'
 				});
 			}
 
+			const result = await response.json();
+			console.log('Succès API DELETE:', result);
 			return { success: true };
 		} catch (err) {
 			console.error('Erreur lors de la suppression du kit:', err);

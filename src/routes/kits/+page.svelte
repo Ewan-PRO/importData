@@ -299,22 +299,30 @@
 		if (!selectedKit?.id) {
 			console.error('Aucun kit sélectionné ou ID manquant');
 			showAlert('Erreur: Aucun kit sélectionné', 'error');
+			deleteConfirmOpen = false;
 			return;
 		}
 
 		const formElement = document.querySelector('#deleteForm') as HTMLFormElement;
 		if (!formElement) {
 			console.error('Formulaire de suppression non trouvé');
+			deleteConfirmOpen = false;
 			return;
 		}
 
-		const formData = new FormData(formElement);
-		formData.set('id', String(selectedKit.id));
+		// Remplir le champ caché avec l'ID
+		const idInput = formElement.querySelector('input[name="id"]') as HTMLInputElement;
+		if (idInput) {
+			idInput.value = String(selectedKit.id);
+		}
 
-		console.log('FormData de suppression:', Object.fromEntries(formData.entries()));
+		console.log('ID rempli pour suppression:', idInput?.value);
 
-		formElement.requestSubmit();
+		// Fermer la boîte de dialogue de confirmation
 		deleteConfirmOpen = false;
+
+		// Soumettre le formulaire
+		formElement.requestSubmit();
 		console.log('=== Fin handleDeleteConfirm ===');
 	}
 
@@ -397,6 +405,27 @@
 		}}
 	/>
 
+	<!-- Confirmation de suppression -->
+	<Form
+		bind:isOpen={deleteConfirmOpen}
+		title="Confirmer la suppression"
+		fields={[
+			{
+				key: 'confirmation',
+				label: 'Confirmation',
+				type: 'text',
+				value: `Êtes-vous sûr de vouloir supprimer le kit "${selectedKit?.kit_label || ''}" ? Cette action est irréversible.`
+			}
+		]}
+		submitLabel="Supprimer"
+		cancelLabel="Annuler"
+		on:submit={handleDeleteConfirm}
+		on:cancel={() => {
+			deleteConfirmOpen = false;
+			selectedKit = null;
+		}}
+	/>
+
 	<!-- Formulaire caché pour les actions -->
 	<form
 		id="kitForm"
@@ -442,6 +471,7 @@
 
 				if (result.type === 'success') {
 					showAlert('Kit supprimé avec succès', 'success');
+					selectedKit = null;
 					await invalidateAll();
 				} else if (result.type === 'failure') {
 					const errorMsg = (result.data as any)?.error || 'Erreur lors de la suppression';
@@ -453,6 +483,6 @@
 		}}
 		style="display: none;"
 	>
-		<!-- L'ID sera ajouté dynamiquement -->
+		<input type="hidden" name="id" value="" />
 	</form>
 </div>
