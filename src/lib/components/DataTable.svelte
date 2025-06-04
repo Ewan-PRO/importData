@@ -67,7 +67,7 @@
 	}
 </script>
 
-<div class="relative overflow-x-auto sm:rounded-lg">
+<div class="relative overflow-x-auto">
 	{#if hasSelection}
 		<div
 			class="mb-4 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-4"
@@ -174,7 +174,7 @@
 	</div>
 
 	<!-- Affichage mobile sous forme de cartes -->
-	<div class="px-2 sm:hidden">
+	<div class="sm:hidden">
 		{#each data as item, i}
 			<div class="mb-4 rounded-lg border border-gray-200 bg-white p-4">
 				<div class="mb-2 flex justify-between">
@@ -235,10 +235,6 @@
 </div>
 
 <style>
-	.sm\:hidden {
-		margin-bottom: 1rem;
-	}
-
 	.break-words {
 		overflow-wrap: break-word;
 		word-wrap: break-word;
