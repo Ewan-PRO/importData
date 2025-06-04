@@ -1,8 +1,9 @@
 <!-- src/lib/components/Filter.svelte modifié -->
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { Button, Input } from 'flowbite-svelte';
-	import { Search, Funnel, CirclePlus } from 'lucide-svelte';
+	import { Input } from 'flowbite-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Search, Funnel, CirclePlus, RefreshCcw } from 'lucide-svelte';
 
 	export let fields: { key: string; label: String }[] = [];
 	export let placeholder = 'Rechercher ...';
@@ -67,16 +68,17 @@
 
 	<!-- Groupe de boutons -->
 	<div class="flex flex-wrap gap-3 sm:flex-nowrap sm:items-start">
-		<Button color="blue" class="flex-1 sm:flex-initial" on:click={handleSearch}>
+		<Button variant="bleu" class="flex-1 sm:flex-initial" onclick={handleSearch}>
 			<Funnel class="mr-2 h-4 w-4" />
 			Filtrer
 		</Button>
-		<Button color="dark" class="flex-1 sm:flex-initial" on:click={handleReset}>
+		<Button variant="noir" class="flex-1 sm:flex-initial" onclick={handleReset}>
+			<RefreshCcw class="mr-2 h-4 w-4" />
 			Réinitialiser
 		</Button>
 		{#if showAddButton}
 			<div class="flex w-full justify-center sm:w-auto sm:justify-start">
-				<Button color="green" class="w-8/12 sm:w-auto" on:click={handleAddClick}>
+				<Button variant="vert" class="w-8/12 sm:w-auto" onclick={handleAddClick}>
 					<CirclePlus class="mr-2 h-4 w-4" />
 					Ajouter une catégorie
 				</Button>

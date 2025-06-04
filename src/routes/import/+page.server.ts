@@ -92,7 +92,7 @@ function validateCSVFormat(
 				}
 
 				// Vérifier les séquences de guillemets suspectes
-				if (cell.includes('""') && !cell.match(/^".*"$/)) {
+				if (cell.includes('""') && !/^".*"$/.exec(cell)) {
 					errors.push({
 						row: rowIndex,
 						field: `Colonne ${cellIndex}`,
