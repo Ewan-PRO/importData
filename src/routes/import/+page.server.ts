@@ -870,7 +870,7 @@ function getValidationRules(tableName: string): ValidationRules {
 				validators: {
 					atr_nat: (value: unknown) => typeof value === 'string' && value.length <= 60,
 					atr_val: (value: unknown) => typeof value === 'string' && value.length <= 60,
-					atr_label: (value: unknown) => typeof value === 'string' && value.length <= 100
+					atr_label: (value: unknown) => typeof value === 'string' && value.length <= 150
 				}
 			};
 		case 'supplier':
@@ -878,7 +878,7 @@ function getValidationRules(tableName: string): ValidationRules {
 				requiredFields: ['sup_code'],
 				uniqueFields: ['sup_code'],
 				validators: {
-					sup_code: (value: unknown) => typeof value === 'string' && value.length <= 10,
+					sup_code: (value: unknown) => typeof value === 'string' && value.length <= 30,
 					sup_label: (value: unknown) => typeof value === 'string' && value.length <= 50
 				}
 			};
@@ -889,19 +889,19 @@ function getValidationRules(tableName: string): ValidationRules {
 				validators: {
 					atr_0_label: (value: unknown) => typeof value === 'string' && value.length <= 100,
 					atr_1_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 100),
+						!value || (typeof value === 'string' && value.length <= 150),
 					atr_2_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 100),
+						!value || (typeof value === 'string' && value.length <= 150),
 					atr_3_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 100),
+						!value || (typeof value === 'string' && value.length <= 150),
 					atr_4_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 100),
+						!value || (typeof value === 'string' && value.length <= 150),
 					atr_5_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 100),
+						!value || (typeof value === 'string' && value.length <= 150),
 					atr_6_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 100),
+						!value || (typeof value === 'string' && value.length <= 150),
 					atr_7_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 100)
+						!value || (typeof value === 'string' && value.length <= 150)
 				}
 			};
 		default:
