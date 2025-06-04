@@ -1,7 +1,7 @@
 <!-- DataTable.svelte - Solution cartes améliorée -->
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { Button } from 'flowbite-svelte';
+	import { Button } from '$lib/components/ui/button';
 	import { SquarePen, Trash2, CheckSquare, Square } from 'lucide-svelte';
 
 	export let data: any[] = [];
@@ -79,7 +79,7 @@
 						: ''}</span
 				>
 			</div>
-			<Button size="xs" color="red" on:click={handleDeleteSelected}>
+			<Button size="sm" variant="rouge" onclick={handleDeleteSelected}>
 				<Trash2 class="mr-2 h-4 w-4" />
 				Supprimer les éléments sélectionnés
 			</Button>
@@ -151,11 +151,16 @@
 									: 'bg-gray-100'}"
 							>
 								<div class="flex flex-col items-end space-y-2">
-									<Button size="xs" color="blue" class="w-full" on:click={() => handleEdit(item)}>
+									<Button size="sm" variant="bleu" class="w-full" onclick={() => handleEdit(item)}>
 										<SquarePen class="mr-2 h-4 w-4" />
 										Modifier
 									</Button>
-									<Button size="xs" color="red" class="w-full" on:click={() => handleDelete(item)}>
+									<Button
+										size="sm"
+										variant="rouge"
+										class="w-full"
+										onclick={() => handleDelete(item)}
+									>
 										<Trash2 class="mr-2 h-4 w-4" />
 										Supprimer
 									</Button>
@@ -214,11 +219,11 @@
 
 				{#if actions}
 					<div class="mt-4 flex space-x-2">
-						<Button size="xs" color="blue" class="w-1/2" on:click={() => handleEdit(item)}>
+						<Button size="sm" variant="bleu" class="w-1/2" onclick={() => handleEdit(item)}>
 							<SquarePen class="mr-2 h-4 w-4" />
 							Modifier
 						</Button>
-						<Button size="xs" color="red" class="w-1/2" on:click={() => handleDelete(item)}>
+						<Button size="sm" variant="rouge" class="w-1/2" onclick={() => handleDelete(item)}>
 							<Trash2 class="mr-2 h-4 w-4" />
 							Supprimer
 						</Button>

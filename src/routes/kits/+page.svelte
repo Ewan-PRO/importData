@@ -2,7 +2,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { Button, Alert } from 'flowbite-svelte';
+	import { Alert } from 'flowbite-svelte';
+	import { Button } from '$lib/components/ui/button';
 	import { CirclePlus } from 'lucide-svelte';
 	import DataTable from '$lib/components/DataTable.svelte';
 	import Filter from '$lib/components/Filter.svelte';
@@ -256,6 +257,10 @@
 		filteredKits = [...data.kits];
 	}
 
+	function handleAddKit(): void {
+		openAddForm();
+	}
+
 	function handleFormSubmit(event: FormEvent): void {
 		console.log('=== Début handleFormSubmit ===');
 		console.log('Données du formulaire reçues:', event.detail.data);
@@ -339,12 +344,8 @@
 </svelte:head>
 
 <div class="container mx-auto p-6">
-	<div class="mb-6 flex items-center justify-between">
+	<div class="mb-6">
 		<h1 class="text-3xl font-bold text-gray-900">Gestion des Kits</h1>
-		<Button color="green" on:click={openAddForm}>
-			<CirclePlus class="mr-2 h-5 w-5" />
-			Ajouter un kit
-		</Button>
 	</div>
 
 	{#if alertVisible}
@@ -353,13 +354,15 @@
 		</Alert>
 	{/if}
 
-	<!-- Composant de filtrage -->
+	<!-- Composant de filtrage avec bouton d'ajout -->
 	<Filter
 		fields={filterFields}
 		placeholder="Rechercher un kit..."
-		showAddButton={false}
+		showAddButton={true}
+		addButtonText="Ajouter un kit"
 		on:filter={handleFilter}
 		on:reset={handleResetFilter}
+		on:add={handleAddKit}
 	/>
 
 	<!-- Tableau des données -->

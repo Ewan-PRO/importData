@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button } from 'flowbite-svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	export let data;
 	const user = data.user;
@@ -30,7 +30,7 @@
 
 			<div class="mt-6">
 				<form method="POST" action="/?/signOut">
-					<Button type="submit" color="red">Se déconnecter</Button>
+					<Button type="submit" variant="rouge">Se déconnecter</Button>
 				</form>
 			</div>
 		{:else}

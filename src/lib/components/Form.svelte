@@ -1,7 +1,8 @@
 <!-- src/lib/components/Form.svelte -->
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { Button, Label, Input, Select, Textarea, Modal } from 'flowbite-svelte';
+	import { Label, Input, Select, Textarea, Modal } from 'flowbite-svelte';
+	import { Button } from '$lib/components/ui/button';
 	import { CircleCheck, CircleX } from 'lucide-svelte';
 
 	export let fields: {
@@ -145,11 +146,11 @@
 		{/each}
 
 		<div class="flex justify-end space-x-2 pt-4">
-			<Button color="red" on:click={handleCancel}>
+			<Button variant="rouge" onclick={handleCancel}>
 				<CircleX class="mr-2 h-4 w-4" />
 				{cancelLabel}
 			</Button>
-			<Button type="submit" color="green">
+			<Button type="submit" variant="vert">
 				<CircleCheck class="mr-2 h-4 w-4" />
 				{submitLabel}
 			</Button>

@@ -8,6 +8,7 @@
 	export let fields: { key: string; label: String }[] = [];
 	export let placeholder = 'Rechercher ...';
 	export let showAddButton = true; // Nouveau paramètre pour décider d'afficher ou non le bouton d'ajout
+	export let addButtonText = 'Ajouter'; // Nouveau paramètre pour personnaliser le texte du bouton
 
 	let searchTerm = '';
 	let selectedField = fields.length > 0 ? fields[0].key : '';
@@ -77,12 +78,10 @@
 			Réinitialiser
 		</Button>
 		{#if showAddButton}
-			<div class="flex w-full justify-center sm:w-auto sm:justify-start">
-				<Button variant="vert" class="w-8/12 sm:w-auto" onclick={handleAddClick}>
-					<CirclePlus class="mr-2 h-4 w-4" />
-					Ajouter une catégorie
-				</Button>
-			</div>
+			<Button variant="vert" class="flex-1 sm:flex-initial" onclick={handleAddClick}>
+				<CirclePlus class="mr-2 h-4 w-4" />
+				{addButtonText}
+			</Button>
 		{/if}
 	</div>
 </div>

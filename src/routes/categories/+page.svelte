@@ -1,9 +1,7 @@
 <!-- src/routes/categories/+page.svelte -->
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { Button, Alert } from 'flowbite-svelte';
-	import { CirclePlus } from 'lucide-svelte';
+	import { Alert } from 'flowbite-svelte';
 	import DataTable from '$lib/components/DataTable.svelte';
 	import Filter from '$lib/components/Filter.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -446,6 +444,7 @@
 			fields={filterFields}
 			placeholder="Rechercher une catégorie..."
 			showAddButton={true}
+			addButtonText="Ajouter une catégorie"
 			on:filter={(event) => {
 				handleFilter(event);
 			}}
