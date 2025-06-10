@@ -2,9 +2,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { Alert } from 'flowbite-svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { CirclePlus } from 'lucide-svelte';
+	import * as Alert from '$lib/components/ui/alert';
 	import DataTable from '$lib/components/DataTable.svelte';
 	import Filter from '$lib/components/Filter.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -85,7 +83,7 @@
 	let deleteConfirmOpen = false;
 	let selectedKit: Kit | null = null;
 	let alertMessage = '';
-	let alertType: 'green' | 'red' = 'green';
+	let alertType: 'success' | 'error' | 'info' | 'warning' = 'success';
 	let alertVisible = false;
 	let formData: Record<string, any> = {};
 
@@ -227,11 +225,14 @@
 		alertVisible = false;
 	}
 
-	function showAlert(message: string, type: 'success' | 'error' = 'success'): void {
+	function showAlert(
+		message: string,
+		type: 'success' | 'error' | 'info' | 'warning' = 'success'
+	): void {
 		alertMessage = message;
-		alertType = type === 'success' ? 'green' : 'red';
+		alertType = type;
 		alertVisible = true;
-		setTimeout(hideAlert, 5000);
+		setTimeout(hideAlert, 10000);
 	}
 
 	function handleFilter(event: FilterEvent): void {
@@ -331,6 +332,56 @@
 		console.log('=== Fin handleDeleteConfirm ===');
 	}
 
+	async function confirmDeleteMultiple(items: Kit[]): Promise<void> {
+		console.log('=== Début confirmDeleteMultiple ===');
+		console.log('Kits à supprimer:', items);
+
+		if (!items.length) {
+			showAlert('Aucun kit sélectionné', 'error');
+			return;
+		}
+
+		try {
+			let successCount = 0;
+			let errorCount = 0;
+
+			// Supprimer chaque kit sélectionné
+			for (const kit of items) {
+				if (kit.id) {
+					const response = await fetch(`/api/kits/${kit.id}`, {
+						method: 'DELETE'
+					});
+
+					if (response.ok) {
+						successCount++;
+					} else {
+						errorCount++;
+						console.error(`Erreur lors de la suppression du kit ${kit.id}`);
+					}
+				} else {
+					errorCount++;
+					console.error('Kit sans ID:', kit);
+				}
+			}
+
+			// Afficher le résultat
+			if (errorCount === 0) {
+				showAlert(`${successCount} kit(s) supprimé(s) avec succès`, 'success');
+			} else if (successCount === 0) {
+				showAlert(`Erreur lors de la suppression des ${errorCount} kit(s)`, 'error');
+			} else {
+				showAlert(`${successCount} kit(s) supprimé(s), ${errorCount} erreur(s)`, 'error');
+			}
+
+			// Recharger les données
+			await invalidateAll();
+		} catch (error) {
+			console.error('Erreur dans confirmDeleteMultiple:', error);
+			showAlert('Erreur lors de la suppression multiple', 'error');
+		}
+		console.log('=== Fin confirmDeleteMultiple ===');
+	}
+
 	// Réactivité pour mettre à jour les données filtrées
 	$: {
 		if (data.kits) {
@@ -346,12 +397,77 @@
 <div class="container mx-auto p-6">
 	<div class="mb-6">
 		<h1 class="text-3xl font-bold text-gray-900">Gestion des Kits</h1>
+
+		<!-- Boutons temporaires pour tester les alertes -->
+		<div class="mt-4 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4">
+			<p class="mb-3 text-sm text-gray-600">🧪 Tests d'alertes (temporaire)</p>
+			<div class="flex flex-wrap gap-2">
+				<button
+					type="button"
+					class="rounded bg-green-500 px-3 py-1 text-sm text-white hover:bg-green-600"
+					on:click={() => showAlert('Opération réussie avec succès !', 'success')}
+				>
+					Alerte Succès
+				</button>
+				<button
+					type="button"
+					class="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600"
+					on:click={() => showAlert("Une erreur est survenue lors de l'opération", 'error')}
+				>
+					Alerte Erreur
+				</button>
+				<button
+					type="button"
+					class="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
+					on:click={() => showAlert("Message d'information générale", 'info')}
+				>
+					Alerte Info
+				</button>
+				<button
+					type="button"
+					class="rounded bg-yellow-500 px-3 py-1 text-sm text-white hover:bg-yellow-600"
+					on:click={() =>
+						showAlert('Attention : vérifiez vos données avant de continuer', 'warning')}
+				>
+					Alerte Attention
+				</button>
+			</div>
+		</div>
 	</div>
 
 	{#if alertVisible}
-		<Alert color={alertType} class="mb-4" dismissable on:close={hideAlert}>
-			{alertMessage}
-		</Alert>
+		<Alert.Root
+			variant={alertType === 'error' ? 'destructive' : alertType}
+			class="relative mb-4 flex items-center gap-2"
+		>
+			<Alert.Icon variant={alertType === 'error' ? 'destructive' : alertType} />
+			<div class="flex-1">
+				<span class="font-semibold">
+					{alertType === 'success'
+						? 'Succès'
+						: alertType === 'error'
+							? 'Erreur'
+							: alertType === 'info'
+								? 'Information'
+								: 'Attention'}:
+				</span>
+				<span class="ml-1">{alertMessage}</span>
+			</div>
+			<button
+				type="button"
+				class="absolute top-2 right-2 rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
+				on:click={hideAlert}
+				aria-label="Fermer l'alerte"
+			>
+				<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+					<path
+						fill-rule="evenodd"
+						d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+						clip-rule="evenodd"
+					></path>
+				</svg>
+			</button>
+		</Alert.Root>
 	{/if}
 
 	<!-- Composant de filtrage avec bouton d'ajout -->
@@ -373,10 +489,7 @@
 		multiSelect={true}
 		on:edit={(e) => openEditForm(e.detail.item)}
 		on:delete={(e) => confirmDelete(e.detail.item)}
-		on:deleteSelected={(e) => {
-			console.log('Suppression multiple:', e.detail.items);
-			// TODO: Implémenter la suppression multiple
-		}}
+		on:deleteSelected={(e) => confirmDeleteMultiple(e.detail.items)}
 	/>
 
 	<!-- Formulaire d'ajout -->
