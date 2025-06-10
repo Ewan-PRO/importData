@@ -1,8 +1,10 @@
 <!-- src/lib/components/Form.svelte -->
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { Label, Input, Select, Textarea, Modal } from 'flowbite-svelte';
+	import { Label, Textarea, Modal } from 'flowbite-svelte';
 	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import * as Select from '$lib/components/ui/select';
 	import { CircleCheck, CircleX } from 'lucide-svelte';
 
 	export let fields: {
@@ -109,21 +111,27 @@
 						class={errors[field.key] ? 'border-red-500' : ''}
 					/>
 				{:else if field.type === 'select'}
-					<Select
-						id={field.key}
-						required={field.required}
+					<Select.Select
+						type="single"
 						value={formData[field.key] || ''}
-						on:change={(e) => {
-							const target = e.target as HTMLSelectElement;
-							updateFormData(field.key, target.value);
+						onValueChange={(value: string) => {
+							if (value) {
+								updateFormData(field.key, value);
+							}
 						}}
-						class={errors[field.key] ? 'border-red-500' : ''}
 					>
-						<option value="">Sélectionnez une option</option>
-						{#each field.options || [] as option}
-							<option value={option.value}>{option.label}</option>
-						{/each}
-					</Select>
+						<Select.SelectTrigger class={errors[field.key] ? 'border-red-500' : ''}>
+							{formData[field.key]
+								? field.options?.find((opt) => opt.value === formData[field.key])?.label ||
+									'Sélectionnez une option'
+								: 'Sélectionnez une option'}
+						</Select.SelectTrigger>
+						<Select.SelectContent>
+							{#each field.options || [] as option}
+								<Select.SelectItem value={option.value}>{option.label}</Select.SelectItem>
+							{/each}
+						</Select.SelectContent>
+					</Select.Select>
 				{:else}
 					<Input
 						type={field.type}
@@ -131,7 +139,7 @@
 						placeholder={field.placeholder || ''}
 						required={field.required}
 						value={formData[field.key] || ''}
-						on:input={(e) => {
+						oninput={(e) => {
 							const target = e.target as HTMLInputElement;
 							updateFormData(field.key, target.value);
 						}}

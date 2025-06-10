@@ -3,7 +3,6 @@
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms/client';
 	import {
-		Button,
 		Card,
 		Table,
 		TableBody,
@@ -13,10 +12,11 @@
 		TableHeadCell,
 		Alert,
 		Progressbar,
-		Select,
 		Spinner,
 		Fileupload
 	} from 'flowbite-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import * as Select from '$lib/components/ui/select';
 	import {
 		Upload,
 		Database,
@@ -485,8 +485,8 @@
 								on:change={handleFileInput}
 							/>
 							<Button
-								color="blue"
-								on:click={() => {
+								variant="bleu"
+								onclick={() => {
 									document.getElementById('fileInput')?.click();
 								}}
 							>
@@ -506,7 +506,7 @@
 								<p class="text-sm text-gray-500">{(file.size / 1024).toFixed(2)} Ko</p>
 							</div>
 						</div>
-						<Button color="blue" on:click={readFile}>
+						<Button variant="bleu" onclick={readFile}>
 							Continuer <ArrowRight class="ml-2 h-4 w-4" />
 						</Button>
 					</div>
@@ -529,16 +529,26 @@
 						<label for="targetTable" class="mb-2 block font-medium text-gray-700"
 							>Table de destination</label
 						>
-						<Select
-							id="targetTable"
-							bind:value={targetTable}
-							on:change={handleTableChange}
-							class="w-full md:w-1/2"
+						<Select.Select
+							type="single"
+							value={targetTable}
+							onValueChange={(value) => {
+								if (value) {
+									targetTable = value;
+									handleTableChange();
+								}
+							}}
 						>
-							{#each availableTables as table}
-								<option value={table.value}>{table.name}</option>
-							{/each}
-						</Select>
+							<Select.SelectTrigger class="w-full md:w-1/2">
+								{availableTables.find((t) => t.value === targetTable)?.name ||
+									'Sélectionnez une table'}
+							</Select.SelectTrigger>
+							<Select.SelectContent>
+								{#each availableTables as table}
+									<Select.SelectItem value={table.value}>{table.name}</Select.SelectItem>
+								{/each}
+							</Select.SelectContent>
+						</Select.Select>
 					</div>
 
 					<h3 class="mb-2 font-medium">Aperçu des données</h3>
@@ -548,16 +558,24 @@
 								{#each headers as header, i}
 									<TableHeadCell>
 										<div class="mb-2">{header}</div>
-										<Select
-											bind:value={mappedFields[i.toString()]}
-											on:change={() => ($form.mappedFields = mappedFields)}
-											class="min-w-[12rem] text-sm"
+										<Select.Select
+											type="single"
+											value={mappedFields[i.toString()] || ''}
+											onValueChange={(value) => {
+												mappedFields[i.toString()] = value || '';
+												$form.mappedFields = mappedFields;
+											}}
 										>
-											<option value="">Ne pas importer</option>
-											{#each tableFields[targetTable] as field}
-												<option value={field}>{field}</option>
-											{/each}
-										</Select>
+											<Select.SelectTrigger class="min-w-[12rem] text-sm">
+												{mappedFields[i.toString()] || 'Ne pas importer'}
+											</Select.SelectTrigger>
+											<Select.SelectContent>
+												<Select.SelectItem value="">Ne pas importer</Select.SelectItem>
+												{#each tableFields[targetTable] as field}
+													<Select.SelectItem value={field}>{field}</Select.SelectItem>
+												{/each}
+											</Select.SelectContent>
+										</Select.Select>
 									</TableHeadCell>
 								{/each}
 							</TableHead>
@@ -600,10 +618,10 @@
 					<input type="hidden" name="targetTable" value={targetTable} />
 
 					<div class="flex justify-between">
-						<Button color="light" on:click={resetImport}>Retour</Button>
+						<Button variant="blanc" onclick={resetImport}>Retour</Button>
 						<Button
 							type="submit"
-							color="blue"
+							variant="bleu"
 							disabled={getRequiredFields().some((field) => !isFieldMapped(field)) || $submitting}
 						>
 							{#if $submitting}
@@ -683,10 +701,10 @@
 						<input type="hidden" name="targetTable" value={targetTable} />
 
 						<div class="flex justify-between">
-							<Button color="light" on:click={() => (step = 2)}>Retour</Button>
+							<Button variant="blanc" onclick={() => (step = 2)}>Retour</Button>
 							<Button
 								type="submit"
-								color={validationResults.validRows > 0 ? 'blue' : 'light'}
+								variant={validationResults.validRows > 0 ? 'bleu' : 'blanc'}
 								disabled={validationResults.validRows === 0 || $submitting}
 							>
 								{#if $submitting}
@@ -710,7 +728,7 @@
 								({validationResults.inserted} insertions et {validationResults.updated} mises à jour)
 							{/if}
 						</p>
-						<Button color="blue" on:click={resetImport}>Nouvelle importation</Button>
+						<Button variant="bleu" onclick={resetImport}>Nouvelle importation</Button>
 					</div>
 				{/if}
 			</div>
