@@ -6,13 +6,24 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Search, Funnel, CirclePlus, RefreshCcw } from 'lucide-svelte';
 
-	export let fields: { key: string; label: string }[] = [];
-	export let placeholder = 'Rechercher ...';
-	export let showAddButton = true; // Nouveau paramètre pour décider d'afficher ou non le bouton d'ajout
-	export let addButtonText = 'Ajouter'; // Nouveau paramètre pour personnaliser le texte du bouton
+	let {
+		fields = [],
+		placeholder = 'Rechercher ...',
+		showAddButton = true,
+		addButtonText = 'Ajouter'
+	}: {
+		fields?: { key: string; label: string }[];
+		placeholder?: string;
+		showAddButton?: boolean;
+		addButtonText?: string;
+	} = $props();
 
-	let searchTerm = '';
-	let selectedField = fields.length > 0 ? fields[0].key : '';
+	let searchTerm = $state('');
+	let selectedField = $state(fields.length > 0 ? fields[0].key : '');
+
+	const selectedFieldLabel = $derived(
+		fields.find((f) => f.key === selectedField)?.label ?? 'Sélectionner un champ'
+	);
 
 	const dispatch = createEventDispatcher();
 
@@ -42,10 +53,10 @@
 				<div class="w-full sm:w-1/4">
 					<Select.Root type="single" bind:value={selectedField}>
 						<Select.Trigger class="w-full">
-							{fields.find((f) => f.key === selectedField)?.label || 'Sélectionner un champ'}
+							{selectedFieldLabel}
 						</Select.Trigger>
 						<Select.Content>
-							{#each fields as field}
+							{#each fields as field (field.key)}
 								<Select.Item value={field.key} label={field.label}>
 									{field.label}
 								</Select.Item>
