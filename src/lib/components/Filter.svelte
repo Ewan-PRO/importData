@@ -1,7 +1,7 @@
 <!-- src/lib/components/Filter.svelte modifié -->
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { Input } from 'flowbite-svelte';
+	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import { Search, Funnel, CirclePlus, RefreshCcw } from 'lucide-svelte';
 
@@ -40,7 +40,7 @@
 			{#if fields.length > 1}
 				<div class="w-full sm:w-1/4">
 					<select
-						class="border-input flex h-10.5 w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+						class="border-input flex h-10 w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
 						bind:value={selectedField}
 					>
 						{#each fields as field}
@@ -60,7 +60,7 @@
 						bind:value={searchTerm}
 						{placeholder}
 						class="w-full pl-10"
-						on:keyup={(e) => e.key === 'Enter' && handleSearch()}
+						onkeyup={(e) => e.key === 'Enter' && handleSearch()}
 					/>
 				</div>
 			</div>
