@@ -3,9 +3,10 @@
 	import { createEventDispatcher } from 'svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
+	import * as Select from '$lib/components/ui/select';
 	import { Search, Funnel, CirclePlus, RefreshCcw } from 'lucide-svelte';
 
-	export let fields: { key: string; label: String }[] = [];
+	export let fields: { key: string; label: string }[] = [];
 	export let placeholder = 'Rechercher ...';
 	export let showAddButton = true; // Nouveau paramètre pour décider d'afficher ou non le bouton d'ajout
 	export let addButtonText = 'Ajouter'; // Nouveau paramètre pour personnaliser le texte du bouton
@@ -39,14 +40,18 @@
 		<div class="flex flex-col gap-3 sm:flex-row">
 			{#if fields.length > 1}
 				<div class="w-full sm:w-1/4">
-					<select
-						class="border-input flex h-10 w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-						bind:value={selectedField}
-					>
-						{#each fields as field}
-							<option value={field.key}>{field.label}</option>
-						{/each}
-					</select>
+					<Select.Root type="single" bind:value={selectedField}>
+						<Select.Trigger class="w-full">
+							{fields.find((f) => f.key === selectedField)?.label || 'Sélectionner un champ'}
+						</Select.Trigger>
+						<Select.Content>
+							{#each fields as field}
+								<Select.Item value={field.key} label={field.label}>
+									{field.label}
+								</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
 				</div>
 			{/if}
 
