@@ -184,6 +184,99 @@ describe('Tests CRUD des Kits', () => {
 			expect(result.error).toContain('uniques');
 		});
 
+		it('devrait rejeter un kit avec même nom mais casse différente', async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 409,
+				json: async () => ({
+					error:
+						'Un kit similaire existe déjà : "Boulon". Raison : Même texte avec casse différente. Les noms de kits doivent être suffisamment distincts.'
+				})
+			});
+
+			const similarKitData = {
+				kit_label: 'BOULON', // Même nom en majuscules
+				atr_label: 'Poids',
+				atr_val: 'kg',
+				kat_valeur: '2.5'
+			};
+
+			const response = await fetch('/api/kits', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(similarKitData)
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(false);
+			expect(response.status).toBe(409);
+			expect(result.error).toContain('similaire existe déjà');
+			expect(result.error).toContain('casse différente');
+		});
+
+		it('devrait rejeter un kit avec même nom mais accents différents', async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 409,
+				json: async () => ({
+					error:
+						'Un kit similaire existe déjà : "Pompe à bec". Raison : Même texte avec accents ou espaces différents. Les noms de kits doivent être suffisamment distincts.'
+				})
+			});
+
+			const similarKitData = {
+				kit_label: 'Pompe a bec', // Même nom sans accent
+				atr_label: 'Pression',
+				atr_val: 'MBAR',
+				kat_valeur: '150'
+			};
+
+			const response = await fetch('/api/kits', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(similarKitData)
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(false);
+			expect(response.status).toBe(409);
+			expect(result.error).toContain('similaire existe déjà');
+			expect(result.error).toContain('accents ou espaces différents');
+		});
+
+		it('devrait rejeter un kit avec distance de Levenshtein ≤ 2', async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 409,
+				json: async () => ({
+					error:
+						'Un kit similaire existe déjà : "Boulon". Raison : Texte très similaire (1 caractère(s) de différence). Les noms de kits doivent être suffisamment distincts.'
+				})
+			});
+
+			const similarKitData = {
+				kit_label: 'Boulons', // 1 caractère de différence
+				atr_label: 'Poids',
+				atr_val: 'g',
+				kat_valeur: '5'
+			};
+
+			const response = await fetch('/api/kits', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(similarKitData)
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(false);
+			expect(response.status).toBe(409);
+			expect(result.error).toContain('similaire existe déjà');
+			expect(result.error).toContain('très similaire');
+		});
+
 		it('devrait créer un kit avec succès', async () => {
 			// Mock de la réponse API pour création réussie
 			mockFetch.mockResolvedValueOnce({
