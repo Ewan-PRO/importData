@@ -134,28 +134,28 @@
 	const editFormFields: FormField[] = [
 		{
 			key: 'kit_label',
-			label: 'Nom du Kit',
+			label: 'Nom du Kit :',
 			type: 'text',
 			required: true,
 			placeholder: 'Ex: Boulon, Pompe à palettes...'
 		},
 		{
 			key: 'atr_label',
-			label: 'Caractéristique',
+			label: 'Caractéristique :',
 			type: 'text',
 			required: true,
 			placeholder: 'Ex: Poids, Diamètre, Pression...'
 		},
 		{
 			key: 'atr_val',
-			label: 'Unité',
+			label: 'Unité :',
 			type: 'text',
 			required: true,
 			placeholder: 'Ex: g, mm, MBAR...'
 		},
 		{
 			key: 'kat_valeur',
-			label: 'Valeur',
+			label: 'Valeur :',
 			type: 'text',
 			required: true,
 			placeholder: 'Ex: 5, 12, 150...'

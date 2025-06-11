@@ -107,26 +107,108 @@
 
 	// Champs pour le formulaire d'ajout
 	const addFormFields: FormField[] = [
-		{ key: 'atr_0_label', label: 'Niveau 1', type: 'text', required: true },
-		{ key: 'atr_1_label', label: 'Niveau 2', type: 'text' },
-		{ key: 'atr_2_label', label: 'Niveau 3', type: 'text' },
-		{ key: 'atr_3_label', label: 'Niveau 4', type: 'text' },
-		{ key: 'atr_4_label', label: 'Niveau 5', type: 'text' },
-		{ key: 'atr_5_label', label: 'Niveau 6', type: 'text' },
-		{ key: 'atr_6_label', label: 'Niveau 7', type: 'text' },
-		{ key: 'atr_7_label', label: 'Niveau 8', type: 'text' }
+		{
+			key: 'atr_0_label',
+			label: 'Niveau 1 :',
+			type: 'text',
+			required: true,
+			placeholder: 'Ex: fluide, pièce, equipement industriel...'
+		},
+		{
+			key: 'atr_1_label',
+			label: 'Niveau 2 :',
+			type: 'text',
+			placeholder: 'Ex: piece mécanique, étanchéité, pompe...'
+		},
+		{
+			key: 'atr_2_label',
+			label: 'Niveau 3 :',
+			type: 'text',
+			placeholder: 'Ex: guidage, joint, pompe à vide...'
+		},
+		{
+			key: 'atr_3_label',
+			label: 'Niveau 4 :',
+			type: 'text',
+			placeholder: 'Ex: guidage en rotation, joint statique...'
+		},
+		{
+			key: 'atr_4_label',
+			label: 'Niveau 5 :',
+			type: 'text',
+			placeholder: 'Ex: roulement, joint torique, pompe à palettes...'
+		},
+		{
+			key: 'atr_5_label',
+			label: 'Niveau 6 :',
+			type: 'text',
+			placeholder: 'Ex: roulement à billes, pompe à palettes sèches...'
+		},
+		{
+			key: 'atr_6_label',
+			label: 'Niveau 7 :',
+			type: 'text',
+			placeholder: 'Ex: roulement rigide à billes...'
+		},
+		{
+			key: 'atr_7_label',
+			label: 'Niveau 8 :',
+			type: 'text',
+			placeholder: 'Ex: spécifications techniques détaillées...'
+		}
 	];
 
 	// Champs pour le formulaire d'édition
 	const editFormFields: FormField[] = [
-		{ key: 'atr_0_label', label: 'Niveau 1', type: 'text', required: true },
-		{ key: 'atr_1_label', label: 'Niveau 2', type: 'text' },
-		{ key: 'atr_2_label', label: 'Niveau 3', type: 'text' },
-		{ key: 'atr_3_label', label: 'Niveau 4', type: 'text' },
-		{ key: 'atr_4_label', label: 'Niveau 5', type: 'text' },
-		{ key: 'atr_5_label', label: 'Niveau 6', type: 'text' },
-		{ key: 'atr_6_label', label: 'Niveau 7', type: 'text' },
-		{ key: 'atr_7_label', label: 'Niveau 8', type: 'text' }
+		{
+			key: 'atr_0_label',
+			label: 'Niveau 1 :',
+			type: 'text',
+			required: true,
+			placeholder: 'Ex: fluide, pièce, equipement industriel...'
+		},
+		{
+			key: 'atr_1_label',
+			label: 'Niveau 2 :',
+			type: 'text',
+			placeholder: 'Ex: piece mécanique, étanchéité, pompe...'
+		},
+		{
+			key: 'atr_2_label',
+			label: 'Niveau 3 :',
+			type: 'text',
+			placeholder: 'Ex: guidage, joint, pompe à vide...'
+		},
+		{
+			key: 'atr_3_label',
+			label: 'Niveau 4 :',
+			type: 'text',
+			placeholder: 'Ex: guidage en rotation, joint statique...'
+		},
+		{
+			key: 'atr_4_label',
+			label: 'Niveau 5 :',
+			type: 'text',
+			placeholder: 'Ex: roulement, joint torique, pompe à palettes...'
+		},
+		{
+			key: 'atr_5_label',
+			label: 'Niveau 6 :',
+			type: 'text',
+			placeholder: 'Ex: roulement à billes, pompe à palettes sèches...'
+		},
+		{
+			key: 'atr_6_label',
+			label: 'Niveau 7 :',
+			type: 'text',
+			placeholder: 'Ex: roulement rigide à billes...'
+		},
+		{
+			key: 'atr_7_label',
+			label: 'Niveau 8 :',
+			type: 'text',
+			placeholder: 'Ex: spécifications techniques détaillées...'
+		}
 	];
 
 	$: {
