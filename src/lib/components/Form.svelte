@@ -1,7 +1,8 @@
 <!-- src/lib/components/Form.svelte -->
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { Label, Textarea, Modal } from 'flowbite-svelte';
+	import { Textarea, Modal } from 'flowbite-svelte';
+	import { Label } from '$lib/components/ui/label';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Select from '$lib/components/ui/select';
