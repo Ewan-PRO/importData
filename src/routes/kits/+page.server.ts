@@ -18,7 +18,12 @@ const kitSchema = z.object({
 	kit_label: z.string().min(1, { message: 'Le nom du kit est requis' }),
 	atr_label: z.string().min(1, { message: 'La caractéristique est requise' }),
 	atr_val: z.string().min(1, { message: "L'unité est requise" }),
-	kat_valeur: z.string().min(1, { message: 'La valeur numérique est requise' })
+	kat_valeur: z
+		.string()
+		.min(1, { message: 'La valeur doit être un chiffre ou un nombre valide' })
+		.refine((val) => !isNaN(parseFloat(val)), {
+			message: 'La valeur doit être un nombre valide'
+		})
 });
 
 // Cette fonction sera utilisée à la fois sur le serveur et le client

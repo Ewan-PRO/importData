@@ -123,8 +123,8 @@
 		},
 		{
 			key: 'kat_valeur',
-			label: 'Valeur :',
-			type: 'text',
+			label: 'Valeur numérique (⚠️chiffre ou nombre obligatoire) :',
+			type: 'number',
 			required: true,
 			placeholder: 'Ex: 5, 12, 150...'
 		}
@@ -155,8 +155,8 @@
 		},
 		{
 			key: 'kat_valeur',
-			label: 'Valeur :',
-			type: 'text',
+			label: 'Valeur numérique (⚠️chiffre ou nombre obligatoire) :',
+			type: 'number',
 			required: true,
 			placeholder: 'Ex: 5, 12, 150...'
 		}
@@ -249,6 +249,20 @@
 		console.log('=== Début handleFormSubmit ===');
 		console.log('Données du formulaire reçues:', event.detail.data);
 		console.log('selectedKit actuel:', selectedKit);
+
+		// Validation numérique pour kat_valeur
+		const katValeur = event.detail.data.kat_valeur;
+		if (!katValeur || katValeur.trim() === '') {
+			Alert.alertActions.warning('La valeur numérique est obligatoire');
+			return;
+		}
+
+		// Vérifier si c'est un nombre valide
+		const numericValue = parseFloat(katValeur);
+		if (isNaN(numericValue)) {
+			Alert.alertActions.warning('La valeur doit être un chiffre ou un nombre valide');
+			return;
+		}
 
 		const formElement = document.querySelector('#kitForm') as HTMLFormElement;
 		if (!formElement) {
