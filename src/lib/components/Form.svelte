@@ -1,10 +1,11 @@
 <!-- src/lib/components/Form.svelte -->
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { Textarea, Modal } from 'flowbite-svelte';
+	import { Modal } from 'flowbite-svelte';
 	import { Label } from '$lib/components/ui/label';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select';
 	import { CircleCheck, CircleX } from 'lucide-svelte';
 
@@ -104,11 +105,7 @@
 						id={field.key}
 						placeholder={field.placeholder || ''}
 						required={field.required}
-						value={formData[field.key] || ''}
-						on:input={(e) => {
-							const target = e.target as HTMLTextAreaElement;
-							updateFormData(field.key, target.value);
-						}}
+						bind:value={formData[field.key]}
 						class={errors[field.key] ? 'border-red-500' : ''}
 					/>
 				{:else if field.type === 'select'}
