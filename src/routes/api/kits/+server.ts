@@ -43,19 +43,30 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		console.log('Validation OK, début de la transaction');
 
+		// Vérifier l'unicité du kit_label AVANT la transaction
+		const existingKit = await prisma.kit.findFirst({
+			where: { kit_label: data.kit_label }
+		});
+
+		if (existingKit) {
+			console.log('Erreur: Kit avec ce nom existe déjà:', existingKit);
+			return json(
+				{
+					error: `Un kit avec le nom "${data.kit_label}" existe déjà. Les noms de kits doivent être uniques.`
+				},
+				{ status: 409 }
+			); // 409 Conflict
+		}
+
 		// Utilisation d'une transaction pour créer toutes les entités nécessaires
 		const result = await prisma.$transaction(async (tx) => {
 			console.log('Transaction démarrée');
 
-			// 1. Vérifier si le kit existe, sinon le créer
-			const kit =
-				(await tx.kit.findFirst({
-					where: { kit_label: data.kit_label }
-				})) ??
-				(await tx.kit.create({
-					data: { kit_label: data.kit_label }
-				}));
-			console.log('Kit créé/trouvé:', kit);
+			// 1. Créer le nouveau kit (on sait qu'il n'existe pas)
+			const kit = await tx.kit.create({
+				data: { kit_label: data.kit_label }
+			});
+			console.log('Kit créé:', kit);
 
 			// 2. Vérifier si l'attribut caractéristique existe, sinon le créer
 			const attributeCarac =

@@ -153,6 +153,37 @@ describe('Tests CRUD des Kits', () => {
 			mockFetch.mockClear();
 		});
 
+		it("devrait rejeter la création d'un kit avec un nom déjà existant", async () => {
+			// Mock de la réponse API pour conflit (kit déjà existant)
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 409,
+				json: async () => ({
+					error: 'Un kit avec le nom "Boulon" existe déjà. Les noms de kits doivent être uniques.'
+				})
+			});
+
+			const duplicateKitData = {
+				kit_label: 'Boulon', // Nom déjà existant
+				atr_label: 'Poids',
+				atr_val: 'kg',
+				kat_valeur: '2.5'
+			};
+
+			const response = await fetch('/api/kits', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(duplicateKitData)
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(false);
+			expect(response.status).toBe(409); // Conflict
+			expect(result.error).toContain('existe déjà');
+			expect(result.error).toContain('uniques');
+		});
+
 		it('devrait créer un kit avec succès', async () => {
 			// Mock de la réponse API pour création réussie
 			mockFetch.mockResolvedValueOnce({
