@@ -259,7 +259,11 @@
 
 		// Vérifier si c'est un nombre valide
 		const numericValue = parseFloat(katValeur);
-		if (isNaN(numericValue)) {
+		if (
+			isNaN(numericValue) ||
+			!isFinite(numericValue) ||
+			!/^-?\d*\.?\d+([eE][-+]?\d+)?$/.test(katValeur.trim())
+		) {
 			Alert.alertActions.warning('La valeur doit être un chiffre ou un nombre valide');
 			return;
 		}
