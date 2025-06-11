@@ -79,7 +79,7 @@
 						: ''}</span
 				>
 			</div>
-			<Button size="sm" variant="rouge" onclick={handleDeleteSelected}>
+			<Button size="default" variant="rouge" onclick={handleDeleteSelected}>
 				<Trash2 class="mr-2 h-4 w-4" />
 				Supprimer les éléments sélectionnés
 			</Button>

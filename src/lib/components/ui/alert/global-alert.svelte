@@ -34,15 +34,17 @@
 </script>
 
 {#if $alertStore.visible}
-	<Alert.Root variant={typeToVariant[$alertStore.type]} class="relative mb-4">
+	<Alert.Root
+		variant={typeToVariant[$alertStore.type]}
+		class="relative mb-4 flex items-start gap-2"
+	>
 		<Alert.Icon variant={typeToVariant[$alertStore.type]} />
-
-		{#if $alertStore.title}
-			<Alert.Title>{$alertStore.title}</Alert.Title>
-		{/if}
-
-		<Alert.Description>{$alertStore.message}</Alert.Description>
-
+		<div class="flex-1">
+			<span class="font-semibold">
+				{$alertStore.title} :
+			</span>
+			<span class="ml-1">{$alertStore.message}</span>
+		</div>
 		<button
 			type="button"
 			class="absolute top-2 right-2 rounded-lg p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"

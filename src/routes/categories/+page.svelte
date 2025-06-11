@@ -1,7 +1,7 @@
 <!-- src/routes/categories/+page.svelte -->
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { Alert } from 'flowbite-svelte';
+	import * as Alert from '$lib/components/ui/alert';
 	import DataTable from '$lib/components/DataTable.svelte';
 	import Filter from '$lib/components/Filter.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -89,9 +89,6 @@
 	let editFormOpen = false;
 	let deleteConfirmOpen = false;
 	let selectedCategory: Category | null = null;
-	let alertMessage = '';
-	let alertType: 'success' | 'error' = 'success';
-	let alertVisible = false;
 	let formData: Record<string, any> = {};
 
 	// Type pour les champs de formulaire
@@ -187,15 +184,12 @@
 		console.log('=== Fin confirmDelete ===');
 	}
 
-	function hideAlert(): void {
-		alertVisible = false;
-	}
-
 	function showAlert(message: string, type: 'success' | 'error' = 'success'): void {
-		alertMessage = message;
-		alertType = type;
-		alertVisible = true;
-		setTimeout(hideAlert, 5000);
+		if (type === 'success') {
+			Alert.alertActions.success(message);
+		} else {
+			Alert.alertActions.error(message);
+		}
 	}
 
 	function handleFilter(event: FilterEvent): void {
@@ -426,18 +420,11 @@
 </script>
 
 <div class="container mx-auto py-6">
-	<h1 class="mb-6 text-3xl font-bold">Gestion des Catégories</h1>
+	<div class="mb-6">
+		<h1 class="text-3xl font-bold text-gray-900">Gestion des Catégories</h1>
+	</div>
 
-	{#if alertVisible}
-		<Alert
-			color={alertType === 'success' ? 'green' : 'red'}
-			dismissable
-			on:dismiss={hideAlert}
-			class="mb-4"
-		>
-			{alertMessage}
-		</Alert>
-	{/if}
+	<Alert.GlobalAlert />
 
 	<div class="mb-4">
 		<Filter

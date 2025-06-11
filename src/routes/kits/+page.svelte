@@ -82,9 +82,6 @@
 	let editFormOpen = false;
 	let deleteConfirmOpen = false;
 	let selectedKit: Kit | null = null;
-	let alertMessage = '';
-	let alertType: 'success' | 'error' | 'info' | 'warning' = 'success';
-	let alertVisible = false;
 	let formData: Record<string, any> = {};
 
 	// Type pour les champs de formulaire
@@ -221,20 +218,6 @@
 		console.log('=== Fin confirmDelete ===');
 	}
 
-	function hideAlert(): void {
-		alertVisible = false;
-	}
-
-	function showAlert(
-		message: string,
-		type: 'success' | 'error' | 'info' | 'warning' = 'success'
-	): void {
-		alertMessage = message;
-		alertType = type;
-		alertVisible = true;
-		setTimeout(hideAlert, 10000);
-	}
-
 	function handleFilter(event: FilterEvent): void {
 		const { field, term } = event.detail;
 		console.log('Filtrage:', { field, term });
@@ -304,7 +287,7 @@
 
 		if (!selectedKit?.id) {
 			console.error('Aucun kit sélectionné ou ID manquant');
-			showAlert('Erreur: Aucun kit sélectionné', 'error');
+			Alert.alertActions.error('Erreur: Aucun kit sélectionné');
 			deleteConfirmOpen = false;
 			return;
 		}
@@ -337,7 +320,7 @@
 		console.log('Kits à supprimer:', items);
 
 		if (!items.length) {
-			showAlert('Aucun kit sélectionné', 'error');
+			Alert.alertActions.error('Aucun kit sélectionné');
 			return;
 		}
 
@@ -366,18 +349,18 @@
 
 			// Afficher le résultat
 			if (errorCount === 0) {
-				showAlert(`${successCount} kit(s) supprimé(s) avec succès`, 'success');
+				Alert.alertActions.success(`${successCount} kit(s) supprimé(s) avec succès`);
 			} else if (successCount === 0) {
-				showAlert(`Erreur lors de la suppression des ${errorCount} kit(s)`, 'error');
+				Alert.alertActions.error(`Erreur lors de la suppression des ${errorCount} kit(s)`);
 			} else {
-				showAlert(`${successCount} kit(s) supprimé(s), ${errorCount} erreur(s)`, 'error');
+				Alert.alertActions.error(`${successCount} kit(s) supprimé(s), ${errorCount} erreur(s)`);
 			}
 
 			// Recharger les données
 			await invalidateAll();
 		} catch (error) {
 			console.error('Erreur dans confirmDeleteMultiple:', error);
-			showAlert('Erreur lors de la suppression multiple', 'error');
+			Alert.alertActions.error('Erreur lors de la suppression multiple');
 		}
 		console.log('=== Fin confirmDeleteMultiple ===');
 	}
@@ -397,78 +380,9 @@
 <div class="container mx-auto p-6">
 	<div class="mb-6">
 		<h1 class="text-3xl font-bold text-gray-900">Gestion des Kits</h1>
-
-		<!-- Boutons temporaires pour tester les alertes -->
-		<div class="mt-4 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4">
-			<p class="mb-3 text-sm text-gray-600">🧪 Tests d'alertes (temporaire)</p>
-			<div class="flex flex-wrap gap-2">
-				<button
-					type="button"
-					class="rounded bg-green-500 px-3 py-1 text-sm text-white hover:bg-green-600"
-					on:click={() => showAlert('Opération réussie avec succès !', 'success')}
-				>
-					Alerte Succès
-				</button>
-				<button
-					type="button"
-					class="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600"
-					on:click={() => showAlert("Une erreur est survenue lors de l'opération", 'error')}
-				>
-					Alerte Erreur
-				</button>
-				<button
-					type="button"
-					class="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
-					on:click={() => showAlert("Message d'information générale", 'info')}
-				>
-					Alerte Info
-				</button>
-				<button
-					type="button"
-					class="rounded bg-yellow-500 px-3 py-1 text-sm text-white hover:bg-yellow-600"
-					on:click={() =>
-						showAlert('Attention : vérifiez vos données avant de continuer', 'warning')}
-				>
-					Alerte Attention
-				</button>
-			</div>
-		</div>
 	</div>
 
-	{#if alertVisible}
-		<Alert.Root
-			variant={alertType === 'error' ? 'destructive' : alertType}
-			class="relative mb-4 flex items-center gap-2"
-		>
-			<Alert.Icon variant={alertType === 'error' ? 'destructive' : alertType} />
-			<div class="flex-1">
-				<span class="font-semibold">
-					{alertType === 'success'
-						? 'Succès'
-						: alertType === 'error'
-							? 'Erreur'
-							: alertType === 'info'
-								? 'Information'
-								: 'Attention'}:
-				</span>
-				<span class="ml-1">{alertMessage}</span>
-			</div>
-			<button
-				type="button"
-				class="absolute top-2 right-2 rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
-				on:click={hideAlert}
-				aria-label="Fermer l'alerte"
-			>
-				<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-					<path
-						fill-rule="evenodd"
-						d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-						clip-rule="evenodd"
-					></path>
-				</svg>
-			</button>
-		</Alert.Root>
-	{/if}
+	<Alert.GlobalAlert />
 
 	<!-- Composant de filtrage avec bouton d'ajout -->
 	<Filter
@@ -552,14 +466,16 @@
 				console.log('Résultat de la soumission:', result);
 
 				if (result.type === 'success') {
-					showAlert(selectedKit ? 'Kit modifié avec succès' : 'Kit créé avec succès', 'success');
+					Alert.alertActions.success(
+						selectedKit ? 'Kit modifié avec succès' : 'Kit créé avec succès'
+					);
 					addFormOpen = false;
 					editFormOpen = false;
 					selectedKit = null;
 					await invalidateAll();
 				} else if (result.type === 'failure') {
 					const errorMsg = (result.data as any)?.error || 'Une erreur est survenue';
-					showAlert(errorMsg, 'error');
+					Alert.alertActions.error(errorMsg);
 				}
 
 				await update();
@@ -586,12 +502,12 @@
 				console.log('Résultat de la suppression:', result);
 
 				if (result.type === 'success') {
-					showAlert('Kit supprimé avec succès', 'success');
+					Alert.alertActions.success('Kit supprimé avec succès');
 					selectedKit = null;
 					await invalidateAll();
 				} else if (result.type === 'failure') {
 					const errorMsg = (result.data as any)?.error || 'Erreur lors de la suppression';
-					showAlert(errorMsg, 'error');
+					Alert.alertActions.error(errorMsg);
 				}
 
 				await update();

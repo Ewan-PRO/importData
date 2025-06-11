@@ -10,16 +10,13 @@
 		TableBodyRow,
 		TableHead,
 		TableHeadCell,
-		Alert,
-		Progressbar,
-		Spinner,
-		Fileupload
+		Spinner
 	} from 'flowbite-svelte';
+	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import * as Select from '$lib/components/ui/select';
 	import {
 		Upload,
-		Database,
 		FileCheck,
 		AlertCircle,
 		ArrowRight,
@@ -84,14 +81,13 @@
 				}
 			}
 
-			errorMessage = errorMsg;
+			Alert.alertActions.error(errorMsg);
 		}
 	});
 
 	let dragActive = false;
 	let isProcessing = false;
 	let step = 1;
-	let errorMessage = '';
 	let file: File | null = null;
 	let fileName = '';
 	let rawData: any[] = [];
@@ -171,12 +167,12 @@
 
 		// Vérification du type de fichier
 		if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
-			errorMessage = 'Format de fichier non supporté. Veuillez utiliser un fichier CSV ou Excel.';
+			Alert.alertActions.error(
+				'Format de fichier non supporté. Veuillez utiliser un fichier CSV ou Excel.'
+			);
 			file = null;
 			return;
 		}
-
-		errorMessage = '';
 		readFile();
 	}
 
@@ -248,7 +244,9 @@
 				step = 2;
 			} catch (err) {
 				console.error('Erreur détaillée:', err);
-				errorMessage = `Erreur lors de la lecture du fichier: ${err instanceof Error ? err.message : 'Erreur inconnue'}`;
+				Alert.alertActions.error(
+					`Erreur lors de la lecture du fichier: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+				);
 			} finally {
 				isProcessing = false;
 			}
@@ -256,7 +254,7 @@
 
 		reader.onerror = () => {
 			console.error('Erreur de lecture du fichier');
-			errorMessage = 'Échec de lecture du fichier';
+			Alert.alertActions.error('Échec de lecture du fichier');
 			isProcessing = false;
 		};
 
@@ -393,7 +391,6 @@
 			processed: false
 		};
 		step = 1;
-		errorMessage = '';
 
 		// Réinitialiser le formulaire SuperForms
 		reset();
@@ -412,12 +409,7 @@
 <div class="mx-auto my-8 max-w-6xl">
 	<h1 class="mb-6 text-2xl font-bold">Importation de données</h1>
 
-	{#if errorMessage}
-		<Alert color="red" class="mb-4">
-			<AlertCircle slot="icon" class="h-4 w-4" />
-			{errorMessage}
-		</Alert>
-	{/if}
+	<Alert.GlobalAlert />
 
 	<div class="steps mb-8 flex justify-between">
 		<div class={`step-item ${step >= 1 ? 'text-blue-700' : ''} flex-1`}>
@@ -518,11 +510,18 @@
 					<h2 class="mb-4 text-xl font-semibold">Mappage des colonnes</h2>
 
 					{#if showNoHeaderAlert}
-						<Alert color="red" class="mb-4">
-							<AlertCircle slot="icon" class="h-4 w-4" />
-							<strong>Attention :</strong> Les données importées n'ont pas d'en-têtes. Les colonnes ont
-							été nommées automatiquement.
-						</Alert>
+						<div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
+							<div class="flex items-center">
+								<AlertCircle class="mr-2 h-4 w-4 text-red-500" />
+								<div>
+									<strong class="text-red-800">Attention :</strong>
+									<span class="text-red-700"
+										>Les données importées n'ont pas d'en-têtes. Les colonnes ont été nommées
+										automatiquement.</span
+									>
+								</div>
+							</div>
+						</div>
 					{/if}
 
 					<div class="mb-6">

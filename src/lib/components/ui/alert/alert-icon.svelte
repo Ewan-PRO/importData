@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CircleCheck, CircleX, Info, TriangleAlert } from 'lucide-svelte';
+	import { CircleCheck, CircleAlert, Info, TriangleAlert } from 'lucide-svelte';
 	import type { AlertVariant } from './alert.svelte';
 
 	let { variant = 'default' }: { variant?: AlertVariant } = $props();
@@ -9,7 +9,7 @@
 			case 'success':
 				return CircleCheck;
 			case 'destructive':
-				return CircleX;
+				return CircleAlert;
 			case 'info':
 				return Info;
 			case 'warning':
