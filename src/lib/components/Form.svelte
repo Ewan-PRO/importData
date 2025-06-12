@@ -17,6 +17,7 @@
 		required?: boolean;
 		options?: Array<{ value: string; label: string }>;
 		value?: any;
+		disabled?: boolean;
 	}[] = [];
 	export let data: any = {};
 	export let title = 'Formulaire';
@@ -53,14 +54,45 @@
 		errors = {};
 		let isValid = true;
 
+		// Validation des champs requis
 		fields.forEach((field) => {
 			console.log(`Validation du champ ${field.key}:`, formData[field.key]);
-			if (field.required && (!formData[field.key] || formData[field.key] === '')) {
+			if (
+				field.required &&
+				!field.disabled &&
+				(!formData[field.key] || formData[field.key] === '')
+			) {
 				errors[field.key] = `Le champ ${field.label} est requis`;
 				isValid = false;
 				console.log(`Erreur détectée pour ${field.key}: champ requis`);
 			}
 		});
+
+		// Validation spéciale pour les catégories : au moins un niveau doit être rempli
+		const categoryLevels = [
+			'atr_1_label',
+			'atr_2_label',
+			'atr_3_label',
+			'atr_4_label',
+			'atr_5_label',
+			'atr_6_label',
+			'atr_7_label'
+		];
+		const hasCategoryFields = fields.some((field) => categoryLevels.includes(field.key));
+
+		if (hasCategoryFields) {
+			const hasAtLeastOneLevel = categoryLevels.some((key) => {
+				const value = formData[key] || data[key];
+				return value && value.toString().trim() !== '';
+			});
+
+			if (!hasAtLeastOneLevel) {
+				errors['atr_1_label'] =
+					'Au moins un niveau entre atr_1_label et atr_7_label doit être rempli';
+				isValid = false;
+				console.log('Erreur détectée: aucun niveau de catégorie rempli');
+			}
+		}
 
 		console.log('Résultat de la validation:', { isValid, errors });
 		return isValid;
@@ -69,7 +101,14 @@
 	function handleSubmit() {
 		console.log('handleSubmit appelé - État actuel:', { formData, errors });
 		if (validateForm()) {
-			const finalData = { ...data, ...formData };
+			// Filtrer les champs disabled des données finales
+			const filteredFormData = Object.fromEntries(
+				Object.entries(formData).filter(([key]) => {
+					const field = fields.find((f) => f.key === key);
+					return !field?.disabled;
+				})
+			);
+			const finalData = { ...data, ...filteredFormData };
 			console.log('Formulaire valide, dispatch de submit avec:', { data: finalData, isEdit });
 			dispatch('submit', {
 				data: finalData,
@@ -136,7 +175,8 @@
 						id={field.key}
 						placeholder={field.placeholder || ''}
 						required={field.required}
-						value={formData[field.key] || ''}
+						disabled={field.disabled || false}
+						value={formData[field.key] || field.value || ''}
 						oninput={(e) => {
 							const target = e.target as HTMLInputElement;
 							updateFormData(field.key, target.value);

@@ -85,20 +85,36 @@ export const POST: RequestHandler = async ({ request }) => {
 		const data = await request.json();
 		const attributeEntries = [];
 
-		if (!data.atr_0_label || data.atr_0_label.trim() === '') {
-			return json({ error: 'Le niveau 1 (atr_0_label) est obligatoire' }, { status: 400 });
+		// Vérifier qu'au moins un niveau entre atr_1_label et atr_7_label est rempli
+		const hasAtLeastOneLevel = [
+			data.atr_1_label,
+			data.atr_2_label,
+			data.atr_3_label,
+			data.atr_4_label,
+			data.atr_5_label,
+			data.atr_6_label,
+			data.atr_7_label
+		].some((label) => label && label.trim() !== '');
+
+		if (!hasAtLeastOneLevel) {
+			return json(
+				{ error: 'Au moins un niveau entre le Niveau 2 et le Niveau 8 doit être rempli' },
+				{ status: 400 }
+			);
 		}
 
 		await createRootCategory();
 
 		let previousLevel = 'CATEGORIE';
 
-		for (let i = 0; i < 8; i++) {
+		// Commencer à partir de atr_1_label (ignorer atr_0_label qui est toujours "Catégorie des produits")
+		for (let i = 1; i <= 7; i++) {
 			const label = data[`atr_${i}_label`];
 
 			if (label && label.trim() !== '') {
 				let result;
-				if (i === 0) {
+				if (i === 1) {
+					// Premier niveau réel (atr_1_label devient le niveau 0 en base)
 					result = await handleLevel0Attribute(label);
 				} else {
 					result = await handleSubLevelAttribute(label, previousLevel);

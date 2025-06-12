@@ -14,16 +14,37 @@ function safeFormDataToString(value: FormDataEntryValue | null): string {
 }
 
 // Schéma de validation pour les catégories
-const categorySchema = z.object({
-	atr_0_label: z.string().min(1, { message: 'Le premier niveau est requis' }),
-	atr_1_label: z.string().optional(),
-	atr_2_label: z.string().optional(),
-	atr_3_label: z.string().optional(),
-	atr_4_label: z.string().optional(),
-	atr_5_label: z.string().optional(),
-	atr_6_label: z.string().optional(),
-	atr_7_label: z.string().optional()
-});
+const categorySchema = z
+	.object({
+		atr_0_label: z.string().default('Catégorie des produits'),
+		atr_1_label: z.string().optional(),
+		atr_2_label: z.string().optional(),
+		atr_3_label: z.string().optional(),
+		atr_4_label: z.string().optional(),
+		atr_5_label: z.string().optional(),
+		atr_6_label: z.string().optional(),
+		atr_7_label: z.string().optional()
+	})
+	.refine(
+		(data) => {
+			// Vérifier qu'au moins un champ entre atr_1_label et atr_7_label est rempli
+			const hasAtLeastOneLevel = [
+				data.atr_1_label,
+				data.atr_2_label,
+				data.atr_3_label,
+				data.atr_4_label,
+				data.atr_5_label,
+				data.atr_6_label,
+				data.atr_7_label
+			].some((label) => label && label.trim() !== '');
+
+			return hasAtLeastOneLevel;
+		},
+		{
+			message: 'Au moins un niveau entre atr_1_label et atr_7_label doit être rempli',
+			path: ['atr_1_label'] // Afficher l'erreur sur le premier champ
+		}
+	);
 
 // Cette fonction sera utilisée à la fois sur le serveur et le client
 export const load = (async ({ fetch, depends }) => {
@@ -55,6 +76,10 @@ export const load = (async ({ fetch, depends }) => {
 export const actions: Actions = {
 	create: async ({ request, fetch }) => {
 		const formData = await request.formData();
+
+		// S'assurer que atr_0_label est toujours "Catégorie des produits"
+		formData.set('atr_0_label', 'Catégorie des produits');
+
 		const form = await superValidate(formData, zod(categorySchema));
 
 		if (!form.valid) {

@@ -103,58 +103,59 @@
 		placeholder?: string;
 		options?: Array<{ value: string; label: string }>;
 		value?: any;
+		disabled?: boolean;
 	}
 
 	// Champs pour le formulaire d'ajout
 	const addFormFields: FormField[] = [
 		{
 			key: 'atr_0_label',
-			label: 'Niveau 1 :',
+			label: 'atr_0_label (ajouté automatiquement) :',
 			type: 'text',
-			required: true,
-			placeholder: 'Ex: fluide, pièce, equipement industriel...'
+			value: 'Catégorie des produits',
+			disabled: true
 		},
 		{
 			key: 'atr_1_label',
-			label: 'Niveau 2 :',
+			label: 'atr_1_label :',
+			type: 'text',
+			placeholder: 'Ex: fluide, pièce, equipement industriel...'
+		},
+		{
+			key: 'atr_2_label',
+			label: 'atr_2_label :',
 			type: 'text',
 			placeholder: 'Ex: piece mécanique, étanchéité, pompe...'
 		},
 		{
-			key: 'atr_2_label',
-			label: 'Niveau 3 :',
+			key: 'atr_3_label',
+			label: 'atr_3_label :',
 			type: 'text',
 			placeholder: 'Ex: guidage, joint, pompe à vide...'
 		},
 		{
-			key: 'atr_3_label',
-			label: 'Niveau 4 :',
+			key: 'atr_4_label',
+			label: 'atr_4_label :',
 			type: 'text',
 			placeholder: 'Ex: guidage en rotation, joint statique...'
 		},
 		{
-			key: 'atr_4_label',
-			label: 'Niveau 5 :',
+			key: 'atr_5_label',
+			label: 'atr_5_label :',
 			type: 'text',
 			placeholder: 'Ex: roulement, joint torique, pompe à palettes...'
 		},
 		{
-			key: 'atr_5_label',
-			label: 'Niveau 6 :',
+			key: 'atr_6_label',
+			label: 'atr_6_label :',
 			type: 'text',
 			placeholder: 'Ex: roulement à billes, pompe à palettes sèches...'
 		},
 		{
-			key: 'atr_6_label',
-			label: 'Niveau 7 :',
+			key: 'atr_7_label',
+			label: 'atr_7_label :',
 			type: 'text',
 			placeholder: 'Ex: roulement rigide à billes...'
-		},
-		{
-			key: 'atr_7_label',
-			label: 'Niveau 8 :',
-			type: 'text',
-			placeholder: 'Ex: spécifications techniques détaillées...'
 		}
 	];
 
@@ -162,52 +163,52 @@
 	const editFormFields: FormField[] = [
 		{
 			key: 'atr_0_label',
-			label: 'Niveau 1 :',
+			label: 'atr_0_label (ajouté automatiquement) :',
 			type: 'text',
-			required: true,
-			placeholder: 'Ex: fluide, pièce, equipement industriel...'
+			value: 'Catégorie des produits',
+			disabled: true
 		},
 		{
 			key: 'atr_1_label',
-			label: 'Niveau 2 :',
+			label: 'atr_1_label :',
+			type: 'text',
+			placeholder: 'Ex: fluide, pièce, equipement industriel...'
+		},
+		{
+			key: 'atr_2_label',
+			label: 'atr_2_label :',
 			type: 'text',
 			placeholder: 'Ex: piece mécanique, étanchéité, pompe...'
 		},
 		{
-			key: 'atr_2_label',
-			label: 'Niveau 3 :',
+			key: 'atr_3_label',
+			label: 'atr_3_label :',
 			type: 'text',
 			placeholder: 'Ex: guidage, joint, pompe à vide...'
 		},
 		{
-			key: 'atr_3_label',
-			label: 'Niveau 4 :',
+			key: 'atr_4_label',
+			label: 'atr_4_label :',
 			type: 'text',
 			placeholder: 'Ex: guidage en rotation, joint statique...'
 		},
 		{
-			key: 'atr_4_label',
-			label: 'Niveau 5 :',
+			key: 'atr_5_label',
+			label: 'atr_5_label :',
 			type: 'text',
 			placeholder: 'Ex: roulement, joint torique, pompe à palettes...'
 		},
 		{
-			key: 'atr_5_label',
-			label: 'Niveau 6 :',
+			key: 'atr_6_label',
+			label: 'atr_6_label :',
 			type: 'text',
 			placeholder: 'Ex: roulement à billes, pompe à palettes sèches...'
 		},
 		{
-			key: 'atr_6_label',
-			label: 'Niveau 7 :',
+			key: 'atr_7_label',
+			label: 'atr_7_label :',
 			type: 'text',
 			placeholder: 'Ex: roulement rigide à billes...'
-		},
-		{
-			key: 'atr_7_label',
-			label: 'Niveau 8 :',
-			type: 'text',
-			placeholder: 'Ex: spécifications techniques détaillées...'
 		}
 	];
 
@@ -320,6 +321,9 @@
 
 		const { data: formData } = event.detail;
 
+		// Ne pas envoyer atr_0_label, il est géré automatiquement par la vue
+		delete formData.atr_0_label;
+
 		// Ajouter l'ID à formData si selectedCategory existe
 		if (selectedCategory && selectedCategory.atr_id) {
 			// Important: Ajouter l'ID à formData
@@ -426,10 +430,15 @@
 		console.log('Add submission event:', event.detail);
 		try {
 			const formData = new FormData();
+
+			// Ne pas envoyer atr_0_label, il est géré automatiquement par la vue
 			for (const field of addFormFields) {
-				const value = event.detail.data[field.key] || '';
-				formData.append(field.key, value);
-				console.log(`Champ ${field.key} traité:`, value);
+				// Ne pas traiter atr_0_label car il est géré par la vue SQL
+				if (field.key !== 'atr_0_label') {
+					const value = event.detail.data[field.key] || '';
+					formData.append(field.key, value);
+					console.log(`Champ ${field.key} traité:`, value);
+				}
 			}
 			console.log('Prepared form data:', Object.fromEntries(formData));
 
