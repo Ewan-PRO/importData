@@ -117,17 +117,17 @@
 			if (isDelete) {
 				toast.success('Élément supprimé avec succès', {
 					description: "L'opération de suppression a été effectuée.",
-					duration: 4000
+					duration: 5000
 				});
 			} else if (isEdit) {
-				toast.success('Élément modifié avec succès', {
+				toast.info('Élément modifié avec succès', {
 					description: 'Les modifications ont été enregistrées.',
-					duration: 4000
+					duration: 5000
 				});
 			} else {
 				toast.success('Élément créé avec succès', {
 					description: 'Le nouvel élément a été ajouté.',
-					duration: 4000
+					duration: 5000
 				});
 			}
 
@@ -140,7 +140,7 @@
 			console.log('Formulaire invalide - Erreurs:', errors);
 			toast.error('Erreur de validation', {
 				description: 'Veuillez corriger les erreurs dans le formulaire.',
-				duration: 4000
+				duration: 5000
 			});
 		}
 	}
@@ -149,6 +149,35 @@
 		console.log('handleCancel appelé - État actuel:', { formData, errors });
 		isOpen = false;
 		dispatch('cancel');
+	}
+
+	// Fonctions pour tester les 4 variantes de toast
+	function testToastInfo() {
+		toast.info('Information importante', {
+			description: "Ceci est un message d'information.",
+			duration: 5000
+		});
+	}
+
+	function testToastSuccess() {
+		toast.success('Opération réussie', {
+			description: "L'action a été effectuée avec succès.",
+			duration: 5000
+		});
+	}
+
+	function testToastError() {
+		toast.error('Erreur détectée', {
+			description: "Une erreur s'est produite lors de l'opération.",
+			duration: 5000
+		});
+	}
+
+	function testToastWarning() {
+		toast.warning('Attention requise', {
+			description: 'Veuillez vérifier les informations saisies.',
+			duration: 5000
+		});
 	}
 
 	function onSubmit(event: Event) {
@@ -229,6 +258,17 @@
 				{/if}
 				{submitLabel}
 			</Button>
+		</div>
+
+		<!-- Boutons de test temporaires pour Sonner -->
+		<div class="mt-6 border-t pt-4">
+			<p class="mb-3 text-sm font-medium text-gray-600">Tests Sonner (temporaire) :</p>
+			<div class="grid grid-cols-2 gap-2">
+				<Button variant="bleu" onclick={testToastInfo}>Info</Button>
+				<Button variant="vert" onclick={testToastSuccess}>Success</Button>
+				<Button variant="rouge" onclick={testToastError}>Error</Button>
+				<Button variant="jaune" onclick={testToastWarning}>Warning</Button>
+			</div>
 		</div>
 	</form>
 </Modal>

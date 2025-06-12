@@ -1,12 +1,24 @@
 <script lang="ts">
 	import { Toaster as Sonner, type ToasterProps as SonnerProps } from 'svelte-sonner';
-	import { mode } from 'mode-watcher';
+
 	let { ...restProps }: SonnerProps = $props();
 </script>
 
 <Sonner
-	theme={mode.current}
+	theme="light"
+	position="top-center"
+	duration={5000}
+	closeButton={true}
+	richColors={true}
 	class="toaster group"
-	style="--normal-bg: var(--popover); --normal-text: var(--popover-foreground); --normal-border: var(--border);"
 	{...restProps}
 />
+
+<style>
+	:global(.toaster .sonner-toast) {
+		background: white !important;
+		border: 1px solid #e5e7eb !important;
+		border-radius: 8px !important;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+	}
+</style>
