@@ -15,12 +15,22 @@ function safeFormDataToString(value: FormDataEntryValue | null): string {
 
 // Schéma de validation pour les kits
 const kitSchema = z.object({
-	kit_label: z.string().min(1, { message: 'Le nom du kit est requis' }),
-	atr_label: z.string().min(1, { message: 'La caractéristique est requise' }),
-	atr_val: z.string().min(1, { message: "L'unité est requise" }),
+	kit_label: z
+		.string()
+		.min(1, { message: 'Le nom du kit est requis' })
+		.max(255, { message: 'Le nom du kit ne peut pas dépasser 255 caractères' }),
+	atr_label: z
+		.string()
+		.min(1, { message: 'La caractéristique est requise' })
+		.max(255, { message: 'La caractéristique ne peut pas dépasser 255 caractères' }),
+	atr_val: z
+		.string()
+		.min(1, { message: "L'unité est requise" })
+		.max(255, { message: "L'unité ne peut pas dépasser 255 caractères" }),
 	kat_valeur: z
 		.string()
 		.min(1, { message: 'La valeur doit être un chiffre ou un nombre valide' })
+		.max(255, { message: 'La valeur ne peut pas dépasser 255 caractères' })
 		.refine((val) => !isNaN(parseFloat(val)), {
 			message: 'La valeur doit être un nombre valide'
 		})

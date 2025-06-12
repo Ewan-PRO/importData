@@ -53,18 +53,18 @@
 
 	// Colonnes pour le tableau
 	const columns = [
-		{ key: 'kit_label', header: 'Nom du Kit' },
-		{ key: 'atr_label', header: 'Caractéristique' },
-		{ key: 'atr_val', header: 'Unité' },
-		{ key: 'kat_valeur', header: 'Valeur' }
+		{ key: 'kit_label', header: 'kit_label' },
+		{ key: 'atr_label', header: 'atr_label' },
+		{ key: 'atr_val', header: 'atr_val' },
+		{ key: 'kat_valeur', header: 'kat_valeur' }
 	];
 
 	// Champs pour le filtrage
 	const filterFields = [
-		{ key: 'kit_label', label: 'Nom du Kit' },
-		{ key: 'atr_label', label: 'Caractéristique' },
-		{ key: 'atr_val', label: 'Unité' },
-		{ key: 'kat_valeur', label: 'Valeur' }
+		{ key: 'kit_label', label: 'kit_label' },
+		{ key: 'atr_label', label: 'atr_label' },
+		{ key: 'atr_val', label: 'atr_val' },
+		{ key: 'kat_valeur', label: 'kat_valeur' }
 	];
 
 	// SuperForm pour la création
@@ -102,28 +102,28 @@
 	const addFormFields: FormField[] = [
 		{
 			key: 'kit_label',
-			label: 'Nom du Kit :',
+			label: 'kit_label :',
 			type: 'text',
 			required: true,
 			placeholder: 'Ex: Boulon, Pompe à palettes...'
 		},
 		{
 			key: 'atr_label',
-			label: 'Caractéristique :',
+			label: 'atr_label :',
 			type: 'text',
 			required: true,
 			placeholder: 'Ex: Poids, Diamètre, Pression...'
 		},
 		{
 			key: 'atr_val',
-			label: 'Unité :',
+			label: 'atr_val :',
 			type: 'text',
 			required: true,
 			placeholder: 'Ex: g, mm, MBAR...'
 		},
 		{
 			key: 'kat_valeur',
-			label: 'Valeur numérique (⚠️chiffre ou nombre obligatoire) :',
+			label: 'kat_valeur :',
 			type: 'number',
 			required: true,
 			placeholder: 'Ex: 5, 12, 150...'
@@ -134,28 +134,28 @@
 	const editFormFields: FormField[] = [
 		{
 			key: 'kit_label',
-			label: 'Nom du Kit :',
+			label: 'kit_label :',
 			type: 'text',
 			required: true,
 			placeholder: 'Ex: Boulon, Pompe à palettes...'
 		},
 		{
 			key: 'atr_label',
-			label: 'Caractéristique :',
+			label: 'atr_label :',
 			type: 'text',
 			required: true,
 			placeholder: 'Ex: Poids, Diamètre, Pression...'
 		},
 		{
 			key: 'atr_val',
-			label: 'Unité :',
+			label: 'atr_val :',
 			type: 'text',
 			required: true,
 			placeholder: 'Ex: g, mm, MBAR...'
 		},
 		{
 			key: 'kat_valeur',
-			label: 'Valeur numérique (⚠️chiffre ou nombre obligatoire) :',
+			label: 'kat_valeur :',
 			type: 'number',
 			required: true,
 			placeholder: 'Ex: 5, 12, 150...'

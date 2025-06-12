@@ -16,14 +16,17 @@ function safeFormDataToString(value: FormDataEntryValue | null): string {
 // Schéma de validation pour les catégories
 const categorySchema = z
 	.object({
-		atr_0_label: z.string().default('Catégorie des produits'),
-		atr_1_label: z.string().optional(),
-		atr_2_label: z.string().optional(),
-		atr_3_label: z.string().optional(),
-		atr_4_label: z.string().optional(),
-		atr_5_label: z.string().optional(),
-		atr_6_label: z.string().optional(),
-		atr_7_label: z.string().optional()
+		atr_0_label: z
+			.string()
+			.max(255, 'Le label ne peut pas dépasser 255 caractères')
+			.default('Catégorie des produits'),
+		atr_1_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional(),
+		atr_2_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional(),
+		atr_3_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional(),
+		atr_4_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional(),
+		atr_5_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional(),
+		atr_6_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional(),
+		atr_7_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional()
 	})
 	.refine(
 		(data) => {

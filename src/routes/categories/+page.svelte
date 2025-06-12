@@ -79,22 +79,22 @@
 
 	// Colonnes pour le tableau
 	const columns = [
-		{ key: 'atr_0_label', header: 'Niveau 1' },
-		{ key: 'atr_1_label', header: 'Niveau 2' },
-		{ key: 'atr_2_label', header: 'Niveau 3' },
-		{ key: 'atr_3_label', header: 'Niveau 4' },
-		{ key: 'atr_4_label', header: 'Niveau 5' },
-		{ key: 'atr_5_label', header: 'Niveau 6' },
-		{ key: 'atr_6_label', header: 'Niveau 7' },
-		{ key: 'atr_7_label', header: 'Niveau 8' }
+		{ key: 'atr_0_label', header: 'atr_0_label' },
+		{ key: 'atr_1_label', header: 'atr_1_label' },
+		{ key: 'atr_2_label', header: 'atr_2_label' },
+		{ key: 'atr_3_label', header: 'atr_3_label' },
+		{ key: 'atr_4_label', header: 'atr_4_label' },
+		{ key: 'atr_5_label', header: 'atr_5_label' },
+		{ key: 'atr_6_label', header: 'atr_6_label' },
+		{ key: 'atr_7_label', header: 'atr_7_label' }
 	];
 
 	// Champs pour le filtrage
 	const filterFields = [
-		{ key: 'atr_0_label', label: 'Niveau 1' },
-		{ key: 'atr_1_label', label: 'Niveau 2' },
-		{ key: 'atr_2_label', label: 'Niveau 3' },
-		{ key: 'atr_3_label', label: 'Niveau 4' }
+		{ key: 'atr_0_label', label: 'atr_0_label' },
+		{ key: 'atr_1_label', label: 'atr_1_label' },
+		{ key: 'atr_2_label', label: 'atr_2_label' },
+		{ key: 'atr_3_label', label: 'atr_3_label' }
 	];
 
 	// SuperForm pour la création

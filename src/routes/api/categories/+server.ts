@@ -38,7 +38,7 @@ const handleLevel0Attribute = async (label: string) => {
 	const newAttr = await prisma.attribute_dev.create({
 		data: {
 			atr_nat: 'CATEGORIE',
-			atr_val: label.toLowerCase().replace(/\s+/g, '_'),
+			atr_val: label,
 			atr_label: label
 		}
 	});
@@ -58,11 +58,10 @@ const handleSubLevelAttribute = async (label: string, previousLevel: string) => 
 		return { attribute: existingAttr, nextLevel: existingAttr.atr_val ?? '' };
 	}
 
-	const attrVal = `${previousLevel}_${label.toLowerCase().replace(/\s+/g, '_')}`;
 	const newAttr = await prisma.attribute_dev.create({
 		data: {
 			atr_nat: previousLevel,
-			atr_val: attrVal,
+			atr_val: label,
 			atr_label: label
 		}
 	});
