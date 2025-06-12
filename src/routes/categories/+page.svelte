@@ -589,6 +589,7 @@
 		]}
 		submitLabel="Supprimer"
 		cancelLabel="Annuler"
+		isDelete={true}
 		on:submit={handleDeleteConfirm}
 		on:cancel={() => (deleteConfirmOpen = false)}
 	/>

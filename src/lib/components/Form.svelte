@@ -7,7 +7,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select';
-	import { CircleCheck, CircleX } from 'lucide-svelte';
+	import { CircleCheck, CircleX, Trash2 } from 'lucide-svelte';
 
 	export let fields: {
 		key: string;
@@ -25,6 +25,7 @@
 	export let cancelLabel = 'Annuler';
 	export let isOpen = false;
 	export let isEdit = false;
+	export let isDelete = false; // Nouvelle propriété pour les modals de suppression
 
 	const dispatch = createEventDispatcher();
 	let formData: Record<string, any> = { ...data };
@@ -192,12 +193,16 @@
 		{/each}
 
 		<div class="flex justify-end space-x-2 pt-4">
-			<Button variant="rouge" onclick={handleCancel}>
+			<Button variant="noir" onclick={handleCancel}>
 				<CircleX class="mr-2 h-4 w-4" />
 				{cancelLabel}
 			</Button>
-			<Button type="submit" variant="vert">
-				<CircleCheck class="mr-2 h-4 w-4" />
+			<Button type="submit" variant={isDelete ? 'rouge' : 'vert'}>
+				{#if isDelete}
+					<Trash2 class="mr-2 h-4 w-4" />
+				{:else}
+					<CircleCheck class="mr-2 h-4 w-4" />
+				{/if}
 				{submitLabel}
 			</Button>
 		</div>
