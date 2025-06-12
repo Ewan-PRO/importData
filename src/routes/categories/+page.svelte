@@ -51,8 +51,31 @@
 		[key: string]: string;
 	}
 
-	// Pour le filtrage
-	let filteredCategories: Category[] = [...data.categories];
+	// Pour le filtrage - utilisation de réactivité Svelte
+	let filterTerm = '';
+	let filterField = '';
+
+	$: filteredCategories = filterCategories(data.categories, filterTerm, filterField);
+
+	// Fonction pure de filtrage
+	function filterCategories(categories: Category[], term: string, field: string): Category[] {
+		if (!term) return [...categories];
+
+		const searchTerm = term.toLowerCase();
+		return categories.filter((category: Category) => {
+			return Object.entries(category).some(([key, value]) => {
+				if (!key.startsWith('atr_')) return false;
+
+				if (field && field !== key) {
+					const currentLevel = parseInt(key.split('_')[1]);
+					const selectedLevel = parseInt(field.split('_')[1]);
+					if (currentLevel < selectedLevel) return false;
+				}
+
+				return value?.toString().toLowerCase().includes(searchTerm);
+			});
+		});
+	}
 
 	// Colonnes pour le tableau
 	const columns = [
@@ -79,7 +102,7 @@
 		onResult: ({ result }) => {
 			if (result.type === 'success') {
 				addFormOpen = false;
-				invalidateAll();
+				// Ne pas appeler invalidateAll ici car on gère la mise à jour manuellement
 			}
 		}
 	});
@@ -279,39 +302,13 @@
 		const { field, term } = event.detail;
 		console.log('Filter event:', { field, term });
 
-		if (!term) {
-			filteredCategories = [...data.categories];
-			return;
-		}
-
-		const searchTerm = term.toLowerCase();
-		console.log('Searching for:', searchTerm, 'in field:', field);
-		console.log('Current categories:', data.categories);
-
-		filteredCategories = data.categories.filter((category: Category) => {
-			// Vérifie tous les champs de catégorie
-			return Object.entries(category).some(([key, value]) => {
-				// Ne vérifie que les champs de catégorie (commençant par atr_)
-				if (!key.startsWith('atr_')) return false;
-
-				// Si un champ spécifique est sélectionné, vérifie aussi les autres champs
-				if (field && field !== key) {
-					// Si c'est un champ de niveau supérieur, vérifie aussi les niveaux inférieurs
-					const currentLevel = parseInt(key.split('_')[1]);
-					const selectedLevel = parseInt(field.split('_')[1]);
-					if (currentLevel < selectedLevel) return false;
-				}
-
-				const match = value?.toString().toLowerCase().includes(searchTerm);
-				console.log('Checking', key, value, 'Match:', match);
-				return match;
-			});
-		});
-		console.log('Filtered results:', filteredCategories);
+		filterTerm = term;
+		filterField = field;
 	}
 
 	function handleFilterReset(): void {
-		filteredCategories = [...data.categories];
+		filterTerm = '';
+		filterField = '';
 	}
 
 	async function handleEditSubmit(event: FormEvent): Promise<void> {
@@ -357,9 +354,8 @@
 						return cat;
 					});
 
-					// Mettre à jour les données de la page et le tableau filtré
+					// Mettre à jour les données de la page
 					data.categories = updatedCategories;
-					filteredCategories = [...updatedCategories];
 
 					showAlert('Catégorie modifiée avec succès', 'success');
 					editFormOpen = false;
@@ -403,9 +399,8 @@
 						(cat: Category) => cat.atr_id !== selectedCategory?.atr_id
 					);
 
-					// Mettre à jour les données de la page et le tableau filtré
+					// Mettre à jour les données de la page
 					data.categories = updatedCategories;
-					filteredCategories = [...updatedCategories];
 
 					showAlert('Catégorie supprimée avec succès', 'success');
 					deleteConfirmOpen = false;
@@ -429,43 +424,52 @@
 	async function handleAddSubmit(event: FormEvent): Promise<void> {
 		console.log('Add submission event:', event.detail);
 		try {
-			const formData = new FormData();
+			// Préparer les données à envoyer à l'API
+			const apiData = { ...event.detail.data };
+			// Ne pas envoyer atr_0_label, il est géré automatiquement par l'API
+			delete apiData.atr_0_label;
 
-			// Ne pas envoyer atr_0_label, il est géré automatiquement par la vue
-			for (const field of addFormFields) {
-				// Ne pas traiter atr_0_label car il est géré par la vue SQL
-				if (field.key !== 'atr_0_label') {
-					const value = event.detail.data[field.key] || '';
-					formData.append(field.key, value);
-					console.log(`Champ ${field.key} traité:`, value);
-				}
-			}
-			console.log('Prepared form data:', Object.fromEntries(formData));
+			console.log("Données à envoyer à l'API:", apiData);
 
-			const response = await fetch('?/create', {
+			const response = await fetch('/api/categories', {
 				method: 'POST',
-				body: formData
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(apiData)
 			});
 
 			console.log('API Response status:', response.status);
-			const responseData = await response.json();
-			console.log('API Response data:', responseData);
 
 			if (!response.ok) {
-				showAlert(responseData.error || "Erreur lors de l'ajout de la catégorie", 'error');
+				const errorData = await response.json();
+				showAlert(errorData.error || "Erreur lors de l'ajout de la catégorie", 'error');
 				return;
 			}
+
+			const serverResponse = await response.json();
+			console.log('Réponse du serveur:', serverResponse);
 
 			showAlert('Catégorie ajoutée avec succès', 'success');
 			addFormOpen = false;
 
-			// Mettre à jour les données localement
-			const newCategory = event.detail.data;
-			filteredCategories = [...filteredCategories, newCategory];
-			data.categories = [...data.categories, newCategory];
+			// Créer l'objet complet avec atr_0_label pour l'affichage immédiat
+			const newCategoryForDisplay = {
+				...apiData,
+				atr_0_label: 'Catégorie des produits',
+				atr_id: Date.now() // ID temporaire pour l'affichage
+			};
 
-			// Rafraîchir les données du serveur
-			await invalidateAll();
+			// Mettre à jour les données localement pour affichage immédiat
+			data.categories = [...data.categories, newCategoryForDisplay];
+
+			console.log('Données mises à jour localement, nouvelle catégorie visible immédiatement');
+
+			// Rafraîchir les données en arrière-plan pour synchroniser avec le serveur
+			setTimeout(async () => {
+				await invalidateAll();
+				console.log('Données rafraîchies en arrière-plan');
+			}, 500);
 		} catch (error) {
 			console.error('Error in form submission:', error);
 			showAlert("Erreur lors de l'ajout de la catégorie", 'error');
@@ -497,9 +501,8 @@
 				(cat: Category) => !items.some((item) => item.atr_id === cat.atr_id)
 			);
 
-			// Mettre à jour les données de la page et le tableau filtré
+			// Mettre à jour les données de la page
 			data.categories = updatedCategories;
-			filteredCategories = [...updatedCategories];
 
 			showAlert(`${items.length} catégorie(s) supprimée(s) avec succès`, 'success');
 		} catch (error) {
