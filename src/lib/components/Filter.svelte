@@ -79,7 +79,7 @@
 						onkeyup={(e) => e.key === 'Enter' && handleSearch()}
 					/>
 					<div class="absolute inset-y-0 right-0 flex items-center pr-1">
-						<Button variant="bleu" size="sm" onclick={handleSearch}>
+						<Button variant="bleu" size="xs" onclick={handleSearch}>
 							<Search class="h-4 w-4" />
 							Rechercher
 						</Button>

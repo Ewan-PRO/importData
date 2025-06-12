@@ -3,12 +3,10 @@
 	import { cn, type WithElementRef } from '$lib/utils.js';
 
 	type InputType = Exclude<HTMLInputTypeAttribute, 'file'>;
-	type InputSize = 'sm' | 'md' | 'lg';
 
 	type Props = WithElementRef<
-		Omit<HTMLInputAttributes, 'type'> & {
-			size?: InputSize;
-		} & ({ type: 'file'; files?: FileList } | { type?: InputType; files?: undefined })
+		Omit<HTMLInputAttributes, 'type'> &
+			({ type: 'file'; files?: FileList } | { type?: InputType; files?: undefined })
 	>;
 
 	let {
@@ -16,16 +14,9 @@
 		value = $bindable(),
 		type,
 		files = $bindable(),
-		size = 'md' as InputSize,
 		class: className,
 		...restProps
-	} = $props() as Props;
-
-	const sizeClasses = {
-		sm: 'h-8 px-2.5 py-1.5 text-xs',
-		md: 'h-10 px-3 py-1 text-base md:text-sm',
-		lg: 'h-12 px-4 py-3 text-base'
-	};
+	}: Props = $props();
 </script>
 
 {#if type === 'file'}
@@ -33,8 +24,7 @@
 		bind:this={ref}
 		data-slot="input"
 		class={cn(
-			'selection:bg-primary dark:bg-input/30 selection:text-primary-foreground border-input ring-offset-background placeholder:text-muted-foreground flex w-full min-w-0 rounded-md border bg-transparent font-medium shadow-xs outline-none disabled:cursor-not-allowed disabled:opacity-50',
-			sizeClasses[size],
+			'selection:bg-primary dark:bg-input/30 selection:text-primary-foreground border-input ring-offset-background placeholder:text-muted-foreground flex h-10 w-full min-w-0 rounded-md border bg-transparent px-3 pt-1.5 text-sm font-medium shadow-xs transition-[color,box-shadow,background-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
 			'focus:border-blue-500 focus:ring-2 focus:ring-blue-500',
 			'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
 			// Styles pour les champs remplis (fichiers) - même couleur que webkit-autofill
@@ -51,8 +41,7 @@
 		bind:this={ref}
 		data-slot="input"
 		class={cn(
-			'border-input bg-background selection:bg-primary dark:bg-input/30 selection:text-primary-foreground ring-offset-background placeholder:text-muted-foreground flex w-full min-w-0 rounded-md border shadow-xs outline-none disabled:cursor-not-allowed disabled:opacity-50',
-			sizeClasses[size],
+			'border-input bg-background selection:bg-primary dark:bg-input/30 selection:text-primary-foreground ring-offset-background placeholder:text-muted-foreground flex h-10 w-full min-w-0 rounded-md border px-3 py-1 text-base shadow-xs transition-[color,box-shadow,background-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
 			'focus:border-blue-500 focus:ring-2 focus:ring-blue-500',
 			'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
 			// Styles pour les champs remplis - même couleur que webkit-autofill
