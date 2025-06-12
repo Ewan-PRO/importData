@@ -4,6 +4,7 @@
 	import AuthButton from '$lib/components/AuthButton.svelte';
 	import { isAuthenticated } from '$lib/auth';
 	import { page } from '$app/stores';
+	import { Toaster } from '$lib/components/ui/sonner';
 
 	interface PageData {
 		user?: any;
@@ -69,4 +70,7 @@
 	<main class="container mx-auto px-4 py-8">
 		<slot />
 	</main>
+
+	<!-- Toaster pour les notifications Sonner -->
+	<Toaster />
 </div>

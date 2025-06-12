@@ -8,6 +8,7 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select';
 	import { CircleCheck, CircleX, Trash2 } from 'lucide-svelte';
+	import { toast } from 'svelte-sonner';
 
 	export let fields: {
 		key: string;
@@ -111,6 +112,25 @@
 			);
 			const finalData = { ...data, ...filteredFormData };
 			console.log('Formulaire valide, dispatch de submit avec:', { data: finalData, isEdit });
+
+			// Afficher la notification Sonner selon l'action
+			if (isDelete) {
+				toast.success('Élément supprimé avec succès', {
+					description: "L'opération de suppression a été effectuée.",
+					duration: 4000
+				});
+			} else if (isEdit) {
+				toast.success('Élément modifié avec succès', {
+					description: 'Les modifications ont été enregistrées.',
+					duration: 4000
+				});
+			} else {
+				toast.success('Élément créé avec succès', {
+					description: 'Le nouvel élément a été ajouté.',
+					duration: 4000
+				});
+			}
+
 			dispatch('submit', {
 				data: finalData,
 				isEdit
@@ -118,6 +138,10 @@
 			isOpen = false;
 		} else {
 			console.log('Formulaire invalide - Erreurs:', errors);
+			toast.error('Erreur de validation', {
+				description: 'Veuillez corriger les erreurs dans le formulaire.',
+				duration: 4000
+			});
 		}
 	}
 
