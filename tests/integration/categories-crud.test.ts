@@ -418,7 +418,7 @@ describe('Tests CRUD des Catégories', () => {
 		it('devrait générer des valeurs atr_val cohérentes', () => {
 			// Test de la logique de génération des valeurs atr_val
 			const testCases = [
-				{ input: 'Électronique', expected: 'electronique' },
+				{ input: 'Électronique', expected: 'électronique' },
 				{ input: 'Ordinateurs Portables', expected: 'ordinateurs_portables' },
 				{ input: 'Gaming & Esport', expected: 'gaming_&_esport' }
 			];
@@ -491,9 +491,9 @@ describe('Tests CRUD des Catégories', () => {
 			expect(result.success).toBe(true);
 		});
 
-		it('devrait gérer des données avec tous les niveaux vides sauf le premier', () => {
+		it('devrait rejeter des données avec tous les niveaux vides sauf atr_0_label', () => {
 			const sparseData = {
-				atr_0_label: 'Seul niveau rempli',
+				atr_0_label: 'Catégorie des produits',
 				atr_1_label: '',
 				atr_2_label: '',
 				atr_3_label: '',
@@ -504,6 +504,28 @@ describe('Tests CRUD des Catégories', () => {
 			};
 
 			const result = categorySchema.safeParse(sparseData);
+			expect(result.success).toBe(false);
+
+			if (!result.success) {
+				expect(result.error.issues[0].message).toBe(
+					'Au moins un niveau entre atr_1_label et atr_7_label doit être rempli'
+				);
+			}
+		});
+
+		it('devrait accepter des données avec atr_0_label et au moins un autre niveau', () => {
+			const validSparseData = {
+				atr_0_label: 'Catégorie des produits',
+				atr_1_label: '',
+				atr_2_label: '',
+				atr_3_label: 'Niveau 4 rempli',
+				atr_4_label: '',
+				atr_5_label: '',
+				atr_6_label: '',
+				atr_7_label: ''
+			};
+
+			const result = categorySchema.safeParse(validSparseData);
 			expect(result.success).toBe(true);
 		});
 	});

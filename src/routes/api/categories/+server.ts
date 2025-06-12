@@ -98,7 +98,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		if (!hasAtLeastOneLevel) {
 			return json(
-				{ error: 'Au moins un niveau entre le Niveau 2 et le Niveau 8 doit être rempli' },
+				{ error: 'Au moins un niveau entre atr_1_label et atr_7_label doit être rempli' },
 				{ status: 400 }
 			);
 		}
