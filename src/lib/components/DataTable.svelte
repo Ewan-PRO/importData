@@ -124,7 +124,7 @@
 			</thead>
 			<tbody>
 				{#each data as item, i}
-					<tr class="border-b" class:bg-blue-100={selectedItems.includes(item)}>
+					<tr class="group border-b" class:bg-blue-100={selectedItems.includes(item)}>
 						{#if selectable}
 							<td class="w-14 px-4 py-3 {i % 2 === 0 ? 'bg-white' : 'bg-gray-100'}">
 								<input
@@ -239,5 +239,9 @@
 		overflow-wrap: break-word;
 		word-wrap: break-word;
 		hyphens: auto;
+	}
+
+	.group:hover :global(td) {
+		background-color: #bfdbfe !important;
 	}
 </style>
