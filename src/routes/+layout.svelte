@@ -71,6 +71,5 @@
 		<slot />
 	</main>
 
-	<!-- Toaster pour les notifications Sonner -->
 	<Toaster />
 </div>
