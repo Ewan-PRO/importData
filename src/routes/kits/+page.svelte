@@ -126,9 +126,16 @@
 		{
 			key: 'atr_val',
 			label: 'atr_val :',
-			type: 'text',
+			type: 'select',
 			required: true,
-			placeholder: 'Ex: g, mm, MBAR...'
+			placeholder: 'Ex: g, mm, MBAR...',
+			options: [
+				{ value: 'MBAR', label: 'MBAR' },
+				{ value: 'kW', label: 'kW' },
+				{ value: 'Triphasé', label: 'Triphasé' },
+				{ value: 'Monophasé', label: 'Monophasé' }
+			],
+			allowCustom: true
 		},
 		{
 			key: 'kat_valeur',
@@ -140,44 +147,7 @@
 	];
 
 	// Champs pour le formulaire d'édition
-	const editFormFields: FormField[] = [
-		{
-			key: 'kit_label',
-			label: 'kit_label :',
-			type: 'text',
-			required: true,
-			placeholder: 'Ex: Boulon, Pompe à palettes...'
-		},
-		{
-			key: 'atr_label',
-			label: 'atr_label :',
-			type: 'select',
-			required: true,
-			placeholder: 'Ex: Poids, Diamètre, Pression...',
-			options: [
-				{ value: 'Poids', label: 'Poids' },
-				{ value: 'Diamètre', label: 'Diamètre' },
-				{ value: 'Pression', label: 'Pression' },
-				{ value: 'Puissance', label: 'Puissance' },
-				{ value: 'Nombre de phases', label: 'Nombre de phases' }
-			],
-			allowCustom: true
-		},
-		{
-			key: 'atr_val',
-			label: 'atr_val :',
-			type: 'text',
-			required: true,
-			placeholder: 'Ex: g, mm, MBAR...'
-		},
-		{
-			key: 'kat_valeur',
-			label: 'kat_valeur :',
-			type: 'number',
-			required: true,
-			placeholder: 'Ex: 5, 12, 150...'
-		}
-	];
+	const editFormFields: FormField[] = JSON.parse(JSON.stringify(addFormFields));
 
 	$: {
 		console.log("État du formulaire d'ajout:", { addFormOpen });

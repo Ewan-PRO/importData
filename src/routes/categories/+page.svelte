@@ -127,6 +127,7 @@
 		options?: Array<{ value: string; label: string }>;
 		value?: any;
 		disabled?: boolean;
+		allowCustom?: boolean;
 	}
 
 	// Champs pour le formulaire d'ajout
@@ -141,38 +142,105 @@
 		{
 			key: 'atr_1_label',
 			label: 'atr_1_label :',
-			type: 'text',
-			placeholder: 'Ex: fluide, pièce, equipement industriel...'
+			type: 'select',
+			placeholder: 'Ex: pièce, équipement industriel...',
+			options: [
+				{ value: 'pièce', label: 'pièce' },
+				{ value: 'equipement industriel', label: 'équipement industriel' }
+			],
+			allowCustom: true
 		},
 		{
 			key: 'atr_2_label',
 			label: 'atr_2_label :',
-			type: 'text',
-			placeholder: 'Ex: piece mécanique, étanchéité, pompe...'
+			type: 'select',
+			placeholder: 'Ex: piece mécanique, étanchéité, filtration...',
+			options: [
+				{ value: 'piece mécanique', label: 'piece mécanique' },
+				{ value: 'étanchéité', label: 'étanchéité' },
+				{ value: 'filtration', label: 'filtration' },
+				{ value: 'filtration sur des gaz', label: 'filtration sur des gaz' },
+				{ value: 'kit', label: 'kit' },
+				{ value: 'pompe', label: 'pompe' },
+				{
+					value: 'moteurs électriques et équipements associés',
+					label: 'moteurs électriques et équipements associés'
+				},
+				{
+					value: 'process : agitation mélange et pulvérisation',
+					label: 'process : agitation mélange et pulvérisation'
+				},
+				{ value: 'tuyauterie et robinetterie', label: 'tuyauterie et robinetterie' },
+				{ value: 'équipements industriels de mesure', label: 'équipements industriels de mesure' },
+				{ value: 'pompes industrielles', label: 'pompes industrielles' }
+			],
+			allowCustom: true
 		},
 		{
 			key: 'atr_3_label',
 			label: 'atr_3_label :',
-			type: 'text',
-			placeholder: 'Ex: guidage, joint, pompe à vide...'
+			type: 'select',
+			placeholder: 'Ex: guidage, transmission des efforts, joint...',
+			options: [
+				{ value: 'guidage', label: 'guidage' },
+				{ value: 'transmission des efforts', label: 'transmission des efforts' },
+				{ value: 'joint', label: 'joint' },
+				{ value: 'filtration sur des liquides', label: 'filtration sur des liquides' },
+				{ value: 'pompe à vide', label: 'pompe à vide' },
+				{ value: 'moteurs électriques', label: 'moteurs électriques' },
+				{ value: 'pompes volumétriques', label: 'pompes volumétriques' },
+				{ value: 'pompes doseuses', label: 'pompes doseuses' }
+			],
+			allowCustom: true
 		},
 		{
 			key: 'atr_4_label',
 			label: 'atr_4_label :',
-			type: 'text',
-			placeholder: 'Ex: guidage en rotation, joint statique...'
+			type: 'select',
+			placeholder: 'Ex: guidage en rotation, accouplement, joint statique...',
+			options: [
+				{ value: 'guidage en rotation', label: 'guidage en rotation' },
+				{ value: 'accouplement', label: 'accouplement' },
+				{ value: 'joint statique', label: 'joint statique' },
+				{ value: 'pompe à vis', label: 'pompe à vis' },
+				{ value: 'pompe à ionisation', label: 'pompe à ionisation' },
+				{ value: 'pompe à adsorption', label: 'pompe à adsorption' },
+				{
+					value: 'moteurs AC (à courant alternatif )',
+					label: 'moteurs AC (à courant alternatif )'
+				},
+				{ value: 'moteurs DC (à courant continu)', label: 'moteurs DC (à courant continu)' }
+			],
+			allowCustom: true
 		},
 		{
 			key: 'atr_5_label',
 			label: 'atr_5_label :',
-			type: 'text',
-			placeholder: 'Ex: roulement, joint torique, pompe à palettes...'
+			type: 'select',
+			placeholder: 'Ex: roulement, accouplement rigide, joint torique...',
+			options: [
+				{ value: 'roulement', label: 'roulement' },
+				{ value: 'roulement à rouleaux', label: 'roulement à rouleaux' },
+				{ value: 'accouplement rigide', label: 'accouplement rigide' },
+				{ value: 'accouplement semi-elastiques', label: 'accouplement semi-elastiques' },
+				{ value: 'accouplements temporaires', label: 'accouplements temporaires' },
+				{ value: 'accouplement élastique', label: 'accouplement élastique' },
+				{ value: 'accouplements articulés', label: 'accouplements articulés' },
+				{ value: 'joint torique', label: 'joint torique' },
+				{ value: 'pompe à éjecteur', label: 'pompe à éjecteur' }
+			],
+			allowCustom: true
 		},
 		{
 			key: 'atr_6_label',
 			label: 'atr_6_label :',
-			type: 'text',
-			placeholder: 'Ex: roulement à billes, pompe à palettes sèches...'
+			type: 'select',
+			placeholder: 'Ex: roulement à billes, galets a rouleaux...',
+			options: [
+				{ value: 'roulement à billes', label: 'roulement à billes' },
+				{ value: 'galets a rouleaux', label: 'galets a rouleaux' }
+			],
+			allowCustom: true
 		},
 		{
 			key: 'atr_7_label',
@@ -183,57 +251,7 @@
 	];
 
 	// Champs pour le formulaire d'édition
-	const editFormFields: FormField[] = [
-		{
-			key: 'atr_0_label',
-			label: 'atr_0_label (ajouté automatiquement) :',
-			type: 'text',
-			value: 'Catégorie des produits',
-			disabled: true
-		},
-		{
-			key: 'atr_1_label',
-			label: 'atr_1_label :',
-			type: 'text',
-			placeholder: 'Ex: fluide, pièce, equipement industriel...'
-		},
-		{
-			key: 'atr_2_label',
-			label: 'atr_2_label :',
-			type: 'text',
-			placeholder: 'Ex: piece mécanique, étanchéité, pompe...'
-		},
-		{
-			key: 'atr_3_label',
-			label: 'atr_3_label :',
-			type: 'text',
-			placeholder: 'Ex: guidage, joint, pompe à vide...'
-		},
-		{
-			key: 'atr_4_label',
-			label: 'atr_4_label :',
-			type: 'text',
-			placeholder: 'Ex: guidage en rotation, joint statique...'
-		},
-		{
-			key: 'atr_5_label',
-			label: 'atr_5_label :',
-			type: 'text',
-			placeholder: 'Ex: roulement, joint torique, pompe à palettes...'
-		},
-		{
-			key: 'atr_6_label',
-			label: 'atr_6_label :',
-			type: 'text',
-			placeholder: 'Ex: roulement à billes, pompe à palettes sèches...'
-		},
-		{
-			key: 'atr_7_label',
-			label: 'atr_7_label :',
-			type: 'text',
-			placeholder: 'Ex: roulement rigide à billes...'
-		}
-	];
+	const editFormFields: FormField[] = JSON.parse(JSON.stringify(addFormFields));
 
 	$: {
 		console.log("État du formulaire d'ajout:", { addFormOpen });
