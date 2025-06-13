@@ -2,19 +2,11 @@
 	import { read, utils } from 'xlsx';
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms/client';
-	import {
-		Card,
-		Table,
-		TableBody,
-		TableBodyCell,
-		TableBodyRow,
-		TableHead,
-		TableHeadCell,
-		Spinner
-	} from 'flowbite-svelte';
+	import { Card, Spinner } from 'flowbite-svelte';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import * as Select from '$lib/components/ui/select';
+	import * as Table from '$lib/components/ui/table';
 	import {
 		Upload,
 		FileCheck,
@@ -552,44 +544,46 @@
 
 					<h3 class="mb-2 font-medium">Aperçu des données</h3>
 					<div class="mb-6 overflow-x-auto">
-						<Table>
-							<TableHead>
-								{#each headers as header, i}
-									<TableHeadCell>
-										<div class="mb-2">{header}</div>
-										<Select.Select
-											type="single"
-											value={mappedFields[i.toString()] || ''}
-											onValueChange={(value) => {
-												mappedFields[i.toString()] = value || '';
-												$form.mappedFields = mappedFields;
-											}}
-										>
-											<Select.SelectTrigger class="min-w-[12rem] text-sm">
-												{mappedFields[i.toString()] || 'Ne pas importer'}
-											</Select.SelectTrigger>
-											<Select.SelectContent>
-												<Select.SelectItem value="">Ne pas importer</Select.SelectItem>
-												{#each tableFields[targetTable] as field}
-													<Select.SelectItem value={field}>{field}</Select.SelectItem>
-												{/each}
-											</Select.SelectContent>
-										</Select.Select>
-									</TableHeadCell>
-								{/each}
-							</TableHead>
-							<TableBody>
-								{#each previewData as row}
-									<TableBodyRow>
+						<Table.Root variant="striped">
+							<Table.Header>
+								<Table.Row variant="striped">
+									{#each headers as header, i}
+										<Table.Head variant="striped">
+											<div class="mb-2">{header}</div>
+											<Select.Select
+												type="single"
+												value={mappedFields[i.toString()] || ''}
+												onValueChange={(value) => {
+													mappedFields[i.toString()] = value || '';
+													$form.mappedFields = mappedFields;
+												}}
+											>
+												<Select.SelectTrigger class="min-w-[12rem] text-sm">
+													{mappedFields[i.toString()] || 'Ne pas importer'}
+												</Select.SelectTrigger>
+												<Select.SelectContent>
+													<Select.SelectItem value="">Ne pas importer</Select.SelectItem>
+													{#each tableFields[targetTable] as field}
+														<Select.SelectItem value={field}>{field}</Select.SelectItem>
+													{/each}
+												</Select.SelectContent>
+											</Select.Select>
+										</Table.Head>
+									{/each}
+								</Table.Row>
+							</Table.Header>
+							<Table.Body>
+								{#each previewData as row, rowIndex}
+									<Table.Row variant="striped">
 										{#each headers as _, i}
-											<TableBodyCell>
+											<Table.Cell variant="striped" {rowIndex}>
 												{row[i] !== undefined ? row[i] : ''}
-											</TableBodyCell>
+											</Table.Cell>
 										{/each}
-									</TableBodyRow>
+									</Table.Row>
 								{/each}
-							</TableBody>
-						</Table>
+							</Table.Body>
+						</Table.Root>
 					</div>
 
 					<!-- Champs requis -->
@@ -617,10 +611,10 @@
 					<input type="hidden" name="targetTable" value={targetTable} />
 
 					<div class="flex justify-between">
-						<Button variant="blanc" onclick={resetImport}>Retour</Button>
+						<Button variant="noir" onclick={resetImport}>Retour</Button>
 						<Button
 							type="submit"
-							variant="bleu"
+							variant="vert"
 							disabled={getRequiredFields().some((field) => !isFieldMapped(field)) || $submitting}
 						>
 							{#if $submitting}
@@ -671,24 +665,26 @@
 						<div class="mb-6">
 							<h3 class="mb-2 font-medium">Erreurs de validation</h3>
 							<div class="overflow-x-auto">
-								<Table>
-									<TableHead>
-										<TableHeadCell>Ligne</TableHeadCell>
-										<TableHeadCell>Champ</TableHeadCell>
-										<TableHeadCell>Valeur</TableHeadCell>
-										<TableHeadCell>Erreur</TableHeadCell>
-									</TableHead>
-									<TableBody>
+								<Table.Root>
+									<Table.Header>
+										<Table.Row>
+											<Table.Head>Ligne</Table.Head>
+											<Table.Head>Champ</Table.Head>
+											<Table.Head>Valeur</Table.Head>
+											<Table.Head>Erreur</Table.Head>
+										</Table.Row>
+									</Table.Header>
+									<Table.Body>
 										{#each validationResults.invalidData as error}
-											<TableBodyRow>
-												<TableBodyCell>{error.row + 1}</TableBodyCell>
-												<TableBodyCell>{error.field}</TableBodyCell>
-												<TableBodyCell>{error.value}</TableBodyCell>
-												<TableBodyCell>{error.error}</TableBodyCell>
-											</TableBodyRow>
+											<Table.Row>
+												<Table.Cell>{error.row + 1}</Table.Cell>
+												<Table.Cell>{error.field}</Table.Cell>
+												<Table.Cell>{error.value}</Table.Cell>
+												<Table.Cell>{error.error}</Table.Cell>
+											</Table.Row>
 										{/each}
-									</TableBody>
-								</Table>
+									</Table.Body>
+								</Table.Root>
 							</div>
 						</div>
 					{/if}
@@ -700,10 +696,10 @@
 						<input type="hidden" name="targetTable" value={targetTable} />
 
 						<div class="flex justify-between">
-							<Button variant="blanc" onclick={() => (step = 2)}>Retour</Button>
+							<Button variant="noir" onclick={() => (step = 2)}>Retour</Button>
 							<Button
 								type="submit"
-								variant={validationResults.validRows > 0 ? 'bleu' : 'blanc'}
+								variant={validationResults.validRows > 0 ? 'vert' : 'noir'}
 								disabled={validationResults.validRows === 0 || $submitting}
 							>
 								{#if $submitting}
