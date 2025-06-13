@@ -96,6 +96,7 @@
 		placeholder?: string;
 		options?: Array<{ value: string; label: string }>;
 		value?: any;
+		allowCustom?: boolean;
 	}
 
 	// Champs pour le formulaire d'ajout
@@ -110,9 +111,17 @@
 		{
 			key: 'atr_label',
 			label: 'atr_label :',
-			type: 'text',
+			type: 'select',
 			required: true,
-			placeholder: 'Ex: Poids, Diamètre, Pression...'
+			placeholder: 'Ex: Poids, Diamètre, Pression...',
+			options: [
+				{ value: 'Poids', label: 'Poids' },
+				{ value: 'Diamètre', label: 'Diamètre' },
+				{ value: 'Pression', label: 'Pression' },
+				{ value: 'Puissance', label: 'Puissance' },
+				{ value: 'Nombre de phases', label: 'Nombre de phases' }
+			],
+			allowCustom: true
 		},
 		{
 			key: 'atr_val',
@@ -142,9 +151,17 @@
 		{
 			key: 'atr_label',
 			label: 'atr_label :',
-			type: 'text',
+			type: 'select',
 			required: true,
-			placeholder: 'Ex: Poids, Diamètre, Pression...'
+			placeholder: 'Ex: Poids, Diamètre, Pression...',
+			options: [
+				{ value: 'Poids', label: 'Poids' },
+				{ value: 'Diamètre', label: 'Diamètre' },
+				{ value: 'Pression', label: 'Pression' },
+				{ value: 'Puissance', label: 'Puissance' },
+				{ value: 'Nombre de phases', label: 'Nombre de phases' }
+			],
+			allowCustom: true
 		},
 		{
 			key: 'atr_val',

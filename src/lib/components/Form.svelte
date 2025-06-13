@@ -19,6 +19,7 @@
 		options?: Array<{ value: string; label: string }>;
 		value?: any;
 		disabled?: boolean;
+		allowCustom?: boolean;
 	}[] = [];
 	export let data: any = {};
 	export let title = 'Formulaire';
@@ -163,27 +164,43 @@
 						class={errors[field.key] ? 'border-red-500' : ''}
 					/>
 				{:else if field.type === 'select'}
-					<Select.Select
-						type="single"
-						value={formData[field.key] || ''}
-						onValueChange={(value: string) => {
-							if (value) {
-								updateFormData(field.key, value);
-							}
-						}}
-					>
-						<Select.SelectTrigger class={errors[field.key] ? 'border-red-500' : ''}>
-							{formData[field.key]
-								? field.options?.find((opt) => opt.value === formData[field.key])?.label ||
-									'Sélectionnez une option'
-								: 'Sélectionnez une option'}
-						</Select.SelectTrigger>
-						<Select.SelectContent>
-							{#each field.options || [] as option}
-								<Select.SelectItem value={option.value}>{option.label}</Select.SelectItem>
-							{/each}
-						</Select.SelectContent>
-					</Select.Select>
+					<div class="relative">
+						<Select.Select
+							type="single"
+							value={formData[field.key] || ''}
+							onValueChange={(value: string) => {
+								if (value) {
+									updateFormData(field.key, value);
+								}
+							}}
+						>
+							<Select.SelectTrigger class={errors[field.key] ? 'border-red-500' : ''}>
+								{formData[field.key]
+									? field.options?.find((opt) => opt.value === formData[field.key])?.label ||
+										formData[field.key]
+									: field.placeholder || 'Sélectionnez une option'}
+							</Select.SelectTrigger>
+							<Select.SelectContent>
+								{#if field.allowCustom}
+									<div class="px-2 py-1">
+										<Input
+											type="text"
+											placeholder="Saisir une valeur personnalisée..."
+											oninput={(e) => {
+												const target = e.target as HTMLInputElement;
+												updateFormData(field.key, target.value);
+											}}
+											class="w-full"
+										/>
+									</div>
+									<Select.SelectSeparator />
+								{/if}
+								{#each field.options || [] as option}
+									<Select.SelectItem value={option.value}>{option.label}</Select.SelectItem>
+								{/each}
+							</Select.SelectContent>
+						</Select.Select>
+					</div>
 				{:else}
 					<Input
 						type={field.type}
