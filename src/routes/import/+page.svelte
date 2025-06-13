@@ -632,61 +632,76 @@
 				<h2 class="mb-4 text-xl font-semibold">Validation et importation</h2>
 
 				{#if !validationResults.processed}
-					<div class="mb-4 rounded-md border border-blue-200 bg-blue-50 p-4">
-						<h3 class="mb-2 font-medium text-blue-800">Résumé de la validation</h3>
-						<ul class="space-y-2">
-							<li class="flex items-center">
-								<CornerDownRight class="mr-2 h-4 w-4 text-gray-500" />
-								Lignes totales :
-								<span class="ml-1 font-semibold">{validationResults.totalRows}</span>
-							</li>
-							<li class="flex items-center">
-								<CornerDownRight class="mr-2 h-4 w-4 text-gray-500" />
-								Lignes valides :
-								<span class="ml-1 font-semibold text-green-600">{validationResults.validRows}</span>
-							</li>
-							<li class="flex items-center">
-								<CornerDownRight class="mr-2 h-4 w-4 text-gray-500" />
-								Doublons détectés :
-								<span class="ml-1 font-semibold text-amber-600">{validationResults.duplicates}</span
-								>
-							</li>
-							<li class="flex items-center">
-								<CornerDownRight class="mr-2 h-4 w-4 text-gray-500" />
-								Erreurs de validation :
-								<span class="ml-1 font-semibold text-red-600"
-									>{validationResults.invalidData.length}</span
-								>
-							</li>
-						</ul>
+					<!-- Résumé avec cartes colorées -->
+					<div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+						<div class="rounded-lg border border-blue-200 bg-blue-50 p-4 text-center">
+							<div class="text-2xl font-bold text-blue-600">{validationResults.totalRows}</div>
+							<div class="text-sm text-blue-800">Lignes totales</div>
+						</div>
+						<div class="rounded-lg border border-green-200 bg-green-50 p-4 text-center">
+							<div class="text-2xl font-bold text-green-600">{validationResults.validRows}</div>
+							<div class="text-sm text-green-800">Lignes valides</div>
+						</div>
+						<div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center">
+							<div class="text-2xl font-bold text-amber-600">{validationResults.duplicates}</div>
+							<div class="text-sm text-amber-800">Doublons</div>
+						</div>
+						<div class="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
+							<div class="text-2xl font-bold text-red-600">
+								{validationResults.invalidData.length}
+							</div>
+							<div class="text-sm text-red-800">Erreurs</div>
+						</div>
 					</div>
 
+					<!-- Tableau des erreurs avec le nouveau composant -->
 					{#if validationResults.invalidData.length > 0}
-						<div class="mb-6">
-							<h3 class="mb-2 font-medium">Erreurs de validation</h3>
-							<div class="overflow-x-auto">
-								<Table.Root>
-									<Table.Header>
-										<Table.Row>
-											<Table.Head>Ligne</Table.Head>
-											<Table.Head>Champ</Table.Head>
-											<Table.Head>Valeur</Table.Head>
-											<Table.Head>Erreur</Table.Head>
-										</Table.Row>
-									</Table.Header>
-									<Table.Body>
-										{#each validationResults.invalidData as error}
-											<Table.Row>
-												<Table.Cell>{error.row + 1}</Table.Cell>
-												<Table.Cell>{error.field}</Table.Cell>
-												<Table.Cell>{error.value}</Table.Cell>
-												<Table.Cell>{error.error}</Table.Cell>
-											</Table.Row>
-										{/each}
-									</Table.Body>
-								</Table.Root>
-							</div>
-						</div>
+						<Table.Error
+							title="Erreurs de validation"
+							headers={[
+								{ key: 'row', label: 'Ligne' },
+								{ key: 'field', label: 'Champ' },
+								{ key: 'value', label: 'Valeur' },
+								{ key: 'error', label: 'Erreur' }
+							]}
+							data={validationResults.invalidData.map((error) => ({
+								row: error.row + 1,
+								field: error.field,
+								value: error.value || '',
+								error: error.error
+							}))}
+						/>
+					{/if}
+
+					<!-- Affichage des lignes valides si nécessaire -->
+					{#if validationResults.validRows > 0}
+						{@const validData = (hasHeaders ? rawData.slice(1) : rawData)
+							.map((row, index) => {
+								// Vérifier si cette ligne a des erreurs
+								const hasError = validationResults.invalidData.some((error) => error.row === index);
+								if (hasError) return null;
+
+								// Créer un objet avec les champs mappés
+								const mappedRow: Record<string, any> = {};
+								Object.entries(mappedFields).forEach(([colIndex, fieldName]) => {
+									if (fieldName) {
+										mappedRow[fieldName] = row[parseInt(colIndex)] || '';
+									}
+								});
+								return mappedRow;
+							})
+							.filter((row) => row !== null)}
+
+						<Table.Success
+							title="Lignes valides prêtes à être importées"
+							headers={Object.values(mappedFields)
+								.filter((field) => field)
+								.map((field) => ({
+									key: field,
+									label: field
+								}))}
+							data={validData}
+						/>
 					{/if}
 
 					<form method="POST" action="?/process" use:superEnhance>

@@ -9,7 +9,7 @@
 		children,
 		...restProps
 	}: WithElementRef<HTMLTableAttributes> & {
-		variant?: 'default' | 'striped';
+		variant?: 'default' | 'striped' | 'success' | 'error';
 	} = $props();
 </script>
 
@@ -20,7 +20,11 @@
 		class={cn(
 			variant === 'default'
 				? 'w-full caption-bottom text-sm'
-				: 'w-full border border-black text-left text-sm',
+				: variant === 'striped'
+					? 'w-full border border-black text-left text-sm'
+					: variant === 'success'
+						? 'w-full rounded-lg border border-black bg-green-50 text-left text-sm shadow-sm'
+						: 'w-full rounded-lg border border-black bg-red-50 text-left text-sm shadow-sm',
 			className
 		)}
 		{...restProps}

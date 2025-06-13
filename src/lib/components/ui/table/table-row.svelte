@@ -9,7 +9,7 @@
 		children,
 		...restProps
 	}: WithElementRef<HTMLAttributes<HTMLTableRowElement>> & {
-		variant?: 'default' | 'striped';
+		variant?: 'default' | 'striped' | 'success' | 'error';
 	} = $props();
 </script>
 
@@ -19,7 +19,11 @@
 	class={cn(
 		variant === 'default'
 			? 'hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors'
-			: 'group border-b transition-colors',
+			: variant === 'striped'
+				? 'group border-b transition-colors'
+				: variant === 'success'
+					? 'group border-b transition-colors'
+					: 'group border-b transition-colors',
 		className
 	)}
 	{...restProps}

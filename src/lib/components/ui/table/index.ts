@@ -7,6 +7,8 @@ import Head from './table-head.svelte';
 import Header from './table-header.svelte';
 import Row from './table-row.svelte';
 import Striped from './table-striped.svelte';
+import Success from './table-success.svelte';
+import Error from './table-error.svelte';
 
 export {
 	Root,
@@ -18,6 +20,8 @@ export {
 	Header,
 	Row,
 	Striped,
+	Success,
+	Error,
 	//
 	Root as Table,
 	Body as TableBody,
@@ -27,5 +31,7 @@ export {
 	Head as TableHead,
 	Header as TableHeader,
 	Row as TableRow,
-	Striped as TableStriped
+	Striped as TableStriped,
+	Success as TableSuccess,
+	Error as TableError
 };
