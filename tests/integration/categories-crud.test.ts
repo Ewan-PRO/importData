@@ -309,6 +309,54 @@ describe('Tests CRUD des Catégories', () => {
 			expect(result.attributes[7].atr_label).toBe('Bio');
 		});
 
+		it('devrait créer automatiquement les niveaux intermédiaires manquants avec NULL', async () => {
+			const gappedCategoryData = {
+				atr_0_label: 'Catégorie des produits',
+				atr_1_label: '000000',
+				atr_3_label: '111' // Niveau 2 manquant
+			};
+
+			// Mock de la réponse avec niveaux intermédiaires créés automatiquement
+			const mockAttributes = [
+				{ id: 1, atr_nat: 'CATEGORIE', atr_val: '000000', atr_label: '000000' },
+				{ id: 2, atr_nat: '000000', atr_val: 'NIVEAU_2_AUTO_123456', atr_label: null }, // Niveau intermédiaire NULL
+				{ id: 3, atr_nat: 'NIVEAU_2_AUTO_123456', atr_val: '111', atr_label: '111' }
+			];
+
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: async () => ({
+					success: true,
+					attributes: mockAttributes
+				})
+			});
+
+			const response = await fetch('/api/categories', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(gappedCategoryData)
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(true);
+			expect(result.success).toBe(true);
+			expect(result.attributes).toHaveLength(3);
+
+			// Vérifier le niveau 1 (rempli)
+			expect(result.attributes[0].atr_label).toBe('000000');
+			expect(result.attributes[0].atr_nat).toBe('CATEGORIE');
+
+			// Vérifier le niveau 2 (créé automatiquement avec NULL)
+			expect(result.attributes[1].atr_label).toBeNull();
+			expect(result.attributes[1].atr_nat).toBe('000000');
+			expect(result.attributes[1].atr_val).toMatch(/^NIVEAU_2_AUTO_/);
+
+			// Vérifier le niveau 3 (rempli)
+			expect(result.attributes[2].atr_label).toBe('111');
+			expect(result.attributes[2].atr_nat).toMatch(/^NIVEAU_2_AUTO_/);
+		});
+
 		it('devrait mettre à jour une catégorie existante', async () => {
 			const updateData = {
 				atr_val: 'electronique_updated',
