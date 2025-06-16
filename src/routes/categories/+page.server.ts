@@ -55,7 +55,7 @@ export const load = (async ({ fetch, depends }) => {
 
 	try {
 		// Récupérer les catégories via l'API
-		const categoriesResponse = await fetch('/api/categories');
+		const categoriesResponse = await fetch('/categories/api');
 
 		if (!categoriesResponse.ok) {
 			throw new Error('Erreur lors de la récupération des catégories');
@@ -90,7 +90,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			const response = await fetch('/api/categories', {
+			const response = await fetch('/categories/api', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -132,7 +132,7 @@ export const actions: Actions = {
 		};
 
 		try {
-			const response = await fetch(`/api/categories/${id}`, {
+			const response = await fetch(`/categories/api/${id}`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json'
@@ -163,7 +163,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			const response = await fetch(`/api/categories/${id}`, {
+			const response = await fetch(`/categories/api/${id}`, {
 				method: 'DELETE'
 			});
 

@@ -336,7 +336,7 @@
 			// Supprimer chaque kit sélectionné
 			for (const kit of items) {
 				if (kit.id) {
-					const response = await fetch(`/api/kits/${kit.id}`, {
+					const response = await fetch(`/kits/api/${kit.id}`, {
 						method: 'DELETE'
 					});
 

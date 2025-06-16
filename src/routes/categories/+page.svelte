@@ -347,8 +347,8 @@
 			console.log('Données à envoyer avec ID:', formData);
 
 			try {
-				console.log('Envoi de la requête PUT à:', `/api/categories/${selectedCategory.atr_id}`);
-				const response = await fetch(`/api/categories/${selectedCategory.atr_id}`, {
+				console.log('Envoi de la requête PUT à:', `/categories/api/${selectedCategory.atr_id}`);
+				const response = await fetch(`/categories/api/${selectedCategory.atr_id}`, {
 					method: 'PUT',
 					headers: {
 						'Content-Type': 'application/json'
@@ -401,7 +401,7 @@
 
 			try {
 				console.log('Envoi de la requête de suppression...');
-				const response = await fetch(`/api/categories/${selectedCategory.atr_id}`, {
+				const response = await fetch(`/categories/api/${selectedCategory.atr_id}`, {
 					method: 'DELETE'
 				});
 
@@ -449,7 +449,7 @@
 
 			console.log("Données à envoyer à l'API:", apiData);
 
-			const response = await fetch('/api/categories', {
+			const response = await fetch('/categories/api', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -502,7 +502,7 @@
 			// Supprimer chaque élément sélectionné
 			for (const item of items) {
 				if (item.atr_id) {
-					const response = await fetch(`/api/categories/${item.atr_id}`, {
+					const response = await fetch(`/categories/api/${item.atr_id}`, {
 						method: 'DELETE'
 					});
 

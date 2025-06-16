@@ -42,7 +42,7 @@ export const load = (async ({ fetch, depends }) => {
 
 	try {
 		// Récupérer les kits via l'API
-		const kitsResponse = await fetch('/api/kits');
+		const kitsResponse = await fetch('/kits/api');
 
 		if (!kitsResponse.ok) {
 			throw new Error('Erreur lors de la récupération des kits');
@@ -83,7 +83,7 @@ export const actions: Actions = {
 
 		try {
 			console.log('Envoi vers API avec données:', form.data);
-			const response = await fetch('/api/kits', {
+			const response = await fetch('/kits/api', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -133,7 +133,7 @@ export const actions: Actions = {
 		};
 
 		try {
-			const response = await fetch(`/api/kits/${id}`, {
+			const response = await fetch(`/kits/api/${id}`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json'
@@ -170,7 +170,7 @@ export const actions: Actions = {
 
 		try {
 			console.log('Envoi vers API DELETE avec ID:', id);
-			const response = await fetch(`/api/kits/${id}`, {
+			const response = await fetch(`/kits/api/${id}`, {
 				method: 'DELETE'
 			});
 
