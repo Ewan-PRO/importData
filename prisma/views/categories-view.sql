@@ -17,3 +17,4 @@ FROM attribute_dev atr_0
          LEFT JOIN attribute_dev atr_6 ON atr_5.atr_val::text = atr_6.atr_nat::text
 WHERE atr_0.atr_nat::text = 'CATEGORIE'::text
 ORDER BY atr_0.atr_val, atr_1.atr_val, atr_2.atr_val, atr_3.atr_val, atr_4.atr_val, atr_5.atr_val, atr_6.atr_val
+

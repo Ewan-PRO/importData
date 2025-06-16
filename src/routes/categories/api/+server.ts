@@ -108,26 +108,56 @@ export const POST: RequestHandler = async ({ request }) => {
 			);
 		}
 
-		let previousLevel = 'CATEGORIE';
-
-		// Commencer à partir de atr_1_label (ignorer atr_0_label qui est toujours "Catégorie des produits")
-		for (let i = 1; i <= 7; i++) {
+		// Trouver le dernier niveau rempli pour savoir jusqu'où créer la hiérarchie
+		let lastFilledLevel = 0;
+		for (let i = 7; i >= 1; i--) {
 			const label = data[`atr_${i}_label`];
-
 			if (label && label.trim() !== '') {
-				let result;
-				if (i === 1) {
-					// Premier niveau réel (atr_1_label devient le niveau 0 en base)
-					result = await handleLevel0Attribute(label);
-				} else {
-					result = await handleSubLevelAttribute(label, previousLevel);
-				}
-
-				attributeEntries.push(result.attribute);
-				previousLevel = result.nextLevel;
-			} else {
+				lastFilledLevel = i;
 				break;
 			}
+		}
+
+		let previousLevel = 'CATEGORIE';
+
+		// Créer tous les niveaux de 1 jusqu'au dernier niveau rempli
+		for (let i = 1; i <= lastFilledLevel; i++) {
+			const label = data[`atr_${i}_label`];
+			const hasValue = label && label.trim() !== '';
+
+			let result;
+			if (i === 1) {
+				// Premier niveau réel (atr_1_label devient le niveau 0 en base)
+				if (hasValue) {
+					result = await handleLevel0Attribute(label);
+				} else {
+					console.log(`🔧 Création niveau 0 intermédiaire (NULL)`);
+					result = await handleLevel0Attribute('NIVEAU_1_AUTO');
+					// Mettre atr_label à NULL pour les niveaux intermédiaires
+					await prisma.attribute_dev.update({
+						where: { atr_id: result.attribute.atr_id },
+						data: { atr_label: null }
+					});
+					result.attribute.atr_label = null;
+				}
+			} else {
+				if (hasValue) {
+					result = await handleSubLevelAttribute(label, previousLevel);
+				} else {
+					console.log(`🔧 Création sous-niveau ${i} intermédiaire (NULL) dans "${previousLevel}"`);
+					const autoValue = `NIVEAU_${i}_AUTO_${Date.now()}`;
+					result = await handleSubLevelAttribute(autoValue, previousLevel);
+					// Mettre atr_label à NULL pour les niveaux intermédiaires
+					await prisma.attribute_dev.update({
+						where: { atr_id: result.attribute.atr_id },
+						data: { atr_label: null }
+					});
+					result.attribute.atr_label = null;
+				}
+			}
+
+			attributeEntries.push(result.attribute);
+			previousLevel = result.nextLevel;
 		}
 
 		return json({ success: true, attributes: attributeEntries });
