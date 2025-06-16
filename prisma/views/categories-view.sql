@@ -1,3 +1,4 @@
+/* CREATE OR REPLACE VIEW v_categories_dev AS */
 SELECT atr_0.atr_id,
        'Catégorie des produits'::character varying(100) AS atr_0_label,
        atr_0.atr_label                                  AS atr_1_label,

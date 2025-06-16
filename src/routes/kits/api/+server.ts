@@ -118,7 +118,7 @@ function isSimilarKitLabel(
 
 export const GET: RequestHandler = async () => {
 	try {
-		const kits = await prisma.v_kit_carac.findMany();
+		const kits = await prisma.v_kit_carac_dev.findMany();
 		return json(kits);
 	} catch (error) {
 		console.error('Erreur lors de la récupération des kits:', error);
@@ -156,7 +156,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		console.log('Validation OK, début de la transaction');
 
 		// Vérifier l'unicité et la similarité du kit_label AVANT la transaction
-		const existingKits = await prisma.kit.findMany({
+		const existingKits = await prisma.kit_dev.findMany({
 			where: { kit_label: { not: null } },
 			select: { kit_label: true }
 		});
@@ -198,20 +198,20 @@ export const POST: RequestHandler = async ({ request }) => {
 			console.log('Transaction démarrée');
 
 			// 1. Créer le nouveau kit (on sait qu'il n'existe pas)
-			const kit = await tx.kit.create({
+			const kit = await tx.kit_dev.create({
 				data: { kit_label: data.kit_label }
 			});
 			console.log('Kit créé:', kit);
 
 			// 2. Vérifier si l'attribut caractéristique existe, sinon le créer
 			const attributeCarac =
-				(await tx.attribute.findFirst({
+				(await tx.attribute_dev.findFirst({
 					where: {
 						atr_nat: 'CARAC',
 						atr_label: data.atr_label
 					}
 				})) ??
-				(await tx.attribute.create({
+				(await tx.attribute_dev.create({
 					data: {
 						atr_nat: 'CARAC',
 						atr_val: data.atr_label.toLowerCase().replace(/\s+/g, '_'),
@@ -222,12 +222,12 @@ export const POST: RequestHandler = async ({ request }) => {
 
 			// 3. Vérifier si l'attribut valeur existe, sinon le créer
 			const attributeVal =
-				(await tx.attribute.findFirst({
+				(await tx.attribute_dev.findFirst({
 					where: {
 						atr_val: data.atr_val
 					}
 				})) ??
-				(await tx.attribute.create({
+				(await tx.attribute_dev.create({
 					data: {
 						atr_nat: 'UNITE',
 						atr_val: data.atr_val,
@@ -236,8 +236,8 @@ export const POST: RequestHandler = async ({ request }) => {
 				}));
 			console.log('Attribut valeur créé/trouvé:', attributeVal);
 
-			// 4. Créer la relation kit_attribute
-			const kitAttribute = await tx.kit_attribute.create({
+			// 4. Créer la relation kit_attribute_dev
+			const kitAttribute = await tx.kit_attribute_dev.create({
 				data: {
 					fk_kit: kit.kit_id,
 					fk_attribute_carac: attributeCarac.atr_id,
@@ -245,7 +245,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					kat_valeur: parseFloat(data.kat_valeur) || 0
 				}
 			});
-			console.log('Kit_attribute créé:', kitAttribute);
+			console.log('Kit_attribute_dev créé:', kitAttribute);
 
 			return {
 				kit,

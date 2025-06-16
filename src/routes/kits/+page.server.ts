@@ -36,7 +36,7 @@ const kitSchema = z.object({
 		})
 });
 
-// Cette fonction sera utilisée à la fois sur le serveur et le client
+// Cette fonction sera utilisée à la fois sur le serveur et le kit
 export const load = (async ({ fetch, depends }) => {
 	depends('app:kits'); // Pour permettre l'invalidation avec invalidateAll()
 

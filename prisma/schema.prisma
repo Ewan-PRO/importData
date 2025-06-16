@@ -113,6 +113,16 @@ model kit_dev {
   updated_at DateTime? @db.Timestamp(6)
 }
 
+model kit_attribute_dev {
+  fk_kit             Int?
+  fk_attribute_carac Int?
+  fk_attribute       Int?
+  kat_valeur         Float?
+  created_at         DateTime? @default(now()) @db.Timestamp(6)
+  updated_at         DateTime? @default(now()) @db.Timestamp(6)
+  kat_id             Int       @id @default(autoincrement())
+}
+
 view v_categories {
   atr_id      Int     @id @default(autoincrement())
   atr_0_label String  @db.VarChar(100)
@@ -149,4 +159,14 @@ view v_categories_dev {
   atr_7_label String? @db.VarChar(100)
 
   @@unique([atr_0_label], name: "v_categories_dev_pkey")
+}
+
+view v_kit_carac_dev {
+  id         Int    @id @default(autoincrement())
+  kit_label  String @db.VarChar(100)
+  atr_label  String @db.VarChar(100)
+  atr_val    String @db.VarChar(60)
+  kat_valeur Float
+
+  @@unique([kit_label, atr_label, atr_val], name: "v_kit_carac_dev_unique")
 }

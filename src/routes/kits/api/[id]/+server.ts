@@ -31,36 +31,46 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		}
 
 		// Vérifier que l'enregistrement existe
-		const existingRecord = await prisma.kit_attribute.findUnique({
-			where: { kat_id: id },
-			include: {
-				kit: true,
-				attribute_kit_attribute_fk_attribute_caracToattribute: true,
-				attribute_kit_attribute_fk_attributeToattribute: true
-			}
+		const existingRecord = await prisma.kit_attribute_dev.findUnique({
+			where: { kat_id: id }
 		});
 
 		if (!existingRecord) {
 			return json({ error: 'Kit non trouvé' }, { status: 404 });
 		}
 
+		// Récupérer les données liées pour la mise à jour
+		const kit = existingRecord.fk_kit
+			? await prisma.kit_dev.findUnique({
+					where: { kit_id: existingRecord.fk_kit }
+				})
+			: null;
+
+		const attributeCarac = existingRecord.fk_attribute_carac
+			? await prisma.attribute_dev.findUnique({
+					where: { atr_id: existingRecord.fk_attribute_carac }
+				})
+			: null;
+
+		const attributeVal = existingRecord.fk_attribute
+			? await prisma.attribute_dev.findUnique({
+					where: { atr_id: existingRecord.fk_attribute }
+				})
+			: null;
+
 		// Utilisation d'une transaction pour mettre à jour toutes les entités
 		const result = await prisma.$transaction(async (tx) => {
 			// 1. Mettre à jour le kit si nécessaire
-			if (existingRecord.kit?.kit_label !== data.kit_label && existingRecord.fk_kit) {
-				await tx.kit.update({
+			if (kit?.kit_label !== data.kit_label && existingRecord.fk_kit) {
+				await tx.kit_dev.update({
 					where: { kit_id: existingRecord.fk_kit },
 					data: { kit_label: data.kit_label }
 				});
 			}
 
 			// 2. Mettre à jour l'attribut caractéristique si nécessaire
-			if (
-				existingRecord.attribute_kit_attribute_fk_attribute_caracToattribute?.atr_label !==
-					data.atr_label &&
-				existingRecord.fk_attribute_carac
-			) {
-				await tx.attribute.update({
+			if (attributeCarac?.atr_label !== data.atr_label && existingRecord.fk_attribute_carac) {
+				await tx.attribute_dev.update({
 					where: { atr_id: existingRecord.fk_attribute_carac },
 					data: {
 						atr_label: data.atr_label,
@@ -70,11 +80,8 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 			}
 
 			// 3. Mettre à jour l'attribut valeur si nécessaire
-			if (
-				existingRecord.attribute_kit_attribute_fk_attributeToattribute?.atr_val !== data.atr_val &&
-				existingRecord.fk_attribute
-			) {
-				await tx.attribute.update({
+			if (attributeVal?.atr_val !== data.atr_val && existingRecord.fk_attribute) {
+				await tx.attribute_dev.update({
 					where: { atr_id: existingRecord.fk_attribute },
 					data: {
 						atr_val: data.atr_val,
@@ -83,8 +90,8 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 				});
 			}
 
-			// 4. Mettre à jour la valeur dans kit_attribute
-			const updatedKitAttribute = await tx.kit_attribute.update({
+			// 4. Mettre à jour la valeur dans kit_attribute_dev
+			const updatedKitAttribute = await tx.kit_attribute_dev.update({
 				where: { kat_id: id },
 				data: {
 					kat_valeur: parseFloat(data.kat_valeur) || 0
@@ -120,7 +127,7 @@ export const DELETE: RequestHandler = async ({ params }) => {
 
 		console.log("Recherche de l'enregistrement avec ID:", id);
 		// Vérifier que l'enregistrement existe
-		const existingRecord = await prisma.kit_attribute.findUnique({
+		const existingRecord = await prisma.kit_attribute_dev.findUnique({
 			where: { kat_id: id }
 		});
 
@@ -131,9 +138,9 @@ export const DELETE: RequestHandler = async ({ params }) => {
 			return json({ error: 'Kit non trouvé' }, { status: 404 });
 		}
 
-		console.log("Suppression de l'enregistrement kit_attribute avec ID:", id);
-		// Supprimer l'enregistrement kit_attribute
-		await prisma.kit_attribute.delete({
+		console.log("Suppression de l'enregistrement kit_attribute_dev avec ID:", id);
+		// Supprimer l'enregistrement kit_attribute_dev
+		await prisma.kit_attribute_dev.delete({
 			where: { kat_id: id }
 		});
 
