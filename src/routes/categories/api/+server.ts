@@ -126,34 +126,31 @@ export const POST: RequestHandler = async ({ request }) => {
 			const hasValue = label && label.trim() !== '';
 
 			let result;
-			if (i === 1) {
-				// Premier niveau réel (atr_1_label devient le niveau 0 en base)
-				if (hasValue) {
-					result = await handleLevel0Attribute(label);
-				} else {
-					console.log(`🔧 Création niveau 0 intermédiaire (NULL)`);
-					result = await handleLevel0Attribute('NIVEAU_1_AUTO');
-					// Mettre atr_label à NULL pour les niveaux intermédiaires
-					await prisma.attribute_dev.update({
-						where: { atr_id: result.attribute.atr_id },
-						data: { atr_label: null }
-					});
-					result.attribute.atr_label = null;
-				}
+			if (i === 1 && hasValue) {
+				// Premier niveau réel avec valeur
+				result = await handleLevel0Attribute(label);
+			} else if (i === 1) {
+				// Premier niveau intermédiaire (NULL)
+				console.log(`🔧 Création niveau 0 intermédiaire (NULL)`);
+				result = await handleLevel0Attribute('NIVEAU_1_AUTO');
+				await prisma.attribute_dev.update({
+					where: { atr_id: result.attribute.atr_id },
+					data: { atr_label: null }
+				});
+				result.attribute.atr_label = null;
+			} else if (hasValue) {
+				// Sous-niveau avec valeur
+				result = await handleSubLevelAttribute(label, previousLevel);
 			} else {
-				if (hasValue) {
-					result = await handleSubLevelAttribute(label, previousLevel);
-				} else {
-					console.log(`🔧 Création sous-niveau ${i} intermédiaire (NULL) dans "${previousLevel}"`);
-					const autoValue = `NIVEAU_${i}_AUTO_${Date.now()}`;
-					result = await handleSubLevelAttribute(autoValue, previousLevel);
-					// Mettre atr_label à NULL pour les niveaux intermédiaires
-					await prisma.attribute_dev.update({
-						where: { atr_id: result.attribute.atr_id },
-						data: { atr_label: null }
-					});
-					result.attribute.atr_label = null;
-				}
+				// Sous-niveau intermédiaire (NULL)
+				console.log(`🔧 Création sous-niveau ${i} intermédiaire (NULL) dans "${previousLevel}"`);
+				const autoValue = `NIVEAU_${i}_AUTO_${Date.now()}`;
+				result = await handleSubLevelAttribute(autoValue, previousLevel);
+				await prisma.attribute_dev.update({
+					where: { atr_id: result.attribute.atr_id },
+					data: { atr_label: null }
+				});
+				result.attribute.atr_label = null;
 			}
 
 			attributeEntries.push(result.attribute);
