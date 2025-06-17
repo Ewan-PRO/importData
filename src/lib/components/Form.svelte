@@ -7,7 +7,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select';
-	import { CircleCheck, CircleX, Trash2 } from 'lucide-svelte';
+	import { CircleCheck, CircleX, Trash2, Search } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { Badge } from '$lib/components/ui/badge';
 
@@ -34,6 +34,7 @@
 	let formData: Record<string, any> = { ...data };
 	let errors: Record<string, string> = {};
 	let isInitialized = false;
+	let searchTerms: Record<string, string> = {}; // Pour stocker les termes de recherche par champ
 
 	$: {
 		console.log('Changement de isOpen détecté:', isOpen);
@@ -41,6 +42,7 @@
 			console.log('Initialisation du formulaire');
 			formData = { ...data };
 			errors = {};
+			searchTerms = {}; // Réinitialiser les termes de recherche
 			isInitialized = true;
 			console.log('FormData initialisé:', formData);
 		} else if (!isOpen) {
@@ -48,9 +50,27 @@
 		}
 	}
 
+	// Fonction pour filtrer les options basée sur le terme de recherche
+	function getFilteredOptions(field: any): Array<{ value: string; label: string }> {
+		const searchTerm = searchTerms[field.key]?.toLowerCase() || '';
+		if (!searchTerm || !field.options) {
+			return field.options || [];
+		}
+
+		return field.options.filter(
+			(option: { value: string; label: string }) =>
+				option.label.toLowerCase().includes(searchTerm) ||
+				option.value.toLowerCase().includes(searchTerm)
+		);
+	}
+
 	function updateFormData(key: string, value: any) {
 		formData = { ...formData, [key]: value };
 		console.log('FormData mis à jour:', formData);
+	}
+
+	function updateSearchTerm(fieldKey: string, value: string) {
+		searchTerms = { ...searchTerms, [fieldKey]: value };
 	}
 
 	function validateForm(): boolean {
@@ -202,7 +222,29 @@
 									</div>
 									<Select.SelectSeparator />
 								{/if}
-								{#each field.options || [] as option}
+								{#if field.options && field.options.length > 0}
+									<div class="px-2 py-1">
+										<div class="relative">
+											<div
+												class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
+											>
+												<Search class="h-4 w-4 text-gray-400" />
+											</div>
+											<Input
+												type="text"
+												placeholder="Rechercher une catégorie..."
+												value={searchTerms[field.key] || ''}
+												oninput={(e) => {
+													const target = e.target as HTMLInputElement;
+													updateSearchTerm(field.key, target.value);
+												}}
+												class="w-full pl-9"
+											/>
+										</div>
+									</div>
+									<Select.SelectSeparator />
+								{/if}
+								{#each getFilteredOptions(field) as option}
 									<Select.SelectItem value={option.value}>{option.label}</Select.SelectItem>
 								{/each}
 							</Select.SelectContent>
