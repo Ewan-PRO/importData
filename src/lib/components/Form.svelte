@@ -9,6 +9,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import { CircleCheck, CircleX, Trash2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
+	import { Badge } from '$lib/components/ui/badge';
 
 	export let fields: {
 		key: string;
@@ -153,7 +154,12 @@
 	<form on:submit={onSubmit} class="space-y-4">
 		{#each fields as field}
 			<div>
-				<Label for={field.key} class="mb-2">{field.label}</Label>
+				<div class="mb-2 flex items-center justify-between">
+					<Label for={field.key}>{field.label}</Label>
+					{#if formData[field.key] && formData[field.key] !== ''}
+						<Badge variant="vert">Valeur remplie</Badge>
+					{/if}
+				</div>
 
 				{#if field.type === 'textarea'}
 					<Textarea
