@@ -182,11 +182,11 @@ describe('Tests CRUD des Catégories', () => {
 		});
 	});
 
-	describe('Simulation API CRUD', () => {
-		// Mock de l'API fetch
-		const mockFetch = vi.fn();
-		global.fetch = mockFetch;
+	// Mock de l'API fetch (global pour tous les tests)
+	const mockFetch = vi.fn();
+	global.fetch = mockFetch;
 
+	describe('Simulation API CRUD', () => {
 		beforeEach(() => {
 			mockFetch.mockClear();
 		});
@@ -575,6 +575,224 @@ describe('Tests CRUD des Catégories', () => {
 
 			const result = categorySchema.safeParse(validSparseData);
 			expect(result.success).toBe(true);
+		});
+	});
+
+	describe('Tests de protection contre suppressions/modifications trop fortes', () => {
+		beforeEach(() => {
+			mockFetch.mockClear();
+		});
+
+		it("devrait empêcher la suppression d'un niveau parent qui affecterait toute une branche", async () => {
+			// Simulation : tentative de suppression de "pièce" qui affecterait toutes les sous-catégories
+			const parentCategoryId = 34; // ID de "pièce"
+
+			// Mock de la réponse API qui détecte des enfants
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 409, // Conflict
+				json: async () => ({
+					error: 'Impossible de supprimer cette catégorie : elle contient 50+ sous-catégories',
+					affectedCount: 67,
+					affectedCategories: [
+						'piece mécanique > guidage > guidage en rotation > roulement',
+						'étanchéité > joint > joint statique',
+						'filtration > filtration sur des liquides',
+						'kit > entretien mineur'
+					]
+				})
+			});
+
+			const response = await fetch(`/api/categories/${parentCategoryId}`, {
+				method: 'DELETE'
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(false);
+			expect(response.status).toBe(409);
+			expect(result.error).toContain('Impossible de supprimer cette catégorie');
+			expect(result.affectedCount).toBe(67);
+			expect(result.affectedCategories).toHaveLength(4);
+		});
+
+		it("devrait empêcher la modification d'un niveau parent qui affecterait massivement les enfants", async () => {
+			// Simulation : tentative de modification de "equipement industriel" vers "333333"
+			const parentCategoryId = 35;
+			const updateData = {
+				atr_val: '333333',
+				atr_label: '333333'
+			};
+
+			// Mock de la réponse API qui détecte l'impact massif
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 409, // Conflict
+				json: async () => ({
+					error: 'Modification trop forte : cette modification affecterait 45+ sous-catégories',
+					affectedCount: 45,
+					currentValue: 'equipement industriel',
+					newValue: '333333',
+					impactedBranches: [
+						'pompe > pompe à vide',
+						'moteurs électriques et équipements associés',
+						'compresseurs industriels',
+						'pompes industrielles'
+					]
+				})
+			});
+
+			const response = await fetch(`/api/categories/${parentCategoryId}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(updateData)
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(false);
+			expect(response.status).toBe(409);
+			expect(result.error).toContain('Modification trop forte');
+			expect(result.affectedCount).toBe(45);
+			expect(result.currentValue).toBe('equipement industriel');
+			expect(result.newValue).toBe('333333');
+			expect(result.impactedBranches).toHaveLength(4);
+		});
+
+		it("devrait permettre la suppression d'une catégorie feuille sans enfants", async () => {
+			// Simulation : suppression d'une catégorie terminale comme "roulement rigide à billes"
+			const leafCategoryId = 123;
+
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: async () => ({
+					success: true,
+					message: 'Catégorie supprimée avec succès',
+					deletedCategory: 'roulement rigide à billes',
+					affectedCount: 0
+				})
+			});
+
+			const response = await fetch(`/api/categories/${leafCategoryId}`, {
+				method: 'DELETE'
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(true);
+			expect(result.success).toBe(true);
+			expect(result.affectedCount).toBe(0);
+			expect(result.deletedCategory).toBe('roulement rigide à billes');
+		});
+
+		it("devrait permettre la modification d'une catégorie avec impact limité", async () => {
+			// Simulation : modification d'une catégorie avec peu d'enfants
+			const categoryId = 456;
+			const updateData = {
+				atr_val: 'roulement_billes_modifie',
+				atr_label: 'Roulement à billes modifié'
+			};
+
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: async () => ({
+					success: true,
+					message: 'Catégorie modifiée avec succès',
+					affectedCount: 3,
+					updatedCategory: updateData,
+					childrenUpdated: [
+						'roulement rigide à billes',
+						'roulements-inserts (roulements Y)',
+						'roulements à billes à contact oblique'
+					]
+				})
+			});
+
+			const response = await fetch(`/api/categories/${categoryId}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(updateData)
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(true);
+			expect(result.success).toBe(true);
+			expect(result.affectedCount).toBe(3);
+			expect(result.childrenUpdated).toHaveLength(3);
+		});
+
+		it('devrait demander confirmation pour les modifications à impact moyen', async () => {
+			// Simulation : modification avec impact moyen (5-20 enfants)
+			const categoryId = 789;
+			const updateData = {
+				atr_val: 'guidage_modifie',
+				atr_label: 'Guidage modifié',
+				forceUpdate: false // Première tentative sans forcer
+			};
+
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 202, // Accepted but needs confirmation
+				json: async () => ({
+					requiresConfirmation: true,
+					message: 'Cette modification affectera 12 sous-catégories. Confirmez-vous ?',
+					affectedCount: 12,
+					previewChanges: [
+						'guidage en rotation > roulement',
+						"guidage en rotation > manchons d'usure",
+						'pallier',
+						'guidage en translation (linéaire)'
+					]
+				})
+			});
+
+			const response = await fetch(`/api/categories/${categoryId}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(updateData)
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(false);
+			expect(response.status).toBe(202);
+			expect(result.requiresConfirmation).toBe(true);
+			expect(result.affectedCount).toBe(12);
+			expect(result.previewChanges).toHaveLength(4);
+		});
+
+		it('devrait accepter la modification avec confirmation forcée', async () => {
+			// Simulation : modification avec forceUpdate = true
+			const categoryId = 789;
+			const updateData = {
+				atr_val: 'guidage_modifie',
+				atr_label: 'Guidage modifié',
+				forceUpdate: true // Confirmation explicite
+			};
+
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: async () => ({
+					success: true,
+					message: 'Modification forcée appliquée avec succès',
+					affectedCount: 12,
+					updatedWithConfirmation: true
+				})
+			});
+
+			const response = await fetch(`/api/categories/${categoryId}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(updateData)
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(true);
+			expect(result.success).toBe(true);
+			expect(result.affectedCount).toBe(12);
+			expect(result.updatedWithConfirmation).toBe(true);
 		});
 	});
 });
