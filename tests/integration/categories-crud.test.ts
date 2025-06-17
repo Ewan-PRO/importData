@@ -18,14 +18,17 @@ vi.mock('$lib/components/ui/alert', () => ({
 // Schéma de validation des catégories (copié depuis +page.server.ts)
 const categorySchema = z
 	.object({
-		atr_0_label: z.string().default('Catégorie des produits'),
-		atr_1_label: z.string().optional(),
-		atr_2_label: z.string().optional(),
-		atr_3_label: z.string().optional(),
-		atr_4_label: z.string().optional(),
-		atr_5_label: z.string().optional(),
-		atr_6_label: z.string().optional(),
-		atr_7_label: z.string().optional()
+		atr_0_label: z
+			.string()
+			.max(255, 'Le label ne peut pas dépasser 255 caractères')
+			.default('Catégorie des produits'),
+		atr_1_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional(),
+		atr_2_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional(),
+		atr_3_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional(),
+		atr_4_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional(),
+		atr_5_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional(),
+		atr_6_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional(),
+		atr_7_label: z.string().max(255, 'Le label ne peut pas dépasser 255 caractères').optional()
 	})
 	.refine(
 		(data) => {
@@ -151,6 +154,28 @@ describe('Tests CRUD des Catégories', () => {
 				);
 			}
 		});
+
+		it('devrait rejeter les labels trop longs (>255 caractères)', () => {
+			const longLabelData = {
+				atr_0_label: 'Catégorie des produits',
+				atr_1_label: 'A'.repeat(256) // 256 caractères, dépasse la limite
+			};
+			const result = categorySchema.safeParse(longLabelData);
+			expect(result.success).toBe(false);
+
+			if (!result.success) {
+				expect(result.error.issues[0].message).toBe('Le label ne peut pas dépasser 255 caractères');
+			}
+		});
+
+		it('devrait accepter les labels de 255 caractères exactement', () => {
+			const exactLimitData = {
+				atr_0_label: 'Catégorie des produits',
+				atr_1_label: 'A'.repeat(255) // Exactement 255 caractères
+			};
+			const result = categorySchema.safeParse(exactLimitData);
+			expect(result.success).toBe(true);
+		});
 	});
 
 	describe('Validation des niveaux hiérarchiques', () => {
@@ -252,6 +277,29 @@ describe('Tests CRUD des Catégories', () => {
 			expect(result.error).toBe(
 				'Au moins un niveau entre atr_1_label et atr_7_label doit être rempli'
 			);
+		});
+
+		it("devrait empêcher la création d'une catégorie qui existe déjà", async () => {
+			// Mock de la réponse API pour catégorie existante
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 409,
+				json: async () => ({
+					error: 'Cette combinaison de catégories existe déjà'
+				})
+			});
+
+			const response = await fetch('/api/categories', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(validCategoryData)
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(false);
+			expect(response.status).toBe(409);
+			expect(result.error).toBe('Cette combinaison de catégories existe déjà');
 		});
 
 		it('devrait créer une catégorie avec un seul niveau', async () => {
@@ -390,7 +438,9 @@ describe('Tests CRUD des Catégories', () => {
 				ok: true,
 				json: async () => ({
 					success: true,
-					message: 'Catégorie supprimée avec succès'
+					message: 'Catégorie supprimée avec succès',
+					deletedCategory: 'Test Category',
+					affectedCount: 0
 				})
 			});
 
@@ -403,6 +453,29 @@ describe('Tests CRUD des Catégories', () => {
 			expect(response.ok).toBe(true);
 			expect(result.success).toBe(true);
 			expect(result.message).toBe('Catégorie supprimée avec succès');
+			expect(result.affectedCount).toBe(0);
+		});
+
+		it("devrait empêcher la suppression d'une catégorie utilisée dans des kits", async () => {
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 400,
+				json: async () => ({
+					error: 'Impossible de supprimer cette catégorie car elle est utilisée dans des kits'
+				})
+			});
+
+			const response = await fetch('/api/categories/1', {
+				method: 'DELETE'
+			});
+
+			const result = await response.json();
+
+			expect(response.ok).toBe(false);
+			expect(response.status).toBe(400);
+			expect(result.error).toBe(
+				'Impossible de supprimer cette catégorie car elle est utilisée dans des kits'
+			);
 		});
 
 		it('devrait récupérer la liste des catégories', async () => {
@@ -529,14 +602,28 @@ describe('Tests CRUD des Catégories', () => {
 	});
 
 	describe('Tests de performance et limites', () => {
-		it('devrait gérer des labels très longs', () => {
+		it('devrait gérer des labels à la limite de 255 caractères', () => {
 			const longLabelData = {
-				atr_0_label: 'A'.repeat(255), // Label très long
+				atr_0_label: 'A'.repeat(255), // Label à la limite
 				atr_1_label: 'Sous-catégorie normale'
 			};
 
 			const result = categorySchema.safeParse(longLabelData);
 			expect(result.success).toBe(true);
+		});
+
+		it('devrait rejeter des labels dépassant 255 caractères', () => {
+			const tooLongLabelData = {
+				atr_0_label: 'A'.repeat(256), // Dépasse la limite
+				atr_1_label: 'Sous-catégorie normale'
+			};
+
+			const result = categorySchema.safeParse(tooLongLabelData);
+			expect(result.success).toBe(false);
+
+			if (!result.success) {
+				expect(result.error.issues[0].message).toBe('Le label ne peut pas dépasser 255 caractères');
+			}
 		});
 
 		it('devrait rejeter des données avec tous les niveaux vides sauf atr_0_label', () => {
@@ -587,13 +674,13 @@ describe('Tests CRUD des Catégories', () => {
 			// Simulation : tentative de suppression de "pièce" qui affecterait toutes les sous-catégories
 			const parentCategoryId = 34; // ID de "pièce"
 
-			// Mock de la réponse API qui détecte des enfants
+			// Mock de la réponse API qui détecte des enfants (seuil > 20)
 			mockFetch.mockResolvedValueOnce({
 				ok: false,
 				status: 409, // Conflict
 				json: async () => ({
-					error: 'Impossible de supprimer cette catégorie : elle contient 50+ sous-catégories',
-					affectedCount: 67,
+					error: 'Impossible de supprimer cette catégorie : elle contient 25+ sous-catégories',
+					affectedCount: 25,
 					affectedCategories: [
 						'piece mécanique > guidage > guidage en rotation > roulement',
 						'étanchéité > joint > joint statique',
@@ -612,7 +699,7 @@ describe('Tests CRUD des Catégories', () => {
 			expect(response.ok).toBe(false);
 			expect(response.status).toBe(409);
 			expect(result.error).toContain('Impossible de supprimer cette catégorie');
-			expect(result.affectedCount).toBe(67);
+			expect(result.affectedCount).toBe(25);
 			expect(result.affectedCategories).toHaveLength(4);
 		});
 
@@ -620,17 +707,16 @@ describe('Tests CRUD des Catégories', () => {
 			// Simulation : tentative de modification de "equipement industriel" vers "333333"
 			const parentCategoryId = 35;
 			const updateData = {
-				atr_val: '333333',
 				atr_label: '333333'
 			};
 
-			// Mock de la réponse API qui détecte l'impact massif
+			// Mock de la réponse API qui détecte l'impact massif (seuil > 20)
 			mockFetch.mockResolvedValueOnce({
 				ok: false,
 				status: 409, // Conflict
 				json: async () => ({
-					error: 'Modification trop forte : cette modification affecterait 45+ sous-catégories',
-					affectedCount: 45,
+					error: 'Modification trop forte : cette modification affecterait 25+ sous-catégories',
+					affectedCount: 25,
 					currentValue: 'equipement industriel',
 					newValue: '333333',
 					impactedBranches: [
@@ -653,7 +739,7 @@ describe('Tests CRUD des Catégories', () => {
 			expect(response.ok).toBe(false);
 			expect(response.status).toBe(409);
 			expect(result.error).toContain('Modification trop forte');
-			expect(result.affectedCount).toBe(45);
+			expect(result.affectedCount).toBe(25);
 			expect(result.currentValue).toBe('equipement industriel');
 			expect(result.newValue).toBe('333333');
 			expect(result.impactedBranches).toHaveLength(4);
@@ -681,6 +767,7 @@ describe('Tests CRUD des Catégories', () => {
 
 			expect(response.ok).toBe(true);
 			expect(result.success).toBe(true);
+			expect(result.message).toBe('Catégorie supprimée avec succès');
 			expect(result.affectedCount).toBe(0);
 			expect(result.deletedCategory).toBe('roulement rigide à billes');
 		});
@@ -766,7 +853,6 @@ describe('Tests CRUD des Catégories', () => {
 			// Simulation : modification avec forceUpdate = true
 			const categoryId = 789;
 			const updateData = {
-				atr_val: 'guidage_modifie',
 				atr_label: 'Guidage modifié',
 				forceUpdate: true // Confirmation explicite
 			};
@@ -775,7 +861,6 @@ describe('Tests CRUD des Catégories', () => {
 				ok: true,
 				json: async () => ({
 					success: true,
-					message: 'Modification forcée appliquée avec succès',
 					affectedCount: 12,
 					updatedWithConfirmation: true
 				})
