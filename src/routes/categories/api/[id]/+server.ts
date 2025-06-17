@@ -64,7 +64,7 @@ async function countAffectedCategories(category: Category): Promise<{
 	const samples = affectedCategories
 		.map((cat) => cat.atr_label)
 		.filter((label) => label !== null)
-		.slice(0, 4) as string[];
+		.slice(0, 4);
 
 	return { count: totalCount, samples };
 }
@@ -142,9 +142,46 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		}
 
 		const categoryId = parseInt(id);
-		const category = await prisma.attribute_dev.findUnique({
+
+		// Récupérer la catégorie depuis la vue
+		const categoryFromView = await prisma.v_categories_dev.findFirst({
 			where: { atr_id: categoryId }
 		});
+
+		if (!categoryFromView) {
+			return json({ error: 'Catégorie non trouvée' }, { status: 404 });
+		}
+
+		// Retrouver l'atr_id réel (même logique que DELETE)
+		let category = null;
+		for (let level = 7; level >= 1; level--) {
+			const labelField = `atr_${level}_label` as keyof typeof categoryFromView;
+			const label = categoryFromView[labelField];
+
+			if (label !== null && label !== undefined) {
+				let currentNat = 'CATEGORIE';
+
+				for (let i = 1; i < level; i++) {
+					const prevLabelField = `atr_${i}_label` as keyof typeof categoryFromView;
+					const prevLabel = categoryFromView[prevLabelField];
+
+					if (prevLabel !== null && prevLabel !== undefined) {
+						const prevCategory = await prisma.attribute_dev.findFirst({
+							where: { atr_nat: currentNat, atr_label: String(prevLabel) }
+						});
+						if (prevCategory) {
+							currentNat = prevCategory.atr_val ?? '';
+						}
+					}
+				}
+
+				category = await prisma.attribute_dev.findFirst({
+					where: { atr_nat: currentNat, atr_label: String(label) }
+				});
+
+				if (category) break;
+			}
+		}
 
 		if (!category) {
 			return json({ error: 'Catégorie non trouvée' }, { status: 404 });
@@ -191,7 +228,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 			}
 		});
 
-		await updateMainCategory(categoryId, data, level);
+		await updateMainCategory(category.atr_id, data, level);
 
 		let currentNat = category.atr_val ?? '';
 		for (let i = level + 1; i <= 7; i++) {
@@ -230,23 +267,79 @@ export const DELETE: RequestHandler = async ({ params }) => {
 		const categoryId = parseInt(id);
 		console.log('ID converti en nombre:', categoryId);
 
-		// Récupérer la catégorie à supprimer
-		const category = await prisma.attribute_dev.findUnique({
+		// Étape 1: Récupérer la ligne de la vue avec l'ID séquentiel
+		const categoryFromView = await prisma.v_categories_dev.findFirst({
 			where: {
 				atr_id: categoryId
 			}
 		});
-		console.log('Catégorie trouvée:', category);
+		console.log('Catégorie trouvée dans la vue:', categoryFromView);
 
-		if (!category) {
-			console.log('Catégorie non trouvée');
+		if (!categoryFromView) {
+			console.log('Catégorie non trouvée dans la vue');
+			return json({ error: 'Catégorie non trouvée' }, { status: 404 });
+		}
+
+		// Étape 2: Retrouver l'atr_id réel en cherchant dans attribute_dev
+		let category = null;
+		let realAtrId = null;
+
+		// Chercher le dernier niveau rempli pour identifier la catégorie réelle
+		for (let level = 7; level >= 1; level--) {
+			const labelField = `atr_${level}_label` as keyof typeof categoryFromView;
+			const label = categoryFromView[labelField];
+
+			if (label !== null && label !== undefined) {
+				console.log(`Recherche au niveau ${level} avec label: "${label}"`);
+
+				// Construire la hiérarchie pour trouver l'atr_nat correct
+				let currentNat = 'CATEGORIE';
+
+				// Parcourir les niveaux précédents pour construire le bon atr_nat
+				for (let i = 1; i < level; i++) {
+					const prevLabelField = `atr_${i}_label` as keyof typeof categoryFromView;
+					const prevLabel = categoryFromView[prevLabelField];
+
+					if (prevLabel !== null && prevLabel !== undefined) {
+						const prevCategory = await prisma.attribute_dev.findFirst({
+							where: {
+								atr_nat: currentNat,
+								atr_label: String(prevLabel)
+							}
+						});
+						if (prevCategory) {
+							currentNat = prevCategory.atr_val ?? '';
+						}
+					}
+				}
+
+				// Chercher la catégorie finale
+				category = await prisma.attribute_dev.findFirst({
+					where: {
+						atr_nat: currentNat,
+						atr_label: String(label)
+					}
+				});
+
+				if (category) {
+					realAtrId = category.atr_id;
+					console.log(`Catégorie réelle trouvée avec atr_id: ${realAtrId}`);
+					break;
+				}
+			}
+		}
+
+		console.log('Catégorie réelle trouvée:', category);
+
+		if (!category || !realAtrId) {
+			console.log('Impossible de retrouver la catégorie réelle');
 			return json({ error: 'Catégorie non trouvée' }, { status: 404 });
 		}
 
 		// Vérifier si l'attribut est utilisé dans kit_attribute
 		const usageCount = await prisma.kit_attribute.count({
 			where: {
-				OR: [{ fk_attribute: categoryId }, { fk_attribute_carac: categoryId }]
+				OR: [{ fk_attribute: realAtrId }, { fk_attribute_carac: realAtrId }]
 			}
 		});
 		console.log("Nombre d'utilisations trouvées:", usageCount);
@@ -288,7 +381,7 @@ export const DELETE: RequestHandler = async ({ params }) => {
 		console.log('Suppression de la catégorie principale...');
 		const mainDeleteResult = await prisma.attribute_dev.delete({
 			where: {
-				atr_id: categoryId
+				atr_id: realAtrId
 			}
 		});
 		console.log('Résultat de la suppression de la catégorie principale:', mainDeleteResult);

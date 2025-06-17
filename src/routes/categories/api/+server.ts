@@ -71,6 +71,86 @@ const handleSubLevelAttribute = async (label: string, previousLevel: string) => 
 	}
 };
 
+const checkExistingCategoryPath = async (data: Record<string, string>, lastFilledLevel: number) => {
+	console.log("🔍 Vérification de l'existence du chemin complet");
+
+	// Construire la requête pour vérifier si le chemin complet existe
+	let currentLevel = 'CATEGORIE';
+	let currentAttribute = null;
+
+	for (let i = 1; i <= lastFilledLevel; i++) {
+		const label = data[`atr_${i}_label`];
+		const hasValue = label && label.trim() !== '';
+
+		if (hasValue) {
+			const existing = await prisma.attribute_dev.findFirst({
+				where: {
+					atr_nat: currentLevel,
+					atr_label: label
+				}
+			});
+
+			if (!existing) {
+				// Si un niveau n'existe pas, le chemin complet n'existe pas
+				return null;
+			}
+
+			currentAttribute = existing;
+			currentLevel = existing.atr_val ?? '';
+		} else {
+			// Pour les niveaux vides, on cherche un attribut avec atr_label = null
+			const existing = await prisma.attribute_dev.findFirst({
+				where: {
+					atr_nat: currentLevel,
+					atr_label: null
+				}
+			});
+
+			if (!existing) {
+				return null;
+			}
+
+			currentAttribute = existing;
+			currentLevel = existing.atr_val ?? '';
+		}
+	}
+
+	return currentAttribute;
+};
+
+const createLevelAttribute = async (level: number, label: string, previousLevel: string) => {
+	const hasValue = label && label.trim() !== '';
+
+	if (level === 1) {
+		if (hasValue) {
+			return await handleLevel0Attribute(label);
+		}
+		console.log(`🔧 Création niveau 1 intermédiaire (NULL)`);
+		const autoValue = `NIVEAU_1_AUTO_${Date.now()}`;
+		const result = await handleLevel0Attribute(autoValue);
+		await prisma.attribute_dev.update({
+			where: { atr_id: result.attribute.atr_id },
+			data: { atr_label: null }
+		});
+		result.attribute.atr_label = null;
+		return result;
+	}
+
+	if (hasValue) {
+		return await handleSubLevelAttribute(label, previousLevel);
+	}
+
+	console.log(`🔧 Création sous-niveau ${level} intermédiaire (NULL) dans "${previousLevel}"`);
+	const autoValue = `NIVEAU_${level}_AUTO_${Date.now()}`;
+	const result = await handleSubLevelAttribute(autoValue, previousLevel);
+	await prisma.attribute_dev.update({
+		where: { atr_id: result.attribute.atr_id },
+		data: { atr_label: null }
+	});
+	result.attribute.atr_label = null;
+	return result;
+};
+
 export const GET: RequestHandler = async () => {
 	try {
 		const categories = await prisma.v_categories_dev.findMany();
@@ -118,47 +198,19 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		}
 
+		// Vérifier si la combinaison complète existe déjà
+		const existingCategory = await checkExistingCategoryPath(data, lastFilledLevel);
+		if (existingCategory) {
+			console.log('⚠️ Catégorie existante trouvée:', existingCategory);
+			return json({ error: 'Cette combinaison de catégories existe déjà' }, { status: 409 });
+		}
+
 		let previousLevel = 'CATEGORIE';
 
 		// Créer tous les niveaux de 1 jusqu'au dernier niveau rempli
 		for (let i = 1; i <= lastFilledLevel; i++) {
 			const label = data[`atr_${i}_label`];
-			const hasValue = label && label.trim() !== '';
-
-			let result;
-			if (i === 1) {
-				// Premier niveau (niveau 1) - toujours traité comme niveau 0 en base
-				if (hasValue) {
-					// Premier niveau avec valeur
-					result = await handleLevel0Attribute(label);
-				} else {
-					// Premier niveau intermédiaire (NULL)
-					console.log(`🔧 Création niveau 1 intermédiaire (NULL)`);
-					const autoValue = `NIVEAU_1_AUTO_${Date.now()}`;
-					result = await handleLevel0Attribute(autoValue);
-					await prisma.attribute_dev.update({
-						where: { atr_id: result.attribute.atr_id },
-						data: { atr_label: null }
-					});
-					result.attribute.atr_label = null;
-				}
-			} else {
-				// Sous-niveaux (niveau 2+)
-				if (hasValue) {
-					// Sous-niveau avec valeur
-					result = await handleSubLevelAttribute(label, previousLevel);
-				} else {
-					// Sous-niveau intermédiaire (NULL)
-					console.log(`🔧 Création sous-niveau ${i} intermédiaire (NULL) dans "${previousLevel}"`);
-					const autoValue = `NIVEAU_${i}_AUTO_${Date.now()}`;
-					result = await handleSubLevelAttribute(autoValue, previousLevel);
-					await prisma.attribute_dev.update({
-						where: { atr_id: result.attribute.atr_id },
-						data: { atr_label: null }
-					});
-					result.attribute.atr_label = null;
-				}
-			}
+			const result = await createLevelAttribute(i, label, previousLevel);
 
 			attributeEntries.push(result.attribute);
 			previousLevel = result.nextLevel;

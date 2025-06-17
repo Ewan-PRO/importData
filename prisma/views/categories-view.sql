@@ -1,5 +1,6 @@
-/* CREATE OR REPLACE VIEW v_categories_dev AS */
-SELECT atr_0.atr_id,
+CREATE VIEW v_categories_dev AS
+SELECT 
+       ROW_NUMBER() OVER (ORDER BY atr_0.atr_val, atr_1.atr_val, atr_2.atr_val, atr_3.atr_val, atr_4.atr_val, atr_5.atr_val, atr_6.atr_val)::integer as atr_id,
        'Catégorie des produits'::character varying(100) AS atr_0_label,
        atr_0.atr_label                                  AS atr_1_label,
        atr_1.atr_label                                  AS atr_2_label,
