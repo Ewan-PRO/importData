@@ -186,6 +186,7 @@
 										<Input
 											type="text"
 											placeholder="Saisir une valeur personnalisée..."
+											value={formData[field.key] || ''}
 											oninput={(e) => {
 												const target = e.target as HTMLInputElement;
 												updateFormData(field.key, target.value);
