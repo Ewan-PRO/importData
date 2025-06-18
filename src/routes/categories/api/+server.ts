@@ -38,75 +38,55 @@ export const POST: RequestHandler = async ({ request }) => {
 			);
 		}
 
-		// Vérifier si cette hiérarchie complète existe déjà
-		const fullPath = levels.join('->');
-		const existingPath = await prisma.attribute_dev.findFirst({
-			where: {
-				atr_nat: 'CATEGORIE',
-				atr_val: fullPath
-			}
-		});
-
-		if (existingPath) {
-			return json({ error: 'Cette hiérarchie de catégories existe déjà.' }, { status: 409 });
-		}
-
 		const attributeEntries = [];
-		let previousLevel = 'CATEGORIE';
+		let parentNat = 'CATEGORIE';
 
 		// Créer chaque niveau de la hiérarchie
 		for (let i = 0; i < levels.length; i++) {
 			const label = levels[i];
-			const currentPath = levels.slice(0, i + 1).join('->');
 
-			// Générer un atr_val unique pour ce niveau spécifique dans ce chemin
-			// On utilise un UUID basé sur le chemin complet + timestamp pour garantir l'unicité
-			const uniqueId = `${currentPath}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+			console.log(`🔍 Niveau ${i + 1}:`, { label, parentNat });
 
-			console.log(`🔍 Niveau ${i + 1}:`, {
-				label,
-				currentPath,
-				uniqueId,
-				previousLevel,
-				fullPath
-			});
-
-			// Pour éviter les doublons exacts sur cette hiérarchie complète,
-			// on vérifie si cette combinaison exacte existe déjà
-			const existingInPath = await prisma.attribute_dev.findFirst({
+			// Vérifier si un attribut avec ce label existe déjà pour ce parent
+			const existingAttr = await prisma.attribute_dev.findFirst({
 				where: {
-					atr_nat: previousLevel,
-					atr_label: label,
-					// Vérifier s'il y a déjà un attribut avec ce label à ce niveau pour ce chemin parent
-					atr_val: {
-						contains: currentPath
-					}
-				}
-			});
-
-			console.log(`📋 Attribut similaire trouvé:`, existingInPath ? 'OUI' : 'NON');
-
-			// Toujours créer un nouvel attribut pour éviter les conflits de hiérarchie
-			const newAttr = await prisma.attribute_dev.create({
-				data: {
-					atr_nat: previousLevel,
-					atr_val: uniqueId,
+					atr_nat: parentNat,
 					atr_label: label
 				}
 			});
 
-			console.log(`✅ Nouvel attribut créé:`, {
-				id: newAttr.atr_id,
-				atr_nat: newAttr.atr_nat,
-				atr_val: newAttr.atr_val,
-				atr_label: newAttr.atr_label
-			});
+			let currentAttr;
 
-			previousLevel = newAttr.atr_val ?? '';
-			attributeEntries.push(newAttr);
+			if (existingAttr) {
+				console.log(`📋 Attribut existant trouvé:`, existingAttr);
+				currentAttr = existingAttr;
+			} else {
+				console.log(`✨ Création d'un nouvel attribut avec atr_val = atr_label:`, label);
+
+				// Créer le nouvel attribut avec atr_val = atr_label
+				currentAttr = await prisma.attribute_dev.create({
+					data: {
+						atr_nat: parentNat,
+						atr_val: label, // atr_val = atr_label
+						atr_label: label
+					}
+				});
+
+				console.log(`✅ Nouvel attribut créé:`, currentAttr);
+			}
+
+			attributeEntries.push(currentAttr);
+			// Le atr_val de ce niveau devient le atr_nat du niveau suivant
+			parentNat = currentAttr.atr_val ?? '';
 		}
 
-		return json({ success: true, attributes: attributeEntries, path: fullPath });
+		const fullPath = levels.join(' -> ');
+		return json({
+			success: true,
+			attributes: attributeEntries,
+			path: fullPath,
+			message: `Hiérarchie créée/mise à jour: ${fullPath}`
+		});
 	} catch (error) {
 		console.error('Erreur lors de la création des attributs :', error);
 		return json({ error: 'Erreur lors de la création des attributs' }, { status: 500 });
