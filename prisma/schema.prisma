@@ -124,7 +124,7 @@ model kit_attribute_dev {
 }
 
 view v_categories {
-  atr_id      Int     @id @default(autoincrement())
+  atr_id      Int     @id
   atr_0_label String  @db.VarChar(100)
   atr_1_label String? @db.VarChar(100)
   atr_2_label String? @db.VarChar(100)
@@ -133,12 +133,10 @@ view v_categories {
   atr_5_label String? @db.VarChar(100)
   atr_6_label String? @db.VarChar(100)
   atr_7_label String? @db.VarChar(100)
-
- @@unique([atr_0_label], name: "v_categories_unique")
 }
 
 view v_kit_carac {
-  id         Int    @id @default(autoincrement())
+  id         Int    @id
   kit_label  String @db.VarChar(100)
   atr_label  String @db.VarChar(100)
   atr_val    String @db.VarChar(60)
@@ -161,7 +159,7 @@ view v_categories_dev {
 }
 
 view v_kit_carac_dev {
-  id         Int    @id @default(autoincrement())
+  id         Int    @id
   kit_label  String @db.VarChar(100)
   atr_label  String @db.VarChar(100)
   atr_val    String @db.VarChar(60)
