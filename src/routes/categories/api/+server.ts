@@ -82,6 +82,38 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		}
 
+		// Validation 4: Vérifier si cette hiérarchie complète existe déjà dans la vue
+		const whereClause: Record<string, string | null> = {
+			atr_0_label: 'Catégorie des produits'
+		};
+
+		// Ajouter chaque niveau à la condition de recherche
+		for (let i = 0; i < levels.length; i++) {
+			whereClause[`atr_${i + 1}_label`] = levels[i];
+		}
+
+		// Ajouter les niveaux vides pour une correspondance exacte
+		for (let i = levels.length + 1; i <= 7; i++) {
+			whereClause[`atr_${i}_label`] = null;
+		}
+
+		console.log('🔍 Vérification des doublons avec la condition:', whereClause);
+
+		const existingHierarchy = await prisma.v_categories_dev.findFirst({
+			where: whereClause
+		});
+
+		if (existingHierarchy) {
+			const fullPath = levels.join(' -> ');
+			return json(
+				{
+					success: false,
+					error: `Cette hiérarchie de catégories existe déjà : ${fullPath}`
+				},
+				{ status: 409 }
+			);
+		}
+
 		const attributeEntries = [];
 		let parentNat = 'CATEGORIE';
 
