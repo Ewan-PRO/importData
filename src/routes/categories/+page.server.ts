@@ -30,6 +30,35 @@ const categorySchema = z
 	})
 	.refine(
 		(data) => {
+			const levels = [
+				data.atr_1_label,
+				data.atr_2_label,
+				data.atr_3_label,
+				data.atr_4_label,
+				data.atr_5_label,
+				data.atr_6_label,
+				data.atr_7_label
+			];
+
+			const firstEmptyIndex = levels.findIndex((level) => !level || level.trim() === '');
+
+			// Si aucun niveau n'est vide, ou si tous les niveaux sont vides, c'est valide (le cas "tous vides" est géré par le refine suivant)
+			if (firstEmptyIndex === -1) {
+				return true;
+			}
+
+			// Une fois qu'un niveau vide est trouvé, tous les niveaux suivants doivent aussi être vides.
+			const subsequentLevels = levels.slice(firstEmptyIndex + 1);
+			return subsequentLevels.every((level) => !level || level.trim() === '');
+		},
+		{
+			message:
+				'Les niveaux de catégorie doivent être consécutifs. Vous ne pouvez pas laisser de vide.',
+			path: ['atr_1_label'] // L'erreur est affichée globalement ou sur le premier champ.
+		}
+	)
+	.refine(
+		(data) => {
 			// Vérifier qu'au moins un champ entre atr_1_label et atr_7_label est rempli
 			const hasAtLeastOneLevel = [
 				data.atr_1_label,
