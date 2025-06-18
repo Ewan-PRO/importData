@@ -208,6 +208,41 @@ async function getDescendantIds(startCategoryId: number): Promise<number[]> {
 	return Array.from(idsToDelete);
 }
 
+/**
+ * Trouve l'ID de la catégorie racine (niveau 1) à partir de n'importe quel niveau
+ */
+async function findRootCategoryId(atrId: number): Promise<number | null> {
+	const category = await prisma.attribute_dev.findUnique({
+		where: { atr_id: atrId },
+		select: { atr_id: true, atr_nat: true, atr_val: true, atr_label: true }
+	});
+
+	if (!category) return null;
+
+	console.log(`🔍 Analyse catégorie ID ${atrId}:`, category);
+
+	// Si atr_nat est 'CATEGORIE', c'est déjà la racine
+	if (category.atr_nat === 'CATEGORIE') {
+		console.log(`🌳 Catégorie racine trouvée: ID ${atrId}`);
+		return atrId;
+	}
+
+	// Sinon, chercher la catégorie parent via atr_nat
+	const parent = await prisma.attribute_dev.findFirst({
+		where: { atr_val: category.atr_nat },
+		select: { atr_id: true }
+	});
+
+	if (parent) {
+		console.log(`⬆️ Parent trouvé, remontée récursive...`);
+		return findRootCategoryId(parent.atr_id);
+	}
+
+	// Si pas de parent, cette catégorie est peut-être orpheline
+	console.log(`⚠️ Catégorie orpheline détectée: ID ${atrId}`);
+	return atrId;
+}
+
 export const DELETE: RequestHandler = async ({ params }) => {
 	const { id } = params;
 
@@ -216,40 +251,54 @@ export const DELETE: RequestHandler = async ({ params }) => {
 	}
 
 	try {
+		console.log('=== Début DELETE /api/categories/[id] ===');
 		const categoryId = parseInt(id, 10);
 		if (isNaN(categoryId)) {
 			return json({ error: 'ID invalide' }, { status: 400 });
 		}
 
-		// 1. Récupérer l'ID de la catégorie à partir de la vue, car c'est celui que le front-end utilise.
+		console.log(`🎯 Suppression demandée pour row_key: ${categoryId}`);
+
+		// 1. Récupérer la ligne complète depuis la vue
 		const categoryFromView = await prisma.v_categories_dev.findFirst({
-			where: {
-				row_key: categoryId // On suppose que le `id` du front-end est `row_key`
-			}
+			where: { row_key: categoryId }
 		});
 
-		if (!categoryFromView || !categoryFromView.atr_id) {
-			// Si `row_key` ne fonctionne pas, essayons avec `atr_id` comme fallback
-			const realCategory = await prisma.attribute_dev.findUnique({
-				where: { atr_id: categoryId }
-			});
-			if (!realCategory) {
-				return json({ error: 'Catégorie non trouvée' }, { status: 404 });
-			}
+		if (!categoryFromView) {
+			console.log(`❌ Aucune ligne trouvée avec row_key: ${categoryId}`);
+			return json({ error: 'Catégorie non trouvée' }, { status: 404 });
 		}
 
-		const realAtrId = categoryFromView?.atr_id ?? categoryId;
+		console.log(`📊 Ligne trouvée dans la vue:`, categoryFromView);
 
-		// 2. Récupérer tous les IDs (celui de départ + tous ses descendants)
-		const allIdsToDelete = await getDescendantIds(realAtrId);
+		// 2. Vérifier que atr_id existe dans la vue
+		if (!categoryFromView.atr_id) {
+			console.log(`❌ atr_id manquant dans la vue`);
+			return json({ error: 'ID de catégorie manquant' }, { status: 404 });
+		}
+
+		// 3. L'atr_id dans la vue pointe vers le dernier niveau rempli
+		// On doit remonter à la racine pour supprimer toute la hiérarchie
+		const rootCategoryId = await findRootCategoryId(categoryFromView.atr_id);
+
+		if (!rootCategoryId) {
+			console.log(`❌ Impossible de trouver la catégorie racine`);
+			return json({ error: 'Catégorie racine non trouvée' }, { status: 404 });
+		}
+
+		console.log(`🌳 Catégorie racine identifiée: ID ${rootCategoryId}`);
+
+		// 3. Récupérer tous les IDs de la hiérarchie complète depuis la racine
+		const allIdsToDelete = await getDescendantIds(rootCategoryId);
+
+		console.log(`📝 IDs à supprimer:`, allIdsToDelete);
 
 		if (allIdsToDelete.length === 0) {
-			// Cela ne devrait pas arriver si on trouve une catégorie, mais c'est une sécurité
-			return json({ error: 'Catégorie non trouvée ou sans ID' }, { status: 404 });
+			return json({ error: 'Aucune catégorie à supprimer' }, { status: 404 });
 		}
 
-		// 3. Supprimer toutes les catégories en une seule transaction
-		await prisma.attribute_dev.deleteMany({
+		// 4. Supprimer toutes les catégories en une seule transaction
+		const deleteResult = await prisma.attribute_dev.deleteMany({
 			where: {
 				atr_id: {
 					in: allIdsToDelete
@@ -257,7 +306,8 @@ export const DELETE: RequestHandler = async ({ params }) => {
 			}
 		});
 
-		console.log(`🗑️ ${allIdsToDelete.length} catégorie(s) supprimée(s).`);
+		console.log(`🗑️ ${deleteResult.count} catégorie(s) supprimée(s) avec succès.`);
+		console.log('=== Fin DELETE /api/categories/[id] ===');
 
 		return new Response(null, { status: 204 });
 	} catch (error) {
