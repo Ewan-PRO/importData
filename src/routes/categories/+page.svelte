@@ -466,6 +466,12 @@
 			const serverResponse = await response.json();
 			console.log('Réponse du serveur:', serverResponse);
 
+			// Vérifier si l'API a vraiment réussi
+			if (!serverResponse.success) {
+				showAlert(serverResponse.error || "Erreur lors de l'ajout de la catégorie", 'error');
+				return;
+			}
+
 			showAlert('Catégorie ajoutée avec succès', 'success');
 			addFormOpen = false;
 
