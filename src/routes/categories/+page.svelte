@@ -340,57 +340,61 @@
 		// Ne pas envoyer atr_0_label, il est géré automatiquement par la vue
 		delete formData.atr_0_label;
 
-		// Ajouter l'ID à formData si selectedCategory existe
-		if (selectedCategory && selectedCategory.atr_id) {
-			// Important: Ajouter l'ID à formData
-			formData.atr_id = selectedCategory.atr_id.toString();
-
-			console.log('Données à envoyer avec ID:', formData);
-
-			try {
-				console.log('Envoi de la requête PUT à:', `/categories/api/${selectedCategory.atr_id}`);
-				const response = await fetch(`/categories/api/${selectedCategory.atr_id}`, {
-					method: 'PUT',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify(formData)
-				});
-
-				console.log('Statut de la réponse:', response.status);
-				const result = await response.json();
-				console.log('Données de la réponse:', result);
-
-				if (response.ok) {
-					console.log('Modification réussie');
-
-					// Mettre à jour les données localement sans recharger la page
-					const updatedCategories = data.categories.map((cat: Category) => {
-						if (selectedCategory && cat.atr_id === selectedCategory.atr_id) {
-							// Mettre à jour tous les champs modifiés
-							return { ...cat, ...formData };
-						}
-						return cat;
-					});
-
-					// Mettre à jour les données de la page
-					data.categories = updatedCategories;
-
-					showAlert('Catégorie modifiée avec succès', 'success');
-					editFormOpen = false;
-				} else {
-					console.log('Erreur lors de la modification:', result.error);
-					showAlert(result.error || 'Erreur lors de la modification', 'error');
-				}
-			} catch (error) {
-				console.error('Erreur dans handleEditSubmit:', error);
-				showAlert('Erreur lors de la modification', 'error');
-			}
-		} else {
-			console.log('Erreur: Catégorie ou ID manquant');
+		if (!selectedCategory || !selectedCategory.atr_id) {
+			console.error('Erreur: Catégorie ou ID manquant pour la modification.');
 			showAlert('Erreur: Informations de catégorie incomplètes', 'error');
+			console.log('=== Fin handleEditSubmit (erreur) ===');
+			return;
 		}
-		console.log('=== Fin handleEditSubmit ===');
+
+		// Important: Ajouter l'ID à formData
+		formData.atr_id = selectedCategory.atr_id.toString();
+		console.log('Données à envoyer avec ID:', formData);
+
+		try {
+			const apiUrl = `/categories/api/${selectedCategory.atr_id}`;
+			console.log('Envoi de la requête PUT à:', apiUrl);
+
+			const response = await fetch(apiUrl, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(formData)
+			});
+
+			console.log(`Réponse reçue. Statut: ${response.status} ${response.statusText}`);
+
+			if (!response.ok) {
+				let errorData;
+				try {
+					errorData = await response.json();
+					console.error("Détails de l'erreur du serveur:", errorData);
+				} catch (e) {
+					console.error("Impossible de parser la réponse d'erreur en JSON.");
+					errorData = { error: `Erreur serveur (${response.status})` };
+				}
+				showAlert(errorData.error || 'Erreur lors de la modification', 'error');
+				return;
+			}
+
+			const result = await response.json();
+			console.log('Réponse de succès du serveur:', result);
+
+			console.log('Modification réussie. Invalidation des données...');
+			await invalidateAll();
+			console.log(
+				'Invalidation terminée. Les données de la page devraient maintenant être rafraîchies.'
+			);
+
+			showAlert('Catégorie modifiée avec succès', 'success');
+			editFormOpen = false;
+		} catch (error) {
+			console.error('Erreur (bloc catch) dans handleEditSubmit:', error);
+			showAlert('Erreur réseau ou inattendue lors de la modification.', 'error');
+		} finally {
+			console.log('=== Fin handleEditSubmit ===');
+		}
 	}
 
 	async function handleDeleteConfirm(): Promise<void> {

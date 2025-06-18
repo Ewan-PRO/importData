@@ -50,23 +50,29 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	try {
 		console.log('=== Début PUT /api/categories/[id] ===');
 		const { id } = params;
-		const data = (await request.json()) as CategoryData; // Les données envoyées par le client
+		const formData = (await request.json()) as CategoryData;
 
 		const categoryId = parseInt(id);
-		const mainCategory = await prisma.attribute_dev.findUnique({ where: { atr_id: categoryId } });
 
-		if (!mainCategory) {
-			return json({ error: 'Catégorie principale non trouvée' }, { status: 404 });
+		// Trouver la catégorie dans la vue pour comprendre sa structure
+		const categoryFromView = await prisma.v_categories_dev.findFirst({
+			where: { atr_id: categoryId }
+		});
+
+		if (!categoryFromView) {
+			return json({ error: 'Catégorie non trouvée' }, { status: 404 });
 		}
 
+		console.log('Catégorie trouvée dans la vue:', categoryFromView);
+
 		// Validation séquentielle
-		const levels = Object.keys(data)
+		const levels = Object.keys(formData)
 			.filter((k) => k.startsWith('atr_') && k.endsWith('_label'))
 			.sort();
 
 		for (let i = 1; i < levels.length; i++) {
-			const prevLevel = data[levels[i - 1]];
-			const currentLevel = data[levels[i]];
+			const prevLevel = formData[levels[i - 1]];
+			const currentLevel = formData[levels[i]];
 			if (!prevLevel && currentLevel) {
 				return json(
 					{ error: `Le niveau ${i + 1} ne peut pas être rempli si le niveau ${i} est vide.` },
@@ -74,28 +80,48 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 				);
 			}
 		}
-		// --- Fin Validation
 
-		let parentVal = mainCategory.atr_val;
+		// Récupérer la catégorie principale (celle avec l'ID fourni)
+		const mainCategory = await prisma.attribute_dev.findUnique({
+			where: { atr_id: categoryId }
+		});
 
-		// Mise à jour du label de la catégorie principale cliquée
-		const mainLabelValue = data[`atr_${await getCategoryLevel(mainCategory)}_label`];
-		const mainLabel = typeof mainLabelValue === 'string' ? mainLabelValue : null;
+		if (!mainCategory) {
+			return json({ error: 'Catégorie principale non trouvée' }, { status: 404 });
+		}
 
-		if (mainLabel !== undefined && mainCategory.atr_label !== mainLabel) {
+		// Déterminer le niveau de la catégorie principale
+		const mainLevel = await getCategoryLevel(mainCategory);
+		console.log(`Catégorie principale niveau ${mainLevel}:`, mainCategory);
+
+		// Mettre à jour le label de la catégorie principale si nécessaire
+		const mainLabelKey = `atr_${mainLevel}_label`;
+		const mainLabelValue = formData[mainLabelKey];
+
+		if (mainLabelValue !== undefined && mainCategory.atr_label !== mainLabelValue) {
+			const newLabel = typeof mainLabelValue === 'string' ? mainLabelValue : null;
 			await prisma.attribute_dev.update({
 				where: { atr_id: categoryId },
-				data: { atr_label: mainLabel === '' ? null : mainLabel }
+				data: {
+					atr_label: newLabel === '' ? null : newLabel,
+					atr_val: newLabel === '' ? null : newLabel // atr_val = atr_label
+				}
 			});
-			console.log(`🏷️ Label de la catégorie principale mis à jour: ${mainLabel}`);
+			console.log(`🏷️ Label de la catégorie principale mis à jour: ${newLabel}`);
 		}
 
 		// Traitement des niveaux suivants
-		for (let i = (await getCategoryLevel(mainCategory)) + 1; i <= 7; i++) {
-			const labelValue = data[`atr_${i}_label`];
+		let currentParentVal = mainCategory.atr_val;
+
+		for (let i = mainLevel + 1; i <= 7; i++) {
+			const labelKey = `atr_${i}_label`;
+			const labelValue = formData[labelKey];
 			const label = typeof labelValue === 'string' ? labelValue : null;
 
-			const childCategory = await prisma.attribute_dev.findFirst({ where: { atr_nat: parentVal } });
+			// Chercher l'enfant existant
+			const childCategory = await prisma.attribute_dev.findFirst({
+				where: { atr_nat: currentParentVal }
+			});
 
 			if (label && label.trim() !== '') {
 				// Si un label est fourni
@@ -103,21 +129,24 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 					// L'enfant existe -> on le met à jour
 					await prisma.attribute_dev.update({
 						where: { atr_id: childCategory.atr_id },
-						data: { atr_label: label }
-					});
-					console.log(`✍️ Niveau ${i} mis à jour avec le label: ${label}`);
-					parentVal = childCategory.atr_val; // pour le prochain tour de boucle
-				} else {
-					// L'enfant n'existe pas -> on le crée
-					const newChild = await prisma.attribute_dev.create({
 						data: {
-							atr_nat: parentVal,
 							atr_label: label,
-							atr_val: label // Simplification
+							atr_val: label // atr_val = atr_label
 						}
 					});
-					console.log(`✨ Niveau ${i} créé avec le label: ${label}`);
-					parentVal = newChild.atr_val;
+					console.log(`✍️ Niveau ${i} mis à jour avec le label: ${label}`);
+					currentParentVal = label; // Utiliser le nouveau label comme parent
+				} else {
+					// L'enfant n'existe pas -> on le crée
+					await prisma.attribute_dev.create({
+						data: {
+							atr_nat: currentParentVal,
+							atr_label: label,
+							atr_val: label // atr_val = atr_label
+						}
+					});
+					console.log(`✨ Niveau ${i} créé avec le label: "${label}"`);
+					currentParentVal = label; // Utiliser le nouveau label comme parent
 				}
 			} else {
 				// Si le label est vide ou manquant, on supprime ce niveau et les suivants
