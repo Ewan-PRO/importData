@@ -65,20 +65,29 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 		console.log('Catégorie trouvée dans la vue:', categoryFromView);
 
-		// Validation séquentielle
-		const levels = Object.keys(formData)
-			.filter((k) => k.startsWith('atr_') && k.endsWith('_label'))
-			.sort();
+		// Validation stricte - les niveaux doivent être consécutifs
+		let lastFilledLevel = 0;
+		for (let i = 1; i <= 7; i++) {
+			const labelKey = `atr_${i}_label`;
+			const labelValue = formData[labelKey];
+			const hasValue = labelValue && typeof labelValue === 'string' && labelValue.trim() !== '';
 
-		for (let i = 1; i < levels.length; i++) {
-			const prevLevel = formData[levels[i - 1]];
-			const currentLevel = formData[levels[i]];
-			if (!prevLevel && currentLevel) {
-				return json(
-					{ error: `Le niveau ${i + 1} ne peut pas être rempli si le niveau ${i} est vide.` },
-					{ status: 400 }
-				);
+			if (hasValue) {
+				if (i !== lastFilledLevel + 1) {
+					console.log(`❌ Saut de niveau détecté: niveau ${lastFilledLevel} → niveau ${i}`);
+					return json(
+						{
+							error: `Saut de niveau interdit. Le niveau ${i} ne peut pas être rempli si le niveau ${i - 1} est vide.`
+						},
+						{ status: 400 }
+					);
+				}
+				lastFilledLevel = i;
 			}
+		}
+
+		if (lastFilledLevel === 0) {
+			return json({ error: 'Au moins un niveau doit être rempli.' }, { status: 400 });
 		}
 
 		// Récupérer la catégorie principale (celle avec l'ID fourni)
@@ -116,14 +125,14 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		for (let i = mainLevel + 1; i <= 7; i++) {
 			const labelKey = `atr_${i}_label`;
 			const labelValue = formData[labelKey];
-			const label = typeof labelValue === 'string' ? labelValue : null;
+			const label = typeof labelValue === 'string' ? labelValue?.trim() : null;
 
 			// Chercher l'enfant existant
 			const childCategory = await prisma.attribute_dev.findFirst({
 				where: { atr_nat: currentParentVal }
 			});
 
-			if (label && label.trim() !== '') {
+			if (label && label !== '' && label !== '""""') {
 				// Si un label est fourni
 				if (childCategory) {
 					// L'enfant existe -> on le met à jour
@@ -134,7 +143,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 							atr_val: label // atr_val = atr_label
 						}
 					});
-					console.log(`✍️ Niveau ${i} mis à jour avec le label: ${label}`);
+					console.log(`✍️ Niveau ${i} mis à jour avec le label: "${label}"`);
 					currentParentVal = label; // Utiliser le nouveau label comme parent
 				} else {
 					// L'enfant n'existe pas -> on le crée
@@ -149,7 +158,32 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 					currentParentVal = label; // Utiliser le nouveau label comme parent
 				}
 			} else {
-				// Si le label est vide ou manquant, on supprime ce niveau et les suivants
+				// Vérifier qu'on ne crée pas de trou dans la hiérarchie
+				const hasSubsequentLevels = Object.keys(formData)
+					.filter((k) => k.startsWith('atr_') && k.endsWith('_label'))
+					.some((k) => {
+						const levelNum = parseInt(k.replace('atr_', '').replace('_label', ''));
+						const value = formData[k];
+						return (
+							levelNum > i &&
+							value &&
+							typeof value === 'string' &&
+							value.trim() !== '' &&
+							value !== '""""'
+						);
+					});
+
+				if (hasSubsequentLevels) {
+					console.log(`❌ Tentative de création d'un trou dans la hiérarchie au niveau ${i}`);
+					return json(
+						{
+							error: `Impossible de laisser le niveau ${i} vide avec des niveaux inférieurs remplis.`
+						},
+						{ status: 400 }
+					);
+				}
+
+				// Si le label est vide et pas de niveaux suivants, on supprime ce niveau et les suivants
 				if (childCategory) {
 					console.log(`🗑️ Début de la suppression à partir du niveau ${i}`);
 					await deleteSubsequentLevels(childCategory.atr_val);
@@ -168,79 +202,116 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 };
 
 /**
- * Collecte de manière récursive les IDs de toutes les catégories descendantes.
- * @param startCategoryId - L'ID de la catégorie de départ.
- * @returns Un tableau des IDs à supprimer.
+ * Supprime un niveau terminal et nettoie récursivement les parents orphelins
+ * @param terminalId - L'ID du niveau terminal à supprimer
+ * @returns Un tableau des IDs supprimés
  */
-async function getDescendantIds(startCategoryId: number): Promise<number[]> {
-	const idsToDelete = new Set<number>();
-	const queue: number[] = [startCategoryId];
-	const visitedIds = new Set<number>();
+async function deleteTerminalAndCleanup(terminalId: number): Promise<number[]> {
+	const deletedIds: number[] = [];
 
-	while (queue.length > 0) {
-		const currentId = queue.shift()!;
-		if (visitedIds.has(currentId)) {
-			continue;
-		}
-
-		visitedIds.add(currentId);
-		idsToDelete.add(currentId);
-
-		const category = await prisma.attribute_dev.findUnique({
-			where: { atr_id: currentId },
-			select: { atr_val: true }
-		});
-
-		if (category?.atr_val) {
-			const children = await prisma.attribute_dev.findMany({
-				where: { atr_nat: category.atr_val },
-				select: { atr_id: true }
-			});
-
-			for (const child of children) {
-				if (!visitedIds.has(child.atr_id)) {
-					queue.push(child.atr_id);
-				}
-			}
-		}
-	}
-
-	return Array.from(idsToDelete);
-}
-
-/**
- * Trouve l'ID de la catégorie racine (niveau 1) à partir de n'importe quel niveau
- */
-async function findRootCategoryId(atrId: number): Promise<number | null> {
-	const category = await prisma.attribute_dev.findUnique({
-		where: { atr_id: atrId },
+	// Récupérer la catégorie terminale
+	const terminalCategory = await prisma.attribute_dev.findUnique({
+		where: { atr_id: terminalId },
 		select: { atr_id: true, atr_nat: true, atr_val: true, atr_label: true }
 	});
 
-	if (!category) return null;
-
-	console.log(`🔍 Analyse catégorie ID ${atrId}:`, category);
-
-	// Si atr_nat est 'CATEGORIE', c'est déjà la racine
-	if (category.atr_nat === 'CATEGORIE') {
-		console.log(`🌳 Catégorie racine trouvée: ID ${atrId}`);
-		return atrId;
+	if (!terminalCategory) {
+		console.log(`❌ Catégorie terminale non trouvée: ID ${terminalId}`);
+		return deletedIds;
 	}
 
-	// Sinon, chercher la catégorie parent via atr_nat
+	console.log(`🎯 Suppression de la catégorie terminale:`, terminalCategory);
+
+	// Supprimer d'abord tous les descendants (au cas où)
+	const descendants = await getDescendantsRecursive(terminalId);
+	if (descendants.length > 0) {
+		await prisma.attribute_dev.deleteMany({
+			where: { atr_id: { in: descendants } }
+		});
+		deletedIds.push(...descendants);
+		console.log(`🗑️ ${descendants.length} descendant(s) supprimé(s)`);
+	}
+
+	// Supprimer la catégorie terminale elle-même
+	await prisma.attribute_dev.delete({ where: { atr_id: terminalId } });
+	deletedIds.push(terminalId);
+	console.log(`🗑️ Catégorie terminale supprimée: ${terminalCategory.atr_label}`);
+
+	// Nettoyer récursivement les parents qui deviennent orphelins
+	if (terminalCategory.atr_nat && terminalCategory.atr_nat !== 'CATEGORIE') {
+		await cleanupOrphanParents(terminalCategory.atr_nat, deletedIds);
+	}
+
+	return deletedIds;
+}
+
+/**
+ * Récupère récursivement tous les descendants d'une catégorie
+ */
+async function getDescendantsRecursive(categoryId: number): Promise<number[]> {
+	const descendants: number[] = [];
+
+	const category = await prisma.attribute_dev.findUnique({
+		where: { atr_id: categoryId },
+		select: { atr_val: true }
+	});
+
+	if (category?.atr_val) {
+		const children = await prisma.attribute_dev.findMany({
+			where: { atr_nat: category.atr_val },
+			select: { atr_id: true }
+		});
+
+		for (const child of children) {
+			descendants.push(child.atr_id);
+			const grandChildren = await getDescendantsRecursive(child.atr_id);
+			descendants.push(...grandChildren);
+		}
+	}
+
+	return descendants;
+}
+
+/**
+ * Nettoie les parents orphelins récursivement
+ */
+async function cleanupOrphanParents(parentNat: string, deletedIds: number[]): Promise<void> {
+	// Trouver le parent par atr_val = parentNat
 	const parent = await prisma.attribute_dev.findFirst({
-		where: { atr_val: category.atr_nat },
+		where: { atr_val: parentNat },
+		select: { atr_id: true, atr_nat: true, atr_val: true, atr_label: true }
+	});
+
+	if (!parent) {
+		console.log(`👻 Parent non trouvé pour atr_nat: ${parentNat}`);
+		return;
+	}
+
+	// Vérifier si ce parent a encore des enfants
+	const remainingChildren = await prisma.attribute_dev.findMany({
+		where: {
+			atr_nat: parent.atr_val,
+			atr_id: { notIn: deletedIds }
+		},
 		select: { atr_id: true }
 	});
 
-	if (parent) {
-		console.log(`⬆️ Parent trouvé, remontée récursive...`);
-		return findRootCategoryId(parent.atr_id);
-	}
+	if (remainingChildren.length === 0) {
+		// Le parent n'a plus d'enfants, on peut le supprimer
+		console.log(`🧹 Nettoyage du parent orphelin: ${parent.atr_label}`);
 
-	// Si pas de parent, cette catégorie est peut-être orpheline
-	console.log(`⚠️ Catégorie orpheline détectée: ID ${atrId}`);
-	return atrId;
+		await prisma.attribute_dev.delete({ where: { atr_id: parent.atr_id } });
+		deletedIds.push(parent.atr_id);
+
+		// Remonter récursivement si ce n'est pas la racine
+		if (parent.atr_nat && parent.atr_nat !== 'CATEGORIE') {
+			await cleanupOrphanParents(parent.atr_nat, deletedIds);
+		}
+	} else {
+		console.log(
+			`👥 Parent conservé (${remainingChildren.length} enfant(s) restant(s)): ${parent.atr_label}`
+		);
+	}
 }
 
 export const DELETE: RequestHandler = async ({ params }) => {
@@ -277,19 +348,12 @@ export const DELETE: RequestHandler = async ({ params }) => {
 			return json({ error: 'ID de catégorie manquant' }, { status: 404 });
 		}
 
-		// 3. L'atr_id dans la vue pointe vers le dernier niveau rempli
-		// On doit remonter à la racine pour supprimer toute la hiérarchie
-		const rootCategoryId = await findRootCategoryId(categoryFromView.atr_id);
+		// 3. La vue pointe vers le dernier niveau rempli - on supprime SEULEMENT ce niveau terminal
+		const terminalCategoryId = categoryFromView.atr_id;
+		console.log(`🎯 Suppression du niveau terminal: ID ${terminalCategoryId}`);
 
-		if (!rootCategoryId) {
-			console.log(`❌ Impossible de trouver la catégorie racine`);
-			return json({ error: 'Catégorie racine non trouvée' }, { status: 404 });
-		}
-
-		console.log(`🌳 Catégorie racine identifiée: ID ${rootCategoryId}`);
-
-		// 3. Récupérer tous les IDs de la hiérarchie complète depuis la racine
-		const allIdsToDelete = await getDescendantIds(rootCategoryId);
+		// 4. Supprimer le niveau terminal et nettoyer les orphelins remontants
+		const allIdsToDelete = await deleteTerminalAndCleanup(terminalCategoryId);
 
 		console.log(`📝 IDs à supprimer:`, allIdsToDelete);
 

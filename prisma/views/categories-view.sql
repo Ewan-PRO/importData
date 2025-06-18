@@ -24,3 +24,5 @@ FROM attribute_dev atr_0
 WHERE atr_0.atr_nat::text = 'CATEGORIE'::text
 ORDER BY atr_0.atr_val, atr_1.atr_val, atr_2.atr_val, atr_3.atr_val, atr_4.atr_val, atr_5.atr_val, atr_6.atr_val;
 
+
+/* row_key, atr_id, atr_0_label, atr_1_label, atr_2_label, atr_3_label, atr_4_label, atr_5_label, atr_6_label, atr_7_label */
