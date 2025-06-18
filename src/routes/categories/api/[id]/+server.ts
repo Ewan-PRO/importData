@@ -12,38 +12,47 @@ interface CategoryData {
 	[key: string]: string | null | undefined | boolean;
 }
 
-interface Category {
-	atr_id: number;
-	atr_nat: string | null;
-	atr_val: string | null;
-	atr_label: string | null;
-}
-
-async function getCategoryLevel(category: Category): Promise<number> {
-	if (category.atr_nat === 'CATEGORIE') {
-		return 1;
+/**
+ * Crée une nouvelle hiérarchie de catégories en réutilisant les branches existantes
+ * @param hierarchy - Tableau des labels de la hiérarchie [niveau1, niveau2, ..., niveauN]
+ */
+async function createHierarchyBranch(hierarchy: string[]): Promise<void> {
+	if (hierarchy.length === 0) {
+		console.log(`⚠️ Hiérarchie vide, rien à créer`);
+		return;
 	}
-	if (category.atr_nat?.startsWith('CATEGORIE_')) {
-		return 2;
-	}
-	if (category.atr_nat?.includes('_')) {
-		return category.atr_nat?.split('_').length || 0;
-	}
-	return 0;
-}
 
-async function deleteSubsequentLevels(parentNat: string | null): Promise<void> {
-	if (!parentNat) return;
+	let currentParentNat = 'CATEGORIE';
 
-	const children = await prisma.attribute_dev.findMany({
-		where: { atr_nat: parentNat }
-	});
+	for (let i = 0; i < hierarchy.length; i++) {
+		const label = hierarchy[i];
 
-	for (const child of children) {
-		await deleteSubsequentLevels(child.atr_val);
-		await prisma.attribute_dev.delete({ where: { atr_id: child.atr_id } });
-		console.log(`🗑️ Niveau orphelin ${child.atr_label} supprimé.`);
+		// Vérifier si ce niveau existe déjà
+		const existingCategory = await prisma.attribute_dev.findFirst({
+			where: {
+				atr_nat: currentParentNat,
+				atr_val: label
+			}
+		});
+
+		if (existingCategory) {
+			console.log(`♻️ Réutilisation du niveau existant ${i + 1}: "${label}"`);
+			currentParentNat = label; // Utiliser pour le niveau suivant
+		} else {
+			// Créer le nouveau niveau
+			const newCategory = await prisma.attribute_dev.create({
+				data: {
+					atr_nat: currentParentNat,
+					atr_label: label,
+					atr_val: label
+				}
+			});
+			console.log(`🌱 Création du niveau ${i + 1}: "${label}" (ID: ${newCategory.atr_id})`);
+			currentParentNat = label;
+		}
 	}
+
+	console.log(`✅ Hiérarchie créée avec succès: ${hierarchy.join(' → ')}`);
 }
 
 export const PUT: RequestHandler = async ({ params, request }) => {
@@ -90,108 +99,53 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 			return json({ error: 'Au moins un niveau doit être rempli.' }, { status: 400 });
 		}
 
-		// Récupérer la catégorie principale (celle avec l'ID fourni)
-		const mainCategory = await prisma.attribute_dev.findUnique({
-			where: { atr_id: categoryId }
-		});
+		// Obtenir la hiérarchie actuelle depuis la vue pour modification ciblée
+		const currentHierarchy = [
+			categoryFromView.atr_1_label,
+			categoryFromView.atr_2_label,
+			categoryFromView.atr_3_label,
+			categoryFromView.atr_4_label,
+			categoryFromView.atr_5_label,
+			categoryFromView.atr_6_label,
+			categoryFromView.atr_7_label
+		].filter((label) => label && label.trim() !== '' && label !== '""""');
 
-		if (!mainCategory) {
-			return json({ error: 'Catégorie principale non trouvée' }, { status: 404 });
-		}
+		console.log(`📊 Hiérarchie actuelle:`, currentHierarchy);
 
-		// Déterminer le niveau de la catégorie principale
-		const mainLevel = await getCategoryLevel(mainCategory);
-		console.log(`Catégorie principale niveau ${mainLevel}:`, mainCategory);
-
-		// Mettre à jour le label de la catégorie principale si nécessaire
-		const mainLabelKey = `atr_${mainLevel}_label`;
-		const mainLabelValue = formData[mainLabelKey];
-
-		if (mainLabelValue !== undefined && mainCategory.atr_label !== mainLabelValue) {
-			const newLabel = typeof mainLabelValue === 'string' ? mainLabelValue : null;
-			await prisma.attribute_dev.update({
-				where: { atr_id: categoryId },
-				data: {
-					atr_label: newLabel === '' ? null : newLabel,
-					atr_val: newLabel === '' ? null : newLabel // atr_val = atr_label
-				}
-			});
-			console.log(`🏷️ Label de la catégorie principale mis à jour: ${newLabel}`);
-		}
-
-		// Traitement des niveaux suivants
-		let currentParentVal = mainCategory.atr_val;
-
-		for (let i = mainLevel + 1; i <= 7; i++) {
+		// Construire la nouvelle hiérarchie demandée
+		const newHierarchy: string[] = [];
+		for (let i = 1; i <= 7; i++) {
 			const labelKey = `atr_${i}_label`;
 			const labelValue = formData[labelKey];
 			const label = typeof labelValue === 'string' ? labelValue?.trim() : null;
 
-			// Chercher l'enfant existant
-			const childCategory = await prisma.attribute_dev.findFirst({
-				where: { atr_nat: currentParentVal }
-			});
-
 			if (label && label !== '' && label !== '""""') {
-				// Si un label est fourni
-				if (childCategory) {
-					// L'enfant existe -> on le met à jour
-					await prisma.attribute_dev.update({
-						where: { atr_id: childCategory.atr_id },
-						data: {
-							atr_label: label,
-							atr_val: label // atr_val = atr_label
-						}
-					});
-					console.log(`✍️ Niveau ${i} mis à jour avec le label: "${label}"`);
-					currentParentVal = label; // Utiliser le nouveau label comme parent
-				} else {
-					// L'enfant n'existe pas -> on le crée
-					await prisma.attribute_dev.create({
-						data: {
-							atr_nat: currentParentVal,
-							atr_label: label,
-							atr_val: label // atr_val = atr_label
-						}
-					});
-					console.log(`✨ Niveau ${i} créé avec le label: "${label}"`);
-					currentParentVal = label; // Utiliser le nouveau label comme parent
-				}
+				newHierarchy.push(label);
 			} else {
-				// Vérifier qu'on ne crée pas de trou dans la hiérarchie
-				const hasSubsequentLevels = Object.keys(formData)
-					.filter((k) => k.startsWith('atr_') && k.endsWith('_label'))
-					.some((k) => {
-						const levelNum = parseInt(k.replace('atr_', '').replace('_label', ''));
-						const value = formData[k];
-						return (
-							levelNum > i &&
-							value &&
-							typeof value === 'string' &&
-							value.trim() !== '' &&
-							value !== '""""'
-						);
-					});
-
-				if (hasSubsequentLevels) {
-					console.log(`❌ Tentative de création d'un trou dans la hiérarchie au niveau ${i}`);
-					return json(
-						{
-							error: `Impossible de laisser le niveau ${i} vide avec des niveaux inférieurs remplis.`
-						},
-						{ status: 400 }
-					);
-				}
-
-				// Si le label est vide et pas de niveaux suivants, on supprime ce niveau et les suivants
-				if (childCategory) {
-					console.log(`🗑️ Début de la suppression à partir du niveau ${i}`);
-					await deleteSubsequentLevels(childCategory.atr_val);
-					await prisma.attribute_dev.delete({ where: { atr_id: childCategory.atr_id } });
-				}
-				break; // Arrête la boucle car la suite de la chaîne est rompue
+				break; // Arrêt à la première valeur vide
 			}
 		}
+
+		console.log(`🎯 Nouvelle hiérarchie demandée:`, newHierarchy);
+
+		// Vérifier si la hiérarchie a changé
+		const hierarchyChanged = JSON.stringify(currentHierarchy) !== JSON.stringify(newHierarchy);
+
+		if (!hierarchyChanged) {
+			console.log(`✅ Aucun changement détecté dans la hiérarchie`);
+			return json({ success: true, message: 'Aucune modification nécessaire' });
+		}
+
+		// Supprimer l'ancienne branche terminale spécifique
+		if (!categoryFromView.atr_id) {
+			return json({ error: 'ID de catégorie manquant pour modification' }, { status: 404 });
+		}
+		console.log(`🗑️ Suppression de l'ancienne branche terminale (ID: ${categoryFromView.atr_id})`);
+		await deleteTerminalAndCleanup(categoryFromView.atr_id);
+
+		// Créer la nouvelle hiérarchie complète
+		console.log(`🏗️ Création de la nouvelle hiérarchie`);
+		await createHierarchyBranch(newHierarchy);
 
 		return json({ success: true });
 	} catch (error) {
