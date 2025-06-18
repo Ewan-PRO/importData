@@ -69,193 +69,109 @@ async function countAffectedCategories(category: Category): Promise<{
 	return { count: totalCount, samples };
 }
 
-async function updateMainCategory(
-	categoryId: number,
-	data: CategoryData,
-	level: number
-): Promise<void> {
-	const updateData: Record<string, string | null> = {};
-	const labelField = `atr_${level}_label`;
-	const fieldValue = data[labelField];
+async function deleteSubsequentLevels(parentNat: string | null): Promise<void> {
+	if (!parentNat) return;
 
-	if (fieldValue !== undefined && typeof fieldValue !== 'boolean') {
-		updateData.atr_label = fieldValue;
-		await prisma.attribute_dev.update({
-			where: { atr_id: categoryId },
-			data: updateData
-		});
-		console.log('Catégorie principale mise à jour');
-	}
-}
-
-async function updateSubCategory(
-	currentNat: string,
-	level: number,
-	data: CategoryData
-): Promise<string> {
-	const nextLevelField = `atr_${level}_label`;
-	const fieldValue = data[nextLevelField];
-
-	if (fieldValue === undefined || typeof fieldValue === 'boolean') {
-		return currentNat;
-	}
-
-	const childCategory = await prisma.attribute_dev.findFirst({
-		where: { atr_nat: currentNat }
+	const children = await prisma.attribute_dev.findMany({
+		where: { atr_nat: parentNat }
 	});
 
-	if (childCategory) {
-		await prisma.attribute_dev.update({
-			where: { atr_id: childCategory.atr_id },
-			data: { atr_label: fieldValue }
-		});
-
-		if (fieldValue !== null) {
-			console.log(`Sous-catégorie de niveau ${level} mise à jour`);
-			return childCategory.atr_val ?? '';
-		}
-	} else if (fieldValue !== null) {
-		const newValue = `${currentNat}_${fieldValue.toLowerCase().replace(/\s+/g, '_')}`;
-		await prisma.attribute_dev.create({
-			data: {
-				atr_nat: currentNat,
-				atr_val: newValue,
-				atr_label: fieldValue
-			}
-		});
-		console.log(`Nouvelle sous-catégorie de niveau ${level} créée`);
-		return newValue;
+	for (const child of children) {
+		await deleteSubsequentLevels(child.atr_val);
+		await prisma.attribute_dev.delete({ where: { atr_id: child.atr_id } });
+		console.log(`🗑️ Niveau orphelin ${child.atr_label} supprimé.`);
 	}
-
-	return currentNat;
 }
 
 export const PUT: RequestHandler = async ({ params, request }) => {
 	try {
 		console.log('=== Début PUT /api/categories/[id] ===');
 		const { id } = params;
-		const data = (await request.json()) as CategoryData;
-		console.log('Données reçues:', data);
-
-		if (!id || isNaN(parseInt(id))) {
-			return json({ error: 'ID de catégorie invalide' }, { status: 400 });
-		}
+		const data = (await request.json()) as CategoryData; // Les données envoyées par le client
 
 		const categoryId = parseInt(id);
+		const mainCategory = await prisma.attribute_dev.findUnique({ where: { atr_id: categoryId } });
 
-		// Récupérer la catégorie depuis la vue
-		const categoryFromView = await prisma.v_categories_dev.findFirst({
-			where: { atr_id: categoryId }
-		});
-
-		if (!categoryFromView) {
-			return json({ error: 'Catégorie non trouvée' }, { status: 404 });
+		if (!mainCategory) {
+			return json({ error: 'Catégorie principale non trouvée' }, { status: 404 });
 		}
 
-		// Retrouver l'atr_id réel (même logique que DELETE)
-		let category = null;
-		for (let level = 7; level >= 1; level--) {
-			const labelField = `atr_${level}_label` as keyof typeof categoryFromView;
-			const label = categoryFromView[labelField];
+		// Validation séquentielle
+		const levels = Object.keys(data)
+			.filter((k) => k.startsWith('atr_') && k.endsWith('_label'))
+			.sort();
 
-			if (label !== null && label !== undefined) {
-				let currentNat = 'CATEGORIE';
+		for (let i = 1; i < levels.length; i++) {
+			const prevLevel = data[levels[i - 1]];
+			const currentLevel = data[levels[i]];
+			if (!prevLevel && currentLevel) {
+				return json(
+					{ error: `Le niveau ${i + 1} ne peut pas être rempli si le niveau ${i} est vide.` },
+					{ status: 400 }
+				);
+			}
+		}
+		// --- Fin Validation
 
-				for (let i = 1; i < level; i++) {
-					const prevLabelField = `atr_${i}_label` as keyof typeof categoryFromView;
-					const prevLabel = categoryFromView[prevLabelField];
+		let parentVal = mainCategory.atr_val;
 
-					if (prevLabel !== null && prevLabel !== undefined) {
-						const prevCategory = await prisma.attribute_dev.findFirst({
-							where: { atr_nat: currentNat, atr_label: String(prevLabel) }
-						});
-						if (prevCategory) {
-							currentNat = prevCategory.atr_val ?? '';
+		// Mise à jour du label de la catégorie principale cliquée
+		const mainLabelValue = data[`atr_${await getCategoryLevel(mainCategory)}_label`];
+		const mainLabel = typeof mainLabelValue === 'string' ? mainLabelValue : null;
+
+		if (mainLabel !== undefined && mainCategory.atr_label !== mainLabel) {
+			await prisma.attribute_dev.update({
+				where: { atr_id: categoryId },
+				data: { atr_label: mainLabel === '' ? null : mainLabel }
+			});
+			console.log(`🏷️ Label de la catégorie principale mis à jour: ${mainLabel}`);
+		}
+
+		// Traitement des niveaux suivants
+		for (let i = (await getCategoryLevel(mainCategory)) + 1; i <= 7; i++) {
+			const labelValue = data[`atr_${i}_label`];
+			const label = typeof labelValue === 'string' ? labelValue : null;
+
+			const childCategory = await prisma.attribute_dev.findFirst({ where: { atr_nat: parentVal } });
+
+			if (label && label.trim() !== '') {
+				// Si un label est fourni
+				if (childCategory) {
+					// L'enfant existe -> on le met à jour
+					await prisma.attribute_dev.update({
+						where: { atr_id: childCategory.atr_id },
+						data: { atr_label: label }
+					});
+					console.log(`✍️ Niveau ${i} mis à jour avec le label: ${label}`);
+					parentVal = childCategory.atr_val; // pour le prochain tour de boucle
+				} else {
+					// L'enfant n'existe pas -> on le crée
+					const newChild = await prisma.attribute_dev.create({
+						data: {
+							atr_nat: parentVal,
+							atr_label: label,
+							atr_val: label // Simplification
 						}
-					}
+					});
+					console.log(`✨ Niveau ${i} créé avec le label: ${label}`);
+					parentVal = newChild.atr_val;
 				}
-
-				category = await prisma.attribute_dev.findFirst({
-					where: { atr_nat: currentNat, atr_label: String(label) }
-				});
-
-				if (category) break;
+			} else {
+				// Si le label est vide ou manquant, on supprime ce niveau et les suivants
+				if (childCategory) {
+					console.log(`🗑️ Début de la suppression à partir du niveau ${i}`);
+					await deleteSubsequentLevels(childCategory.atr_val);
+					await prisma.attribute_dev.delete({ where: { atr_id: childCategory.atr_id } });
+				}
+				break; // Arrête la boucle car la suite de la chaîne est rompue
 			}
 		}
 
-		if (!category) {
-			return json({ error: 'Catégorie non trouvée' }, { status: 404 });
-		}
-
-		// Vérifier l'impact de la modification
-		const { count: affectedCount, samples } = await countAffectedCategories(category);
-		console.log(`Modification affecterait ${affectedCount} sous-catégories`);
-
-		// Protection contre les modifications trop fortes
-		if (affectedCount > PROTECTION_THRESHOLDS.BLOCK_OPERATION) {
-			return json(
-				{
-					error: `Modification trop forte : cette modification affecterait ${affectedCount}+ sous-catégories`,
-					affectedCount,
-					currentValue: category.atr_label,
-					newValue: data.atr_label,
-					impactedBranches: samples
-				},
-				{ status: 409 }
-			);
-		}
-
-		// Demander confirmation pour impact moyen
-		if (affectedCount > PROTECTION_THRESHOLDS.DIRECT_ALLOW && !data.forceUpdate) {
-			return json(
-				{
-					requiresConfirmation: true,
-					message: `Cette modification affectera ${affectedCount} sous-catégories. Confirmez-vous ?`,
-					affectedCount,
-					previewChanges: samples
-				},
-				{ status: 202 }
-			);
-		}
-
-		const level = await getCategoryLevel(category);
-		console.log(`Cette catégorie est de niveau ${level}`);
-
-		// Convertir les chaînes vides en null pour tous les champs
-		Object.keys(data).forEach((key) => {
-			if (data[key] === '' || data[key] === undefined) {
-				data[key] = null;
-			}
-		});
-
-		await updateMainCategory(category.atr_id, data, level);
-
-		let currentNat = category.atr_val ?? '';
-		for (let i = level + 1; i <= 7; i++) {
-			const nextNat = await updateSubCategory(currentNat, i, data);
-			if (nextNat === currentNat) {
-				break;
-			}
-			currentNat = nextNat;
-		}
-
-		const responseData: {
-			success: boolean;
-			updatedWithConfirmation?: boolean;
-			affectedCount?: number;
-		} = { success: true };
-
-		if (data.forceUpdate) {
-			responseData.updatedWithConfirmation = true;
-		}
-		if (affectedCount > 0) {
-			responseData.affectedCount = affectedCount;
-		}
-
-		return json(responseData, { status: 200 });
+		return json({ success: true });
 	} catch (error) {
-		console.error('Erreur lors de la mise à jour de la catégorie:', error);
-		return json({ error: 'Erreur lors de la mise à jour de la catégorie' }, { status: 500 });
+		console.error('❌ Erreur lors de la mise à jour :', error);
+		const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+		return json({ error: `Erreur interne: ${errorMessage}` }, { status: 500 });
 	}
 };
 
