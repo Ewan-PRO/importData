@@ -5,13 +5,6 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Seuils de protection
-const PROTECTION_THRESHOLDS = {
-	DIRECT_ALLOW: 3, // ≤ 3 enfants : autoriser
-	REQUIRE_CONFIRM: 20, // 4-20 enfants : demander confirmation
-	BLOCK_OPERATION: 20 // 20+ enfants : bloquer
-};
-
 interface CategoryData {
 	forceUpdate?: boolean; // Pour forcer les modifications avec confirmation
 	atr_label?: string | null;
@@ -37,36 +30,6 @@ async function getCategoryLevel(category: Category): Promise<number> {
 		return category.atr_nat?.split('_').length || 0;
 	}
 	return 0;
-}
-
-async function countAffectedCategories(category: Category): Promise<{
-	count: number;
-	samples: string[];
-}> {
-	// Compter toutes les sous-catégories qui seraient affectées
-	const affectedCategories = await prisma.attribute_dev.findMany({
-		where: {
-			OR: [{ atr_nat: category.atr_val }, { atr_nat: { startsWith: `${category.atr_val}_` } }]
-		},
-		select: {
-			atr_label: true,
-			atr_nat: true
-		},
-		take: 10 // Limiter pour les exemples
-	});
-
-	const totalCount = await prisma.attribute_dev.count({
-		where: {
-			OR: [{ atr_nat: category.atr_val }, { atr_nat: { startsWith: `${category.atr_val}_` } }]
-		}
-	});
-
-	const samples = affectedCategories
-		.map((cat) => cat.atr_label)
-		.filter((label) => label !== null)
-		.slice(0, 4);
-
-	return { count: totalCount, samples };
 }
 
 async function deleteSubsequentLevels(parentNat: string | null): Promise<void> {
@@ -175,145 +138,102 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	}
 };
 
-export const DELETE: RequestHandler = async ({ params }) => {
-	try {
-		console.log('=== Début DELETE /api/categories/[id] ===');
-		const { id } = params;
-		console.log('ID reçu:', id);
-		const categoryId = parseInt(id);
-		console.log('ID converti en nombre:', categoryId);
+/**
+ * Collecte de manière récursive les IDs de toutes les catégories descendantes.
+ * @param startCategoryId - L'ID de la catégorie de départ.
+ * @returns Un tableau des IDs à supprimer.
+ */
+async function getDescendantIds(startCategoryId: number): Promise<number[]> {
+	const idsToDelete = new Set<number>();
+	const queue: number[] = [startCategoryId];
+	const visitedIds = new Set<number>();
 
-		// Étape 1: Récupérer la ligne de la vue avec l'ID séquentiel
+	while (queue.length > 0) {
+		const currentId = queue.shift()!;
+		if (visitedIds.has(currentId)) {
+			continue;
+		}
+
+		visitedIds.add(currentId);
+		idsToDelete.add(currentId);
+
+		const category = await prisma.attribute_dev.findUnique({
+			where: { atr_id: currentId },
+			select: { atr_val: true }
+		});
+
+		if (category?.atr_val) {
+			const children = await prisma.attribute_dev.findMany({
+				where: { atr_nat: category.atr_val },
+				select: { atr_id: true }
+			});
+
+			for (const child of children) {
+				if (!visitedIds.has(child.atr_id)) {
+					queue.push(child.atr_id);
+				}
+			}
+		}
+	}
+
+	return Array.from(idsToDelete);
+}
+
+export const DELETE: RequestHandler = async ({ params }) => {
+	const { id } = params;
+
+	if (!id) {
+		return json({ error: 'ID manquant' }, { status: 400 });
+	}
+
+	try {
+		const categoryId = parseInt(id, 10);
+		if (isNaN(categoryId)) {
+			return json({ error: 'ID invalide' }, { status: 400 });
+		}
+
+		// 1. Récupérer l'ID de la catégorie à partir de la vue, car c'est celui que le front-end utilise.
 		const categoryFromView = await prisma.v_categories_dev.findFirst({
 			where: {
-				atr_id: categoryId
+				row_key: categoryId // On suppose que le `id` du front-end est `row_key`
 			}
 		});
-		console.log('Catégorie trouvée dans la vue:', categoryFromView);
 
-		if (!categoryFromView) {
-			console.log('Catégorie non trouvée dans la vue');
-			return json({ error: 'Catégorie non trouvée' }, { status: 404 });
+		if (!categoryFromView || !categoryFromView.atr_id) {
+			// Si `row_key` ne fonctionne pas, essayons avec `atr_id` comme fallback
+			const realCategory = await prisma.attribute_dev.findUnique({
+				where: { atr_id: categoryId }
+			});
+			if (!realCategory) {
+				return json({ error: 'Catégorie non trouvée' }, { status: 404 });
+			}
 		}
 
-		// Étape 2: Retrouver l'atr_id réel en cherchant dans attribute_dev
-		let category = null;
-		let realAtrId = null;
+		const realAtrId = categoryFromView?.atr_id ?? categoryId;
 
-		// Chercher le dernier niveau rempli pour identifier la catégorie réelle
-		for (let level = 7; level >= 1; level--) {
-			const labelField = `atr_${level}_label` as keyof typeof categoryFromView;
-			const label = categoryFromView[labelField];
+		// 2. Récupérer tous les IDs (celui de départ + tous ses descendants)
+		const allIdsToDelete = await getDescendantIds(realAtrId);
 
-			if (label !== null && label !== undefined) {
-				console.log(`Recherche au niveau ${level} avec label: "${label}"`);
+		if (allIdsToDelete.length === 0) {
+			// Cela ne devrait pas arriver si on trouve une catégorie, mais c'est une sécurité
+			return json({ error: 'Catégorie non trouvée ou sans ID' }, { status: 404 });
+		}
 
-				// Construire la hiérarchie pour trouver l'atr_nat correct
-				let currentNat = 'CATEGORIE';
-
-				// Parcourir les niveaux précédents pour construire le bon atr_nat
-				for (let i = 1; i < level; i++) {
-					const prevLabelField = `atr_${i}_label` as keyof typeof categoryFromView;
-					const prevLabel = categoryFromView[prevLabelField];
-
-					if (prevLabel !== null && prevLabel !== undefined) {
-						const prevCategory = await prisma.attribute_dev.findFirst({
-							where: {
-								atr_nat: currentNat,
-								atr_label: String(prevLabel)
-							}
-						});
-						if (prevCategory) {
-							currentNat = prevCategory.atr_val ?? '';
-						}
-					}
-				}
-
-				// Chercher la catégorie finale
-				category = await prisma.attribute_dev.findFirst({
-					where: {
-						atr_nat: currentNat,
-						atr_label: String(label)
-					}
-				});
-
-				if (category) {
-					realAtrId = category.atr_id;
-					console.log(`Catégorie réelle trouvée avec atr_id: ${realAtrId}`);
-					break;
+		// 3. Supprimer toutes les catégories en une seule transaction
+		await prisma.attribute_dev.deleteMany({
+			where: {
+				atr_id: {
+					in: allIdsToDelete
 				}
 			}
-		}
-
-		console.log('Catégorie réelle trouvée:', category);
-
-		if (!category || !realAtrId) {
-			console.log('Impossible de retrouver la catégorie réelle');
-			return json({ error: 'Catégorie non trouvée' }, { status: 404 });
-		}
-
-		// Vérifier si l'attribut est utilisé dans kit_attribute
-		const usageCount = await prisma.kit_attribute.count({
-			where: {
-				OR: [{ fk_attribute: realAtrId }, { fk_attribute_carac: realAtrId }]
-			}
 		});
-		console.log("Nombre d'utilisations trouvées:", usageCount);
 
-		if (usageCount > 0) {
-			console.log('Catégorie utilisée dans des kits, suppression impossible');
-			return json(
-				{ error: 'Impossible de supprimer cette catégorie car elle est utilisée dans des kits' },
-				{ status: 400 }
-			);
-		}
+		console.log(`🗑️ ${allIdsToDelete.length} catégorie(s) supprimée(s).`);
 
-		// Vérifier l'impact de la suppression
-		const { count: affectedCount, samples } = await countAffectedCategories(category);
-		console.log(`Suppression affecterait ${affectedCount} sous-catégories`);
-
-		// Protection contre les suppressions trop fortes
-		if (affectedCount > PROTECTION_THRESHOLDS.BLOCK_OPERATION) {
-			return json(
-				{
-					error: `Impossible de supprimer cette catégorie : elle contient ${affectedCount}+ sous-catégories`,
-					affectedCount,
-					affectedCategories: samples
-				},
-				{ status: 409 }
-			);
-		}
-
-		// Supprimer toutes les sous-catégories
-		console.log('Suppression des sous-catégories...');
-		const deleteResult = await prisma.attribute_dev.deleteMany({
-			where: {
-				OR: [{ atr_nat: category.atr_val }, { atr_nat: { startsWith: `${category.atr_val}_` } }]
-			}
-		});
-		console.log('Résultat de la suppression des sous-catégories:', deleteResult);
-
-		// Supprimer la catégorie elle-même
-		console.log('Suppression de la catégorie principale...');
-		const mainDeleteResult = await prisma.attribute_dev.delete({
-			where: {
-				atr_id: realAtrId
-			}
-		});
-		console.log('Résultat de la suppression de la catégorie principale:', mainDeleteResult);
-
-		console.log('=== Fin DELETE /api/categories/[id] ===');
-		return json({
-			success: true,
-			message:
-				affectedCount === 0
-					? 'Catégorie supprimée avec succès'
-					: `Catégorie et ${affectedCount} sous-catégories supprimées`,
-			deletedCategory: category.atr_label,
-			affectedCount
-		});
+		return new Response(null, { status: 204 });
 	} catch (error) {
-		console.error('Erreur lors de la suppression de la catégorie:', error);
-		return json({ error: 'Erreur lors de la suppression de la catégorie' }, { status: 500 });
+		console.error('❌ Erreur lors de la suppression de la catégorie :', error);
+		const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+		return json({ error: `Erreur interne: ${errorMessage}` }, { status: 500 });
 	}
 };

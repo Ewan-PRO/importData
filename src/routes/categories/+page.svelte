@@ -13,6 +13,7 @@
 
 	// Définition de l'interface pour les catégories
 	interface Category {
+		row_key: number;
 		atr_id?: number;
 		atr_0_label?: string;
 		atr_1_label?: string;
@@ -394,38 +395,30 @@
 
 	async function handleDeleteConfirm(): Promise<void> {
 		console.log('=== Début handleDeleteConfirm ===');
-		if (selectedCategory && selectedCategory.atr_id) {
-			console.log('ID de la catégorie à supprimer:', selectedCategory.atr_id);
-			const formData = new FormData();
-			formData.append('id', selectedCategory.atr_id.toString());
+		if (selectedCategory && selectedCategory.row_key) {
+			const rowKeyToDelete = selectedCategory.row_key;
+			console.log('ID de la ligne à supprimer:', rowKeyToDelete);
 
 			try {
 				console.log('Envoi de la requête de suppression...');
-				const response = await fetch(`/categories/api/${selectedCategory.atr_id}`, {
+				const response = await fetch(`/categories/api/${rowKeyToDelete}`, {
 					method: 'DELETE'
 				});
 
 				console.log('Statut de la réponse:', response.status);
-				const result = await response.json();
-				console.log('Résultat de la suppression:', result);
 
 				if (response.ok) {
 					console.log('Suppression réussie');
 
-					// Mettre à jour les données localement sans recharger la page
 					const updatedCategories = data.categories.filter(
-						(cat: Category) => cat.atr_id !== selectedCategory?.atr_id
+						(cat: Category) => cat.row_key !== rowKeyToDelete
 					);
-
-					// Mettre à jour les données de la page
 					data.categories = updatedCategories;
 
 					showAlert('Catégorie supprimée avec succès', 'success');
 					deleteConfirmOpen = false;
-
-					// Ne plus recharger la page après la suppression
-					// invalidateAll();
 				} else {
+					const result = await response.json();
 					console.log('Erreur lors de la suppression:', result.error);
 					showAlert(result.error || 'Erreur lors de la suppression', 'error');
 				}
@@ -434,7 +427,8 @@
 				showAlert('Erreur lors de la suppression', 'error');
 			}
 		} else {
-			console.log('Erreur: Catégorie ou ID manquant');
+			console.log('Erreur: Catégorie ou ID de ligne manquant');
+			showAlert('Erreur: Informations de catégorie incomplètes', 'error');
 		}
 		console.log('=== Fin handleDeleteConfirm ===');
 	}
@@ -497,26 +491,25 @@
 	async function confirmDeleteMultiple(items: Category[]): Promise<void> {
 		console.log('=== Début confirmDeleteMultiple ===');
 		console.log('Items à supprimer:', items);
+		const rowKeysToDelete = items.map((item) => item.row_key).filter(Boolean) as number[];
 
 		try {
 			// Supprimer chaque élément sélectionné
-			for (const item of items) {
-				if (item.atr_id) {
-					const response = await fetch(`/categories/api/${item.atr_id}`, {
-						method: 'DELETE'
-					});
+			for (const rowKey of rowKeysToDelete) {
+				const response = await fetch(`/categories/api/${rowKey}`, {
+					method: 'DELETE'
+				});
 
-					if (!response.ok) {
-						const errorData = await response.json();
-						showAlert(errorData.error || 'Erreur lors de la suppression', 'error');
-						return;
-					}
+				if (!response.ok) {
+					const errorData = await response.json();
+					showAlert(errorData.error || 'Erreur lors de la suppression', 'error');
+					return;
 				}
 			}
 
 			// Mettre à jour les données localement
 			const updatedCategories = data.categories.filter(
-				(cat: Category) => !items.some((item) => item.atr_id === cat.atr_id)
+				(cat: Category) => !rowKeysToDelete.includes(cat.row_key)
 			);
 
 			// Mettre à jour les données de la page

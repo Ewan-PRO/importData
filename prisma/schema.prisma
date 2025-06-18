@@ -148,8 +148,9 @@ view v_kit_carac {
 }
 
 view v_categories_dev {
-  atr_id      Int     @id @default(autoincrement())
-  atr_0_label String  @db.VarChar(100)
+  row_key     Int     @id
+  atr_id      Int?
+  atr_0_label String? @db.VarChar(100)
   atr_1_label String? @db.VarChar(100)
   atr_2_label String? @db.VarChar(100)
   atr_3_label String? @db.VarChar(100)
@@ -157,8 +158,6 @@ view v_categories_dev {
   atr_5_label String? @db.VarChar(100)
   atr_6_label String? @db.VarChar(100)
   atr_7_label String? @db.VarChar(100)
-
-  @@unique([atr_0_label], name: "v_categories_dev_pkey")
 }
 
 view v_kit_carac_dev {
