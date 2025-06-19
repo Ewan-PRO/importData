@@ -236,7 +236,37 @@ export const POST: RequestHandler = async ({ request }) => {
 				}));
 			console.log('Attribut valeur créé/trouvé:', attributeVal);
 
-			// 4. Créer la relation kit_attribute_dev
+			// 4. Vérifier les IDs existants et la séquence avant création
+			console.log('Vérification avant création kit_attribute_dev:');
+
+			// Vérifier le dernier kat_id
+			const lastKitAttribute = await tx.kit_attribute_dev.findFirst({
+				orderBy: { kat_id: 'desc' },
+				select: { kat_id: true }
+			});
+			console.log('Dernier kat_id trouvé:', lastKitAttribute?.kat_id || 'aucun');
+
+			// Compter le nombre total d'enregistrements
+			const count = await tx.kit_attribute_dev.count();
+			console.log('Nombre total kit_attribute_dev:', count);
+
+			// CORRECTION: Synchroniser la séquence avec le dernier ID
+			if (lastKitAttribute?.kat_id) {
+				const nextId = lastKitAttribute.kat_id + 1;
+				console.log('Correction de la séquence pour démarrer à:', nextId);
+
+				await tx.$executeRaw`SELECT setval('kit_attribute_dev_kat_id_seq', ${nextId}, false)`;
+				console.log('Séquence corrigée');
+			}
+
+			// Créer la relation kit_attribute_dev SANS spécifier kat_id (laisser l'autoincrement)
+			console.log('Données à insérer:', {
+				fk_kit: kit.kit_id,
+				fk_attribute_carac: attributeCarac.atr_id,
+				fk_attribute: attributeVal.atr_id,
+				kat_valeur: parseFloat(data.kat_valeur) || 0
+			});
+
 			const kitAttribute = await tx.kit_attribute_dev.create({
 				data: {
 					fk_kit: kit.kit_id,
@@ -245,7 +275,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					kat_valeur: parseFloat(data.kat_valeur) || 0
 				}
 			});
-			console.log('Kit_attribute_dev créé:', kitAttribute);
+			console.log('Kit_attribute_dev créé avec succès:', kitAttribute);
 
 			return {
 				kit,
