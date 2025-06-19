@@ -246,12 +246,13 @@
 
 		// Vérifier si c'est un nombre valide
 		const numericValue = parseFloat(katValeur);
-		if (
-			isNaN(numericValue) ||
-			!isFinite(numericValue) ||
-			!/^-?\d*\.?\d+([eE][-+]?\d+)?$/.test(katValeur.trim())
-		) {
-			Alert.alertActions.warning('La valeur doit être un chiffre ou un nombre valide');
+		// Regex corrigée pour accepter : entiers, décimaux, négatifs, notation scientifique
+		const isValidNumber = /^-?\d+(\.\d+)?([eE][-+]?\d+)?$/.test(katValeur.trim());
+
+		if (isNaN(numericValue) || !isFinite(numericValue) || !isValidNumber) {
+			Alert.alertActions.warning(
+				'La valeur doit être un nombre valide (ex: 12, 12.5, -3.14, 1.5e10)'
+			);
 			return;
 		}
 
