@@ -15,11 +15,11 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"prisma:transform": "node scripts/transform-prisma-schema.mjs",
-		"prisma:generate": "npm run prisma:transform && prisma generate --schema=./prisma/schema.transformed.prisma",
-		"prisma:migrate": "npm run prisma:transform && prisma migrate dev --schema=./prisma/schema.transformed.prisma",
-		"prisma:studio": "npm run prisma:transform && prisma studio --schema=./prisma/schema.transformed.prisma",
-		"prisma:push": "npm run prisma:transform && prisma db push --schema=./prisma/schema.transformed.prisma",
-		"prisma:pull": "prisma db pull --schema=./prisma/schema.prisma && npm run prisma:transform",
+		"prisma:generate": "prisma generate",
+		"prisma:migrate": "prisma migrate dev",
+		"prisma:studio": "prisma studio",
+		"prisma:push": "prisma db push",
+		"prisma:pull": "prisma db pull",
 		"postinstall": "npm run prisma:generate"
 	},
 	"devDependencies": {
