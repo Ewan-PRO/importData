@@ -260,6 +260,7 @@
 						placeholder={field.placeholder || ''}
 						required={field.required}
 						disabled={field.disabled || false}
+						step={field.type === 'number' ? 'any' : undefined}
 						value={formData[field.key] || field.value || ''}
 						oninput={(e) => {
 							const target = e.target as HTMLInputElement;
