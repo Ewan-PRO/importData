@@ -24,13 +24,11 @@ pnpm prisma:generate      # Génération client Prisma
 - `src/lib/components/` : Composants réutilisables + UI library
 - `src/lib/schemas/dbSchema.ts` : Schémas Zod pour validation
 - `prisma/schema.prisma` : Schéma principal base de données
-- `scripts/transform-prisma-schema.mjs` : Transformation de schéma
 
-## Workflow Prisma personnalisé
+## Workflow Prisma
 
 1. Éditer `prisma/schema.prisma`
-2. Exécuter `pnpm prisma:transform` → `schema.transformed.prisma`
-3. Toutes les commandes Prisma utilisent le schéma transformé
+2. Exécuter les commandes Prisma directement sur le schéma principal
 
 ## Base de données
 

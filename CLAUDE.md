@@ -32,8 +32,8 @@ pnpm test         # Run tests once
 
 **Database operations:**
 ```bash
-pnpm prisma:generate  # Generate Prisma client (runs schema transform first)
-pnpm prisma:migrate   # Run database migrations
+pnpm prisma:generate  # Generate Prisma client
+pnpm prisma:migrate   # Run database migrations  
 pnpm prisma:studio    # Open Prisma Studio
 pnpm prisma:push      # Push schema to database
 pnpm prisma:pull      # Pull schema from database
@@ -69,13 +69,11 @@ The application manages a hierarchical kit and parts system with:
 - `src/lib/components/` - Reusable Svelte components including UI library
 - `src/lib/schemas/dbSchema.ts` - Zod validation schemas for all database entities
 - `prisma/schema.prisma` - Main database schema
-- `scripts/transform-prisma-schema.mjs` - Schema transformation utility
 
 ### Prisma Workflow
-This project uses a custom Prisma workflow:
+Standard Prisma workflow:
 1. Edit `prisma/schema.prisma`
-2. Run `pnpm prisma:transform` to create `schema.transformed.prisma`
-3. All Prisma commands operate on the transformed schema
+2. Run Prisma commands directly on the main schema
 
 ### Authentication
 Uses Logto for authentication with:

@@ -124,7 +124,7 @@ model kit_attribute_dev {
 }
 
 view v_categories {
-  atr_id      Int     @id
+  atr_id      Int
   atr_0_label String  @db.VarChar(100)
   atr_1_label String? @db.VarChar(100)
   atr_2_label String? @db.VarChar(100)
@@ -136,7 +136,7 @@ view v_categories {
 }
 
 view v_kit_carac {
-  id         Int    @id
+  id         Int
   kit_label  String @db.VarChar(100)
   atr_label  String @db.VarChar(100)
   atr_val    String @db.VarChar(60)
@@ -146,7 +146,7 @@ view v_kit_carac {
 }
 
 view v_categories_dev {
-  row_key     Int     @id
+  row_key     Int
   atr_id      Int?
   atr_0_label String? @db.VarChar(100)
   atr_1_label String? @db.VarChar(100)
@@ -159,7 +159,7 @@ view v_categories_dev {
 }
 
 view v_kit_carac_dev {
-  id         Int    @id
+  id         Int
   kit_label  String @db.VarChar(100)
   atr_label  String @db.VarChar(100)
   atr_val    String @db.VarChar(60)
