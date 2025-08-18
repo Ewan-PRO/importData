@@ -1,12 +1,10 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { getKits, prisma, findKitCombination, findSimilarKitCombinations } from '$lib/server/db';
 
 export const GET: RequestHandler = async () => {
 	try {
-		const kits = await prisma.v_kit_carac_dev.findMany();
+		const kits = await getKits();
 		return json(kits);
 	} catch (error) {
 		console.error('Erreur lors de la récupération des kits:', error);

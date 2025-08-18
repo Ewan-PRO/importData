@@ -1,13 +1,11 @@
 // src/routes/api/categories/+server.ts
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { getCategories } from '$lib/server/db';
 
 export const GET: RequestHandler = async () => {
 	try {
-		const categories = await prisma.v_categories_dev.findMany();
+		const categories = await getCategories();
 		return json(categories);
 	} catch (error) {
 		console.error('Erreur lors de la récupération des catégories:', error);
