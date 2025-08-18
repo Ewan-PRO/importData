@@ -530,7 +530,7 @@
 								}
 							}}
 						>
-							<Select.SelectTrigger class="w-full md:w-1/2">
+							<Select.SelectTrigger class="w-full md:w-1/2" hasValue={!!targetTable}>
 								{availableTables.find((t) => t.value === targetTable)?.name ||
 									'Sélectionnez une table'}
 							</Select.SelectTrigger>
@@ -558,7 +558,10 @@
 													$form.mappedFields = mappedFields;
 												}}
 											>
-												<Select.SelectTrigger class="min-w-[12rem] text-sm">
+												<Select.SelectTrigger 
+													class="min-w-[12rem] text-sm"
+													hasValue={!!(mappedFields[i.toString()] && mappedFields[i.toString()] !== '')}
+												>
 													{mappedFields[i.toString()] || 'Ne pas importer'}
 												</Select.SelectTrigger>
 												<Select.SelectContent>

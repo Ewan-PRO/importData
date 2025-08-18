@@ -52,7 +52,7 @@
 			{#if fields.length > 1}
 				<div class="w-full sm:w-1/4">
 					<Select.Root type="single" bind:value={selectedField}>
-						<Select.Trigger class="w-full">
+						<Select.Trigger class="w-full" hasValue={!!selectedField}>
 							{selectedFieldLabel}
 						</Select.Trigger>
 						<Select.Content>

@@ -200,7 +200,10 @@
 								}
 							}}
 						>
-							<Select.SelectTrigger class={errors[field.key] ? 'border-red-500' : ''}>
+							<Select.SelectTrigger 
+								class={errors[field.key] ? 'border-red-500' : ''}
+								hasValue={!!(formData[field.key] && formData[field.key] !== '')}
+							>
 								{formData[field.key]
 									? field.options?.find((opt) => opt.value === formData[field.key])?.label ||
 										formData[field.key]

@@ -10,9 +10,11 @@
 		class: className,
 		children,
 		size = 'md',
+		hasValue = false,
 		...restProps
 	}: WithoutChild<SelectPrimitive.TriggerProps> & {
 		size?: SelectSize;
+		hasValue?: boolean;
 	} = $props();
 
 	const sizeClasses = {
@@ -28,6 +30,12 @@
 	data-size={size}
 	class={cn(
 		"border-input bg-background selection:bg-primary dark:bg-input/30 selection:text-primary-foreground ring-offset-background placeholder:text-muted-foreground flex w-full items-center justify-between gap-2 rounded-md border shadow-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+		// Styles pour les champs remplis - même couleur que webkit-autofill
+		'[-webkit-autofill]:!shadow-[inset_0_0_0px_1000px_rgb(232,240,254)]',
+		'[-webkit-autofill:focus]:!shadow-[inset_0_0_0px_1000px_rgb(232,240,254)]',
+		'[-webkit-autofill:hover]:!shadow-[inset_0_0_0px_1000px_rgb(232,240,254)]',
+		// Style pour les valeurs sélectionnées - même couleur que input
+		hasValue ? 'bg-[rgb(232,240,254)]' : 'bg-background',
 		sizeClasses[size],
 		className
 	)}
