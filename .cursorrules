@@ -1,0 +1,83 @@
+# Règles de développement pour ImportData
+
+## Environnement et outils
+
+- Utiliser **pnpm** comme gestionnaire de paquets (jamais npm)
+- Stack : SvelteKit + TypeScript + PostgreSQL + Prisma + TailwindCSS
+- Authentification via Logto
+- Tests avec Vitest
+
+## Commandes essentielles
+
+```bash
+pnpm dev                  # Serveur de développement
+pnpm build && pnpm preview  # Build et aperçu
+pnpm lint && pnpm format  # Qualité du code
+pnpm check                # Vérification TypeScript
+pnpm test:unit            # Tests unitaires
+pnpm prisma:generate      # Génération client Prisma
+```
+
+## Architecture et fichiers clés
+
+- `src/routes/` : Pages SvelteKit (categories, kits, import, products)
+- `src/lib/components/` : Composants réutilisables + UI library
+- `src/lib/schemas/dbSchema.ts` : Schémas Zod pour validation
+- `prisma/schema.prisma` : Schéma principal base de données
+- `scripts/transform-prisma-schema.mjs` : Transformation de schéma
+
+## Workflow Prisma personnalisé
+
+1. Éditer `prisma/schema.prisma`
+2. Exécuter `pnpm prisma:transform` → `schema.transformed.prisma`
+3. Toutes les commandes Prisma utilisent le schéma transformé
+
+## Base de données
+
+- Système hiérarchique kits/pièces
+- Tables : kits, attributes, parts, documents
+- Vues matérialisées : v_categories, v_kit_carac (+ variantes \_dev)
+- Support prod/dev avec tables séparées
+
+## Conventions de code
+
+- camelCase pour fonctions et variables
+- Typage strict TypeScript
+- Programmation fonctionnelle privilégiée
+- async/await plutôt que callbacks
+- Early returns pour éviter imbrication
+- const/let jamais var
+- Template literals plutôt que concaténation
+- Gestion erreurs explicite avec try/catch
+- Fonctions pures sans effets de bord
+- Principes DRY, KISS, YAGNI
+
+## Authentification
+
+- Routes protégées via `src/lib/auth/protect.ts`
+- Gestion session dans layouts
+- Callback OAuth dans `/authentication-callback`
+
+## Import Excel
+
+- Fonctionnalité import dans `/import` et `/products/import`
+- Support catégories, attributs, hiérarchies kits
+
+## Tests
+
+- Tests d'intégration dans `tests/integration/`
+- CRUD operations pour categories et kits
+- Tests de fonctionnalité import
+
+## Composants UI
+
+- Composants personnalisés basés sur bits-ui et Flowbite
+- Validation formulaires avec Zod + SvelteKit Superforms
+- Structure dans `src/lib/components/ui/`
+
+## Réponses en français
+
+- Toujours répondre en français
+- Être concis, éviter phrases de remplissage
+- Montrer seulement lignes changées avec contexte minimal
+- Anticiper besoins et suggérer solutions
