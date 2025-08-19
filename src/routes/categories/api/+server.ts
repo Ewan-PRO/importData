@@ -1,7 +1,13 @@
 // src/routes/api/categories/+server.ts
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { prisma } from '$lib/server/db';
+import {
+	prisma,
+	getCategories,
+	findCategoryInView,
+	findAttribute,
+	createAttribute
+} from '$lib/server/db';
 
 export const GET: RequestHandler = async () => {
 	console.log('🚀 [API-CATEGORIES] Début GET /categories/api');
@@ -13,8 +19,10 @@ export const GET: RequestHandler = async () => {
 		await prisma.$connect();
 		console.log('✅ [API-CATEGORIES] Connexion Prisma établie');
 
-		console.log('📡 [API-CATEGORIES] Requête vers v_categories_dev');
-		const categories = await prisma.v_categories_dev.findMany();
+		console.log(
+			'📡 [API-CATEGORIES] Requête vers base de données (détection automatique dev/prod)'
+		);
+		const categories = await getCategories();
 
 		console.log('📊 [API-CATEGORIES] Données récupérées:', {
 			count: categories.length,
@@ -131,9 +139,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		console.log('🔍 Vérification des doublons avec la condition:', whereClause);
 
-		const existingHierarchy = await prisma.v_categories_dev.findFirst({
-			where: whereClause
-		});
+		const existingHierarchy = await findCategoryInView(whereClause);
 
 		if (existingHierarchy) {
 			const fullPath = levels.join(' -> ');
@@ -156,11 +162,9 @@ export const POST: RequestHandler = async ({ request }) => {
 			console.log(`🔍 Niveau ${i + 1}:`, { label, parentNat });
 
 			// Vérifier si un attribut avec ce label existe déjà pour ce parent
-			const existingAttr = await prisma.attribute_dev.findFirst({
-				where: {
-					atr_nat: parentNat,
-					atr_label: label
-				}
+			const existingAttr = await findAttribute({
+				atr_nat: parentNat,
+				atr_label: label
 			});
 
 			let currentAttr;
@@ -172,12 +176,10 @@ export const POST: RequestHandler = async ({ request }) => {
 				console.log(`✨ Création d'un nouvel attribut avec atr_val = atr_label:`, label);
 
 				// Créer le nouvel attribut avec atr_val = atr_label
-				currentAttr = await prisma.attribute_dev.create({
-					data: {
-						atr_nat: parentNat,
-						atr_val: label, // atr_val = atr_label
-						atr_label: label
-					}
+				currentAttr = await createAttribute({
+					atr_nat: parentNat,
+					atr_val: label, // atr_val = atr_label
+					atr_label: label
 				});
 
 				console.log(`✅ Nouvel attribut créé:`, currentAttr);

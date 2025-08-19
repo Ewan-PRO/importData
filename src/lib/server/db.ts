@@ -25,6 +25,33 @@ interface KitCombinationData {
 	kat_valeur: number;
 }
 
+// Types pour les clauses where et données basés sur l'usage réel
+interface CategoryWhereInput {
+	atr_id?: number;
+	atr_0_label?: string;
+	atr_1_label?: string;
+	atr_2_label?: string;
+	atr_3_label?: string;
+	atr_4_label?: string;
+	atr_5_label?: string;
+	atr_6_label?: string;
+	atr_7_label?: string;
+	row_key?: number; // pour v_categories_dev
+}
+
+interface AttributeWhereInput {
+	atr_id?: number;
+	atr_nat?: string;
+	atr_val?: string;
+	atr_label?: string;
+}
+
+interface AttributeCreateInput {
+	atr_nat?: string;
+	atr_val?: string;
+	atr_label?: string;
+}
+
 // Fonction pour récupérer les catégories selon l'environnement
 export async function getCategories() {
 	const useDevViews = env.USE_DEV_VIEWS === 'true' || dev;
@@ -70,6 +97,37 @@ export async function findSimilarKitCombinations(kit_label: string, atr_label: s
 		return await prisma.v_kit_carac.findMany({
 			where: { kit_label, atr_label }
 		});
+	}
+}
+
+// Fonction helper pour déterminer l'environnement
+function useDevTables() {
+	return env.USE_DEV_VIEWS === 'true' || dev;
+}
+
+// Fonctions pour les vues categories avec condition de recherche
+export async function findCategoryInView(whereClause: CategoryWhereInput) {
+	if (useDevTables()) {
+		return await prisma.v_categories_dev.findFirst({ where: whereClause });
+	} else {
+		return await prisma.v_categories.findFirst({ where: whereClause });
+	}
+}
+
+// Fonctions pour les tables attributes
+export async function findAttribute(whereClause: AttributeWhereInput) {
+	if (useDevTables()) {
+		return await prisma.attribute_dev.findFirst({ where: whereClause });
+	} else {
+		return await prisma.attribute.findFirst({ where: whereClause });
+	}
+}
+
+export async function createAttribute(data: AttributeCreateInput) {
+	if (useDevTables()) {
+		return await prisma.attribute_dev.create({ data });
+	} else {
+		return await prisma.attribute.create({ data });
 	}
 }
 

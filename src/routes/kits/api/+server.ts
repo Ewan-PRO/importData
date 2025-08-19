@@ -1,8 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, getKits } from '$lib/server/db';
 
 // Type pour la transaction Prisma
 type PrismaTransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
@@ -17,8 +15,8 @@ export const GET: RequestHandler = async () => {
 		await prisma.$connect();
 		console.log('✅ [API-KITS] Connexion Prisma établie');
 
-		console.log('📡 [API-KITS] Requête vers v_kit_carac_dev');
-		const kits = await prisma.v_kit_carac_dev.findMany();
+		console.log('📡 [API-KITS] Requête vers base de données (détection automatique dev/prod)');
+		const kits = await getKits();
 
 		console.log('📊 [API-KITS] Données récupérées:', {
 			count: kits.length,
