@@ -5,6 +5,7 @@
 	import { isAuthenticated } from '$lib/auth';
 	import { page } from '$app/stores';
 	import { Toaster } from '$lib/components/ui/sonner';
+	import DebugLogger from '$lib/components/DebugLogger.svelte';
 
 	interface PageData {
 		user?: any;
@@ -72,4 +73,5 @@
 	</main>
 
 	<Toaster />
+	<DebugLogger />
 </div>

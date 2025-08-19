@@ -37,29 +37,57 @@ const kitSchema = z.object({
 });
 
 // Cette fonction sera utilisée à la fois sur le serveur et le kit
-export const load = (async ({ fetch, depends }) => {
+export const load = (async ({ fetch, depends, url }) => {
+	console.log('🚀 [KITS] Début du chargement de la page kits');
+	console.log('🔍 [KITS] URL:', url.pathname);
+
 	depends('app:kits'); // Pour permettre l'invalidation avec invalidateAll()
 
 	try {
+		console.log('📡 [KITS] Appel API: /kits/api');
+
 		// Récupérer les kits via l'API
 		const kitsResponse = await fetch('/kits/api');
 
+		console.log('📡 [KITS] Réponse API:', {
+			status: kitsResponse.status,
+			statusText: kitsResponse.statusText,
+			ok: kitsResponse.ok
+		});
+
 		if (!kitsResponse.ok) {
-			throw new Error('Erreur lors de la récupération des kits');
+			console.error('❌ [KITS] Erreur API response:', kitsResponse.status);
+			throw new Error(`Erreur API: ${kitsResponse.status} - ${kitsResponse.statusText}`);
 		}
 
 		const kits = await kitsResponse.json();
+		console.log('📊 [KITS] Données reçues:', {
+			count: Array.isArray(kits) ? kits.length : 'N/A',
+			type: typeof kits,
+			isArray: Array.isArray(kits),
+			firstItem: Array.isArray(kits) && kits.length > 0 ? kits[0] : null
+		});
 
 		// Créer un formulaire vide pour l'ajout de kit
+		console.log('📝 [KITS] Création du formulaire SuperForms');
 		const form = await superValidate(zod(kitSchema));
+		console.log('📝 [KITS] Formulaire créé:', {
+			valid: form.valid,
+			hasErrors: Object.keys(form.errors || {}).length > 0
+		});
 
+		console.log('✅ [KITS] Chargement terminé avec succès');
 		return {
 			kits,
 			form
 		};
 	} catch (err) {
-		console.error('Erreur dans le chargement de la page kits:', err);
-		throw error(500, 'Erreur lors du chargement des kits');
+		console.error('❌ [KITS] Erreur dans le chargement de la page kits:', err);
+		console.error('❌ [KITS] Stack trace:', err instanceof Error ? err.stack : 'N/A');
+		throw error(
+			500,
+			`Erreur lors du chargement des kits: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+		);
 	}
 }) satisfies PageServerLoad;
 

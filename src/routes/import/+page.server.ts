@@ -914,9 +914,28 @@ function getValidationRules(tableName: string): ValidationRules {
 }
 
 // Pour SuperForms, nous devons également fournir la fonction de chargement
-export const load: ServerLoad = async () => {
-	// Initialisation d'un formulaire vide
-	const form = await superValidate(zod(importSchema));
+export const load: ServerLoad = async ({ url }) => {
+	console.log('🚀 [IMPORT] Début du chargement de la page import');
+	console.log('🔍 [IMPORT] URL:', url.pathname);
 
-	return { form };
+	try {
+		console.log('📝 [IMPORT] Création du formulaire SuperForms pour import');
+
+		// Initialisation d'un formulaire vide
+		const form = await superValidate(zod(importSchema));
+
+		console.log('📝 [IMPORT] Formulaire créé:', {
+			valid: form.valid,
+			hasErrors: Object.keys(form.errors || {}).length > 0
+		});
+
+		console.log('✅ [IMPORT] Chargement terminé avec succès');
+		return { form };
+	} catch (err) {
+		console.error('❌ [IMPORT] Erreur dans le chargement de la page import:', err);
+		console.error('❌ [IMPORT] Stack trace:', err instanceof Error ? err.stack : 'N/A');
+		throw new Error(
+			`Erreur lors du chargement de la page import: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+		);
+	}
 };

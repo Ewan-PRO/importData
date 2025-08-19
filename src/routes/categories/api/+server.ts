@@ -6,20 +6,54 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export const GET: RequestHandler = async () => {
+	console.log('🚀 [API-CATEGORIES] Début GET /categories/api');
+
 	try {
+		console.log('🔍 [API-CATEGORIES] Vérification de la connexion Prisma');
+
+		// Test de connexion à la base de données
+		await prisma.$connect();
+		console.log('✅ [API-CATEGORIES] Connexion Prisma établie');
+
+		console.log('📡 [API-CATEGORIES] Requête vers v_categories_dev');
 		const categories = await prisma.v_categories_dev.findMany();
+
+		console.log('📊 [API-CATEGORIES] Données récupérées:', {
+			count: categories.length,
+			firstItem: categories.length > 0 ? categories[0] : null
+		});
+
+		console.log('✅ [API-CATEGORIES] GET terminé avec succès');
 		return json(categories);
 	} catch (error) {
-		console.error('Erreur lors de la récupération des catégories:', error);
-		return json({ error: 'Erreur lors de la récupération des catégories' }, { status: 500 });
+		console.error('❌ [API-CATEGORIES] Erreur lors de la récupération des catégories:', error);
+		console.error('❌ [API-CATEGORIES] Stack trace:', error instanceof Error ? error.stack : 'N/A');
+		console.error("❌ [API-CATEGORIES] Type d'erreur:", error?.constructor?.name || 'Inconnu');
+
+		return json(
+			{
+				error: 'Erreur lors de la récupération des catégories',
+				details: error instanceof Error ? error.message : 'Erreur inconnue'
+			},
+			{ status: 500 }
+		);
+	} finally {
+		try {
+			await prisma.$disconnect();
+			console.log('🔌 [API-CATEGORIES] Connexion Prisma fermée');
+		} catch (disconnectError) {
+			console.error('⚠️ [API-CATEGORIES] Erreur lors de la déconnexion:', disconnectError);
+		}
 	}
 };
 
 export const POST: RequestHandler = async ({ request }) => {
+	console.log('🚀 [API-CATEGORIES] Début POST /categories/api');
+
 	try {
-		console.log('🚀 Début de la création des catégories');
+		console.log('📥 [API-CATEGORIES] Lecture du body de la requête');
 		const data = await request.json();
-		console.log('📥 Données reçues:', data);
+		console.log('📥 [API-CATEGORIES] Données reçues:', data);
 
 		// Construire le chemin complet de la hiérarchie
 		const levels = [];

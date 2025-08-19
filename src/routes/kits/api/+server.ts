@@ -5,20 +5,54 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export const GET: RequestHandler = async () => {
+	console.log('🚀 [API-KITS] Début GET /kits/api');
+
 	try {
+		console.log('🔍 [API-KITS] Vérification de la connexion Prisma');
+
+		// Test de connexion à la base de données
+		await prisma.$connect();
+		console.log('✅ [API-KITS] Connexion Prisma établie');
+
+		console.log('📡 [API-KITS] Requête vers v_kit_carac_dev');
 		const kits = await prisma.v_kit_carac_dev.findMany();
+
+		console.log('📊 [API-KITS] Données récupérées:', {
+			count: kits.length,
+			firstItem: kits.length > 0 ? kits[0] : null
+		});
+
+		console.log('✅ [API-KITS] GET terminé avec succès');
 		return json(kits);
 	} catch (error) {
-		console.error('Erreur lors de la récupération des kits:', error);
-		return json({ error: 'Erreur lors de la récupération des kits' }, { status: 500 });
+		console.error('❌ [API-KITS] Erreur lors de la récupération des kits:', error);
+		console.error('❌ [API-KITS] Stack trace:', error instanceof Error ? error.stack : 'N/A');
+		console.error("❌ [API-KITS] Type d'erreur:", error?.constructor?.name || 'Inconnu');
+
+		return json(
+			{
+				error: 'Erreur lors de la récupération des kits',
+				details: error instanceof Error ? error.message : 'Erreur inconnue'
+			},
+			{ status: 500 }
+		);
+	} finally {
+		try {
+			await prisma.$disconnect();
+			console.log('🔌 [API-KITS] Connexion Prisma fermée');
+		} catch (disconnectError) {
+			console.error('⚠️ [API-KITS] Erreur lors de la déconnexion:', disconnectError);
+		}
 	}
 };
 
 export const POST: RequestHandler = async ({ request }) => {
+	console.log('🚀 [API-KITS] Début POST /kits/api');
+
 	try {
-		console.log('=== API POST /api/kits appelée ===');
+		console.log('📥 [API-KITS] Lecture du body de la requête');
 		const data = await request.json();
-		console.log('Données reçues:', data);
+		console.log('📥 [API-KITS] Données reçues:', data);
 
 		// Validation des données requises
 		if (!data.kit_label || data.kit_label.trim() === '') {
