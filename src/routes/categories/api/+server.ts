@@ -1,9 +1,7 @@
 // src/routes/api/categories/+server.ts
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '$lib/server/db';
 
 export const GET: RequestHandler = async () => {
 	console.log('🚀 [API-CATEGORIES] Début GET /categories/api');

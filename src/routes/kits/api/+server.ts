@@ -4,6 +4,9 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Type pour la transaction Prisma
+type PrismaTransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
 export const GET: RequestHandler = async () => {
 	console.log('🚀 [API-KITS] Début GET /kits/api');
 
@@ -115,7 +118,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		// Utilisation d'une transaction pour créer toutes les entités nécessaires
-		const result = await prisma.$transaction(async (tx) => {
+		const result = await prisma.$transaction(async (tx: PrismaTransactionClient) => {
 			console.log('Transaction démarrée');
 
 			// 1. Créer le nouveau kit (on sait qu'il n'existe pas)
