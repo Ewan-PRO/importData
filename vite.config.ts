@@ -18,12 +18,12 @@ export default defineConfig({
 		__filename: JSON.stringify(__filename)
 	},
 	ssr: {
-		// Exclure Prisma du bundling SSR pour éviter les problèmes ES modules
-		noExternal: ['@prisma/client']
+		// Forcer Prisma à rester externe (ne pas bundler)
+		external: ['@prisma/client', '.prisma/client']
 	},
 	optimizeDeps: {
 		// Exclure Prisma de l'optimisation des dépendances
-		exclude: ['@prisma/client']
+		exclude: ['@prisma/client', '.prisma/client']
 	},
 	test: {
 		projects: [
