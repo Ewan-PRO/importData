@@ -37,53 +37,27 @@ const kitSchema = z.object({
 });
 
 // Cette fonction sera utilisée à la fois sur le serveur et le kit
-export const load = (async ({ fetch, depends, url }) => {
-	console.log('🚀 [KITS] Début du chargement de la page kits');
-	console.log('🔍 [KITS] URL:', url.pathname);
-
+export const load = (async ({ fetch, depends }) => {
 	depends('app:kits'); // Pour permettre l'invalidation avec invalidateAll()
 
 	try {
-		console.log('📡 [KITS] Appel API: /kits/api');
-
 		// Récupérer les kits via l'API
 		const kitsResponse = await fetch('/kits/api');
 
-		console.log('📡 [KITS] Réponse API:', {
-			status: kitsResponse.status,
-			statusText: kitsResponse.statusText,
-			ok: kitsResponse.ok
-		});
-
 		if (!kitsResponse.ok) {
-			console.error('❌ [KITS] Erreur API response:', kitsResponse.status);
 			throw new Error(`Erreur API: ${kitsResponse.status} - ${kitsResponse.statusText}`);
 		}
 
 		const kits = await kitsResponse.json();
-		console.log('📊 [KITS] Données reçues:', {
-			count: Array.isArray(kits) ? kits.length : 'N/A',
-			type: typeof kits,
-			isArray: Array.isArray(kits),
-			firstItem: Array.isArray(kits) && kits.length > 0 ? kits[0] : null
-		});
 
 		// Créer un formulaire vide pour l'ajout de kit
-		console.log('📝 [KITS] Création du formulaire SuperForms');
 		const form = await superValidate(zod(kitSchema));
-		console.log('📝 [KITS] Formulaire créé:', {
-			valid: form.valid,
-			hasErrors: Object.keys(form.errors || {}).length > 0
-		});
 
-		console.log('✅ [KITS] Chargement terminé avec succès');
 		return {
 			kits,
 			form
 		};
 	} catch (err) {
-		console.error('❌ [KITS] Erreur dans le chargement de la page kits:', err);
-		console.error('❌ [KITS] Stack trace:', err instanceof Error ? err.stack : 'N/A');
 		throw error(
 			500,
 			`Erreur lors du chargement des kits: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
@@ -93,24 +67,14 @@ export const load = (async ({ fetch, depends, url }) => {
 
 export const actions: Actions = {
 	create: async ({ request, fetch }) => {
-		console.log('=== Action CREATE appelée ===');
 		const formData = await request.formData();
-		console.log('FormData reçu:', Object.fromEntries(formData.entries()));
-
 		const form = await superValidate(formData, zod(kitSchema));
-		console.log('Validation SuperForms:', {
-			valid: form.valid,
-			errors: form.errors,
-			data: form.data
-		});
 
 		if (!form.valid) {
-			console.log('Formulaire invalide, retour fail(400)');
 			return fail(400, { form });
 		}
 
 		try {
-			console.log('Envoi vers API avec données:', form.data);
 			const response = await fetch('/kits/api', {
 				method: 'POST',
 				headers: {
@@ -119,19 +83,13 @@ export const actions: Actions = {
 				body: JSON.stringify(form.data)
 			});
 
-			console.log('Réponse API:', { ok: response.ok, status: response.status });
-
 			if (!response.ok) {
 				const errorData = await response.json();
-				console.log('Erreur API:', errorData);
 				return fail(response.status, {
 					form,
 					error: errorData.error ?? 'Erreur lors de la création du kit'
 				});
 			}
-
-			const result = await response.json();
-			console.log('Succès API:', result);
 
 			// Réinitialiser le formulaire après succès
 			return { form, success: true };
@@ -184,36 +142,25 @@ export const actions: Actions = {
 	},
 
 	delete: async ({ request, fetch }) => {
-		console.log('=== Action DELETE appelée ===');
 		const formData = await request.formData();
-		console.log('FormData reçu:', Object.fromEntries(formData.entries()));
-
 		const id = safeFormDataToString(formData.get('id'));
-		console.log('ID extrait:', id);
 
 		if (!id) {
-			console.log('Erreur: ID de kit manquant');
 			return fail(400, { error: 'ID de kit manquant' });
 		}
 
 		try {
-			console.log('Envoi vers API DELETE avec ID:', id);
 			const response = await fetch(`/kits/api/${id}`, {
 				method: 'DELETE'
 			});
 
-			console.log('Réponse API DELETE:', { ok: response.ok, status: response.status });
-
 			if (!response.ok) {
 				const errorData = await response.json();
-				console.log('Erreur API DELETE:', errorData);
 				return fail(response.status, {
 					error: errorData.error ?? 'Erreur lors de la suppression du kit'
 				});
 			}
 
-			const result = await response.json();
-			console.log('Succès API DELETE:', result);
 			return { success: true };
 		} catch (err) {
 			console.error('Erreur lors de la suppression du kit:', err);

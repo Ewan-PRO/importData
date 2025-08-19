@@ -79,55 +79,29 @@ const categorySchema = z
 	);
 
 // Cette fonction sera utilisée à la fois sur le serveur et le client
-export const load = (async ({ fetch, depends, url }) => {
-	console.log('🚀 [CATEGORIES] Début du chargement de la page categories');
-	console.log('🔍 [CATEGORIES] URL:', url.pathname);
-
+export const load = (async ({ fetch, depends }) => {
 	depends('app:categories'); // Pour permettre l'invalidation avec invalidateAll()
 
 	try {
-		console.log('📡 [CATEGORIES] Appel API: /categories/api');
-
 		// Récupérer les catégories via l'API
 		const categoriesResponse = await fetch('/categories/api');
 
-		console.log('📡 [CATEGORIES] Réponse API:', {
-			status: categoriesResponse.status,
-			statusText: categoriesResponse.statusText,
-			ok: categoriesResponse.ok
-		});
-
 		if (!categoriesResponse.ok) {
-			console.error('❌ [CATEGORIES] Erreur API response:', categoriesResponse.status);
 			throw new Error(
 				`Erreur API: ${categoriesResponse.status} - ${categoriesResponse.statusText}`
 			);
 		}
 
 		const categories = await categoriesResponse.json();
-		console.log('📊 [CATEGORIES] Données reçues:', {
-			count: Array.isArray(categories) ? categories.length : 'N/A',
-			type: typeof categories,
-			isArray: Array.isArray(categories),
-			firstItem: Array.isArray(categories) && categories.length > 0 ? categories[0] : null
-		});
 
 		// Créer un formulaire vide pour l'ajout de catégorie
-		console.log('📝 [CATEGORIES] Création du formulaire SuperForms');
 		const form = await superValidate(zod(categorySchema));
-		console.log('📝 [CATEGORIES] Formulaire créé:', {
-			valid: form.valid,
-			hasErrors: Object.keys(form.errors || {}).length > 0
-		});
 
-		console.log('✅ [CATEGORIES] Chargement terminé avec succès');
 		return {
 			categories,
 			form
 		};
 	} catch (err) {
-		console.error('❌ [CATEGORIES] Erreur dans le chargement de la page catégories:', err);
-		console.error('❌ [CATEGORIES] Stack trace:', err instanceof Error ? err.stack : 'N/A');
 		throw error(
 			500,
 			`Erreur lors du chargement des catégories: ${err instanceof Error ? err.message : 'Erreur inconnue'}`

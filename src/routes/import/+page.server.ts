@@ -567,9 +567,6 @@ async function processRow(
 	result: ImportResult
 ): Promise<void> {
 	try {
-		console.log(`=== Traitement ligne ${rowIndex} ===`);
-		console.log('Données brutes de la ligne:', row);
-
 		// Préparation des données pour l'importation
 		const recordData: Record<string, unknown> = {};
 		const validationRules = getValidationRules(targetTable);

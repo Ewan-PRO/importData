@@ -10,26 +10,10 @@ import {
 } from '$lib/server/db';
 
 export const GET: RequestHandler = async () => {
-	console.log('🚀 [API-CATEGORIES] Début GET /categories/api');
-
 	try {
-		console.log('🔍 [API-CATEGORIES] Vérification de la connexion Prisma');
-
 		// Test de connexion à la base de données
 		await prisma.$connect();
-		console.log('✅ [API-CATEGORIES] Connexion Prisma établie');
-
-		console.log(
-			'📡 [API-CATEGORIES] Requête vers base de données (détection automatique dev/prod)'
-		);
 		const categories = await getCategories();
-
-		console.log('📊 [API-CATEGORIES] Données récupérées:', {
-			count: categories.length,
-			firstItem: categories.length > 0 ? categories[0] : null
-		});
-
-		console.log('✅ [API-CATEGORIES] GET terminé avec succès');
 		return json(categories);
 	} catch (error) {
 		console.error('❌ [API-CATEGORIES] Erreur lors de la récupération des catégories:', error);
@@ -46,7 +30,6 @@ export const GET: RequestHandler = async () => {
 	} finally {
 		try {
 			await prisma.$disconnect();
-			console.log('🔌 [API-CATEGORIES] Connexion Prisma fermée');
 		} catch (disconnectError) {
 			console.error('⚠️ [API-CATEGORIES] Erreur lors de la déconnexion:', disconnectError);
 		}
@@ -54,12 +37,8 @@ export const GET: RequestHandler = async () => {
 };
 
 export const POST: RequestHandler = async ({ request }) => {
-	console.log('🚀 [API-CATEGORIES] Début POST /categories/api');
-
 	try {
-		console.log('📥 [API-CATEGORIES] Lecture du body de la requête');
 		const data = await request.json();
-		console.log('📥 [API-CATEGORIES] Données reçues:', data);
 
 		// Construire le chemin complet de la hiérarchie
 		const levels = [];
@@ -137,8 +116,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			whereClause[`atr_${i}_label`] = null;
 		}
 
-		console.log('🔍 Vérification des doublons avec la condition:', whereClause);
-
 		const existingHierarchy = await findCategoryInView(whereClause);
 
 		if (existingHierarchy) {
@@ -159,8 +136,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		for (let i = 0; i < levels.length; i++) {
 			const label = levels[i];
 
-			console.log(`🔍 Niveau ${i + 1}:`, { label, parentNat });
-
 			// Vérifier si un attribut avec ce label existe déjà pour ce parent
 			const existingAttr = await findAttribute({
 				atr_nat: parentNat,
@@ -170,19 +145,14 @@ export const POST: RequestHandler = async ({ request }) => {
 			let currentAttr;
 
 			if (existingAttr) {
-				console.log(`📋 Attribut existant trouvé:`, existingAttr);
 				currentAttr = existingAttr;
 			} else {
-				console.log(`✨ Création d'un nouvel attribut avec atr_val = atr_label:`, label);
-
 				// Créer le nouvel attribut avec atr_val = atr_label
 				currentAttr = await createAttribute({
 					atr_nat: parentNat,
 					atr_val: label, // atr_val = atr_label
 					atr_label: label
 				});
-
-				console.log(`✅ Nouvel attribut créé:`, currentAttr);
 			}
 
 			attributeEntries.push(currentAttr);
