@@ -2,23 +2,15 @@ import tailwindcss from '@tailwindcss/vite';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-// Polyfill pour __dirname en ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	define: {
-		// Polyfills pour Node.js dans les ES modules
-		global: 'globalThis',
-		__dirname: JSON.stringify(__dirname),
-		__filename: JSON.stringify(__filename)
+		// Polyfills globaux pour Node.js
+		global: 'globalThis'
 	},
 	ssr: {
-		// Forcer Prisma à rester externe (ne pas bundler)
+		// Forcer Prisma à rester externe
 		external: ['@prisma/client', '.prisma/client']
 	},
 	optimizeDeps: {

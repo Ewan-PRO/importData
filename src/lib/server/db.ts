@@ -1,4 +1,12 @@
 // src/lib/server/db.ts
+// Polyfill __dirname et __filename pour ES modules AVANT d'importer Prisma
+if (typeof globalThis.__dirname === 'undefined') {
+	globalThis.__dirname = '/app';
+}
+if (typeof globalThis.__filename === 'undefined') {
+	globalThis.__filename = '/app/index.js';
+}
+
 import { PrismaClient } from '@prisma/client';
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
