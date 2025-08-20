@@ -6,6 +6,7 @@
 	import Filter from '$lib/components/Filter.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import { superForm } from 'sveltekit-superforms/client';
+	import { toast } from 'svelte-sonner';
 
 	console.log('Script de la page catégories chargé');
 
@@ -343,6 +344,7 @@
 		if (!selectedCategory || !selectedCategory.atr_id) {
 			console.error('Erreur: Catégorie ou ID manquant pour la modification.');
 			showAlert('Erreur: Informations de catégorie incomplètes', 'error');
+			toast.error('Erreur: Informations de catégorie incomplètes');
 			console.log('=== Fin handleEditSubmit (erreur) ===');
 			return;
 		}
@@ -375,6 +377,7 @@
 					errorData = { error: `Erreur serveur (${response.status})` };
 				}
 				showAlert(errorData.error || 'Erreur lors de la modification', 'error');
+				toast.error(errorData.error || 'Erreur lors de la modification');
 				return;
 			}
 
@@ -388,10 +391,12 @@
 			);
 
 			showAlert('Catégorie modifiée avec succès', 'success');
+			toast.success('Élément modifié avec succès');
 			editFormOpen = false;
 		} catch (error) {
 			console.error('Erreur (bloc catch) dans handleEditSubmit:', error);
 			showAlert('Erreur réseau ou inattendue lors de la modification.', 'error');
+			toast.error('Erreur réseau ou inattendue lors de la modification.');
 		} finally {
 			console.log('=== Fin handleEditSubmit ===');
 		}
@@ -420,19 +425,23 @@
 					data.categories = updatedCategories;
 
 					showAlert('Catégorie supprimée avec succès', 'success');
+					toast.success('Élément supprimé avec succès');
 					deleteConfirmOpen = false;
 				} else {
 					const result = await response.json();
 					console.log('Erreur lors de la suppression:', result.error);
 					showAlert(result.error || 'Erreur lors de la suppression', 'error');
+					toast.error(result.error || 'Erreur lors de la suppression');
 				}
 			} catch (error) {
 				console.error('Erreur dans handleDeleteConfirm:', error);
 				showAlert('Erreur lors de la suppression', 'error');
+				toast.error('Erreur lors de la suppression');
 			}
 		} else {
 			console.log('Erreur: Catégorie ou ID de ligne manquant');
 			showAlert('Erreur: Informations de catégorie incomplètes', 'error');
+			toast.error('Erreur: Informations de catégorie incomplètes');
 		}
 		console.log('=== Fin handleDeleteConfirm ===');
 	}
@@ -460,6 +469,7 @@
 			if (!response.ok) {
 				const errorData = await response.json();
 				showAlert(errorData.error || "Erreur lors de l'ajout de la catégorie", 'error');
+				toast.error(errorData.error || "Erreur lors de l'ajout de la catégorie");
 				return;
 			}
 
@@ -469,10 +479,12 @@
 			// Vérifier si l'API a vraiment réussi
 			if (!serverResponse.success) {
 				showAlert(serverResponse.error || "Erreur lors de l'ajout de la catégorie", 'error');
+				toast.error(serverResponse.error || "Erreur lors de l'ajout de la catégorie");
 				return;
 			}
 
 			showAlert('Catégorie ajoutée avec succès', 'success');
+			toast.success('Élément créé avec succès');
 			addFormOpen = false;
 
 			// Créer l'objet complet avec atr_0_label pour l'affichage immédiat
@@ -495,6 +507,7 @@
 		} catch (error) {
 			console.error('Error in form submission:', error);
 			showAlert("Erreur lors de l'ajout de la catégorie", 'error');
+			toast.error("Erreur lors de l'ajout de la catégorie");
 		}
 	}
 
@@ -513,6 +526,7 @@
 				if (!response.ok) {
 					const errorData = await response.json();
 					showAlert(errorData.error || 'Erreur lors de la suppression', 'error');
+					toast.error(errorData.error || 'Erreur lors de la suppression');
 					return;
 				}
 			}
@@ -529,6 +543,7 @@
 		} catch (error) {
 			console.error('Erreur dans confirmDeleteMultiple:', error);
 			showAlert('Erreur lors de la suppression multiple', 'error');
+			toast.error('Erreur lors de la suppression multiple');
 		}
 		console.log('=== Fin confirmDeleteMultiple ===');
 	}

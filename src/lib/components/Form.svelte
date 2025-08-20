@@ -135,14 +135,7 @@
 			const finalData = { ...data, ...filteredFormData };
 			console.log('Formulaire valide, dispatch de submit avec:', { data: finalData, isEdit });
 
-			// Toast
-			if (isDelete) {
-				toast.success('Élément supprimé avec succès');
-			} else if (isEdit) {
-				toast.success('Élément modifié avec succès');
-			} else {
-				toast.success('Élément créé avec succès');
-			}
+			// Les toasts sont gérés par les handlers dans les pages après la réponse API
 
 			dispatch('submit', {
 				data: finalData,

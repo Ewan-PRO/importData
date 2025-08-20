@@ -7,6 +7,7 @@
 	import Filter from '$lib/components/Filter.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import { superForm } from 'sveltekit-superforms/client';
+	import { toast } from 'svelte-sonner';
 
 	console.log('Script de la page kits chargé');
 
@@ -356,6 +357,7 @@
 			// Afficher le résultat
 			if (errorCount === 0) {
 				Alert.alertActions.success(`${successCount} kit(s) supprimé(s) avec succès`);
+				toast.success(`${successCount} élément(s) supprimé(s) avec succès`);
 			} else if (successCount === 0) {
 				Alert.alertActions.error(`Erreur lors de la suppression des ${errorCount} kit(s)`);
 			} else {
@@ -475,6 +477,7 @@
 					Alert.alertActions.success(
 						selectedKit ? 'Kit modifié avec succès' : 'Kit créé avec succès'
 					);
+					toast.success(selectedKit ? 'Élément modifié avec succès' : 'Élément créé avec succès');
 					addFormOpen = false;
 					editFormOpen = false;
 					selectedKit = null;
@@ -509,6 +512,7 @@
 
 				if (result.type === 'success') {
 					Alert.alertActions.success('Kit supprimé avec succès');
+					toast.success('Élément supprimé avec succès');
 					selectedKit = null;
 					await invalidateAll();
 				} else if (result.type === 'failure') {
