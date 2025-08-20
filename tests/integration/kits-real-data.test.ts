@@ -108,8 +108,9 @@ const testKitsReal = {
 	}
 };
 
-// Variables pour stocker les IDs créés
-let createdKatIds: number[] = [];
+// Variables pour stocker les IDs créés - NE PAS vider dans beforeEach pour le nettoyage afterAll
+const createdKatIds: number[] = [];
+let currentTestKatIds: number[] = []; // Pour chaque test individuel
 
 describe('Kits CRUD - Tests avec vraies données BDD', () => {
 	// 🧹 Nettoyage avant tous les tests
@@ -153,24 +154,35 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 	afterAll(async () => {
 		console.log('🧹 Nettoyage final des données de test...');
 
-		// Supprimer dans l'ordre inverse des relations
+		// 1. Supprimer tous les kit_attribute_dev créés lors des tests
+		if (createdKatIds.length > 0) {
+			console.log(`🗑️ Suppression de ${createdKatIds.length} kit_attribute_dev créés lors des tests`);
+			await prisma.kit_attribute_dev.deleteMany({
+				where: { kat_id: { in: createdKatIds } }
+			});
+		}
+
+		// 2. Supprimer dans l'ordre inverse des relations pour les kits restants
 		const testKits = await prisma.kit_dev.findMany({
 			where: { kit_label: { startsWith: 'TEST_KIT_' } }
 		});
 		
 		if (testKits.length > 0) {
 			const testKitIds = testKits.map(k => k.kit_id);
+			console.log(`🗑️ Suppression des kit_attribute_dev pour ${testKits.length} kits restants`);
 			await prisma.kit_attribute_dev.deleteMany({
 				where: { fk_kit: { in: testKitIds } }
 			});
 		}
 
+		console.log(`🗑️ Suppression de tous les kits TEST_KIT_*`);
 		await prisma.kit_dev.deleteMany({
 			where: {
 				kit_label: { startsWith: 'TEST_KIT_' }
 			}
 		});
 
+		console.log(`🗑️ Suppression des attributs de test`);
 		await prisma.attribute_dev.deleteMany({
 			where: {
 				OR: [
@@ -186,7 +198,7 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 
 	// 🔄 Reset entre chaque test pour isolation
 	beforeEach(() => {
-		createdKatIds = [];
+		currentTestKatIds = []; // Vider seulement les IDs du test courant
 	});
 
 	describe('✅ Tests création (POST /kits/api)', () => {
@@ -217,7 +229,10 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 			expect(kitInView?.atr_val).toBe('bar');
 			expect(kitInView?.kat_valeur).toBe(350);
 
-			createdKatIds.push(result.data.kitAttribute.kat_id);
+			const katId = result.data.kitAttribute.kat_id;
+			createdKatIds.push(katId);
+			currentTestKatIds.push(katId);
+			currentTestKatIds.push(katId);
 		});
 
 		it('❌ INVALIDE: devrait rejeter même kit_label (contrainte unique)', async () => {
@@ -367,6 +382,7 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 
 			testKitKatId = result.data.kitAttribute.kat_id;
 			createdKatIds.push(testKitKatId);
+			currentTestKatIds.push(testKitKatId);
 		});
 
 		it('✅ VALIDE: devrait modifier seulement la valeur numérique', async () => {
@@ -518,6 +534,7 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 			expect(kitInView?.id).toBe(katId);
 
 			createdKatIds.push(katId);
+			currentTestKatIds.push(katId);
 		});
 
 		it('❌ Contrainte unique kit_label: impossible de créer même kit deux fois', async () => {
@@ -586,7 +603,10 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 			expect(result.data.kit.kit_label.trim()).toBe(uniqueName);
 			expect(result.data.kitAttribute.kat_valeur).toBe(85.5);
 
-			createdKatIds.push(result.data.kitAttribute.kat_id);
+			const katId = result.data.kitAttribute.kat_id;
+			createdKatIds.push(katId);
+			currentTestKatIds.push(katId);
+			currentTestKatIds.push(katId);
 		});
 	});
 });

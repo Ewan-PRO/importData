@@ -36,20 +36,28 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const data = await request.json();
 
+		// Nettoyer les données d'entrée
+		const cleanData = {
+			kit_label: data.kit_label?.trim() || '',
+			atr_label: data.atr_label?.trim() || '',
+			atr_val: data.atr_val?.trim() || '',
+			kat_valeur: data.kat_valeur?.trim() || ''
+		};
+
 		// Validation des données requises
-		if (!data.kit_label || data.kit_label.trim() === '') {
+		if (!cleanData.kit_label) {
 			return json({ error: 'Le nom du kit est obligatoire' }, { status: 400 });
 		}
 
-		if (!data.atr_label || data.atr_label.trim() === '') {
+		if (!cleanData.atr_label) {
 			return json({ error: 'La caractéristique est obligatoire' }, { status: 400 });
 		}
 
-		if (!data.atr_val || data.atr_val.trim() === '') {
+		if (!cleanData.atr_val) {
 			return json({ error: "L'unité est obligatoire" }, { status: 400 });
 		}
 
-		if (!data.kat_valeur || data.kat_valeur.trim() === '') {
+		if (!cleanData.kat_valeur) {
 			return json({ error: 'La valeur est obligatoire' }, { status: 400 });
 		}
 
@@ -57,17 +65,17 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Un même kit peut avoir plusieurs caractéristiques, mais pas la même combinaison exacte
 		const existingCombination = await prisma.v_kit_carac_dev.findFirst({
 			where: {
-				kit_label: data.kit_label,
-				atr_label: data.atr_label,
-				atr_val: data.atr_val,
-				kat_valeur: parseFloat(data.kat_valeur) || 0
+				kit_label: cleanData.kit_label,
+				atr_label: cleanData.atr_label,
+				atr_val: cleanData.atr_val,
+				kat_valeur: parseFloat(cleanData.kat_valeur) || 0
 			}
 		});
 
 		if (existingCombination) {
 			return json(
 				{
-					error: `Cette combinaison existe déjà : Kit "${data.kit_label}" avec caractéristique "${data.atr_label}" = ${data.kat_valeur} ${data.atr_val}`
+					error: `Cette combinaison existe déjà : Kit "${cleanData.kit_label}" avec caractéristique "${cleanData.atr_label}" = ${cleanData.kat_valeur} ${cleanData.atr_val}`
 				},
 				{ status: 409 }
 			);
@@ -77,7 +85,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		const result = await prisma.$transaction(async (tx: PrismaTransactionClient) => {
 			// 1. Créer le nouveau kit (on sait qu'il n'existe pas)
 			const kit = await tx.kit_dev.create({
-				data: { kit_label: data.kit_label }
+				data: { kit_label: cleanData.kit_label }
 			});
 
 			// 2. Vérifier si l'attribut caractéristique existe, sinon le créer
@@ -85,14 +93,14 @@ export const POST: RequestHandler = async ({ request }) => {
 				(await tx.attribute_dev.findFirst({
 					where: {
 						atr_nat: 'CARAC',
-						atr_label: data.atr_label
+						atr_label: cleanData.atr_label
 					}
 				})) ??
 				(await tx.attribute_dev.create({
 					data: {
 						atr_nat: 'CARAC',
-						atr_val: data.atr_label.toLowerCase().replace(/\s+/g, '_'),
-						atr_label: data.atr_label
+						atr_val: cleanData.atr_label.toLowerCase().replace(/\s+/g, '_'),
+						atr_label: cleanData.atr_label
 					}
 				}));
 
@@ -100,14 +108,14 @@ export const POST: RequestHandler = async ({ request }) => {
 			const attributeVal =
 				(await tx.attribute_dev.findFirst({
 					where: {
-						atr_val: data.atr_val
+						atr_val: cleanData.atr_val
 					}
 				})) ??
 				(await tx.attribute_dev.create({
 					data: {
 						atr_nat: 'UNITE',
-						atr_val: data.atr_val,
-						atr_label: data.atr_val
+						atr_val: cleanData.atr_val,
+						atr_label: cleanData.atr_val
 					}
 				}));
 
@@ -130,7 +138,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					fk_kit: kit.kit_id,
 					fk_attribute_carac: attributeCarac.atr_id,
 					fk_attribute: attributeVal.atr_id,
-					kat_valeur: parseFloat(data.kat_valeur) || 0
+					kat_valeur: parseFloat(cleanData.kat_valeur) || 0
 				}
 			});
 
