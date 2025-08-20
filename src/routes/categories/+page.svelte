@@ -614,15 +614,8 @@
 	<!-- Confirmation de suppression -->
 	<Form
 		bind:isOpen={deleteConfirmOpen}
-		title="Confirmer la suppression"
-		fields={[
-			{
-				key: 'confirmation',
-				label: 'Confirmation',
-				type: 'text',
-				value: 'Êtes-vous sûr de vouloir supprimer cette catégorie ? Cette action est irréversible.'
-			}
-		]}
+		title="Supprimer cette catégorie"
+		fields={[]}
 		submitLabel="Supprimer"
 		cancelLabel="Annuler"
 		isDelete={true}

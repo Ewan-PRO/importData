@@ -446,17 +446,11 @@
 	<!-- Confirmation de suppression -->
 	<Form
 		bind:isOpen={deleteConfirmOpen}
-		title="Confirmer la suppression"
-		fields={[
-			{
-				key: 'confirmation',
-				label: 'Confirmation',
-				type: 'text',
-				value: `Êtes-vous sûr de vouloir supprimer le kit "${selectedKit?.kit_label || ''}" ? Cette action est irréversible.`
-			}
-		]}
+		title="Supprimer ce kit"
+		fields={[]}
 		submitLabel="Supprimer"
 		cancelLabel="Annuler"
+		isDelete={true}
 		on:submit={handleDeleteConfirm}
 		on:cancel={() => {
 			deleteConfirmOpen = false;

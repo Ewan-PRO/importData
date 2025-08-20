@@ -35,6 +35,10 @@
 	let errors: Record<string, string> = {};
 	let isInitialized = false;
 	let searchTerms: Record<string, string> = {}; // Pour stocker les termes de recherche par champ
+	let deleteConfirmationText = ''; // Pour la confirmation de suppression
+
+	// Variable réactive pour l'état du bouton supprimer
+	$: isDeleteConfirmed = deleteConfirmationText.trim() === 'SUPPRIMER';
 
 	$: {
 		console.log('Changement de isOpen détecté:', isOpen);
@@ -43,6 +47,7 @@
 			formData = { ...data };
 			errors = {};
 			searchTerms = {}; // Réinitialiser les termes de recherche
+			deleteConfirmationText = ''; // Réinitialiser la confirmation de suppression
 			isInitialized = true;
 			console.log('FormData initialisé:', formData);
 		} else if (!isOpen) {
@@ -124,6 +129,13 @@
 
 	function handleSubmit() {
 		console.log('handleSubmit appelé - État actuel:', { formData, errors });
+
+		// Vérification spéciale pour les suppressions
+		if (isDelete && !isDeleteConfirmed) {
+			toast.error('Veuillez taper SUPPRIMER pour confirmer la suppression');
+			return;
+		}
+
 		if (validateForm()) {
 			// Filtrer les champs disabled des données finales
 			const filteredFormData = Object.fromEntries(
@@ -163,118 +175,152 @@
 	}
 </script>
 
-<Modal {title} bind:open={isOpen}>
+<Modal bind:open={isOpen}>
+	<h3 class="text-lg font-bold {isDelete ? 'text-black' : 'text-gray-900'}">
+		{isDelete ? 'Confirmer la suppression :' : title}
+	</h3>
 	<form on:submit={onSubmit} class="space-y-4">
-		{#each fields as field}
-			<div>
-				<div class="mb-2 flex items-center justify-between">
-					<Label for={field.key}>{field.label}</Label>
-					{#if formData[field.key] && formData[field.key] !== ''}
-						<Badge variant="vert">Valeur remplie</Badge>
-					{/if}
-				</div>
-
-				{#if field.type === 'textarea'}
-					<Textarea
-						id={field.key}
-						placeholder={field.placeholder || ''}
-						required={field.required}
-						bind:value={formData[field.key]}
-						class={errors[field.key] ? 'border-red-500' : ''}
+		{#if isDelete}
+			<!-- Interface spéciale pour la suppression -->
+			<div class="space-y-4">
+				<p class="text-gray-700">
+					Êtes-vous sûr de vouloir supprimer cette {title.includes('catégorie')
+						? 'catégorie'
+						: 'kit'} ? Cette action est irréversible.
+				</p>
+				<div>
+					<Label for="deleteConfirmation" class="text-black"
+						>Taper SUPPRIMER pour supprimer cette {title.includes('catégorie')
+							? 'catégorie :'
+							: 'kit :'}</Label
+					>
+					<Input
+						id="deleteConfirmation"
+						type="text"
+						bind:value={deleteConfirmationText}
+						placeholder=""
+						class="mt-2"
 					/>
-				{:else if field.type === 'select'}
-					<div class="relative">
-						<Select.Select
-							type="single"
-							value={formData[field.key] || ''}
-							onValueChange={(value: string) => {
-								if (value) {
-									updateFormData(field.key, value);
-								}
-							}}
-						>
-							<Select.SelectTrigger 
-								class={errors[field.key] ? 'border-red-500' : ''}
-								hasValue={!!(formData[field.key] && formData[field.key] !== '')}
+				</div>
+			</div>
+		{:else}
+			<!-- Interface normale pour création/édition -->
+			{#each fields as field}
+				<div>
+					<div class="mb-2 flex items-center justify-between">
+						<Label for={field.key}>{field.label}</Label>
+						{#if formData[field.key] && formData[field.key] !== ''}
+							<Badge variant="vert">Valeur remplie</Badge>
+						{/if}
+					</div>
+
+					{#if field.type === 'textarea'}
+						<Textarea
+							id={field.key}
+							placeholder={field.placeholder || ''}
+							required={field.required}
+							bind:value={formData[field.key]}
+							class={errors[field.key] ? 'border-red-500' : ''}
+						/>
+					{:else if field.type === 'select'}
+						<div class="relative">
+							<Select.Select
+								type="single"
+								value={formData[field.key] || ''}
+								onValueChange={(value: string) => {
+									if (value) {
+										updateFormData(field.key, value);
+									}
+								}}
 							>
-								{formData[field.key]
-									? field.options?.find((opt) => opt.value === formData[field.key])?.label ||
-										formData[field.key]
-									: field.placeholder || 'Sélectionnez une option'}
-							</Select.SelectTrigger>
-							<Select.SelectContent>
-								{#if field.allowCustom}
-									<div class="px-2 py-1">
-										<Input
-											type="text"
-											placeholder="Saisir une valeur personnalisée..."
-											value={formData[field.key] || ''}
-											oninput={(e) => {
-												const target = e.target as HTMLInputElement;
-												updateFormData(field.key, target.value);
-											}}
-											class="w-full"
-										/>
-									</div>
-									<Select.SelectSeparator />
-								{/if}
-								{#if field.options && field.options.length > 0}
-									<div class="px-2 py-1">
-										<div class="relative">
-											<div
-												class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
-											>
-												<Search class="h-4 w-4 text-gray-400" />
-											</div>
+								<Select.SelectTrigger
+									class={errors[field.key] ? 'border-red-500' : ''}
+									hasValue={!!(formData[field.key] && formData[field.key] !== '')}
+								>
+									{formData[field.key]
+										? field.options?.find((opt) => opt.value === formData[field.key])?.label ||
+											formData[field.key]
+										: field.placeholder || 'Sélectionnez une option'}
+								</Select.SelectTrigger>
+								<Select.SelectContent>
+									{#if field.allowCustom}
+										<div class="px-2 py-1">
 											<Input
 												type="text"
-												placeholder="Rechercher une catégorie..."
-												value={searchTerms[field.key] || ''}
+												placeholder="Saisir une valeur personnalisée..."
+												value={formData[field.key] || ''}
 												oninput={(e) => {
 													const target = e.target as HTMLInputElement;
-													updateSearchTerm(field.key, target.value);
+													updateFormData(field.key, target.value);
 												}}
-												class="w-full pl-9"
+												class="w-full"
 											/>
 										</div>
-									</div>
-									<Select.SelectSeparator />
-								{/if}
-								{#each getFilteredOptions(field) as option}
-									<Select.SelectItem value={option.value}>{option.label}</Select.SelectItem>
-								{/each}
-							</Select.SelectContent>
-						</Select.Select>
-					</div>
-				{:else}
-					<Input
-						type={field.type}
-						id={field.key}
-						placeholder={field.placeholder || ''}
-						required={field.required}
-						disabled={field.disabled || false}
-						step={field.type === 'number' ? 'any' : undefined}
-						value={formData[field.key] || field.value || ''}
-						oninput={(e) => {
-							const target = e.target as HTMLInputElement;
-							updateFormData(field.key, target.value);
-						}}
-						class={errors[field.key] ? 'border-red-500' : ''}
-					/>
-				{/if}
+										<Select.SelectSeparator />
+									{/if}
+									{#if field.options && field.options.length > 0}
+										<div class="px-2 py-1">
+											<div class="relative">
+												<div
+													class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
+												>
+													<Search class="h-4 w-4 text-gray-400" />
+												</div>
+												<Input
+													type="text"
+													placeholder="Rechercher une catégorie..."
+													value={searchTerms[field.key] || ''}
+													oninput={(e) => {
+														const target = e.target as HTMLInputElement;
+														updateSearchTerm(field.key, target.value);
+													}}
+													class="w-full pl-9"
+												/>
+											</div>
+										</div>
+										<Select.SelectSeparator />
+									{/if}
+									{#each getFilteredOptions(field) as option}
+										<Select.SelectItem value={option.value}>{option.label}</Select.SelectItem>
+									{/each}
+								</Select.SelectContent>
+							</Select.Select>
+						</div>
+					{:else}
+						<Input
+							type={field.type}
+							id={field.key}
+							placeholder={field.placeholder || ''}
+							required={field.required}
+							disabled={field.disabled || false}
+							step={field.type === 'number' ? 'any' : undefined}
+							value={formData[field.key] || field.value || ''}
+							oninput={(e) => {
+								const target = e.target as HTMLInputElement;
+								updateFormData(field.key, target.value);
+							}}
+							class={errors[field.key] ? 'border-red-500' : ''}
+						/>
+					{/if}
 
-				{#if errors[field.key]}
-					<p class="mt-1 text-sm text-red-600">{errors[field.key]}</p>
-				{/if}
-			</div>
-		{/each}
+					{#if errors[field.key]}
+						<p class="mt-1 text-sm text-red-600">{errors[field.key]}</p>
+					{/if}
+				</div>
+			{/each}
+		{/if}
 
 		<div class="flex justify-end space-x-2 pt-4">
 			<Button variant="noir" onclick={handleCancel}>
 				<CircleX class="mr-2 h-4 w-4" />
 				{cancelLabel}
 			</Button>
-			<Button type="submit" variant={isDelete ? 'rouge' : 'vert'}>
+			<Button
+				type="submit"
+				variant={isDelete ? 'rouge' : 'vert'}
+				disabled={isDelete && !isDeleteConfirmed}
+				class={isDelete && !isDeleteConfirmed ? 'cursor-not-allowed opacity-50' : ''}
+			>
 				{#if isDelete}
 					<Trash2 class="mr-2 h-4 w-4" />
 				{:else}
