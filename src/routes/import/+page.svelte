@@ -105,8 +105,17 @@
 	// Debug: Observer les changements de selectedTables
 	$: {
 		console.log('🔥 selectedTables changed to:', selectedTables);
+		console.log('🔥 selectedTables length:', selectedTables.length);
 	}
+
 	let mappedFields: Record<string, string> = {};
+
+	// Debug: Observer les changements de mappedFields
+	$: {
+		console.log('🗺️ mappedFields changed to:', mappedFields);
+		console.log('🗺️ mappedFields keys:', Object.keys(mappedFields));
+		console.log('🗺️ mappedFields values:', Object.values(mappedFields));
+	}
 	let hasHeaders = true; // Détection automatique
 	let showNoHeaderAlert = false; // Nouvelle variable pour l'alerte
 	let availableTables = [
@@ -201,20 +210,10 @@
 				const result = e.target?.result;
 				if (!result) throw new Error('Échec de lecture du fichier');
 
-				console.log('Type de fichier:', file?.type);
-				console.log('Nom du fichier:', file?.name);
-
 				const workbook = read(result, { type: 'array' });
-				console.log('Workbook créé:', workbook);
-
 				const firstSheetName = workbook.SheetNames[0];
-				console.log('Nom de la première feuille:', firstSheetName);
-
 				const worksheet = workbook.Sheets[firstSheetName];
-				console.log('Worksheet:', worksheet);
-
 				rawData = utils.sheet_to_json(worksheet, { header: 1 });
-				console.log('Données brutes:', rawData);
 
 				if (rawData.length < 1) {
 					throw new Error('Le fichier ne contient pas de données');
@@ -240,19 +239,12 @@
 					previewData = rawData.slice(0, Math.min(rawData.length, 5)) as any[];
 				}
 
-				console.log('En-têtes:', headers);
-				console.log('Mode avec en-têtes:', hasHeaders);
-
-				// Mappage automatique des champs
-				guessFieldMapping();
-
-				// Mise à jour du formulaire SuperForms
+				// Mise à jour du formulaire SuperForms (le mapping se fait automatiquement via variable réactive)
 				const formData: MultiTableFormData = {
 					data: hasHeaders ? rawData.slice(1) : rawData, // Exclure les en-têtes seulement si présents
 					mappedFields,
 					selectedTables
 				};
-				console.log('Données du formulaire à envoyer:', formData);
 				$form = formData as any;
 
 				step = 2;
@@ -312,10 +304,12 @@
 	}
 
 	function guessFieldMapping() {
-		console.log('Début du mappage des champs');
-		console.log('En-têtes à mapper:', headers);
-		console.log('Tables sélectionnées:', selectedTables);
+		console.log('🔮 guessFieldMapping called');
+		console.log('🔮 - Current headers:', headers);
+		console.log('🔮 - Selected tables:', selectedTables);
+		console.log('🔮 - hasHeaders:', hasHeaders);
 
+		// Réinitialiser seulement les mappings
 		mappedFields = {};
 
 		// Obtenir tous les champs possibles des tables sélectionnées
@@ -329,9 +323,10 @@
 			return acc;
 		}, [] as string[]);
 
-		console.log('Champs disponibles:', allFields);
+		console.log('🔮 - Available fields for mapping:', allFields);
 
-		if (hasHeaders) {
+		if (hasHeaders && headers.length > 0) {
+			console.log('🔮 - Starting automatic mapping...');
 			// Mappage automatique basé sur les en-têtes
 			headers.forEach((header, index) => {
 				// Normalisation pour la comparaison
@@ -363,49 +358,104 @@
 
 				if (bestScore > 0.5) {
 					mappedFields[index.toString()] = bestMatch;
+					console.log(
+						`🔮 - Mapped header "${header}" (index ${index}) to field "${bestMatch}" (score: ${bestScore})`
+					);
+				} else {
+					console.log(`🔮 - No good match found for header "${header}" (index ${index})`);
 				}
 			});
+		} else {
+			console.log('🔮 - No headers available or hasHeaders=false, skipping automatic mapping');
 		}
-		// Si pas d'en-têtes, le mappage sera fait manuellement par l'utilisateur
 
-		console.log('Mappage final:', mappedFields);
+		console.log('🔮 - Final mappedFields:', mappedFields);
 	}
 
 	function handleTableChange() {
-		console.log('handleTableChange called with selectedTables:', selectedTables);
-		// Réinitialiser le mappage lors du changement de tables
-		mappedFields = {};
-		guessFieldMapping();
+		console.log('🔄 handleTableChange called (now simplified)');
 
-		// Mise à jour du formulaire
+		// Mise à jour du formulaire (le mapping se fait automatiquement via la variable réactive)
 		$form = {
 			...$form,
 			selectedTables,
 			mappedFields
 		} as any;
 
-		// La variable réactive se met à jour automatiquement
+		console.log('🔄 - Form updated');
 	}
 
-	// Variable réactive pour les champs requis (union de tous les champs requis des tables sélectionnées)
-	$: requiredFields = (() => {
-		console.log('🔎 Reactive requiredFields called with selectedTables:', selectedTables);
-
+	// Fonction pour calculer les champs requis
+	function getRequiredFieldsForTables(tables: string[]): string[] {
+		console.log('📐 getRequiredFieldsForTables called with:', tables);
 		let result: string[] = [];
 
-		selectedTables.forEach((table) => {
+		tables.forEach((table) => {
+			console.log(`📐 Processing table: ${table}`);
 			if (table === 'attribute' || table === 'attribute_dev') {
-				if (!result.includes('atr_nat')) result.push('atr_nat');
-				if (!result.includes('atr_val')) result.push('atr_val');
+				if (!result.includes('atr_nat')) {
+					result.push('atr_nat');
+					console.log('📐 Added atr_nat to required fields');
+				}
+				if (!result.includes('atr_val')) {
+					result.push('atr_val');
+					console.log('📐 Added atr_val to required fields');
+				}
 			} else if (table === 'supplier' || table === 'supplier_dev') {
-				if (!result.includes('sup_code')) result.push('sup_code');
+				if (!result.includes('sup_code')) {
+					result.push('sup_code');
+					console.log('📐 Added sup_code to required fields');
+				}
 			} else if (table === 'v_categories_dev') {
-				if (!result.includes('atr_0_label')) result.push('atr_0_label');
+				if (!result.includes('atr_0_label')) {
+					result.push('atr_0_label');
+					console.log('📐 Added atr_0_label to required fields');
+				}
 			}
 		});
 
-		console.log('🔎 Final requiredFields result:', result);
+		console.log('📐 Final required fields:', result);
 		return result;
+	}
+
+	// Variable réactive pour refaire le mapping automatiquement quand les tables changent
+	$: {
+		if (selectedTables.length > 0 && headers.length > 0) {
+			console.log('🔄 Auto-remapping triggered by selectedTables change');
+			guessFieldMapping();
+		}
+	}
+
+	// Variable réactive pour les champs requis (union de tous les champs requis des tables sélectionnées)
+	$: requiredFields = getRequiredFieldsForTables(selectedTables);
+
+	// Debug: Observer les changements de requiredFields
+	$: {
+		console.log('📋 requiredFields changed to:', requiredFields);
+		console.log('📋 requiredFields length:', requiredFields.length);
+	}
+
+	// Debug: Variable réactive pour l'état du bouton de validation (dépend explicitement de mappedFields)
+	$: buttonDisabled = (() => {
+		// Forcer la dépendance à mappedFields
+		const _ = mappedFields;
+
+		const noTablesSelected = selectedTables.length === 0;
+		const someRequiredFieldsNotMapped = requiredFields.some((field) => !isFieldMapped(field));
+		const isSubmitting = $submitting;
+
+		console.log('🔘 Button validation state:');
+		console.log('🔘 - No tables selected:', noTablesSelected);
+		console.log('🔘 - Some required fields not mapped:', someRequiredFieldsNotMapped);
+		console.log('🔘 - Is submitting:', isSubmitting);
+		console.log('🔘 - Current mappedFields keys:', Object.keys(mappedFields));
+		console.log('🔘 - Current requiredFields:', requiredFields);
+		console.log(
+			'🔘 - Final disabled state:',
+			noTablesSelected || someRequiredFieldsNotMapped || isSubmitting
+		);
+
+		return noTablesSelected || someRequiredFieldsNotMapped || isSubmitting;
 	})();
 
 	function getRequiredFields(): string[] {
@@ -413,7 +463,10 @@
 	}
 
 	function isFieldMapped(fieldName: string): boolean {
-		return Object.values(mappedFields).includes(fieldName);
+		const isMapped = Object.values(mappedFields).includes(fieldName);
+		console.log(`🎯 isFieldMapped("${fieldName}") = ${isMapped}`);
+		console.log(`🎯 Available mapped values:`, Object.values(mappedFields));
+		return isMapped;
 	}
 
 	function resetImport() {
@@ -696,18 +749,16 @@
 					<!-- Champs requis -->
 					<div class="mb-6">
 						<h3 class="mb-2 font-medium">Champs requis</h3>
-						<!-- Debug info -->
-						<div class="mb-2 text-xs text-gray-500">
-							Debug: selectedTables = {JSON.stringify(selectedTables)}, requiredFields = {JSON.stringify(
-								requiredFields
-							)}
-						</div>
 						<div class="flex flex-wrap gap-2">
 							{#each requiredFields as field}
+								{@const fieldMapped = isFieldMapped(field)}
+								{@const _ = console.log(
+									`🏷️ Badge for field "${field}": mapped=${fieldMapped}, class=${fieldMapped ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`
+								)}
 								<div
-									class={`rounded-full px-3 py-1 text-sm font-medium ${isFieldMapped(field) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+									class={`rounded-full px-3 py-1 text-sm font-medium ${fieldMapped ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
 								>
-									{#if isFieldMapped(field)}
+									{#if fieldMapped}
 										<Check class="mr-1 inline h-4 w-4" />
 									{:else}
 										<X class="mr-1 inline h-4 w-4" />
@@ -725,13 +776,7 @@
 
 					<div class="flex justify-between">
 						<Button variant="noir" onclick={resetImport}>Retour</Button>
-						<Button
-							type="submit"
-							variant="vert"
-							disabled={selectedTables.length === 0 ||
-								requiredFields.some((field) => !isFieldMapped(field)) ||
-								$submitting}
-						>
+						<Button type="submit" variant="vert" disabled={buttonDisabled}>
 							{#if $submitting}
 								<Spinner class="mr-2 h-4 w-4" />
 								Validation en cours...

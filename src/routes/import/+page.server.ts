@@ -166,7 +166,6 @@ export const actions: Actions = {
 			}
 
 			const { data, mappedFields, selectedTables } = form.data;
-			console.log('Données extraites:', { data, mappedFields, selectedTables });
 
 			const result: ValidationResult = {
 				totalRows: Array.isArray(data) ? data.length : 0,
@@ -186,14 +185,11 @@ export const actions: Actions = {
 				};
 			});
 
-			console.log('Résultat initial:', result);
-
 			// Validation du format CSV d'abord
 			if (Array.isArray(data)) {
 				const csvErrors = validateCSVFormat(data);
 				if (csvErrors.length > 0) {
 					result.invalidData.push(...csvErrors);
-					console.log('Erreurs de format CSV détectées:', csvErrors);
 
 					return {
 						form: {
@@ -215,8 +211,6 @@ export const actions: Actions = {
 					// Si des erreurs atr_0_label sont détectées, arrêter ici
 					const atr0Errors = result.invalidData.filter((error) => error.field === 'atr_0_label');
 					if (atr0Errors.length > 0) {
-						console.log('Erreurs atr_0_label détectées:', atr0Errors);
-
 						return {
 							form: {
 								...form,
@@ -237,18 +231,14 @@ export const actions: Actions = {
 				table,
 				rules: getValidationRules(table)
 			}));
-			console.log('Règles de validation pour toutes les tables:', allValidationRules);
 
 			// Préparation pour le traitement
 			const columnMap = prepareColumnMap(mappedFields);
-			console.log('Mappage des colonnes:', columnMap);
 
 			// Validation ligne par ligne pour toutes les tables
 			if (Array.isArray(data)) {
-				console.log('Début de la validation des lignes');
 				for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
 					const row = data[rowIndex];
-					console.log(`Validation de la ligne ${rowIndex}:`, row);
 
 					let isValidForAnyTable = false;
 
@@ -297,7 +287,6 @@ export const actions: Actions = {
 				}
 			}
 
-			console.log('Résultat final de validation:', result);
 			// Retourner un formulaire avec le résultat intégré
 			return {
 				form: {
@@ -444,19 +433,10 @@ export const actions: Actions = {
 				}
 			}
 
-			const totalValidRows = Object.values(validRowsByTable).reduce(
-				(acc, rows) => acc + rows.length,
-				0
-			);
-			console.log(
-				`Lignes valides à traiter: ${totalValidRows} pour ${selectedTables.length} table(s)`
-			);
-
 			// Traitement des données en transaction pour toutes les tables
 			await prisma.$transaction(async (tx) => {
 				for (const table of selectedTables) {
 					const validRowsForTable = validRowsByTable[table];
-					console.log(`Traitement de ${validRowsForTable.length} lignes pour la table ${table}`);
 
 					for (const { index, row } of validRowsForTable) {
 						await processRow(row, index, columnMap, table, tx as PrismaTransactionClient, result);
@@ -629,24 +609,16 @@ async function processRow(
 		// Préparation des données pour l'importation
 		const recordData: Record<string, unknown> = {};
 		const validationRules = getValidationRules(targetTable);
-		console.log('Règles de validation:', validationRules);
-		console.log('Mappage des colonnes:', columnMap);
 
 		Object.entries(columnMap).forEach(([field, colIndex]) => {
 			const value = row[colIndex];
-			console.log(`Champ ${field} (colonne ${colIndex}): valeur brute = "${value}"`);
 
 			// Inclure si c'est un champ obligatoire OU si la valeur n'est pas vide
 			if (validationRules.requiredFields.includes(field) || (value !== undefined && value !== '')) {
 				const formattedValue = formatValueForDatabase(field, value);
 				recordData[field] = formattedValue;
-				console.log(`  -> Inclus dans recordData: ${field} = "${formattedValue}"`);
-			} else {
-				console.log(`  -> Exclu de recordData (optionnel et vide)`);
 			}
 		});
-
-		console.log('RecordData final:', recordData);
 
 		// Vérification si le record existe déjà
 		const existingRecord = await checkExistingRecord(
@@ -655,11 +627,9 @@ async function processRow(
 			row,
 			tx
 		);
-		console.log('Enregistrement existant trouvé:', existingRecord);
 
 		if (existingRecord) {
 			// Mise à jour d'un enregistrement existant
-			console.log("-> Mise à jour d'un enregistrement existant");
 			await updateRecord(tx, targetTable, recordData);
 			result.updated++;
 			if (result.resultsByTable && result.resultsByTable[targetTable]) {
@@ -667,7 +637,6 @@ async function processRow(
 			}
 		} else {
 			// Création d'un nouvel enregistrement
-			console.log("-> Création d'un nouvel enregistrement");
 			await createRecord(tx, targetTable, recordData);
 			result.inserted++;
 			if (result.resultsByTable && result.resultsByTable[targetTable]) {
@@ -676,7 +645,6 @@ async function processRow(
 		}
 
 		result.validRows++;
-		console.log(`Ligne ${rowIndex} traitée avec succès`);
 	} catch (err) {
 		console.error(`Erreur lors de l'importation de la ligne ${rowIndex}:`, err);
 		result.errors.push(
