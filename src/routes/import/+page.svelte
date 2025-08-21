@@ -92,15 +92,15 @@
 	let availableTables = [
 		{ value: 'attribute', name: 'Attributs' },
 		{ value: 'attribute_dev', name: 'Attributs (Dev)' },
-		{ value: 'supplier', name: 'Fournisseurs' },
-		{ value: 'v_categories', name: 'Catégories' }
+		{ value: 'supplier_dev', name: 'Fournisseurs (Dev)' },
+		{ value: 'v_categories_dev', name: 'Catégories (Dev)' }
 	];
 
 	let tableFields: Record<string, string[]> = {
 		attribute: ['atr_nat', 'atr_val', 'atr_label'],
 		attribute_dev: ['atr_nat', 'atr_val', 'atr_label'],
-		supplier: ['sup_code', 'sup_label'],
-		v_categories: [
+		supplier_dev: ['sup_code', 'sup_label'],
+		v_categories_dev: [
 			'atr_0_label',
 			'atr_1_label',
 			'atr_2_label',
@@ -267,8 +267,8 @@
 			// Vérifier si c'est un nom de champ connu
 			const knownFields = [
 				...tableFields.attribute,
-				...tableFields.supplier,
-				...tableFields.v_categories
+				...tableFields.supplier_dev,
+				...tableFields.v_categories_dev
 			];
 			const normalizedCell = String(cell)
 				.toLowerCase()
@@ -354,9 +354,9 @@
 	function getRequiredFields(): string[] {
 		if (targetTable === 'attribute' || targetTable === 'attribute_dev') {
 			return ['atr_nat', 'atr_val'];
-		} else if (targetTable === 'supplier') {
+		} else if (targetTable === 'supplier_dev') {
 			return ['sup_code'];
-		} else if (targetTable === 'v_categories') {
+		} else if (targetTable === 'v_categories_dev') {
 			return ['atr_0_label'];
 		}
 		return [];

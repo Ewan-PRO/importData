@@ -189,8 +189,8 @@ export const actions: Actions = {
 					};
 				}
 
-				// Validation spécifique pour atr_0_label si c'est la table v_categories
-				if (targetTable === 'v_categories') {
+				// Validation spécifique pour atr_0_label si c'est la table v_categories_dev
+				if (targetTable === 'v_categories_dev') {
 					validateAtr0Label(data, mappedFields, result);
 
 					// Si des erreurs atr_0_label sont détectées, arrêter ici
@@ -322,8 +322,8 @@ export const actions: Actions = {
 					};
 				}
 
-				// Validation spécifique pour atr_0_label si c'est la table v_categories
-				if (targetTable === 'v_categories') {
+				// Validation spécifique pour atr_0_label si c'est la table v_categories_dev
+				if (targetTable === 'v_categories_dev') {
 					validateAtr0Label(data, mappedFields, result);
 
 					// Si des erreurs atr_0_label sont détectées, arrêter le traitement
@@ -641,8 +641,8 @@ async function updateRecord(
 				data: recordData
 			});
 			break;
-		case 'supplier':
-			await tx.supplier.updateMany({
+		case 'supplier_dev':
+			await tx.supplier_dev.updateMany({
 				where: uniqueConstraint,
 				data: recordData
 			});
@@ -668,19 +668,19 @@ async function createRecord(
 				data: recordData as AttributeData
 			});
 			break;
-		case 'supplier':
-			// Vérifier que sup_code est défini pour supplier
+		case 'supplier_dev':
+			// Vérifier que sup_code est défini pour supplier_dev
 			if (!recordData.sup_code || recordData.sup_code === null) {
 				throw new Error('Le champ sup_code est obligatoire pour les fournisseurs');
 			}
-			await tx.supplier.create({
+			await tx.supplier_dev.create({
 				data: {
 					sup_code: recordData.sup_code as string,
 					sup_label: recordData.sup_label as string | null
 				}
 			});
 			break;
-		case 'v_categories':
+		case 'v_categories_dev':
 			// Pour les vues, on doit insérer dans les tables sous-jacentes
 			await handleCategoryInsert(tx, recordData);
 			break;
@@ -742,13 +742,13 @@ async function checkExistingRecord(
 					where: whereCondition
 				});
 				break;
-			case 'supplier':
-				existingRecord = await tx.supplier.findFirst({
+			case 'supplier_dev':
+				existingRecord = await tx.supplier_dev.findFirst({
 					where: whereCondition
 				});
 				break;
-			case 'v_categories':
-				existingRecord = await tx.v_categories.findFirst({
+			case 'v_categories_dev':
+				existingRecord = await tx.v_categories_dev.findFirst({
 					where: whereCondition
 				});
 				break;
@@ -809,7 +809,7 @@ async function handleCategoryInsert(
 	data: Record<string, unknown>
 ): Promise<void> {
 	// Insertion dans la table attribute pour chaque niveau de catégorie
-	// Pour v_categories, on doit insérer dans les tables sous-jacentes
+	// Pour v_categories_dev, on doit insérer dans les tables sous-jacentes
 
 	// Niveau 0 (catégorie principale)
 	if (data.atr_0_label) {
@@ -870,7 +870,7 @@ function getValidationRules(tableName: string): ValidationRules {
 					atr_label: (value: unknown) => typeof value === 'string' && value.length <= 150
 				}
 			};
-		case 'supplier':
+		case 'supplier_dev':
 			return {
 				requiredFields: ['sup_code'],
 				uniqueFields: ['sup_code'],
@@ -879,7 +879,7 @@ function getValidationRules(tableName: string): ValidationRules {
 					sup_label: (value: unknown) => typeof value === 'string' && value.length <= 50
 				}
 			};
-		case 'v_categories':
+		case 'v_categories_dev':
 			return {
 				requiredFields: ['atr_0_label'],
 				uniqueFields: ['atr_0_label'],

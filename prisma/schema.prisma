@@ -123,6 +123,14 @@ model kit_attribute_dev {
   kat_id             Int       @id @default(autoincrement())
 }
 
+model supplier_dev {
+  sup_id    Int     @id @default(autoincrement())
+  sup_code  String? @db.VarChar(10)
+  sup_label String? @db.VarChar(50)
+
+  @@index([sup_code], map: "supplier_dev_sup_code_index")
+}
+
 view v_categories {
   atr_id      Int
   atr_0_label String  @db.VarChar(100)
