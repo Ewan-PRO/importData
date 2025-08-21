@@ -21,6 +21,14 @@ interface ValidationResult {
 		error: string;
 	}>;
 	processed: boolean;
+	resultsByTable?: Record<
+		string,
+		{
+			validRows: number;
+			inserted: number;
+			updated: number;
+		}
+	>;
 }
 
 interface ImportResult extends ValidationResult {
@@ -45,7 +53,7 @@ type PrismaTransactionClient = Omit<
 const importSchema = z.object({
 	data: z.array(z.array(z.unknown())),
 	mappedFields: z.record(z.string()),
-	targetTable: z.string()
+	selectedTables: z.array(z.string())
 });
 
 type AttributeData = {
@@ -157,16 +165,27 @@ export const actions: Actions = {
 				return fail(400, { form });
 			}
 
-			const { data, mappedFields, targetTable } = form.data;
-			console.log('Données extraites:', { data, mappedFields, targetTable });
+			const { data, mappedFields, selectedTables } = form.data;
+			console.log('Données extraites:', { data, mappedFields, selectedTables });
 
 			const result: ValidationResult = {
 				totalRows: Array.isArray(data) ? data.length : 0,
 				validRows: 0,
 				duplicates: 0,
 				invalidData: [],
-				processed: false
+				processed: false,
+				resultsByTable: {}
 			};
+
+			// Initialiser les compteurs par table
+			selectedTables.forEach((table) => {
+				result.resultsByTable![table] = {
+					validRows: 0,
+					inserted: 0,
+					updated: 0
+				};
+			});
+
 			console.log('Résultat initial:', result);
 
 			// Validation du format CSV d'abord
@@ -182,15 +201,15 @@ export const actions: Actions = {
 							data: {
 								data: data || [],
 								mappedFields: mappedFields || {},
-								targetTable: targetTable || '',
+								selectedTables: selectedTables || [],
 								result
 							}
 						}
 					};
 				}
 
-				// Validation spécifique pour atr_0_label si c'est la table v_categories_dev
-				if (targetTable === 'v_categories_dev') {
+				// Validation spécifique pour atr_0_label si une des tables sélectionnées est v_categories_dev
+				if (selectedTables.includes('v_categories_dev')) {
 					validateAtr0Label(data, mappedFields, result);
 
 					// Si des erreurs atr_0_label sont détectées, arrêter ici
@@ -204,7 +223,7 @@ export const actions: Actions = {
 								data: {
 									data: data || [],
 									mappedFields: mappedFields || {},
-									targetTable: targetTable || '',
+									selectedTables: selectedTables || [],
 									result
 								}
 							}
@@ -213,48 +232,67 @@ export const actions: Actions = {
 				}
 			}
 
-			// Obtenir la structure de la table cible
-			const validationRules = getValidationRules(targetTable);
-			console.log('Règles de validation:', validationRules);
+			// Obtenir les règles de validation pour toutes les tables sélectionnées
+			const allValidationRules = selectedTables.map((table) => ({
+				table,
+				rules: getValidationRules(table)
+			}));
+			console.log('Règles de validation pour toutes les tables:', allValidationRules);
 
 			// Préparation pour le traitement
 			const columnMap = prepareColumnMap(mappedFields);
 			console.log('Mappage des colonnes:', columnMap);
-			const uniqueEntries = new Set<string>();
 
-			// Validation ligne par ligne
+			// Validation ligne par ligne pour toutes les tables
 			if (Array.isArray(data)) {
 				console.log('Début de la validation des lignes');
 				for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
 					const row = data[rowIndex];
 					console.log(`Validation de la ligne ${rowIndex}:`, row);
-					const validationResult = validateRow(
-						rowIndex,
-						row,
-						columnMap,
-						validationRules,
-						uniqueEntries,
-						result
-					);
-					console.log(`Résultat de validation pour la ligne ${rowIndex}:`, validationResult);
 
-					// Vérification des doublons avec la base de données
-					if (validationResult) {
-						const existingRecord = await checkExistingRecord(targetTable, mappedFields, row);
-						console.log(`Vérification des doublons pour la ligne ${rowIndex}:`, existingRecord);
+					let isValidForAnyTable = false;
 
-						if (existingRecord) {
-							result.duplicates++;
+					// Valider pour chaque table sélectionnée
+					for (const { table, rules } of allValidationRules) {
+						const tempResult: ValidationResult = {
+							totalRows: 0,
+							validRows: 0,
+							duplicates: 0,
+							invalidData: [],
+							processed: false
+						};
 
-							result.invalidData.push({
-								row: rowIndex,
-								field: validationRules.uniqueFields.join(', '),
-								value: existingRecord,
-								error: 'Existe déjà dans la base de données'
-							});
-						} else {
-							result.validRows++;
+						const validationResult = validateRow(
+							rowIndex,
+							row,
+							columnMap,
+							rules,
+							new Set<string>(), // Unique entries par table
+							tempResult
+						);
+
+						if (validationResult) {
+							// Vérification des doublons avec la base de données pour cette table
+							const existingRecord = await checkExistingRecord(table, mappedFields, row);
+
+							if (!existingRecord) {
+								// Ligne valide pour cette table spécifique
+								result.resultsByTable![table].validRows++;
+								isValidForAnyTable = true;
+							}
 						}
+					}
+
+					if (isValidForAnyTable) {
+						result.validRows++;
+					} else {
+						// Si la ligne n'est valide pour aucune table, ajouter une erreur générique
+						result.invalidData.push({
+							row: rowIndex,
+							field: 'Général',
+							value: 'Ligne entière',
+							error: 'Ligne non valide pour aucune des tables sélectionnées'
+						});
 					}
 				}
 			}
@@ -267,7 +305,7 @@ export const actions: Actions = {
 					data: {
 						data: data || [],
 						mappedFields: mappedFields || {},
-						targetTable: targetTable || '',
+						selectedTables: selectedTables || [],
 						result // Inclure explicitement le résultat ici
 					}
 				}
@@ -289,7 +327,7 @@ export const actions: Actions = {
 				return fail(400, { form });
 			}
 
-			const { data, mappedFields, targetTable } = form.data;
+			const { data, mappedFields, selectedTables } = form.data;
 
 			const result: ImportResult = {
 				totalRows: Array.isArray(data) ? data.length : 0,
@@ -299,8 +337,18 @@ export const actions: Actions = {
 				inserted: 0,
 				updated: 0,
 				errors: [],
-				processed: true
+				processed: true,
+				resultsByTable: {}
 			};
+
+			// Initialiser les compteurs par table
+			selectedTables.forEach((table) => {
+				result.resultsByTable![table] = {
+					validRows: 0,
+					inserted: 0,
+					updated: 0
+				};
+			});
 
 			// Validation du format CSV avant traitement
 			if (Array.isArray(data)) {
@@ -315,15 +363,15 @@ export const actions: Actions = {
 							data: {
 								data: data || [],
 								mappedFields: mappedFields || {},
-								targetTable: targetTable || '',
+								selectedTables: selectedTables || [],
 								result
 							}
 						}
 					};
 				}
 
-				// Validation spécifique pour atr_0_label si c'est la table v_categories_dev
-				if (targetTable === 'v_categories_dev') {
+				// Validation spécifique pour atr_0_label si une des tables sélectionnées est v_categories_dev
+				if (selectedTables.includes('v_categories_dev')) {
 					validateAtr0Label(data, mappedFields, result);
 
 					// Si des erreurs atr_0_label sont détectées, arrêter le traitement
@@ -339,7 +387,7 @@ export const actions: Actions = {
 								data: {
 									data: data || [],
 									mappedFields: mappedFields || {},
-									targetTable: targetTable || '',
+									selectedTables: selectedTables || [],
 									result
 								}
 							}
@@ -350,58 +398,69 @@ export const actions: Actions = {
 
 			// Préparation pour le traitement
 			const columnMap = prepareColumnMap(mappedFields);
-			const validationRules = getValidationRules(targetTable);
-			const uniqueEntries = new Set<string>();
+			const allValidationRules = selectedTables.map((table) => ({
+				table,
+				rules: getValidationRules(table)
+			}));
 
-			// Pré-validation pour identifier les lignes valides
-			const validRows: { index: number; row: unknown[] }[] = [];
+			// Pré-validation pour identifier les lignes valides pour chaque table
+			const validRowsByTable: Record<string, { index: number; row: unknown[] }[]> = {};
+			selectedTables.forEach((table) => {
+				validRowsByTable[table] = [];
+			});
 
 			if (Array.isArray(data)) {
 				for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
 					const row = data[rowIndex];
 					if (!Array.isArray(row)) continue;
 
-					// Valider la ligne
-					const tempResult: ValidationResult = {
-						totalRows: 0,
-						validRows: 0,
-						duplicates: 0,
-						invalidData: [],
-						processed: false
-					};
+					// Valider la ligne pour chaque table sélectionnée
+					for (const { table, rules } of allValidationRules) {
+						const tempResult: ValidationResult = {
+							totalRows: 0,
+							validRows: 0,
+							duplicates: 0,
+							invalidData: [],
+							processed: false
+						};
 
-					const isValid = validateRow(
-						rowIndex,
-						row,
-						columnMap,
-						validationRules,
-						uniqueEntries,
-						tempResult
-					);
+						const isValid = validateRow(
+							rowIndex,
+							row,
+							columnMap,
+							rules,
+							new Set<string>(),
+							tempResult
+						);
 
-					if (isValid) {
-						// Vérifier les doublons en base
-						const existingRecord = await checkExistingRecord(targetTable, mappedFields, row);
-						if (!existingRecord) {
-							validRows.push({ index: rowIndex, row });
+						if (isValid) {
+							// Vérifier les doublons en base pour cette table
+							const existingRecord = await checkExistingRecord(table, mappedFields, row);
+							if (!existingRecord) {
+								validRowsByTable[table].push({ index: rowIndex, row });
+							}
 						}
 					}
 				}
 			}
 
-			console.log(`Lignes valides à traiter: ${validRows.length}`);
+			const totalValidRows = Object.values(validRowsByTable).reduce(
+				(acc, rows) => acc + rows.length,
+				0
+			);
+			console.log(
+				`Lignes valides à traiter: ${totalValidRows} pour ${selectedTables.length} table(s)`
+			);
 
-			// Traitement des données en transaction (seulement les lignes valides)
+			// Traitement des données en transaction pour toutes les tables
 			await prisma.$transaction(async (tx) => {
-				for (const { index, row } of validRows) {
-					await processRow(
-						row,
-						index,
-						columnMap,
-						targetTable,
-						tx as PrismaTransactionClient,
-						result
-					);
+				for (const table of selectedTables) {
+					const validRowsForTable = validRowsByTable[table];
+					console.log(`Traitement de ${validRowsForTable.length} lignes pour la table ${table}`);
+
+					for (const { index, row } of validRowsForTable) {
+						await processRow(row, index, columnMap, table, tx as PrismaTransactionClient, result);
+					}
 				}
 			});
 
@@ -412,7 +471,7 @@ export const actions: Actions = {
 					data: {
 						data: data || [],
 						mappedFields: mappedFields || {},
-						targetTable: targetTable || '',
+						selectedTables: selectedTables || [],
 						result // Inclure explicitement le résultat ici
 					}
 				}
@@ -603,11 +662,17 @@ async function processRow(
 			console.log("-> Mise à jour d'un enregistrement existant");
 			await updateRecord(tx, targetTable, recordData);
 			result.updated++;
+			if (result.resultsByTable && result.resultsByTable[targetTable]) {
+				result.resultsByTable[targetTable].updated++;
+			}
 		} else {
 			// Création d'un nouvel enregistrement
 			console.log("-> Création d'un nouvel enregistrement");
 			await createRecord(tx, targetTable, recordData);
 			result.inserted++;
+			if (result.resultsByTable && result.resultsByTable[targetTable]) {
+				result.resultsByTable[targetTable].inserted++;
+			}
 		}
 
 		result.validRows++;
@@ -641,6 +706,12 @@ async function updateRecord(
 				data: recordData
 			});
 			break;
+		case 'supplier':
+			await tx.supplier.updateMany({
+				where: uniqueConstraint,
+				data: recordData
+			});
+			break;
 		case 'supplier_dev':
 			await tx.supplier_dev.updateMany({
 				where: uniqueConstraint,
@@ -666,6 +737,18 @@ async function createRecord(
 		case 'attribute_dev':
 			await tx.attribute_dev.create({
 				data: recordData as AttributeData
+			});
+			break;
+		case 'supplier':
+			// Vérifier que sup_code est défini pour supplier
+			if (!recordData.sup_code || recordData.sup_code === null) {
+				throw new Error('Le champ sup_code est obligatoire pour les fournisseurs');
+			}
+			await tx.supplier.create({
+				data: {
+					sup_code: recordData.sup_code as string,
+					sup_label: recordData.sup_label as string | null
+				}
 			});
 			break;
 		case 'supplier_dev':
@@ -739,6 +822,11 @@ async function checkExistingRecord(
 				break;
 			case 'attribute_dev':
 				existingRecord = await tx.attribute_dev.findFirst({
+					where: whereCondition
+				});
+				break;
+			case 'supplier':
+				existingRecord = await tx.supplier.findFirst({
 					where: whereCondition
 				});
 				break;
@@ -870,6 +958,7 @@ function getValidationRules(tableName: string): ValidationRules {
 					atr_label: (value: unknown) => typeof value === 'string' && value.length <= 150
 				}
 			};
+		case 'supplier':
 		case 'supplier_dev':
 			return {
 				requiredFields: ['sup_code'],

@@ -29,6 +29,21 @@
 		inserted?: number;
 		updated?: number;
 		errors?: string[];
+		resultsByTable?: Record<
+			string,
+			{
+				validRows: number;
+				inserted: number;
+				updated: number;
+			}
+		>;
+	};
+
+	// Type pour le formulaire multi-tables
+	type MultiTableFormData = {
+		data: unknown[][];
+		mappedFields: Record<string, string>;
+		selectedTables: string[];
 	};
 
 	// Initialisation du formulaire avec SuperForms
@@ -85,25 +100,27 @@
 	let rawData: any[] = [];
 	let headers: string[] = [];
 	let previewData: any[] = [];
-	let targetTable = 'attribute_dev'; // Par défaut
-	
-	// Debug: Observer les changements de targetTable
+	let selectedTables: string[] = ['supplier_dev']; // Tables sélectionnées par défaut
+
+	// Debug: Observer les changements de selectedTables
 	$: {
-		console.log('🔥 targetTable changed to:', targetTable);
+		console.log('🔥 selectedTables changed to:', selectedTables);
 	}
 	let mappedFields: Record<string, string> = {};
 	let hasHeaders = true; // Détection automatique
 	let showNoHeaderAlert = false; // Nouvelle variable pour l'alerte
 	let availableTables = [
-		{ value: 'attribute', name: 'Attributs' },
-		{ value: 'attribute_dev', name: 'Attributs (Dev)' },
-		{ value: 'supplier_dev', name: 'Fournisseurs (Dev)' },
-		{ value: 'v_categories_dev', name: 'Catégories (Dev)' }
+		{ value: 'attribute', name: 'Attributs (Production)', category: 'attribute' },
+		{ value: 'attribute_dev', name: 'Attributs (Dev)', category: 'attribute' },
+		{ value: 'supplier', name: 'Fournisseurs (Production)', category: 'supplier' },
+		{ value: 'supplier_dev', name: 'Fournisseurs (Dev)', category: 'supplier' },
+		{ value: 'v_categories_dev', name: 'Catégories (Dev)', category: 'category' }
 	];
 
 	let tableFields: Record<string, string[]> = {
 		attribute: ['atr_nat', 'atr_val', 'atr_label'],
 		attribute_dev: ['atr_nat', 'atr_val', 'atr_label'],
+		supplier: ['sup_code', 'sup_label'],
 		supplier_dev: ['sup_code', 'sup_label'],
 		v_categories_dev: [
 			'atr_0_label',
@@ -230,13 +247,13 @@
 				guessFieldMapping();
 
 				// Mise à jour du formulaire SuperForms
-				const formData = {
+				const formData: MultiTableFormData = {
 					data: hasHeaders ? rawData.slice(1) : rawData, // Exclure les en-têtes seulement si présents
 					mappedFields,
-					targetTable
+					selectedTables
 				};
 				console.log('Données du formulaire à envoyer:', formData);
-				$form = formData;
+				$form = formData as any;
 
 				step = 2;
 			} catch (err) {
@@ -269,17 +286,13 @@
 		const hasStringHeaders = firstRow.every((cell, index) => {
 			if (typeof cell !== 'string') return false;
 
-			// Vérifier si c'est un nom de champ connu
-			const knownFields = [
-				...tableFields.attribute,
-				...tableFields.supplier_dev,
-				...tableFields.v_categories_dev
-			];
+			// Vérifier si c'est un nom de champ connu dans toutes les tables
+			const allKnownFields = Object.values(tableFields).flat();
 			const normalizedCell = String(cell)
 				.toLowerCase()
 				.replace(/[^a-z0-9]/g, '');
 
-			return knownFields.some((field) => {
+			return allKnownFields.some((field) => {
 				const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
 				return normalizedCell.includes(normalizedField) || normalizedField.includes(normalizedCell);
 			});
@@ -301,10 +314,22 @@
 	function guessFieldMapping() {
 		console.log('Début du mappage des champs');
 		console.log('En-têtes à mapper:', headers);
-		console.log('Champs disponibles:', tableFields[targetTable]);
+		console.log('Tables sélectionnées:', selectedTables);
 
 		mappedFields = {};
-		const fields = tableFields[targetTable];
+
+		// Obtenir tous les champs possibles des tables sélectionnées
+		const allFields = selectedTables.reduce((acc, table) => {
+			const fields = tableFields[table] || [];
+			fields.forEach((field) => {
+				if (!acc.includes(field)) {
+					acc.push(field);
+				}
+			});
+			return acc;
+		}, [] as string[]);
+
+		console.log('Champs disponibles:', allFields);
 
 		if (hasHeaders) {
 			// Mappage automatique basé sur les en-têtes
@@ -318,7 +343,7 @@
 				let bestMatch = '';
 				let bestScore = 0;
 
-				fields.forEach((field) => {
+				allFields.forEach((field) => {
 					const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 					if (
@@ -347,36 +372,38 @@
 	}
 
 	function handleTableChange() {
-		console.log('handleTableChange called with targetTable:', targetTable);
-		// Réinitialiser le mappage lors du changement de table
+		console.log('handleTableChange called with selectedTables:', selectedTables);
+		// Réinitialiser le mappage lors du changement de tables
 		mappedFields = {};
 		guessFieldMapping();
 
 		// Mise à jour du formulaire
-		$form.targetTable = targetTable;
-		$form.mappedFields = mappedFields;
-		
+		$form = {
+			...$form,
+			selectedTables,
+			mappedFields
+		} as any;
+
 		// La variable réactive se met à jour automatiquement
 	}
 
-	// Variable réactive pour les champs requis
+	// Variable réactive pour les champs requis (union de tous les champs requis des tables sélectionnées)
 	$: requiredFields = (() => {
-		console.log('🔎 Reactive requiredFields called with targetTable:', targetTable);
-		console.log('🔎 Type of targetTable:', typeof targetTable);
-		console.log('🔎 targetTable === "supplier_dev":', targetTable === 'supplier_dev');
-		
+		console.log('🔎 Reactive requiredFields called with selectedTables:', selectedTables);
+
 		let result: string[] = [];
-		if (targetTable === 'attribute' || targetTable === 'attribute_dev') {
-			result = ['atr_nat', 'atr_val'];
-			console.log('🔎 Returning for attribute tables:', result);
-		} else if (targetTable === 'supplier_dev') {
-			result = ['sup_code'];
-			console.log('🔎 Returning for supplier_dev:', result);
-		} else if (targetTable === 'v_categories_dev') {
-			result = ['atr_0_label'];
-			console.log('🔎 Returning for categories:', result);
-		}
-		
+
+		selectedTables.forEach((table) => {
+			if (table === 'attribute' || table === 'attribute_dev') {
+				if (!result.includes('atr_nat')) result.push('atr_nat');
+				if (!result.includes('atr_val')) result.push('atr_val');
+			} else if (table === 'supplier' || table === 'supplier_dev') {
+				if (!result.includes('sup_code')) result.push('sup_code');
+			} else if (table === 'v_categories_dev') {
+				if (!result.includes('atr_0_label')) result.push('atr_0_label');
+			}
+		});
+
 		console.log('🔎 Final requiredFields result:', result);
 		return result;
 	})();
@@ -416,8 +443,8 @@
 		$form = {
 			data: hasHeaders ? rawData.slice(1) : rawData,
 			mappedFields,
-			targetTable
-		};
+			selectedTables
+		} as any;
 	}
 </script>
 
@@ -540,37 +567,75 @@
 					{/if}
 
 					<div class="mb-6">
-						<label for="targetTable" class="mb-2 block font-medium text-gray-700"
-							>Table de destination</label
-						>
-						<Select.Select
-							type="single"
-							value={targetTable}
-							onValueChange={(value) => {
-								console.log('🎯 Select.onValueChange called with:', value);
-								console.log('🎯 Value length:', value?.length);
-								console.log('🎯 Value JSON:', JSON.stringify(value));
-								console.log('🎯 Current targetTable before change:', targetTable);
-								if (value) {
-									// Nettoyer la valeur au cas où il y aurait des espaces
-									const cleanValue = value.trim();
-									targetTable = cleanValue;
-									console.log('🎯 targetTable set to:', targetTable);
-									console.log('🎯 targetTable JSON:', JSON.stringify(targetTable));
-									handleTableChange();
-								}
-							}}
-						>
-							<Select.SelectTrigger class="w-full md:w-1/2" hasValue={!!targetTable}>
-								{availableTables.find((t) => t.value === targetTable)?.name ||
-									'Sélectionnez une table'}
-							</Select.SelectTrigger>
-							<Select.SelectContent>
-								{#each availableTables as table}
-									<Select.SelectItem value={table.value}>{table.name}</Select.SelectItem>
-								{/each}
-							</Select.SelectContent>
-						</Select.Select>
+						<div class="mb-3 block font-medium text-gray-700">Tables de destination</div>
+						<div class="space-y-4">
+							<!-- Groupement par catégorie -->
+							<div class="rounded-lg border p-4">
+								<h4 class="mb-2 font-medium text-gray-600">Fournisseurs</h4>
+								<div class="space-y-2">
+									{#each availableTables.filter((t) => t.category === 'supplier') as table}
+										<label class="flex items-center space-x-2">
+											<input
+												type="checkbox"
+												bind:group={selectedTables}
+												value={table.value}
+												on:change={handleTableChange}
+												class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+											/>
+											<span class="text-sm">{table.name}</span>
+										</label>
+									{/each}
+								</div>
+							</div>
+
+							<div class="rounded-lg border p-4">
+								<h4 class="mb-2 font-medium text-gray-600">Attributs</h4>
+								<div class="space-y-2">
+									{#each availableTables.filter((t) => t.category === 'attribute') as table}
+										<label class="flex items-center space-x-2">
+											<input
+												type="checkbox"
+												bind:group={selectedTables}
+												value={table.value}
+												on:change={handleTableChange}
+												class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+											/>
+											<span class="text-sm">{table.name}</span>
+										</label>
+									{/each}
+								</div>
+							</div>
+
+							<div class="rounded-lg border p-4">
+								<h4 class="mb-2 font-medium text-gray-600">Catégories</h4>
+								<div class="space-y-2">
+									{#each availableTables.filter((t) => t.category === 'category') as table}
+										<label class="flex items-center space-x-2">
+											<input
+												type="checkbox"
+												bind:group={selectedTables}
+												value={table.value}
+												on:change={handleTableChange}
+												class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+											/>
+											<span class="text-sm">{table.name}</span>
+										</label>
+									{/each}
+								</div>
+							</div>
+						</div>
+
+						{#if selectedTables.length === 0}
+							<p class="mt-2 text-sm text-red-600">
+								Veuillez sélectionner au moins une table de destination.
+							</p>
+						{:else}
+							<p class="mt-2 text-sm text-gray-600">
+								{selectedTables.length} table(s) sélectionnée(s): {selectedTables
+									.map((t) => availableTables.find((at) => at.value === t)?.name)
+									.join(', ')}
+							</p>
+						{/if}
 					</div>
 
 					<h3 class="mb-2 font-medium">Aperçu des données</h3>
@@ -589,15 +654,23 @@
 													$form.mappedFields = mappedFields;
 												}}
 											>
-												<Select.SelectTrigger 
+												<Select.SelectTrigger
 													class="min-w-[12rem] text-sm"
-													hasValue={!!(mappedFields[i.toString()] && mappedFields[i.toString()] !== '')}
+													hasValue={!!(
+														mappedFields[i.toString()] && mappedFields[i.toString()] !== ''
+													)}
 												>
 													{mappedFields[i.toString()] || 'Ne pas importer'}
 												</Select.SelectTrigger>
 												<Select.SelectContent>
 													<Select.SelectItem value="">Ne pas importer</Select.SelectItem>
-													{#each tableFields[targetTable] as field}
+													{#each selectedTables.reduce((acc, table) => {
+														const fields = tableFields[table] || [];
+														fields.forEach((field) => {
+															if (!acc.includes(field)) acc.push(field);
+														});
+														return acc;
+													}, [] as string[]) as field}
 														<Select.SelectItem value={field}>{field}</Select.SelectItem>
 													{/each}
 												</Select.SelectContent>
@@ -625,7 +698,9 @@
 						<h3 class="mb-2 font-medium">Champs requis</h3>
 						<!-- Debug info -->
 						<div class="mb-2 text-xs text-gray-500">
-							Debug: targetTable = "{targetTable}", requiredFields = {JSON.stringify(requiredFields)}
+							Debug: selectedTables = {JSON.stringify(selectedTables)}, requiredFields = {JSON.stringify(
+								requiredFields
+							)}
 						</div>
 						<div class="flex flex-wrap gap-2">
 							{#each requiredFields as field}
@@ -646,14 +721,16 @@
 					<!-- Champs cachés pour le formulaire -->
 					<input type="hidden" name="data" value={JSON.stringify($form.data)} />
 					<input type="hidden" name="mappedFields" value={JSON.stringify(mappedFields)} />
-					<input type="hidden" name="targetTable" value={targetTable} />
+					<input type="hidden" name="selectedTables" value={JSON.stringify(selectedTables)} />
 
 					<div class="flex justify-between">
 						<Button variant="noir" onclick={resetImport}>Retour</Button>
 						<Button
 							type="submit"
 							variant="vert"
-							disabled={requiredFields.some((field) => !isFieldMapped(field)) || $submitting}
+							disabled={selectedTables.length === 0 ||
+								requiredFields.some((field) => !isFieldMapped(field)) ||
+								$submitting}
 						>
 							{#if $submitting}
 								<Spinner class="mr-2 h-4 w-4" />
@@ -678,7 +755,7 @@
 						</div>
 						<div class="rounded-lg border border-green-200 bg-green-50 p-4 text-center">
 							<div class="text-2xl font-bold text-green-600">{validationResults.validRows}</div>
-							<div class="text-sm text-green-800">Lignes valides</div>
+							<div class="text-sm text-green-800">Lignes valides (par table)</div>
 						</div>
 						<div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center">
 							<div class="text-2xl font-bold text-amber-600">{validationResults.duplicates}</div>
@@ -691,6 +768,25 @@
 							<div class="text-sm text-red-800">Erreurs</div>
 						</div>
 					</div>
+
+					<!-- Détail par table si plusieurs tables sélectionnées -->
+					{#if selectedTables.length > 1 && validationResults.resultsByTable}
+						<div class="mb-6">
+							<h3 class="mb-3 font-medium">Détail par table de destination</h3>
+							<div class="space-y-2">
+								{#each selectedTables as table}
+									{@const tableResult = validationResults.resultsByTable[table]}
+									{@const tableName = availableTables.find((t) => t.value === table)?.name || table}
+									{#if tableResult}
+										<div class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+											<span class="font-medium">{tableName}</span>
+											<span class="text-green-600">{tableResult.validRows} ligne(s) valide(s)</span>
+										</div>
+									{/if}
+								{/each}
+							</div>
+						</div>
+					{/if}
 
 					<!-- Tableau des erreurs avec le nouveau composant -->
 					{#if validationResults.invalidData.length > 0}
@@ -746,7 +842,7 @@
 						<!-- Champs cachés pour le formulaire -->
 						<input type="hidden" name="data" value={JSON.stringify($form.data)} />
 						<input type="hidden" name="mappedFields" value={JSON.stringify(mappedFields)} />
-						<input type="hidden" name="targetTable" value={targetTable} />
+						<input type="hidden" name="selectedTables" value={JSON.stringify(selectedTables)} />
 
 						<div class="flex justify-between">
 							<Button variant="noir" onclick={() => (step = 2)}>Retour</Button>
@@ -765,18 +861,48 @@
 						</div>
 					</form>
 				{:else}
-					<div class="rounded-md border border-green-200 bg-green-50 p-6 text-center">
-						<Check class="mx-auto mb-2 h-12 w-12 text-green-500" />
-						<h3 class="mb-2 text-xl font-medium text-green-800">
-							Importation terminée avec succès
-						</h3>
-						<p class="mb-4">
-							{validationResults.validRows} lignes ont été importées dans la table {targetTable}.
-							{#if validationResults.inserted && validationResults.updated}
-								({validationResults.inserted} insertions et {validationResults.updated} mises à jour)
-							{/if}
-						</p>
-						<Button variant="bleu" onclick={resetImport}>Nouvelle importation</Button>
+					<div class="rounded-md border border-green-200 bg-green-50 p-6">
+						<div class="mb-4 text-center">
+							<Check class="mx-auto mb-2 h-12 w-12 text-green-500" />
+							<h3 class="mb-2 text-xl font-medium text-green-800">
+								Importation terminée avec succès
+							</h3>
+						</div>
+
+						<!-- Détail par table -->
+						{#if validationResults.resultsByTable && selectedTables.length > 1}
+							<div class="mb-4 space-y-3">
+								{#each selectedTables as table}
+									{@const tableResult = validationResults.resultsByTable[table]}
+									{@const tableName = availableTables.find((t) => t.value === table)?.name || table}
+									{#if tableResult && tableResult.inserted > 0}
+										<div
+											class="flex items-center justify-between rounded-lg border border-green-200 bg-white p-3"
+										>
+											<span class="font-medium text-gray-700"
+												>{tableResult.inserted} ligne(s) ont été importées dans la table :</span
+											>
+											<span class="font-semibold text-green-700">{tableName}</span>
+										</div>
+									{/if}
+								{/each}
+							</div>
+						{:else}
+							<!-- Affichage simple pour une seule table -->
+							<p class="mb-4 text-center">
+								{validationResults.inserted || validationResults.validRows} lignes ont été importées
+								dans la table : {selectedTables
+									.map((t) => availableTables.find((at) => at.value === t)?.name)
+									.join(', ')}.
+								{#if validationResults.inserted && validationResults.updated}
+									({validationResults.inserted} insertions et {validationResults.updated} mises à jour)
+								{/if}
+							</p>
+						{/if}
+
+						<div class="text-center">
+							<Button variant="bleu" onclick={resetImport}>Nouvelle importation</Button>
+						</div>
 					</div>
 				{/if}
 			</div>

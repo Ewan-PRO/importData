@@ -23,7 +23,6 @@ interface ValidationResult {
 	errors?: string[];
 }
 
-
 interface ValidationRules {
 	requiredFields: string[];
 	uniqueFields: string[];
@@ -44,6 +43,7 @@ function getValidationRules(tableName: string): ValidationRules {
 					atr_label: (value: unknown) => typeof value === 'string' && value.length <= 150
 				}
 			};
+		case 'supplier':
 		case 'supplier_dev':
 			return {
 				requiredFields: ['sup_code'],
@@ -134,12 +134,13 @@ function validateRequiredFields(
 	for (const fieldName of validationRules.requiredFields) {
 		const colIndex = columnMap[fieldName];
 		const value = colIndex !== undefined ? row[colIndex] : undefined;
-		
+
 		// Vérifier si le champ est vide (undefined, null, '', ou chaîne vide après trim)
-		const isEmpty = value === undefined || 
-			             value === null || 
-			             value === '' ||
-			             (typeof value === 'string' && value.trim() === '');
+		const isEmpty =
+			value === undefined ||
+			value === null ||
+			value === '' ||
+			(typeof value === 'string' && value.trim() === '');
 
 		if (colIndex === undefined || isEmpty) {
 			result.invalidData.push({
@@ -276,7 +277,6 @@ function validateCSVFormat(
 	return errors;
 }
 
-
 // Vérification des doublons en base de données
 async function checkExistingRecord(
 	tableName: string,
@@ -310,6 +310,11 @@ async function checkExistingRecord(
 				break;
 			case 'attribute_dev':
 				existingRecord = await prisma.attribute_dev.findFirst({
+					where: whereCondition
+				});
+				break;
+			case 'supplier':
+				existingRecord = await prisma.supplier.findFirst({
 					where: whereCondition
 				});
 				break;
@@ -362,7 +367,7 @@ function formatValueForDatabase(field: string, value: unknown): unknown {
 // Fonction pour gérer l'insertion des catégories
 async function handleCategoryInsert(data: Record<string, unknown>): Promise<void> {
 	// Insertion dans la table attribute_dev pour chaque niveau de catégorie
-	
+
 	// Niveau 0 (catégorie principale)
 	if (data.atr_0_label) {
 		await prisma.attribute_dev.upsert({
@@ -386,7 +391,7 @@ async function handleCategoryInsert(data: Record<string, unknown>): Promise<void
 	// Niveaux 1-7 (sous-catégories)
 	for (let i = 1; i <= 7; i++) {
 		const labelField = `atr_${i}_label`;
-		
+
 		if (data[labelField]) {
 			await prisma.attribute_dev.upsert({
 				where: {
@@ -417,12 +422,12 @@ async function insertValidData(
 ): Promise<number> {
 	let insertedCount = 0;
 
-	console.log('🔍 insertValidData Debug:', { 
-		tableName, 
-		mappedFields, 
-		dataLength: data.length, 
+	console.log('🔍 insertValidData Debug:', {
+		tableName,
+		mappedFields,
+		dataLength: data.length,
 		validRowsSetSize: validRowsSet.size,
-		validRowsArray: Array.from(validRowsSet) 
+		validRowsArray: Array.from(validRowsSet)
 	});
 
 	try {
@@ -432,18 +437,18 @@ async function insertValidData(
 				console.log(`🔍 Skipping row ${rowIndex} - not in validRowsSet`);
 				continue;
 			}
-			
+
 			const row = data[rowIndex];
 			console.log(`🔍 Processing row ${rowIndex}:`, row);
-			
+
 			// Vérifier une dernière fois que la ligne n'existe pas déjà en base
 			const existingRecord = await checkExistingRecord(tableName, mappedFields, row);
 			console.log(`🔍 Existing record check for row ${rowIndex}:`, existingRecord);
-			
+
 			if (!existingRecord) {
 				// Préparer les données pour l'insertion
 				const insertData: Record<string, unknown> = {};
-				
+
 				// Pour les catégories, ne pas mapper les champs atr_X_label directement
 				if (tableName === 'v_categories_dev') {
 					// Stocker les données de catégorie temporairement pour handleCategoryInsert
@@ -460,7 +465,7 @@ async function insertValidData(
 						}
 					});
 				}
-				
+
 				console.log(`🔍 Insert data for row ${rowIndex}:`, insertData);
 
 				// Insérer dans la table appropriée
@@ -469,8 +474,30 @@ async function insertValidData(
 						await prisma.attribute_dev.create({ data: insertData });
 						console.log(`✅ Inserted into attribute_dev:`, insertData);
 						break;
+					case 'supplier':
+						// Vérifier et typer correctement les données pour supplier
+						if (!insertData.sup_code || typeof insertData.sup_code !== 'string') {
+							throw new Error('Le champ sup_code est obligatoire pour les fournisseurs');
+						}
+						await prisma.supplier.create({
+							data: {
+								sup_code: insertData.sup_code,
+								sup_label: insertData.sup_label ? String(insertData.sup_label) : null
+							}
+						});
+						console.log(`✅ Inserted into supplier:`, insertData);
+						break;
 					case 'supplier_dev':
-						await prisma.supplier_dev.create({ data: insertData });
+						// Vérifier et typer correctement les données pour supplier_dev
+						if (!insertData.sup_code || typeof insertData.sup_code !== 'string') {
+							throw new Error('Le champ sup_code est obligatoire pour les fournisseurs');
+						}
+						await prisma.supplier_dev.create({
+							data: {
+								sup_code: insertData.sup_code,
+								sup_label: insertData.sup_label ? String(insertData.sup_label) : null
+							}
+						});
 						console.log(`✅ Inserted into supplier_dev:`, insertData);
 						break;
 					case 'v_categories_dev':
@@ -485,8 +512,10 @@ async function insertValidData(
 			}
 		}
 	} catch (err) {
-		console.error('❌ Erreur lors de l\'insertion:', err);
-		throw new Error(`Erreur d'insertion: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+		console.error("❌ Erreur lors de l'insertion:", err);
+		throw new Error(
+			`Erreur d'insertion: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+		);
 	}
 
 	console.log(`🔍 Total inserted: ${insertedCount}`);
@@ -497,12 +526,12 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const body = await request.json();
 		const { data, mappedFields, targetTable } = body;
-		
-		console.log('🔍 API Debug - Request:', { 
-			dataLength: Array.isArray(data) ? data.length : 'not array', 
-			mappedFields, 
-			targetTable, 
-			action: body.action 
+
+		console.log('🔍 API Debug - Request:', {
+			dataLength: Array.isArray(data) ? data.length : 'not array',
+			mappedFields,
+			targetTable,
+			action: body.action
 		});
 
 		const result: ValidationResult = {
@@ -522,24 +551,22 @@ export const POST: RequestHandler = async ({ request }) => {
 			if (csvErrors.length > 0) {
 				result.invalidData.push(...csvErrors);
 			}
-
 		}
 
 		// Obtenir la structure de la table cible
 		const validationRules = getValidationRules(targetTable);
-		
+
 		// Préparation pour le traitement
 		const columnMap = prepareColumnMap(mappedFields);
 		const uniqueEntries = new Set<string>();
 		const validRowsSet = new Set<number>();
-
 
 		// Validation ligne par ligne
 		if (Array.isArray(data)) {
 			for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
 				const row = data[rowIndex];
 				console.log(`🔍 Validating row ${rowIndex}:`, row, 'with columnMap:', columnMap);
-				
+
 				const validationResult = validateRow(
 					rowIndex,
 					row,
@@ -552,8 +579,10 @@ export const POST: RequestHandler = async ({ request }) => {
 				// Vérification des doublons avec la base de données
 				if (validationResult) {
 					const existingRecord = await checkExistingRecord(targetTable, mappedFields, row);
-					console.log(`🔍 Validation result for row ${rowIndex}: validationResult=${validationResult}, existingRecord=${existingRecord}`);
-					
+					console.log(
+						`🔍 Validation result for row ${rowIndex}: validationResult=${validationResult}, existingRecord=${existingRecord}`
+					);
+
 					if (existingRecord) {
 						result.duplicates++;
 						result.invalidData.push({
@@ -576,8 +605,12 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		// Si c'est un test "process", marquer comme traité et insérer les données
 		const isProcessing = request.url.includes('process') || body.action === 'process';
-		console.log('🔍 API Debug - Processing:', { isProcessing, validRows: result.validRows, validRowsSetSize: validRowsSet.size });
-		
+		console.log('🔍 API Debug - Processing:', {
+			isProcessing,
+			validRows: result.validRows,
+			validRowsSetSize: validRowsSet.size
+		});
+
 		if (isProcessing && result.validRows > 0) {
 			result.processed = true;
 			const insertedCount = await insertValidData(targetTable, mappedFields, data, validRowsSet);
@@ -592,7 +625,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			success: true,
 			result
 		});
-
 	} catch (err) {
 		console.error('Erreur lors de la validation:', err);
 		return error(500, {
