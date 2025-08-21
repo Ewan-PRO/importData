@@ -14,7 +14,9 @@
 		ArrowRight,
 		CornerDownRight,
 		Check,
-		X
+		X,
+		CircleArrowLeft,
+		CircleCheck
 	} from 'lucide-svelte';
 
 	export let data;
@@ -701,12 +703,16 @@
 					<input type="hidden" name="selectedTables" value={JSON.stringify(selectedTables)} />
 
 					<div class="flex justify-between">
-						<Button variant="noir" onclick={resetImport}>Retour</Button>
+						<Button variant="noir" onclick={resetImport}>
+							<CircleArrowLeft class="mr-2 h-4 w-4" />
+							Retour
+						</Button>
 						<Button type="submit" variant="vert" disabled={buttonDisabled}>
 							{#if $submitting}
 								<Spinner class="mr-2 h-4 w-4" />
 								Validation en cours...
 							{:else}
+								<CircleCheck class="mr-2 h-4 w-4" />
 								Valider les données
 							{/if}
 						</Button>
@@ -816,7 +822,10 @@
 						<input type="hidden" name="selectedTables" value={JSON.stringify(selectedTables)} />
 
 						<div class="flex justify-between">
-							<Button variant="noir" onclick={() => (step = 2)}>Retour</Button>
+							<Button variant="noir" onclick={() => (step = 2)}>
+								<CircleArrowLeft class="mr-2 h-4 w-4" />
+								Retour
+							</Button>
 							<Button
 								type="submit"
 								variant={validationResults.validRows > 0 ? 'vert' : 'noir'}
@@ -826,6 +835,7 @@
 									<Spinner class="mr-2 h-4 w-4" />
 									Importation en cours...
 								{:else}
+									<CircleCheck class="mr-2 h-4 w-4" />
 									Importer {validationResults.validRows} lignes
 								{/if}
 							</Button>

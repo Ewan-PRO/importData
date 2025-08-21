@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { LogIn } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
 	import UserInfo from '$lib/components/UserInfo.svelte';
 
 	export let data;
@@ -16,12 +18,10 @@
 				Connectez-vous pour accéder à notre catalogue de pompes et moteurs industriels.
 			</p>
 			<form method="POST" action="?/signIn">
-				<button
-					type="submit"
-					class="rme-2 mb-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-				>
-					Se connecter12
-				</button>
+				<Button type="submit" variant="bleu" class="me-2 mb-2">
+					<LogIn size={16} />
+					Se connecter
+				</Button>
 			</form>
 		</div>
 	{/if}
