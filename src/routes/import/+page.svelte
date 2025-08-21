@@ -86,6 +86,11 @@
 	let headers: string[] = [];
 	let previewData: any[] = [];
 	let targetTable = 'attribute_dev'; // Par défaut
+	
+	// Debug: Observer les changements de targetTable
+	$: {
+		console.log('🔥 targetTable changed to:', targetTable);
+	}
 	let mappedFields: Record<string, string> = {};
 	let hasHeaders = true; // Détection automatique
 	let showNoHeaderAlert = false; // Nouvelle variable pour l'alerte
@@ -342,6 +347,7 @@
 	}
 
 	function handleTableChange() {
+		console.log('handleTableChange called with targetTable:', targetTable);
 		// Réinitialiser le mappage lors du changement de table
 		mappedFields = {};
 		guessFieldMapping();
@@ -349,17 +355,34 @@
 		// Mise à jour du formulaire
 		$form.targetTable = targetTable;
 		$form.mappedFields = mappedFields;
+		
+		// La variable réactive se met à jour automatiquement
 	}
 
-	function getRequiredFields(): string[] {
+	// Variable réactive pour les champs requis
+	$: requiredFields = (() => {
+		console.log('🔎 Reactive requiredFields called with targetTable:', targetTable);
+		console.log('🔎 Type of targetTable:', typeof targetTable);
+		console.log('🔎 targetTable === "supplier_dev":', targetTable === 'supplier_dev');
+		
+		let result: string[] = [];
 		if (targetTable === 'attribute' || targetTable === 'attribute_dev') {
-			return ['atr_nat', 'atr_val'];
+			result = ['atr_nat', 'atr_val'];
+			console.log('🔎 Returning for attribute tables:', result);
 		} else if (targetTable === 'supplier_dev') {
-			return ['sup_code'];
+			result = ['sup_code'];
+			console.log('🔎 Returning for supplier_dev:', result);
 		} else if (targetTable === 'v_categories_dev') {
-			return ['atr_0_label'];
+			result = ['atr_0_label'];
+			console.log('🔎 Returning for categories:', result);
 		}
-		return [];
+		
+		console.log('🔎 Final requiredFields result:', result);
+		return result;
+	})();
+
+	function getRequiredFields(): string[] {
+		return requiredFields;
 	}
 
 	function isFieldMapped(fieldName: string): boolean {
@@ -524,8 +547,16 @@
 							type="single"
 							value={targetTable}
 							onValueChange={(value) => {
+								console.log('🎯 Select.onValueChange called with:', value);
+								console.log('🎯 Value length:', value?.length);
+								console.log('🎯 Value JSON:', JSON.stringify(value));
+								console.log('🎯 Current targetTable before change:', targetTable);
 								if (value) {
-									targetTable = value;
+									// Nettoyer la valeur au cas où il y aurait des espaces
+									const cleanValue = value.trim();
+									targetTable = cleanValue;
+									console.log('🎯 targetTable set to:', targetTable);
+									console.log('🎯 targetTable JSON:', JSON.stringify(targetTable));
 									handleTableChange();
 								}
 							}}
@@ -592,8 +623,12 @@
 					<!-- Champs requis -->
 					<div class="mb-6">
 						<h3 class="mb-2 font-medium">Champs requis</h3>
+						<!-- Debug info -->
+						<div class="mb-2 text-xs text-gray-500">
+							Debug: targetTable = "{targetTable}", requiredFields = {JSON.stringify(requiredFields)}
+						</div>
 						<div class="flex flex-wrap gap-2">
-							{#each getRequiredFields() as field}
+							{#each requiredFields as field}
 								<div
 									class={`rounded-full px-3 py-1 text-sm font-medium ${isFieldMapped(field) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
 								>
@@ -618,7 +653,7 @@
 						<Button
 							type="submit"
 							variant="vert"
-							disabled={getRequiredFields().some((field) => !isFieldMapped(field)) || $submitting}
+							disabled={requiredFields.some((field) => !isFieldMapped(field)) || $submitting}
 						>
 							{#if $submitting}
 								<Spinner class="mr-2 h-4 w-4" />
