@@ -16,6 +16,11 @@ pnpm lint && pnpm format  # Qualité du code
 pnpm check                # Vérification TypeScript
 pnpm test:unit            # Tests unitaires
 pnpm prisma:generate      # Génération client Prisma
+
+# Scripts BDD-IA (Export base de données)
+node scripts/BDD-IA/fetch-all-tables.mjs    # Export toutes les tables
+node scripts/BDD-IA/fetch-all-views.mjs     # Export toutes les vues  
+node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 ```
 
 ## Architecture et fichiers clés
@@ -36,6 +41,7 @@ pnpm prisma:generate      # Génération client Prisma
 - Tables : kits, attributes, parts, documents
 - Vues matérialisées : v_categories, v_kit_carac (+ variantes \_dev)
 - Support prod/dev avec tables séparées
+- **Données complètes disponibles** : Toutes les données Cenov (12 tables, 4 vues) exportées en JSON dans `scripts/BDD-IA/output/` pour analyse IA
 
 ## Conventions de code
 

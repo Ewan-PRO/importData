@@ -46,6 +46,14 @@ pnpm add <package>        # Add new dependency
 pnpm add -D <package>     # Add dev dependency
 ```
 
+**BDD-IA Scripts (Database Export):**
+```bash
+node scripts/BDD-IA/fetch-all-tables.mjs    # Export all tables
+node scripts/BDD-IA/fetch-all-views.mjs     # Export all views  
+node scripts/BDD-IA/fetch-cenov-data.mjs    # Export everything (recommended)
+```
+*Exports all Cenov database data in read-only mode to JSON files in `scripts/BDD-IA/output/`*
+
 ## Architecture Overview
 
 ### Tech Stack
@@ -63,6 +71,8 @@ The application manages a hierarchical kit and parts system with:
 - **Parts:** Components belonging to kits
 - **Documents:** File attachments for kits
 - **Views:** Materialized views for categories (v_categories, v_kit_carac) with dev variants
+
+**Database Export:** Complete Cenov database data (12 tables, 4 views) available as JSON files in `scripts/BDD-IA/output/` for AI analysis and consultation.
 
 ### Key Files Structure
 - `src/routes/` - SvelteKit pages (categories, kits, import, products)
