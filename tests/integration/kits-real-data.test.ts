@@ -94,7 +94,7 @@ const testKitsReal = {
 
 	tooLongAtrLabel: {
 		kit_label: 'TEST_KIT_Normal',
-		atr_label: 'TEST_' + 'B'.repeat(96), // > 100 chars total  
+		atr_label: 'TEST_' + 'B'.repeat(96), // > 100 chars total
 		atr_val: 'unit',
 		kat_valeur: '1'
 	},
@@ -122,9 +122,9 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 		const testKits = await prisma.kit_dev.findMany({
 			where: { kit_label: { startsWith: 'TEST_KIT_' } }
 		});
-		
+
 		if (testKits.length > 0) {
-			const testKitIds = testKits.map(k => k.kit_id);
+			const testKitIds = testKits.map((k) => k.kit_id);
 			await prisma.kit_attribute_dev.deleteMany({
 				where: { fk_kit: { in: testKitIds } }
 			});
@@ -140,10 +140,7 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 		// Supprimer les attributs de test
 		await prisma.attribute_dev.deleteMany({
 			where: {
-				OR: [
-					{ atr_label: { startsWith: 'TEST_' } },
-					{ atr_val: { startsWith: 'TEST_' } }
-				]
+				OR: [{ atr_label: { startsWith: 'TEST_' } }, { atr_val: { startsWith: 'TEST_' } }]
 			}
 		});
 
@@ -156,7 +153,9 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 
 		// 1. Supprimer tous les kit_attribute_dev créés lors des tests
 		if (createdKatIds.length > 0) {
-			console.log(`🗑️ Suppression de ${createdKatIds.length} kit_attribute_dev créés lors des tests`);
+			console.log(
+				`🗑️ Suppression de ${createdKatIds.length} kit_attribute_dev créés lors des tests`
+			);
 			await prisma.kit_attribute_dev.deleteMany({
 				where: { kat_id: { in: createdKatIds } }
 			});
@@ -166,9 +165,9 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 		const testKits = await prisma.kit_dev.findMany({
 			where: { kit_label: { startsWith: 'TEST_KIT_' } }
 		});
-		
+
 		if (testKits.length > 0) {
-			const testKitIds = testKits.map(k => k.kit_id);
+			const testKitIds = testKits.map((k) => k.kit_id);
 			console.log(`🗑️ Suppression des kit_attribute_dev pour ${testKits.length} kits restants`);
 			await prisma.kit_attribute_dev.deleteMany({
 				where: { fk_kit: { in: testKitIds } }
@@ -185,10 +184,7 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 		console.log(`🗑️ Suppression des attributs de test`);
 		await prisma.attribute_dev.deleteMany({
 			where: {
-				OR: [
-					{ atr_label: { startsWith: 'TEST_' } },
-					{ atr_val: { startsWith: 'TEST_' } }
-				]
+				OR: [{ atr_label: { startsWith: 'TEST_' } }, { atr_val: { startsWith: 'TEST_' } }]
 			}
 		});
 
@@ -219,7 +215,7 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 
 			// Vérifier dans la vue v_kit_carac_dev
 			const kitInView = await prisma.v_kit_carac_dev.findFirst({
-				where: { 
+				where: {
 					kit_label: 'TEST_KIT_Pompe_Hydraulique',
 					atr_label: 'Pression'
 				}
@@ -389,7 +385,7 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 			// Tester une modification simple : changer seulement la valeur numérique
 			const modificationData = {
 				kit_label: 'TEST_KIT_ModifBase_' + Date.now().toString().slice(-6), // Même kit de base mais nom unique
-				atr_label: 'Température', // Garder même caractéristique  
+				atr_label: 'Température', // Garder même caractéristique
 				atr_val: '°C', // Garder même unité
 				kat_valeur: '90.5' // Changer seulement la valeur
 			};
@@ -452,12 +448,12 @@ describe('Kits CRUD - Tests avec vraies données BDD', () => {
 			});
 
 			const result = await response.json();
-			
+
 			// Vérifier que la création a réussi
 			if (!result.success || !result.data?.kitAttribute) {
 				throw new Error(`Échec création kit pour suppression: ${JSON.stringify(result)}`);
 			}
-			
+
 			testKitKatId = result.data.kitAttribute.kat_id;
 		});
 

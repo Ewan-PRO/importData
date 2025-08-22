@@ -5,42 +5,51 @@ Ce dossier contient des scripts pour récupérer toutes les données de la base 
 ## Scripts disponibles
 
 ### 📊 `fetch-all-tables.mjs`
+
 Récupère toutes les données des tables du schéma public.
 
 **Utilisation :**
+
 ```bash
 node scripts/BDD-IA/fetch-all-tables.mjs
 ```
 
 **Fonctionnalités :**
+
 - Liste toutes les tables du schéma public
 - Récupère toutes les données de chaque table (SELECT uniquement)
 - Sauvegarde les résultats en JSON avec horodatage
 - Affiche un résumé détaillé avec comptage des lignes
 
 ### 👁️ `fetch-all-views.mjs`
+
 Récupère toutes les données des vues (normales et matérialisées) du schéma public.
 
 **Utilisation :**
+
 ```bash
 node scripts/BDD-IA/fetch-all-views.mjs
 ```
 
 **Fonctionnalités :**
+
 - Liste toutes les vues et vues matérialisées du schéma public
 - Récupère les données, définitions et structures des colonnes
 - Sauvegarde les résultats en JSON avec métadonnées complètes
 - Distingue les vues normales des vues matérialisées
 
 ### 🚀 `fetch-cenov-data.mjs` (Script principal)
+
 Script principal qui récupère **toutes les données** (tables + vues) en une seule exécution.
 
 **Utilisation :**
+
 ```bash
 node scripts/BDD-IA/fetch-cenov-data.mjs
 ```
 
 **Fonctionnalités :**
+
 - Exécute les deux scripts précédents en parallèle
 - Récupère les informations générales sur la base de données
 - Génère un rapport complet avec résumé et métriques
@@ -59,6 +68,7 @@ Les scripts créent un dossier `scripts/BDD-IA/output/` avec :
 ## 🔒 Sécurité
 
 Ces scripts fonctionnent en **mode lecture seule** :
+
 - ✅ SELECT sur toutes les tables et vues
 - ❌ Aucune modification (INSERT/UPDATE/DELETE)
 - ❌ Aucune suppression

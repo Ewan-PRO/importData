@@ -565,9 +565,7 @@ describe('Import System - Tests avec vraies données BDD', () => {
 			const importedCount = result.result.inserted || 0;
 			expect(importedCount).toBeLessThan(2); // Moins que le total des lignes
 		});
-
 	});
-
 
 	describe('🗃️ Tests spécifiques tables', () => {
 		it('✅ CATEGORIES: devrait traiter correctement les niveaux hiérarchiques', async () => {

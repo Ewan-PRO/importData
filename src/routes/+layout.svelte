@@ -23,7 +23,8 @@
 		{ href: '/', label: 'Accueil' },
 		{ href: '/categories', label: 'Catégories' },
 		{ href: '/kits', label: 'Kits' },
-		{ href: '/import', label: 'Import' }
+		{ href: '/import', label: 'Import' },
+		{ href: '/export', label: 'Export' }
 	];
 </script>
 
