@@ -4,9 +4,9 @@
  * Récupère toutes les tables et vues du schéma public en mode lecture seule
  * 
  * Commandes pour lancer les scripts :
- * - Tables seulement : node scripts/fetch-all-tables.mjs
- * - Vues seulement : node scripts/fetch-all-views.mjs  
- * - Tout (recommandé) : node scripts/fetch-cenov-data.mjs
+ * - Tables seulement : node scripts/BDD-IA/fetch-all-tables.mjs
+ * - Vues seulement : node scripts/BDD-IA/fetch-all-views.mjs  
+ * - Tout (recommandé) : node scripts/BDD-IA/fetch-cenov-data.mjs
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -127,7 +127,7 @@ async function fetchCenovData() {
     };
 
     // Sauvegarde des résultats complets
-    const outputDir = path.join(process.cwd(), 'scripts', 'output');
+    const outputDir = path.join(process.cwd(), 'scripts', 'BDD-IA', 'output');
     await fs.mkdir(outputDir, { recursive: true });
     
     const outputFile = path.join(outputDir, `cenov-complete-data-${new Date().toISOString().split('T')[0]}.json`);

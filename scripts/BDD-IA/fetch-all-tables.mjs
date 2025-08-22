@@ -4,9 +4,9 @@
  * Mode lecture seule - aucune modification/suppression/ajout
  * test
  * Commandes pour lancer les scripts :
- * - Tables seulement : node scripts/fetch-all-tables.mjs
- * - Vues seulement : node scripts/fetch-all-views.mjs
- * - Tout (recommandé) : node scripts/fetch-cenov-data.mjs
+ * - Tables seulement : node scripts/BDD-IA/fetch-all-tables.mjs
+ * - Vues seulement : node scripts/BDD-IA/fetch-all-views.mjs
+ * - Tout (recommandé) : node scripts/BDD-IA/fetch-cenov-data.mjs
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -79,7 +79,7 @@ async function fetchAllTables() {
 		}
 
 		// Sauvegarde des résultats
-		const outputDir = path.join(process.cwd(), 'scripts', 'output');
+		const outputDir = path.join(process.cwd(), 'scripts', 'BDD-IA', 'output');
 		await fs.mkdir(outputDir, { recursive: true });
 
 		const outputFile = path.join(

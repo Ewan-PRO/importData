@@ -9,7 +9,7 @@ Récupère toutes les données des tables du schéma public.
 
 **Utilisation :**
 ```bash
-node scripts/fetch-all-tables.mjs
+node scripts/BDD-IA/fetch-all-tables.mjs
 ```
 
 **Fonctionnalités :**
@@ -23,7 +23,7 @@ Récupère toutes les données des vues (normales et matérialisées) du schéma
 
 **Utilisation :**
 ```bash
-node scripts/fetch-all-views.mjs
+node scripts/BDD-IA/fetch-all-views.mjs
 ```
 
 **Fonctionnalités :**
@@ -37,7 +37,7 @@ Script principal qui récupère **toutes les données** (tables + vues) en une s
 
 **Utilisation :**
 ```bash
-node scripts/fetch-cenov-data.mjs
+node scripts/BDD-IA/fetch-cenov-data.mjs
 ```
 
 **Fonctionnalités :**
@@ -49,7 +49,7 @@ node scripts/fetch-cenov-data.mjs
 
 ## 📁 Fichiers de sortie
 
-Les scripts créent un dossier `scripts/output/` avec :
+Les scripts créent un dossier `scripts/BDD-IA/output/` avec :
 
 - `cenov-complete-data-YYYY-MM-DD.json` - Toutes les données récupérées
 - `cenov-summary-YYYY-MM-DD.json` - Résumé avec métadonnées uniquement
@@ -82,7 +82,7 @@ Ces scripts fonctionnent en **mode lecture seule** :
 Pour une récupération complète, utilisez le script principal :
 
 ```bash
-pnpm node scripts/fetch-cenov-data.mjs
+pnpm node scripts/BDD-IA/fetch-cenov-data.mjs
 ```
 
 Cela vous donnera accès à toutes les informations de la base Cenov pour consultation et analyse.
