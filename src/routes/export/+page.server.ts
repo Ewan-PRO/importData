@@ -532,8 +532,8 @@ export const actions: Actions = {
 				});
 			}
 
-			// Si c'est un fichier binaire, on devrait gérer le téléchargement différemment
-			if (contentType && (contentType.includes('application/vnd.openxml') || contentType.includes('text/csv') || contentType.includes('application/xml'))) {
+			// Si c'est un fichier binaire ou HTML (PDF), on devrait gérer le téléchargement différemment
+			if (contentType && (contentType.includes('application/vnd.openxml') || contentType.includes('text/csv') || contentType.includes('application/xml') || contentType.includes('text/html'))) {
 				console.log('📁 [SERVER] Fichier binaire détecté, lecture des headers personnalisés');
 				const exportResultHeader = response.headers.get('X-Export-Result');
 				if (exportResultHeader) {
