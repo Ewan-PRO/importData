@@ -2,7 +2,7 @@
 /**
  * Script pour récupérer toutes les données des tables du schéma public de la base Cenov
  * Mode lecture seule - aucune modification/suppression/ajout
- *
+ * test
  * Commandes pour lancer les scripts :
  * - Tables seulement : node scripts/fetch-all-tables.mjs
  * - Vues seulement : node scripts/fetch-all-views.mjs
