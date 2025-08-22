@@ -9,6 +9,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import * as Table from '$lib/components/ui/table';
 	import { Badge } from '$lib/components/ui/badge';
+	import { Input } from '$lib/components/ui/input';
 	// import { Separator } from '$lib/components/ui/separator'; // Non utilisé
 	import {
 		// Download, // Non utilisé
@@ -26,7 +27,9 @@
 		BarChart3,
 		FileDown,
 		Play,
-		RotateCcw
+		RotateCcw,
+		CircleArrowRight,
+		CircleArrowLeft
 		// X, // Non utilisé
 		// Check // Non utilisé
 	} from 'lucide-svelte';
@@ -44,19 +47,38 @@
 	} = superForm(data.form, {
 		dataType: 'json',
 		onUpdated: ({ form }) => {
+			console.log('🔄 [CLIENT] onUpdated appelé, form.data:', form?.data);
 			if (form && form.data) {
 				if ('result' in form.data) {
+					console.log('📦 [CLIENT] Résultat d\'export reçu:', form.data.result);
 					const result = form.data.result as ExportResult;
 					handleExportResult(result);
 				}
 				if ('preview' in form.data) {
+					console.log('👀 [CLIENT] Données d\'aperçu reçues');
 					previewData = form.data.preview as Record<string, unknown[]>;
 					step = 3; // Étape d'aperçu
 				}
 			}
 		},
+		onResult: ({ result }) => {
+			console.log('🎯 [CLIENT] onResult appelé:', result);
+			if (result.type === 'success' && result.data) {
+				console.log('📊 [CLIENT] Données de résultat:', result.data);
+				if ('result' in result.data) {
+					console.log('📦 [CLIENT] Résultat d\'export dans onResult:', result.data.result);
+					const exportResult = result.data.result as ExportResult;
+					handleExportResult(exportResult);
+				}
+				if ('preview' in result.data) {
+					console.log('👀 [CLIENT] Aperçu dans onResult');
+					previewData = result.data.preview as Record<string, unknown[]>;
+					step = 3;
+				}
+			}
+		},
 		onError: (event) => {
-			console.error('Erreur de soumission:', event);
+			console.error('❌ [CLIENT] Erreur de soumission SuperForm:', event);
 			Alert.alertActions.error("Une erreur est survenue lors de l'export");
 		}
 	});
@@ -164,12 +186,65 @@
 
 	// Gestion des résultats d'export
 	function handleExportResult(result: ExportResult) {
+		console.log('🎯 [CLIENT] handleExportResult appelé avec:', result);
 		exportResult = result;
 		if (result.success) {
+			console.log('✅ [CLIENT] Export réussi, affichage du message de succès');
+			
+			// Si un téléchargement client est nécessaire
+			if (result.needsClientDownload && result.downloadUrl) {
+				console.log('📁 [CLIENT] Déclenchement du téléchargement client:', result.downloadUrl);
+				triggerClientDownload(result);
+			}
+			
 			Alert.alertActions.success(result.message);
 			step = 4; // Étape finale
 		} else {
+			console.error('❌ [CLIENT] Échec de l\'export:', result.message);
 			Alert.alertActions.error(result.message);
+		}
+	}
+
+	// Fonction pour déclencher le téléchargement côté client
+	async function triggerClientDownload(result: ExportResult) {
+		try {
+			console.log('🌐 [CLIENT] Lancement requête de téléchargement');
+			
+			// Refaire la requête POST pour obtenir le fichier
+			const response = await fetch('/export/api', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify($form)
+			});
+
+			if (!response.ok) {
+				console.error('❌ [CLIENT] Erreur de téléchargement:', response.status);
+				Alert.alertActions.error('Erreur lors du téléchargement du fichier');
+				return;
+			}
+
+			console.log('📄 [CLIENT] Réponse téléchargement reçue, création du blob');
+			
+			// Créer un blob et déclencher le téléchargement
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = result.fileName || 'export.xlsx';
+			document.body.appendChild(link);
+			
+			console.log('⬇️ [CLIENT] Déclenchement du téléchargement:', result.fileName);
+			link.click();
+			
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(url);
+			
+			console.log('✅ [CLIENT] Téléchargement terminé avec succès');
+		} catch (err) {
+			console.error('❌ [CLIENT] Erreur téléchargement client:', err);
+			Alert.alertActions.error('Erreur lors du téléchargement du fichier');
 		}
 	}
 
@@ -314,7 +389,7 @@
 		</Card>
 	</div>
 
-	<Card class="w-full">
+	<Card class="w-full max-w-none">
 		{#if step === 1}
 			<!-- Étape 1: Sélection des tables -->
 			<div class="mb-6">
@@ -325,11 +400,10 @@
 					<div class="flex flex-wrap gap-4">
 						<!-- Recherche -->
 						<div class="min-w-64 flex-1">
-							<input
+							<Input
 								type="text"
 								bind:value={searchTerm}
 								placeholder="Rechercher une table..."
-								class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
 							/>
 						</div>
 
@@ -455,7 +529,7 @@
 					</Button>
 					<Button variant="bleu" onclick={validateAndNext}>
 						Continuer
-						<span class="ml-2">→</span>
+						<CircleArrowRight class="ml-2 h-4 w-4" />
 					</Button>
 				</div>
 			</div>
@@ -493,14 +567,14 @@
 						<div class="flex items-center space-x-4">
 							<label for="rowLimit" class="text-sm font-medium">Limite de lignes (optionnel):</label
 							>
-							<input
+							<Input
 								id="rowLimit"
 								type="number"
 								bind:value={$form.rowLimit}
 								placeholder="Pas de limite"
 								min="1"
 								max="1000000"
-								class="w-32 rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+								class="w-32"
 							/>
 						</div>
 					</div>
@@ -526,20 +600,18 @@
 									<div class="flex gap-4">
 										<div>
 											<label for="dateFrom" class="block text-sm text-gray-600">Du:</label>
-											<input
+											<Input
 												id="dateFrom"
 												type="date"
 												bind:value={dateFrom}
-												class="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
 											/>
 										</div>
 										<div>
 											<label for="dateTo" class="block text-sm text-gray-600">Au:</label>
-											<input
+											<Input
 												id="dateTo"
 												type="date"
 												bind:value={dateTo}
-												class="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
 											/>
 										</div>
 									</div>
@@ -593,7 +665,10 @@
 					<input type="hidden" name="dateRange" value={JSON.stringify($form.dateRange)} />
 
 					<div class="flex justify-between">
-						<Button variant="noir" onclick={() => goToStep(1)}>← Retour</Button>
+						<Button variant="noir" onclick={() => goToStep(1)}>
+							<CircleArrowLeft class="mr-2 h-4 w-4" />
+							Retour
+						</Button>
 						<div class="flex gap-2">
 							<Button type="submit" variant="blanc">
 								{#if $submitting}
@@ -691,7 +766,10 @@
 					<input type="hidden" name="dateRange" value={JSON.stringify($form.dateRange)} />
 
 					<div class="flex justify-between">
-						<Button variant="noir" onclick={() => goToStep(2)}>← Configuration</Button>
+						<Button variant="noir" onclick={() => goToStep(2)}>
+							<CircleArrowLeft class="mr-2 h-4 w-4" />
+							Configuration
+						</Button>
 						<Button type="submit" variant="vert" size="lg">
 							{#if $submitting}
 								<Spinner class="mr-2 h-4 w-4" />

@@ -42,6 +42,7 @@ export interface ExportResult {
 	exportedRows: number;
 	warnings: string[];
 	errors: string[];
+	needsClientDownload?: boolean;
 }
 
 // Schéma de validation pour l'export
@@ -490,14 +491,19 @@ export const actions: Actions = {
 	},
 
 	export: async ({ request, fetch }) => {
+		console.log('🚀 [SERVER] Action export déclenchée');
 		const form = await superValidate(request, zod(exportSchema));
 
 		if (!form.valid) {
+			console.error('❌ [SERVER] Formulaire invalide:', form.errors);
 			return fail(400, { form });
 		}
 
+		console.log('📊 [SERVER] Configuration d\'export:', form.data);
+
 		try {
 			// Rediriger vers l'API d'export pour le traitement
+			console.log('📡 [SERVER] Envoi requête vers /export/api');
 			const response = await fetch('/export/api', {
 				method: 'POST',
 				headers: {
@@ -506,18 +512,59 @@ export const actions: Actions = {
 				body: JSON.stringify(form.data)
 			});
 
+			console.log('📨 [SERVER] Réponse API reçue:', response.status, response.statusText);
+			
+			// Vérifier si c'est un fichier binaire (headers Content-Type)
+			const contentType = response.headers.get('content-type');
+			console.log('📄 [SERVER] Content-Type de la réponse:', contentType);
+
 			if (!response.ok) {
-				const errorData = await response.json();
+				console.error('❌ [SERVER] Réponse API non OK:', response.status);
+				let errorData;
+				try {
+					errorData = await response.json();
+				} catch {
+					errorData = { error: 'Erreur de communication avec l\'API' };
+				}
 				return fail(response.status, {
 					form,
 					error: errorData.error || "Erreur lors de l'export"
 				});
 			}
 
-			const result = await response.json();
+			// Si c'est un fichier binaire, on devrait gérer le téléchargement différemment
+			if (contentType && (contentType.includes('application/vnd.openxml') || contentType.includes('text/csv') || contentType.includes('application/xml'))) {
+				console.log('📁 [SERVER] Fichier binaire détecté, lecture des headers personnalisés');
+				const exportResultHeader = response.headers.get('X-Export-Result');
+				if (exportResultHeader) {
+					const result = JSON.parse(exportResultHeader);
+					console.log('📦 [SERVER] Résultat d\'export extrait des headers:', result);
+					
+					// Dans ce cas, nous devons gérer le téléchargement côté client
+					const finalResult = { ...result, needsClientDownload: true, downloadUrl: '/export/api' };
+					console.log('🎯 [SERVER] Retour du résultat final:', finalResult);
+					return { form, success: true, result: finalResult };
+				} else {
+					console.warn('⚠️ [SERVER] Header X-Export-Result manquant');
+				}
+			}
+
+			// Tentative de lecture JSON pour les erreurs
+			let result;
+			try {
+				result = await response.json();
+				console.log('📦 [SERVER] Résultat JSON:', result);
+			} catch (jsonErr) {
+				console.error('❌ [SERVER] Impossible de parser la réponse en JSON:', jsonErr);
+				return fail(500, {
+					form,
+					error: "Erreur lors du parsing de la réponse d'export"
+				});
+			}
+
 			return { form, success: true, result };
 		} catch (err) {
-			console.error("Erreur lors de l'export:", err);
+			console.error("❌ [SERVER] Erreur lors de l'export:", err);
 			return fail(500, {
 				form,
 				error: "Erreur lors de l'export des données"
