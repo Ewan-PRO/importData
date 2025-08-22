@@ -392,7 +392,7 @@
 		{#if step === 1}
 			<!-- Étape 1: Sélection des tables -->
 			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-bold text-black">Sélection des tables à exporter</h2>
+				<h2 class="mb-4 text-xl font-bold text-black">Sélection des tables à exporter :</h2>
 
 				<!-- Filtres -->
 				<div class="mb-6 space-y-4">
@@ -425,11 +425,16 @@
 
 					<!-- Actions rapides -->
 					<div class="flex flex-wrap gap-4">
-						<Button variant="noir" size="sm" onclick={toggleAllTables}>
-							{$form.selectedTables.length === filteredTables.length
-								? 'Désélectionner'
-								: 'Sélectionner'} tout
-						</Button>
+						<label class="flex cursor-pointer items-center space-x-2">
+							<input
+								type="checkbox"
+								checked={$form.selectedTables.length === filteredTables.length &&
+									filteredTables.length > 0}
+								onchange={toggleAllTables}
+								class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+							/>
+							<span>Sélectionner tout ({filteredTables.length})</span>
+						</label>
 
 						<label class="flex cursor-pointer items-center space-x-2">
 							<input
@@ -709,7 +714,7 @@
 							Retour
 						</Button>
 						<div class="flex gap-2">
-							<Button type="submit" variant="blanc">
+							<Button type="submit" variant="bleu">
 								{#if $submitting}
 									<Spinner class="mr-2 h-4 w-4" />
 									Génération de l'aperçu...
