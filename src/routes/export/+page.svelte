@@ -10,7 +10,6 @@
 	import * as Table from '$lib/components/ui/table';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
-	// import { Separator } from '$lib/components/ui/separator'; // Non utilisé
 	import {
 		// Download, // Non utilisé
 		Database,
@@ -50,12 +49,12 @@
 			console.log('🔄 [CLIENT] onUpdated appelé, form.data:', form?.data);
 			if (form && form.data) {
 				if ('result' in form.data) {
-					console.log('📦 [CLIENT] Résultat d\'export reçu:', form.data.result);
+					console.log("📦 [CLIENT] Résultat d'export reçu:", form.data.result);
 					const result = form.data.result as ExportResult;
 					handleExportResult(result);
 				}
 				if ('preview' in form.data) {
-					console.log('👀 [CLIENT] Données d\'aperçu reçues');
+					console.log("👀 [CLIENT] Données d'aperçu reçues");
 					previewData = form.data.preview as Record<string, unknown[]>;
 					step = 3; // Étape d'aperçu
 				}
@@ -66,7 +65,7 @@
 			if (result.type === 'success' && result.data) {
 				console.log('📊 [CLIENT] Données de résultat:', result.data);
 				if ('result' in result.data) {
-					console.log('📦 [CLIENT] Résultat d\'export dans onResult:', result.data.result);
+					console.log("📦 [CLIENT] Résultat d'export dans onResult:", result.data.result);
 					const exportResult = result.data.result as ExportResult;
 					handleExportResult(exportResult);
 				}
@@ -103,8 +102,8 @@
 		{ value: 'all', label: 'Toutes les tables', icon: Database },
 		{ value: 'tables', label: 'Tables principales', icon: Database },
 		{ value: 'views', label: 'Vues', icon: Eye },
-		{ value: 'dev_tables', label: 'Tables de dev', icon: Settings },
-		{ value: 'dev_views', label: 'Vues de dev', icon: Settings }
+		{ value: 'dev_tables', label: 'Tables de dev', icon: Database },
+		{ value: 'dev_views', label: 'Vues de dev', icon: Eye }
 	];
 
 	// Formats d'export
@@ -162,7 +161,7 @@
 			case 'dev_views':
 				return Eye;
 			case 'dev_tables':
-				return Settings;
+				return Database;
 			default:
 				return Database;
 		}
@@ -190,17 +189,17 @@
 		exportResult = result;
 		if (result.success) {
 			console.log('✅ [CLIENT] Export réussi, affichage du message de succès');
-			
+
 			// Si un téléchargement client est nécessaire
 			if (result.needsClientDownload && result.downloadUrl) {
 				console.log('📁 [CLIENT] Déclenchement du téléchargement client:', result.downloadUrl);
 				triggerClientDownload(result);
 			}
-			
+
 			Alert.alertActions.success(result.message);
 			step = 4; // Étape finale
 		} else {
-			console.error('❌ [CLIENT] Échec de l\'export:', result.message);
+			console.error("❌ [CLIENT] Échec de l'export:", result.message);
 			Alert.alertActions.error(result.message);
 		}
 	}
@@ -209,7 +208,7 @@
 	async function triggerClientDownload(result: ExportResult) {
 		try {
 			console.log('🌐 [CLIENT] Lancement requête de téléchargement');
-			
+
 			// Refaire la requête POST pour obtenir le fichier
 			const response = await fetch('/export/api', {
 				method: 'POST',
@@ -226,7 +225,7 @@
 			}
 
 			console.log('📄 [CLIENT] Réponse téléchargement reçue, création du blob');
-			
+
 			// Créer un blob et déclencher le téléchargement
 			const blob = await response.blob();
 			const url = window.URL.createObjectURL(blob);
@@ -234,13 +233,13 @@
 			link.href = url;
 			link.download = result.fileName || 'export.xlsx';
 			document.body.appendChild(link);
-			
+
 			console.log('⬇️ [CLIENT] Déclenchement du téléchargement:', result.fileName);
 			link.click();
-			
+
 			document.body.removeChild(link);
 			window.URL.revokeObjectURL(url);
-			
+
 			console.log('✅ [CLIENT] Téléchargement terminé avec succès');
 		} catch (err) {
 			console.error('❌ [CLIENT] Erreur téléchargement client:', err);
@@ -393,18 +392,14 @@
 		{#if step === 1}
 			<!-- Étape 1: Sélection des tables -->
 			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-semibold">Sélection des tables à exporter</h2>
+				<h2 class="mb-4 text-xl font-bold text-black">Sélection des tables à exporter</h2>
 
 				<!-- Filtres -->
 				<div class="mb-6 space-y-4">
 					<div class="flex flex-wrap gap-4">
 						<!-- Recherche -->
 						<div class="min-w-64 flex-1">
-							<Input
-								type="text"
-								bind:value={searchTerm}
-								placeholder="Rechercher une table..."
-							/>
+							<Input type="text" bind:value={searchTerm} placeholder="Rechercher une table..." />
 						</div>
 
 						<!-- Sélection par catégorie -->
@@ -429,18 +424,70 @@
 					</div>
 
 					<!-- Actions rapides -->
-					<div class="flex flex-wrap gap-2">
-						<Button variant="blanc" size="sm" onclick={toggleAllTables}>
+					<div class="flex flex-wrap gap-4">
+						<Button variant="noir" size="sm" onclick={toggleAllTables}>
 							{$form.selectedTables.length === filteredTables.length
 								? 'Désélectionner'
 								: 'Sélectionner'} tout
 						</Button>
-						<Button variant="blanc" size="sm" onclick={() => selectByCategory('tables')}>
-							Tables principales ({tableCounts.tables})
-						</Button>
-						<Button variant="blanc" size="sm" onclick={() => selectByCategory('views')}>
-							Vues ({tableCounts.views})
-						</Button>
+
+						<label class="flex cursor-pointer items-center space-x-2">
+							<input
+								type="checkbox"
+								checked={$form.selectedTables.filter(
+									(t) => data.tables.find((table) => table.name === t)?.category === 'tables'
+								).length === tableCounts.tables && tableCounts.tables > 0}
+								onchange={() => {
+									const tablesInCategory = data.tables
+										.filter((t) => t.category === 'tables')
+										.map((t) => t.name);
+									const isAllSelected = tablesInCategory.every((tableName) =>
+										$form.selectedTables.includes(tableName)
+									);
+									if (isAllSelected) {
+										$form.selectedTables = $form.selectedTables.filter(
+											(t) => !tablesInCategory.includes(t)
+										);
+									} else {
+										const newSelection = [
+											...new Set([...$form.selectedTables, ...tablesInCategory])
+										];
+										$form.selectedTables = newSelection;
+									}
+								}}
+								class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+							/>
+							<span>Tables principales ({tableCounts.tables})</span>
+						</label>
+
+						<label class="flex cursor-pointer items-center space-x-2">
+							<input
+								type="checkbox"
+								checked={$form.selectedTables.filter(
+									(t) => data.tables.find((table) => table.name === t)?.category === 'views'
+								).length === tableCounts.views && tableCounts.views > 0}
+								onchange={() => {
+									const tablesInCategory = data.tables
+										.filter((t) => t.category === 'views')
+										.map((t) => t.name);
+									const isAllSelected = tablesInCategory.every((tableName) =>
+										$form.selectedTables.includes(tableName)
+									);
+									if (isAllSelected) {
+										$form.selectedTables = $form.selectedTables.filter(
+											(t) => !tablesInCategory.includes(t)
+										);
+									} else {
+										const newSelection = [
+											...new Set([...$form.selectedTables, ...tablesInCategory])
+										];
+										$form.selectedTables = newSelection;
+									}
+								}}
+								class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+							/>
+							<span>Vues ({tableCounts.views})</span>
+						</label>
 					</div>
 				</div>
 
@@ -600,19 +647,11 @@
 									<div class="flex gap-4">
 										<div>
 											<label for="dateFrom" class="block text-sm text-gray-600">Du:</label>
-											<Input
-												id="dateFrom"
-												type="date"
-												bind:value={dateFrom}
-											/>
+											<Input id="dateFrom" type="date" bind:value={dateFrom} />
 										</div>
 										<div>
 											<label for="dateTo" class="block text-sm text-gray-600">Au:</label>
-											<Input
-												id="dateTo"
-												type="date"
-												bind:value={dateTo}
-											/>
+											<Input id="dateTo" type="date" bind:value={dateTo} />
 										</div>
 									</div>
 								</div>
@@ -785,7 +824,7 @@
 		{:else if step === 4}
 			<!-- Étape 4: Résultat de l'export -->
 			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-semibold">Export terminé</h2>
+				<h2 class="mb-4 text-xl font-semibold text-black">Export terminé</h2>
 
 				{#if exportResult}
 					<div class="rounded-lg border border-green-200 bg-green-50 p-6">
