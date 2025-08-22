@@ -1,0 +1,5811 @@
+{
+  "timestamp": "2025-08-22T07:48:28.229Z",
+  "schema": "public",
+  "totalViews": 4,
+  "views": {
+    "v_categories": {
+      "viewName": "v_categories",
+      "rowCount": 150,
+      "data": [
+        {
+          "atr_id": 33,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "fluide",
+          "atr_2_label": null,
+          "atr_3_label": null,
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "roulement à billes",
+          "atr_7_label": "roulement rigide à billes"
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "roulement à billes",
+          "atr_7_label": "roulements-inserts (roulements Y) "
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "roulement à billes",
+          "atr_7_label": "roulements à billes à contact oblique "
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "roulement à billes",
+          "atr_7_label": "roulements à rotule sur billes"
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "roulement à billes",
+          "atr_7_label": "butées à billes"
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "galets a rouleaux",
+          "atr_7_label": "galets de came "
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "galets a rouleaux",
+          "atr_7_label": "butées à aiguilles "
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "galets a rouleaux",
+          "atr_7_label": "galets-supports"
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "galets a rouleaux",
+          "atr_7_label": "galets de came avec axe"
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "accessories pour roulement",
+          "atr_7_label": "ecrou de serrage"
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "roulement à une rangée de rouleaux cylindriques",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "roulements à aiguilles ",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "roulements à rouleaux coniques",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "roulements à rotule sur rouleaux",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "roulements à rouleaux toroïdaux CARB",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "butées à rouleaux cylindriques",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "butées à rotule sur rouleaux",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "manchons d'usure",
+          "atr_6_label": "Speedi Sleeve",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "manchons d'usure",
+          "atr_6_label": "bagues interieures de roulements à aiguilles",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "pallier",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en translation (linéaire)",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "quinquaillerie",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "piece spécifique",
+          "atr_4_label": "cartérisation",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "piece spécifique",
+          "atr_4_label": "palettes",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "chaines, Pignions, roues, disque",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "poulie, courroie",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement rigide",
+          "atr_6_label": "accouplements par manchon à goupilles",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement rigide",
+          "atr_6_label": "accouplements à goupilles",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement rigide",
+          "atr_6_label": "assemblage par manchon et clavette",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement rigide",
+          "atr_6_label": "accouplements à manchon à plateau",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement rigide",
+          "atr_6_label": "accouplements par mâchoires",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement rigide",
+          "atr_6_label": "accouplements biconiques",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement semi-elastiques",
+          "atr_6_label": "accouplements semi-élastiques",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement semi-elastiques",
+          "atr_6_label": "accouplement flexible Multibeam",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement semi-elastiques",
+          "atr_6_label": "accouplements flexibles",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements temporaires",
+          "atr_6_label": "embrayages",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements temporaires",
+          "atr_6_label": "freins",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement élastique",
+          "atr_6_label": "accouplement élastique de torsion",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement élastique",
+          "atr_6_label": "accouplement élastique ressort carré triple fil ",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement élastique",
+          "atr_6_label": "accouplement à mâchoire",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement élastique",
+          "atr_6_label": "accouplement manchons en caoutchouc ",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements articulés",
+          "atr_6_label": "accouplement  accouplement à denture",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements articulés",
+          "atr_6_label": "accouplement  joint d’oldham",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements articulés",
+          "atr_6_label": "accouplements à denture bombée",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements articulés",
+          "atr_6_label": "accouplement joint de cardan",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements articulés",
+          "atr_6_label": "accouplement joints homocinétiques",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "joint torique",
+          "atr_6_label": "joint torique, profil :  revetu",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "joint torique",
+          "atr_6_label": "joint torique, profil : 4 lobes",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "joint torique",
+          "atr_6_label": "joint torique, profil : carré",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "joint torique",
+          "atr_6_label": "joint torique, profil : standard",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "joint plat",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "joints plats :anneau",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "A la découpe",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint dynamique",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "bagues d'étanchéité",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration",
+          "atr_3_label": "filtration sur des liquides",
+          "atr_4_label": "filtration de l'huile",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration",
+          "atr_3_label": "filtration sur des liquides",
+          "atr_4_label": "filtre à huile cartouche extérieur",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration",
+          "atr_3_label": "filtration sur des liquides",
+          "atr_4_label": "Cartouche filtration inftérieur",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration sur des gaz",
+          "atr_3_label": "séparateurs de liquides",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration sur des gaz",
+          "atr_3_label": "condensateurs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration sur des gaz",
+          "atr_3_label": "mousse filtrante",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration sur des gaz",
+          "atr_3_label": "cartouche filtre à air",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration sur des gaz",
+          "atr_3_label": "déshuileur, Filtre séparateur d'huile",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration sur des gaz",
+          "atr_3_label": "filtre à air",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "entretien mineur",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "entretien majeur ",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "maintenance (joints + pièces d'usure",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "maintenance  majeur (joints + pièces d'usure + kit entretien mineur)",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "kit complet (joints + pièces d'usure + kit entretien majeur)",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "palettes",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "clapet",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 34,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "joints",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à spirale",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à becs",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à vis",
+          "atr_5_label": "pompe a vis sèche",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à vis",
+          "atr_5_label": "pompe à vis lubrifiée",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à vis",
+          "atr_5_label": "sèche",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à vis",
+          "atr_5_label": "pompes à vis lubrifiée (Joint d'huile)",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à ionisation",
+          "atr_5_label": "pompe à éjecteur",
+          "atr_6_label": "pompe à éjecteur trompe à eau",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à ionisation",
+          "atr_5_label": "pompe à éjecteur",
+          "atr_6_label": "pompe à éjecteur à gaz",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à ionisation",
+          "atr_5_label": "pompe à éjecteur",
+          "atr_6_label": "pompe à éjecteur à vapeur",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à ionisation",
+          "atr_5_label": "pompe à diffusion",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à ionisation",
+          "atr_5_label": "pompe à diffusion et à éjecteur",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe cryostatique",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe à sorbeur",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe à sublimation",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe ionique à sorbeur",
+          "atr_6_label": "pompe ionique à sublimation",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe ionique à sorbeur",
+          "atr_6_label": "pompe ionique à pulvérisation",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe cryostatique",
+          "atr_6_label": "pompe à bain",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe cryostatique",
+          "atr_6_label": "pompe à circuit fermé",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "Condenseur",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe moléculaire mécanique",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à lobes",
+          "atr_5_label": "roots booster",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à piston oscillant",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à piston tournant",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à palettes",
+          "atr_5_label": "pompe à palettes sèches",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à palettes",
+          "atr_5_label": "pompe à palettes lubrifiées",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à anneau liquide",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "surpresseur",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "turbine à canal latéral",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompes à palettes sèches",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompes à palettes lubrifiée (Joint d'huile)",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "équipements industriels de pilotage des moteurs électriques",
+          "atr_4_label": "variateurs",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "équipements industriels de pilotage des moteurs électriques",
+          "atr_4_label": "démarreurs progressifs",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "protections",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "motoréducteurs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "réducteurs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "moteurs AC (à courant alternatif )",
+          "atr_5_label": "moteur triphasé",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "moteurs AC (à courant alternatif )",
+          "atr_5_label": "moteur monophasé",
+          "atr_6_label": "moteurs asynchrone monophasé",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "moteurs AC (à courant alternatif )",
+          "atr_5_label": "moteur monophasé",
+          "atr_6_label": "moteurs synchrone monophasé",
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "moteurs AC (à courant alternatif )",
+          "atr_5_label": "moteurs synchrone triphasé",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "moteurs AC (à courant alternatif )",
+          "atr_5_label": "moteur asynchrone triphasé",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "moteurs DC (à courant continu)",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "brushless",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "classique (de type inducteur)",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "pas à pas",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "process : agitation mélange et pulvérisation",
+          "atr_3_label": "mélangeurs industriels",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "process : agitation mélange et pulvérisation",
+          "atr_3_label": "agitateurs industriels",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "process : agitation mélange et pulvérisation",
+          "atr_3_label": "buse industrielle",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "tuyauterie et robinetterie",
+          "atr_3_label": "tuyaux",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "tuyauterie et robinetterie",
+          "atr_3_label": "robinetterie",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "équipements industriels de mesure",
+          "atr_3_label": "sur les fluides",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "équipements industriels de mesure",
+          "atr_3_label": "sur les gaz",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "équipements industriels de mesure",
+          "atr_3_label": "de position",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "équipements industriels de mesure",
+          "atr_3_label": "de mouvement",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "équipements industriels de mesure",
+          "atr_3_label": "vibratoire",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "compresseurs industriels",
+          "atr_3_label": "surpresseurs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "compresseurs industriels",
+          "atr_3_label": "pompes à palettes",
+          "atr_4_label": "pompes à palettes sèches",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "compresseurs industriels",
+          "atr_3_label": "pompes à palettes",
+          "atr_4_label": "pompes à palettes lubrifiée (Joint d'huile)",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "compresseurs industriels",
+          "atr_3_label": "pompes à becs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes centrifuges",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes monoblocs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes  normalisées ",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "circulateurs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes de surpression",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes vide fût",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à lobes",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à engrenages",
+          "atr_5_label": "engrenages internes",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à engrenages",
+          "atr_5_label": "engrenages externes",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à membranes",
+          "atr_5_label": "pneumatique",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à membranes",
+          "atr_5_label": "electrique",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à vis",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à palettes",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à pistons",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes vide fût",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes péristatiques",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes doseuses",
+          "atr_4_label": "pompes  doseuses electromagnétiques",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes doseuses",
+          "atr_4_label": "pompes  doseuses à moteur",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "atr_id": 35,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes doseuses",
+          "atr_4_label": "pompes  doseuses à pistons",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        }
+      ],
+      "type": "VIEW",
+      "definition": " SELECT atr_0.atr_id,\n    'Catégorie des produits'::character varying(100) AS atr_0_label,\n    atr_0.atr_label AS atr_1_label,\n    atr_1.atr_label AS atr_2_label,\n    atr_2.atr_label AS atr_3_label,\n    atr_3.atr_label AS atr_4_label,\n    atr_4.atr_label AS atr_5_label,\n    atr_5.atr_label AS atr_6_label,\n    atr_6.atr_label AS atr_7_label\n   FROM ((((((attribute atr_0\n     LEFT JOIN attribute atr_1 ON (((atr_0.atr_val)::text = (atr_1.atr_nat)::text)))\n     LEFT JOIN attribute atr_2 ON (((atr_1.atr_val)::text = (atr_2.atr_nat)::text)))\n     LEFT JOIN attribute atr_3 ON (((atr_2.atr_val)::text = (atr_3.atr_nat)::text)))\n     LEFT JOIN attribute atr_4 ON (((atr_3.atr_val)::text = (atr_4.atr_nat)::text)))\n     LEFT JOIN attribute atr_5 ON (((atr_4.atr_val)::text = (atr_5.atr_nat)::text)))\n     LEFT JOIN attribute atr_6 ON (((atr_5.atr_val)::text = (atr_6.atr_nat)::text)))\n  WHERE ((atr_0.atr_nat)::text = 'CATEGORIE'::text)\n  ORDER BY atr_0.atr_val, atr_1.atr_val, atr_2.atr_val, atr_3.atr_val, atr_4.atr_val, atr_5.atr_val, atr_6.atr_val;",
+      "columns": [
+        {
+          "column_name": "atr_id",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_0_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_1_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_2_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_3_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_4_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_5_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_6_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_7_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        }
+      ]
+    },
+    "v_categories_dev": {
+      "viewName": "v_categories_dev",
+      "rowCount": 151,
+      "data": [
+        {
+          "row_key": 1,
+          "atr_id": 1298,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "6668",
+          "atr_2_label": "jjj6",
+          "atr_3_label": "hhh",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 2,
+          "atr_id": 33,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "fluide",
+          "atr_2_label": null,
+          "atr_3_label": null,
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 3,
+          "atr_id": 41,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "roulement à billes",
+          "atr_7_label": "roulement rigide à billes"
+        },
+        {
+          "row_key": 4,
+          "atr_id": 192,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "roulement à billes",
+          "atr_7_label": "roulements-inserts (roulements Y) "
+        },
+        {
+          "row_key": 5,
+          "atr_id": 193,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "roulement à billes",
+          "atr_7_label": "roulements à billes à contact oblique "
+        },
+        {
+          "row_key": 6,
+          "atr_id": 194,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "roulement à billes",
+          "atr_7_label": "roulements à rotule sur billes"
+        },
+        {
+          "row_key": 7,
+          "atr_id": 195,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "roulement à billes",
+          "atr_7_label": "butées à billes"
+        },
+        {
+          "row_key": 8,
+          "atr_id": 203,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "galets a rouleaux",
+          "atr_7_label": "galets de came "
+        },
+        {
+          "row_key": 9,
+          "atr_id": 204,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "galets a rouleaux",
+          "atr_7_label": "butées à aiguilles "
+        },
+        {
+          "row_key": 10,
+          "atr_id": 205,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "galets a rouleaux",
+          "atr_7_label": "galets-supports"
+        },
+        {
+          "row_key": 11,
+          "atr_id": 206,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "galets a rouleaux",
+          "atr_7_label": "galets de came avec axe"
+        },
+        {
+          "row_key": 12,
+          "atr_id": 208,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement",
+          "atr_6_label": "accessories pour roulement",
+          "atr_7_label": "ecrou de serrage"
+        },
+        {
+          "row_key": 13,
+          "atr_id": 47,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "roulement à une rangée de rouleaux cylindriques",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 14,
+          "atr_id": 196,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "roulements à aiguilles ",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 15,
+          "atr_id": 197,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "roulements à rouleaux coniques",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 16,
+          "atr_id": 198,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "roulements à rotule sur rouleaux",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 17,
+          "atr_id": 199,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "roulements à rouleaux toroïdaux CARB",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 18,
+          "atr_id": 200,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "butées à rouleaux cylindriques",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 19,
+          "atr_id": 201,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "roulement à rouleaux",
+          "atr_6_label": "butées à rotule sur rouleaux",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 20,
+          "atr_id": 210,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "manchons d'usure",
+          "atr_6_label": "Speedi Sleeve",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 21,
+          "atr_id": 211,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en rotation",
+          "atr_5_label": "manchons d'usure",
+          "atr_6_label": "bagues interieures de roulements à aiguilles",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 22,
+          "atr_id": 191,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "pallier",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 23,
+          "atr_id": 212,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "guidage",
+          "atr_4_label": "guidage en translation (linéaire)",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 24,
+          "atr_id": 110,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "quinquaillerie",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 25,
+          "atr_id": 116,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "piece spécifique",
+          "atr_4_label": "cartérisation",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 26,
+          "atr_id": 117,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "piece spécifique",
+          "atr_4_label": "palettes",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 27,
+          "atr_id": 214,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "chaines, Pignions, roues, disque",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 28,
+          "atr_id": 215,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "poulie, courroie",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 29,
+          "atr_id": 218,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement rigide",
+          "atr_6_label": "accouplements par manchon à goupilles",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 30,
+          "atr_id": 219,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement rigide",
+          "atr_6_label": "accouplements à goupilles",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 31,
+          "atr_id": 220,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement rigide",
+          "atr_6_label": "assemblage par manchon et clavette",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 32,
+          "atr_id": 221,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement rigide",
+          "atr_6_label": "accouplements à manchon à plateau",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 33,
+          "atr_id": 222,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement rigide",
+          "atr_6_label": "accouplements par mâchoires",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 34,
+          "atr_id": 223,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement rigide",
+          "atr_6_label": "accouplements biconiques",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 35,
+          "atr_id": 225,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement semi-elastiques",
+          "atr_6_label": "accouplements semi-élastiques",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 36,
+          "atr_id": 226,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement semi-elastiques",
+          "atr_6_label": "accouplement flexible Multibeam",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 37,
+          "atr_id": 227,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement semi-elastiques",
+          "atr_6_label": "accouplements flexibles",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 38,
+          "atr_id": 229,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements temporaires",
+          "atr_6_label": "embrayages",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 39,
+          "atr_id": 230,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements temporaires",
+          "atr_6_label": "freins",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 40,
+          "atr_id": 232,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement élastique",
+          "atr_6_label": "accouplement élastique de torsion",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 41,
+          "atr_id": 233,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement élastique",
+          "atr_6_label": "accouplement élastique ressort carré triple fil ",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 42,
+          "atr_id": 234,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement élastique",
+          "atr_6_label": "accouplement à mâchoire",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 43,
+          "atr_id": 235,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplement élastique",
+          "atr_6_label": "accouplement manchons en caoutchouc ",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 44,
+          "atr_id": 237,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements articulés",
+          "atr_6_label": "accouplement  accouplement à denture",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 45,
+          "atr_id": 238,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements articulés",
+          "atr_6_label": "accouplement  joint d’oldham",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 46,
+          "atr_id": 239,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements articulés",
+          "atr_6_label": "accouplements à denture bombée",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 47,
+          "atr_id": 240,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements articulés",
+          "atr_6_label": "accouplement joint de cardan",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 48,
+          "atr_id": 241,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "piece mécanique",
+          "atr_3_label": "transmission des efforts",
+          "atr_4_label": "accouplement",
+          "atr_5_label": "accouplements articulés",
+          "atr_6_label": "accouplement joints homocinétiques",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 49,
+          "atr_id": 121,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "joint torique",
+          "atr_6_label": "joint torique, profil :  revetu",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 50,
+          "atr_id": 122,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "joint torique",
+          "atr_6_label": "joint torique, profil : 4 lobes",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 51,
+          "atr_id": 123,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "joint torique",
+          "atr_6_label": "joint torique, profil : carré",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 52,
+          "atr_id": 124,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "joint torique",
+          "atr_6_label": "joint torique, profil : standard",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 53,
+          "atr_id": 89,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "joint plat",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 54,
+          "atr_id": 119,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "joints plats :anneau",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 55,
+          "atr_id": 120,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint statique",
+          "atr_5_label": "A la découpe",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 56,
+          "atr_id": 87,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "joint",
+          "atr_4_label": "joint dynamique",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 57,
+          "atr_id": 118,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "étanchéité",
+          "atr_3_label": "bagues d'étanchéité",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 58,
+          "atr_id": 92,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration",
+          "atr_3_label": "filtration sur des liquides",
+          "atr_4_label": "filtration de l'huile",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 59,
+          "atr_id": 93,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration",
+          "atr_3_label": "filtration sur des liquides",
+          "atr_4_label": "filtre à huile cartouche extérieur",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 60,
+          "atr_id": 94,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration",
+          "atr_3_label": "filtration sur des liquides",
+          "atr_4_label": "Cartouche filtration inftérieur",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 61,
+          "atr_id": 96,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration sur des gaz",
+          "atr_3_label": "séparateurs de liquides",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 62,
+          "atr_id": 97,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration sur des gaz",
+          "atr_3_label": "condensateurs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 63,
+          "atr_id": 98,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration sur des gaz",
+          "atr_3_label": "mousse filtrante",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 64,
+          "atr_id": 99,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration sur des gaz",
+          "atr_3_label": "cartouche filtre à air",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 65,
+          "atr_id": 100,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration sur des gaz",
+          "atr_3_label": "déshuileur, Filtre séparateur d'huile",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 66,
+          "atr_id": 242,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "filtration sur des gaz",
+          "atr_3_label": "filtre à air",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 67,
+          "atr_id": 102,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "entretien mineur",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 68,
+          "atr_id": 103,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "entretien majeur ",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 69,
+          "atr_id": 104,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "maintenance (joints + pièces d'usure",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 70,
+          "atr_id": 105,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "maintenance  majeur (joints + pièces d'usure + kit entretien mineur)",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 71,
+          "atr_id": 106,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "kit complet (joints + pièces d'usure + kit entretien majeur)",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 72,
+          "atr_id": 107,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "palettes",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 73,
+          "atr_id": 108,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "clapet",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 74,
+          "atr_id": 109,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "pièce",
+          "atr_2_label": "kit",
+          "atr_3_label": "joints",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 75,
+          "atr_id": 50,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à spirale",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 76,
+          "atr_id": 51,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à becs",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 77,
+          "atr_id": 63,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à vis",
+          "atr_5_label": "pompe a vis sèche",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 78,
+          "atr_id": 64,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à vis",
+          "atr_5_label": "pompe à vis lubrifiée",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 79,
+          "atr_id": 163,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à vis",
+          "atr_5_label": "sèche",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 80,
+          "atr_id": 164,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à vis",
+          "atr_5_label": "pompes à vis lubrifiée (Joint d'huile)",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 81,
+          "atr_id": 69,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à ionisation",
+          "atr_5_label": "pompe à éjecteur",
+          "atr_6_label": "pompe à éjecteur trompe à eau",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 82,
+          "atr_id": 70,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à ionisation",
+          "atr_5_label": "pompe à éjecteur",
+          "atr_6_label": "pompe à éjecteur à gaz",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 83,
+          "atr_id": 71,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à ionisation",
+          "atr_5_label": "pompe à éjecteur",
+          "atr_6_label": "pompe à éjecteur à vapeur",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 84,
+          "atr_id": 67,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à ionisation",
+          "atr_5_label": "pompe à diffusion",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 85,
+          "atr_id": 68,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à ionisation",
+          "atr_5_label": "pompe à diffusion et à éjecteur",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 86,
+          "atr_id": 72,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe cryostatique",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 87,
+          "atr_id": 73,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe à sorbeur",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 88,
+          "atr_id": 74,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe à sublimation",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 89,
+          "atr_id": 78,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe ionique à sorbeur",
+          "atr_6_label": "pompe ionique à sublimation",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 90,
+          "atr_id": 79,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe ionique à sorbeur",
+          "atr_6_label": "pompe ionique à pulvérisation",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 91,
+          "atr_id": 80,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe cryostatique",
+          "atr_6_label": "pompe à bain",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 92,
+          "atr_id": 81,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "pompe cryostatique",
+          "atr_6_label": "pompe à circuit fermé",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 93,
+          "atr_id": 77,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à adsorption",
+          "atr_5_label": "Condenseur",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 94,
+          "atr_id": 55,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe moléculaire mécanique",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 95,
+          "atr_id": 65,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à lobes",
+          "atr_5_label": "roots booster",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 96,
+          "atr_id": 57,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à piston oscillant",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 97,
+          "atr_id": 58,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à piston tournant",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 98,
+          "atr_id": 82,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à palettes",
+          "atr_5_label": "pompe à palettes sèches",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 99,
+          "atr_id": 83,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à palettes",
+          "atr_5_label": "pompe à palettes lubrifiées",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 100,
+          "atr_id": 60,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompe à anneau liquide",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 101,
+          "atr_id": 61,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "surpresseur",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 102,
+          "atr_id": 62,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "turbine à canal latéral",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 103,
+          "atr_id": 165,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompes à palettes sèches",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 104,
+          "atr_id": 166,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompe",
+          "atr_3_label": "pompe à vide",
+          "atr_4_label": "pompes à palettes lubrifiée (Joint d'huile)",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 105,
+          "atr_id": 127,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "équipements industriels de pilotage des moteurs électriques",
+          "atr_4_label": "variateurs",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 106,
+          "atr_id": 128,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "équipements industriels de pilotage des moteurs électriques",
+          "atr_4_label": "démarreurs progressifs",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 107,
+          "atr_id": 129,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "protections",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 108,
+          "atr_id": 130,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "motoréducteurs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 109,
+          "atr_id": 131,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "réducteurs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 110,
+          "atr_id": 138,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "moteurs AC (à courant alternatif )",
+          "atr_5_label": "moteur triphasé",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 111,
+          "atr_id": 140,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "moteurs AC (à courant alternatif )",
+          "atr_5_label": "moteur monophasé",
+          "atr_6_label": "moteurs asynchrone monophasé",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 112,
+          "atr_id": 141,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "moteurs AC (à courant alternatif )",
+          "atr_5_label": "moteur monophasé",
+          "atr_6_label": "moteurs synchrone monophasé",
+          "atr_7_label": null
+        },
+        {
+          "row_key": 113,
+          "atr_id": 142,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "moteurs AC (à courant alternatif )",
+          "atr_5_label": "moteurs synchrone triphasé",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 114,
+          "atr_id": 143,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "moteurs AC (à courant alternatif )",
+          "atr_5_label": "moteur asynchrone triphasé",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 115,
+          "atr_id": 134,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "moteurs DC (à courant continu)",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 116,
+          "atr_id": 135,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "brushless",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 117,
+          "atr_id": 136,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "classique (de type inducteur)",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 118,
+          "atr_id": 137,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "moteurs électriques et équipements associés",
+          "atr_3_label": "moteurs électriques",
+          "atr_4_label": "pas à pas",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 119,
+          "atr_id": 145,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "process : agitation mélange et pulvérisation",
+          "atr_3_label": "mélangeurs industriels",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 120,
+          "atr_id": 146,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "process : agitation mélange et pulvérisation",
+          "atr_3_label": "agitateurs industriels",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 121,
+          "atr_id": 147,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "process : agitation mélange et pulvérisation",
+          "atr_3_label": "buse industrielle",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 122,
+          "atr_id": 149,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "tuyauterie et robinetterie",
+          "atr_3_label": "tuyaux",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 123,
+          "atr_id": 150,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "tuyauterie et robinetterie",
+          "atr_3_label": "robinetterie",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 124,
+          "atr_id": 152,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "équipements industriels de mesure",
+          "atr_3_label": "sur les fluides",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 125,
+          "atr_id": 153,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "équipements industriels de mesure",
+          "atr_3_label": "sur les gaz",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 126,
+          "atr_id": 154,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "équipements industriels de mesure",
+          "atr_3_label": "de position",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 127,
+          "atr_id": 155,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "équipements industriels de mesure",
+          "atr_3_label": "de mouvement",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 128,
+          "atr_id": 156,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "équipements industriels de mesure",
+          "atr_3_label": "vibratoire",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 129,
+          "atr_id": 158,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "compresseurs industriels",
+          "atr_3_label": "surpresseurs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 130,
+          "atr_id": 161,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "compresseurs industriels",
+          "atr_3_label": "pompes à palettes",
+          "atr_4_label": "pompes à palettes sèches",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 131,
+          "atr_id": 162,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "compresseurs industriels",
+          "atr_3_label": "pompes à palettes",
+          "atr_4_label": "pompes à palettes lubrifiée (Joint d'huile)",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 132,
+          "atr_id": 160,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "compresseurs industriels",
+          "atr_3_label": "pompes à becs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 133,
+          "atr_id": 168,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes centrifuges",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 134,
+          "atr_id": 169,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes monoblocs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 135,
+          "atr_id": 170,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes  normalisées ",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 136,
+          "atr_id": 171,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "circulateurs",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 137,
+          "atr_id": 172,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes de surpression",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 138,
+          "atr_id": 173,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes vide fût",
+          "atr_4_label": null,
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 139,
+          "atr_id": 175,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à lobes",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 140,
+          "atr_id": 183,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à engrenages",
+          "atr_5_label": "engrenages internes",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 141,
+          "atr_id": 184,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à engrenages",
+          "atr_5_label": "engrenages externes",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 142,
+          "atr_id": 185,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à membranes",
+          "atr_5_label": "pneumatique",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 143,
+          "atr_id": 186,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à membranes",
+          "atr_5_label": "electrique",
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 144,
+          "atr_id": 178,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à vis",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 145,
+          "atr_id": 179,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à palettes",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 146,
+          "atr_id": 180,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes à pistons",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 147,
+          "atr_id": 181,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes vide fût",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 148,
+          "atr_id": 182,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes volumétriques",
+          "atr_4_label": "pompes péristatiques",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 149,
+          "atr_id": 188,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes doseuses",
+          "atr_4_label": "pompes  doseuses electromagnétiques",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 150,
+          "atr_id": 189,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes doseuses",
+          "atr_4_label": "pompes  doseuses à moteur",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        },
+        {
+          "row_key": 151,
+          "atr_id": 190,
+          "atr_0_label": "Catégorie des produits",
+          "atr_1_label": "equipement industriel",
+          "atr_2_label": "pompes industrielles ",
+          "atr_3_label": "pompes doseuses",
+          "atr_4_label": "pompes  doseuses à pistons",
+          "atr_5_label": null,
+          "atr_6_label": null,
+          "atr_7_label": null
+        }
+      ],
+      "type": "VIEW",
+      "definition": " SELECT (row_number() OVER (ORDER BY atr_0.atr_val, atr_1.atr_val, atr_2.atr_val, atr_3.atr_val, atr_4.atr_val, atr_5.atr_val, atr_6.atr_val))::integer AS row_key,\n    COALESCE(atr_6.atr_id, atr_5.atr_id, atr_4.atr_id, atr_3.atr_id, atr_2.atr_id, atr_1.atr_id, atr_0.atr_id) AS atr_id,\n    'Catégorie des produits'::character varying(100) AS atr_0_label,\n    atr_0.atr_label AS atr_1_label,\n    atr_1.atr_label AS atr_2_label,\n    atr_2.atr_label AS atr_3_label,\n    atr_3.atr_label AS atr_4_label,\n    atr_4.atr_label AS atr_5_label,\n    atr_5.atr_label AS atr_6_label,\n    atr_6.atr_label AS atr_7_label\n   FROM ((((((attribute_dev atr_0\n     LEFT JOIN attribute_dev atr_1 ON (((atr_0.atr_val)::text = (atr_1.atr_nat)::text)))\n     LEFT JOIN attribute_dev atr_2 ON (((atr_1.atr_val)::text = (atr_2.atr_nat)::text)))\n     LEFT JOIN attribute_dev atr_3 ON (((atr_2.atr_val)::text = (atr_3.atr_nat)::text)))\n     LEFT JOIN attribute_dev atr_4 ON (((atr_3.atr_val)::text = (atr_4.atr_nat)::text)))\n     LEFT JOIN attribute_dev atr_5 ON (((atr_4.atr_val)::text = (atr_5.atr_nat)::text)))\n     LEFT JOIN attribute_dev atr_6 ON (((atr_5.atr_val)::text = (atr_6.atr_nat)::text)))\n  WHERE ((atr_0.atr_nat)::text = 'CATEGORIE'::text)\n  ORDER BY atr_0.atr_val, atr_1.atr_val, atr_2.atr_val, atr_3.atr_val, atr_4.atr_val, atr_5.atr_val, atr_6.atr_val;",
+      "columns": [
+        {
+          "column_name": "row_key",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_id",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_0_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_1_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_2_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_3_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_4_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_5_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_6_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_7_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        }
+      ]
+    },
+    "v_kit_carac": {
+      "viewName": "v_kit_carac",
+      "rowCount": 151,
+      "data": [
+        {
+          "id": 2,
+          "kit_label": "Boulon",
+          "atr_label": "Diamètre",
+          "atr_val": "mm",
+          "kat_valeur": 12
+        },
+        {
+          "id": 4,
+          "kit_label": "Pompe à palettes sèches KVT 3.80 TRI 2.2kW- G024016",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 5,
+          "kit_label": "Pompe à palettes sèches VXLF 2.400 TRI 7.5kW- UNKNOW003",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 6,
+          "kit_label": "Pompe à palettes sèches VXLF 2.200 TRI 4.0kW- G024421",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 7,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250 TRI 5.5kW- G024152",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 8,
+          "kit_label": "Pompe à palettes sèches VXLF 2.250 TRI 5.5kW- UNKNOW002",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 9,
+          "kit_label": "Pompe à palettes sèches VT 4.10 MONO 0.37kW- G008221",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 10,
+          "kit_label": "Pompe à palettes sèches VT 4.25 MONO 0.80kW- G008786",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 11,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250/0-400 VARIAIR TRI 7.5kW- G050517",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 12,
+          "kit_label": "Pompe à palettes sèches VX 4.40 MONO 1.1kW- G013536",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 13,
+          "kit_label": "Pompe à bec BCV 100 VARIAIR TRI 4kW- G051416",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 50
+        },
+        {
+          "id": 14,
+          "kit_label": "Pompe à palettes sèches KVT 3.140/0-400 VARIAIR TRI 4kW- G021367",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 15,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360 TRI 11.0kW- G018598",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 16,
+          "kit_label": "Pompe à palettes sèches KVT 3.140 TRI 4kW- G024007",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 17,
+          "kit_label": "Pompe à palettes sèches VX 4.10 MONO 0.37kW- G013532",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 18,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250/0-400 VARIAIR TRI 7.5kW- UNKNOW006",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 19,
+          "kit_label": "Pompe à palettes sèches VT 4.40 MONO 1.1kW- G008411",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 20,
+          "kit_label": "Pompe à palettes sèches VT 4.10 TRI 0.37kW- G008220",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 21,
+          "kit_label": "Pompe à palettes sèches KVX 3.140 TRI 4kW- G024084",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 22,
+          "kit_label": "Pompe à palettes sèches VTLF 2.400 TRI 7.5kW- UNKNOW001",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 23,
+          "kit_label": "Pompe à palettes sèches KVT 3.100/0-400 VARIAIR TRI 4kW- UNKNOW004",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 24,
+          "kit_label": "Pompe à palettes sèches VT 4.4 MONO 0.18kW- G053620",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 25,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360/0-400 VARIAIR TRI 11kW- UNKNOW007",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 26,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500 TRI 11.0kW- G024212",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 27,
+          "kit_label": "Pompe à palettes sèches KVT 3.60 TRI 2.2kW- G024026",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 28,
+          "kit_label": "Pompe à bec BCV 300 VARIAIR TRI 7.5kW- G051415",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 29,
+          "kit_label": "Pompe à palettes sèches VT 4.40 TRI 0.75kW- G027221",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 30,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500/0-400 VARIAIR TRI 11kW- UNKNOW010",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 31,
+          "kit_label": "Pompe à palettes sèches VT 4.16 MONO 0.55kW- G008162",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 32,
+          "kit_label": "Pompe à palettes sèches KVX 3.60 TRI 2.2kW- G024261",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 33,
+          "kit_label": "Pompe à palettes sèches VX 4.16 MONO 0.55kW- G013534",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 34,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500/0-400 VARIAIR TRI 11kW- UNKNOW009",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 35,
+          "kit_label": "Pompe à palettes sèches VX 4.25 TRI 1.3kW- G050075",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 36,
+          "kit_label": "Pompe à palettes sèches VT 4.25 TRI 0.75kW- G026677",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 37,
+          "kit_label": "Pompe à bec BCV 300 TRI 5.5kW- G027360",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 38,
+          "kit_label": "Pompe à palettes sèches VXLF 2.500 TRI 11.0kW- G053273",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 39,
+          "kit_label": "Pompe à palettes sèches KVT 3.100 TRI 3kW- G024020",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 40,
+          "kit_label": "Pompe à palettes sèches KVT 3.140/0-400 VARIAIR TRI 4kW- G021365",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 41,
+          "kit_label": "Pompe à bec BCV 150 VARIAIR  TRI 4kW- G051414",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 42,
+          "kit_label": "Pompe à palettes sèches KVX 3.80 TRI 2.2kW- G024165",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 43,
+          "kit_label": "Pompe à palettes sèches KVT 3.100/0-400 VARIAIR TRI 4kW- UNKNOW005",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 44,
+          "kit_label": "Pompe à palettes sèches VX 4.40 TRI 1.3kW- G050049",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 45,
+          "kit_label": "Pompe à palettes sèches VT 4.4 24V DC 250WkW- G052386",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 46,
+          "kit_label": "Pompe à bec BCV 150 TRI 3.0kW- G027359",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 47,
+          "kit_label": "Pompe à palettes sèches VT 4.8 TRI 0.37kW- G052508",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 48,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360/0-400 VARIAIR TRI 11kW- UNKNOW008",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 49,
+          "kit_label": "Pompe à bec BCV 100 TRI 2.2kW- G027358",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 50
+        },
+        {
+          "id": 50,
+          "kit_label": "Pompe à palettes sèches KVX 3.100 TRI 3kW- G024262",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 51,
+          "kit_label": "Pompe à palettes sèches VTLF 2.200 TRI 4.0kW- G024175",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 52,
+          "kit_label": "Pompe à palettes sèches VX 4.25 MONO 0.80kW- G013633",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 53,
+          "kit_label": "Pompe à palettes sèches VT 4.8 MONO 0.37kW- G053623",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 55,
+          "kit_label": "Pompe à palettes sèches KVT 3.80 TRI 2.2kW- G024016",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 2.2
+        },
+        {
+          "id": 56,
+          "kit_label": "Pompe à palettes sèches VXLF 2.400 TRI 7.5kW- UNKNOW003",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 7.5
+        },
+        {
+          "id": 57,
+          "kit_label": "Pompe à palettes sèches VXLF 2.200 TRI 4.0kW- G024421",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 58,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250 TRI 5.5kW- G024152",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 5.5
+        },
+        {
+          "id": 59,
+          "kit_label": "Pompe à palettes sèches VXLF 2.250 TRI 5.5kW- UNKNOW002",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 5.5
+        },
+        {
+          "id": 60,
+          "kit_label": "Pompe à palettes sèches VT 4.10 MONO 0.37kW- G008221",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.37
+        },
+        {
+          "id": 61,
+          "kit_label": "Pompe à palettes sèches VT 4.25 MONO 0.80kW- G008786",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.8
+        },
+        {
+          "id": 62,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250/0-400 VARIAIR TRI 7.5kW- G050517",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 7.5
+        },
+        {
+          "id": 63,
+          "kit_label": "Pompe à palettes sèches VX 4.40 MONO 1.1kW- G013536",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 1.1
+        },
+        {
+          "id": 64,
+          "kit_label": "Pompe à bec BCV 100 VARIAIR TRI 4kW- G051416",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 65,
+          "kit_label": "Pompe à palettes sèches KVT 3.140/0-400 VARIAIR TRI 4kW- G021367",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 66,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360 TRI 11.0kW- G018598",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 67,
+          "kit_label": "Pompe à palettes sèches KVT 3.140 TRI 4kW- G024007",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 68,
+          "kit_label": "Pompe à palettes sèches VX 4.10 MONO 0.37kW- G013532",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.37
+        },
+        {
+          "id": 69,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250/0-400 VARIAIR TRI 7.5kW- UNKNOW006",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 7.5
+        },
+        {
+          "id": 70,
+          "kit_label": "Pompe à palettes sèches VT 4.40 MONO 1.1kW- G008411",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 1.1
+        },
+        {
+          "id": 71,
+          "kit_label": "Pompe à palettes sèches VT 4.10 TRI 0.37kW- G008220",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.37
+        },
+        {
+          "id": 72,
+          "kit_label": "Pompe à palettes sèches KVX 3.140 TRI 4kW- G024084",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 73,
+          "kit_label": "Pompe à palettes sèches VTLF 2.400 TRI 7.5kW- UNKNOW001",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 7.5
+        },
+        {
+          "id": 74,
+          "kit_label": "Pompe à palettes sèches KVT 3.100/0-400 VARIAIR TRI 4kW- UNKNOW004",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 75,
+          "kit_label": "Pompe à palettes sèches VT 4.4 MONO 0.18kW- G053620",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.18
+        },
+        {
+          "id": 76,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360/0-400 VARIAIR TRI 11kW- UNKNOW007",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 77,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500 TRI 11.0kW- G024212",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 78,
+          "kit_label": "Pompe à palettes sèches KVT 3.60 TRI 2.2kW- G024026",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 2.2
+        },
+        {
+          "id": 79,
+          "kit_label": "Pompe à bec BCV 300 VARIAIR TRI 7.5kW- G051415",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 80,
+          "kit_label": "Pompe à palettes sèches VT 4.40 TRI 0.75kW- G027221",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.75
+        },
+        {
+          "id": 81,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500/0-400 VARIAIR TRI 11kW- UNKNOW010",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 82,
+          "kit_label": "Pompe à palettes sèches VT 4.16 MONO 0.55kW- G008162",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.55
+        },
+        {
+          "id": 83,
+          "kit_label": "Pompe à palettes sèches KVX 3.60 TRI 2.2kW- G024261",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 2.2
+        },
+        {
+          "id": 84,
+          "kit_label": "Pompe à palettes sèches VX 4.16 MONO 0.55kW- G013534",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.55
+        },
+        {
+          "id": 85,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500/0-400 VARIAIR TRI 11kW- UNKNOW009",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 86,
+          "kit_label": "Pompe à palettes sèches VX 4.25 TRI 1.3kW- G050075",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 1.3
+        },
+        {
+          "id": 87,
+          "kit_label": "Pompe à palettes sèches VT 4.25 TRI 0.75kW- G026677",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.75
+        },
+        {
+          "id": 88,
+          "kit_label": "Pompe à bec BCV 300 TRI 5.5kW- G027360",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 5.5
+        },
+        {
+          "id": 89,
+          "kit_label": "Pompe à palettes sèches VXLF 2.500 TRI 11.0kW- G053273",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 90,
+          "kit_label": "Pompe à palettes sèches KVT 3.100 TRI 3kW- G024020",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 3
+        },
+        {
+          "id": 91,
+          "kit_label": "Pompe à palettes sèches KVT 3.140/0-400 VARIAIR TRI 4kW- G021365",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 92,
+          "kit_label": "Pompe à bec BCV 150 VARIAIR  TRI 4kW- G051414",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 93,
+          "kit_label": "Pompe à palettes sèches KVX 3.80 TRI 2.2kW- G024165",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 2.2
+        },
+        {
+          "id": 94,
+          "kit_label": "Pompe à palettes sèches KVT 3.100/0-400 VARIAIR TRI 4kW- UNKNOW005",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 95,
+          "kit_label": "Pompe à palettes sèches VX 4.40 TRI 1.3kW- G050049",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 1.3
+        },
+        {
+          "id": 96,
+          "kit_label": "Pompe à palettes sèches VT 4.4 24V DC 250WkW- G052386",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.25
+        },
+        {
+          "id": 97,
+          "kit_label": "Pompe à bec BCV 150 TRI 3.0kW- G027359",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 3
+        },
+        {
+          "id": 98,
+          "kit_label": "Pompe à palettes sèches VT 4.8 TRI 0.37kW- G052508",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.37
+        },
+        {
+          "id": 99,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360/0-400 VARIAIR TRI 11kW- UNKNOW008",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 100,
+          "kit_label": "Pompe à bec BCV 100 TRI 2.2kW- G027358",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 2.2
+        },
+        {
+          "id": 101,
+          "kit_label": "Pompe à palettes sèches KVX 3.100 TRI 3kW- G024262",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 3
+        },
+        {
+          "id": 102,
+          "kit_label": "Pompe à palettes sèches VTLF 2.200 TRI 4.0kW- G024175",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 103,
+          "kit_label": "Pompe à palettes sèches VX 4.25 MONO 0.80kW- G013633",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.8
+        },
+        {
+          "id": 104,
+          "kit_label": "Pompe à palettes sèches VT 4.8 MONO 0.37kW- G053623",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.37
+        },
+        {
+          "id": 106,
+          "kit_label": "Pompe à palettes sèches KVT 3.80 TRI 2.2kW- G024016",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 107,
+          "kit_label": "Pompe à palettes sèches VXLF 2.400 TRI 7.5kW- UNKNOW003",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 108,
+          "kit_label": "Pompe à palettes sèches VXLF 2.200 TRI 4.0kW- G024421",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 109,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250 TRI 5.5kW- G024152",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 110,
+          "kit_label": "Pompe à palettes sèches VXLF 2.250 TRI 5.5kW- UNKNOW002",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 111,
+          "kit_label": "Pompe à palettes sèches VT 4.10 MONO 0.37kW- G008221",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 112,
+          "kit_label": "Pompe à palettes sèches VT 4.25 MONO 0.80kW- G008786",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 113,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250/0-400 VARIAIR TRI 7.5kW- G050517",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 114,
+          "kit_label": "Pompe à palettes sèches VX 4.40 MONO 1.1kW- G013536",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 115,
+          "kit_label": "Pompe à bec BCV 100 VARIAIR TRI 4kW- G051416",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 116,
+          "kit_label": "Pompe à palettes sèches KVT 3.140/0-400 VARIAIR TRI 4kW- G021367",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 117,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360 TRI 11.0kW- G018598",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 118,
+          "kit_label": "Pompe à palettes sèches KVT 3.140 TRI 4kW- G024007",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 119,
+          "kit_label": "Pompe à palettes sèches VX 4.10 MONO 0.37kW- G013532",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 120,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250/0-400 VARIAIR TRI 7.5kW- UNKNOW006",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 121,
+          "kit_label": "Pompe à palettes sèches VT 4.40 MONO 1.1kW- G008411",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 122,
+          "kit_label": "Pompe à palettes sèches VT 4.10 TRI 0.37kW- G008220",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 123,
+          "kit_label": "Pompe à palettes sèches KVX 3.140 TRI 4kW- G024084",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 124,
+          "kit_label": "Pompe à palettes sèches VTLF 2.400 TRI 7.5kW- UNKNOW001",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 125,
+          "kit_label": "Pompe à palettes sèches KVT 3.100/0-400 VARIAIR TRI 4kW- UNKNOW004",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 126,
+          "kit_label": "Pompe à palettes sèches VT 4.4 MONO 0.18kW- G053620",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 127,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360/0-400 VARIAIR TRI 11kW- UNKNOW007",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 128,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500 TRI 11.0kW- G024212",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 129,
+          "kit_label": "Pompe à palettes sèches KVT 3.60 TRI 2.2kW- G024026",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 130,
+          "kit_label": "Pompe à bec BCV 300 VARIAIR TRI 7.5kW- G051415",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 131,
+          "kit_label": "Pompe à palettes sèches VT 4.40 TRI 0.75kW- G027221",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 132,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500/0-400 VARIAIR TRI 11kW- UNKNOW010",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 133,
+          "kit_label": "Pompe à palettes sèches VT 4.16 MONO 0.55kW- G008162",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 134,
+          "kit_label": "Pompe à palettes sèches KVX 3.60 TRI 2.2kW- G024261",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 135,
+          "kit_label": "Pompe à palettes sèches VX 4.16 MONO 0.55kW- G013534",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 136,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500/0-400 VARIAIR TRI 11kW- UNKNOW009",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 137,
+          "kit_label": "Pompe à palettes sèches VX 4.25 TRI 1.3kW- G050075",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 138,
+          "kit_label": "Pompe à palettes sèches VT 4.25 TRI 0.75kW- G026677",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 139,
+          "kit_label": "Pompe à bec BCV 300 TRI 5.5kW- G027360",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 140,
+          "kit_label": "Pompe à palettes sèches VXLF 2.500 TRI 11.0kW- G053273",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 141,
+          "kit_label": "Pompe à palettes sèches KVT 3.100 TRI 3kW- G024020",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 142,
+          "kit_label": "Pompe à palettes sèches KVT 3.140/0-400 VARIAIR TRI 4kW- G021365",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 143,
+          "kit_label": "Pompe à bec BCV 150 VARIAIR  TRI 4kW- G051414",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 144,
+          "kit_label": "Pompe à palettes sèches KVX 3.80 TRI 2.2kW- G024165",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 145,
+          "kit_label": "Pompe à palettes sèches KVT 3.100/0-400 VARIAIR TRI 4kW- UNKNOW005",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 146,
+          "kit_label": "Pompe à palettes sèches VX 4.40 TRI 1.3kW- G050049",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 147,
+          "kit_label": "Pompe à palettes sèches VT 4.4 24V DC 250WkW- G052386",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Continu",
+          "kat_valeur": 0
+        },
+        {
+          "id": 148,
+          "kit_label": "Pompe à bec BCV 150 TRI 3.0kW- G027359",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 149,
+          "kit_label": "Pompe à palettes sèches VT 4.8 TRI 0.37kW- G052508",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 150,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360/0-400 VARIAIR TRI 11kW- UNKNOW008",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 151,
+          "kit_label": "Pompe à bec BCV 100 TRI 2.2kW- G027358",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 152,
+          "kit_label": "Pompe à palettes sèches KVX 3.100 TRI 3kW- G024262",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 153,
+          "kit_label": "Pompe à palettes sèches VTLF 2.200 TRI 4.0kW- G024175",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 154,
+          "kit_label": "Pompe à palettes sèches VX 4.25 MONO 0.80kW- G013633",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 155,
+          "kit_label": "Pompe à palettes sèches VT 4.8 MONO 0.37kW- G053623",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        }
+      ],
+      "type": "VIEW",
+      "definition": " SELECT kat.kat_id AS id,\n    kit.kit_label,\n    attribute_carac.atr_label,\n    attribute.atr_val,\n    kat.kat_valeur\n   FROM (((kit\n     JOIN kit_attribute kat ON ((kit.kit_id = kat.fk_kit)))\n     JOIN attribute attribute_carac ON ((((attribute_carac.atr_nat)::text = 'CARAC'::text) AND (kat.fk_attribute_carac = attribute_carac.atr_id))))\n     JOIN attribute ON ((kat.fk_attribute = attribute.atr_id)));",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "kit_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_val",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "kat_valeur",
+          "data_type": "double precision",
+          "is_nullable": "YES",
+          "column_default": null
+        }
+      ]
+    },
+    "v_kit_carac_dev": {
+      "viewName": "v_kit_carac_dev",
+      "rowCount": 153,
+      "data": [
+        {
+          "id": 2,
+          "kit_label": "Boulon",
+          "atr_label": "Diamètre",
+          "atr_val": "mm",
+          "kat_valeur": 12
+        },
+        {
+          "id": 106,
+          "kit_label": "Pompe à palettes sèches KVT 3.80 TRI 2.2kW- G024016",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 55,
+          "kit_label": "Pompe à palettes sèches KVT 3.80 TRI 2.2kW- G024016",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 2.2
+        },
+        {
+          "id": 4,
+          "kit_label": "Pompe à palettes sèches KVT 3.80 TRI 2.2kW- G024016",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 107,
+          "kit_label": "Pompe à palettes sèches VXLF 2.400 TRI 7.5kW- UNKNOW003",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 56,
+          "kit_label": "Pompe à palettes sèches VXLF 2.400 TRI 7.5kW- UNKNOW003",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 7.5
+        },
+        {
+          "id": 5,
+          "kit_label": "Pompe à palettes sèches VXLF 2.400 TRI 7.5kW- UNKNOW003",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 108,
+          "kit_label": "Pompe à palettes sèches VXLF 2.200 TRI 4.0kW- G024421",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 57,
+          "kit_label": "Pompe à palettes sèches VXLF 2.200 TRI 4.0kW- G024421",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 6,
+          "kit_label": "Pompe à palettes sèches VXLF 2.200 TRI 4.0kW- G024421",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 109,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250 TRI 5.5kW- G024152",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 58,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250 TRI 5.5kW- G024152",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 5.5
+        },
+        {
+          "id": 7,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250 TRI 5.5kW- G024152",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 110,
+          "kit_label": "Pompe à palettes sèches VXLF 2.250 TRI 5.5kW- UNKNOW002",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 59,
+          "kit_label": "Pompe à palettes sèches VXLF 2.250 TRI 5.5kW- UNKNOW002",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 5.5
+        },
+        {
+          "id": 8,
+          "kit_label": "Pompe à palettes sèches VXLF 2.250 TRI 5.5kW- UNKNOW002",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 111,
+          "kit_label": "Pompe à palettes sèches VT 4.10 MONO 0.37kW- G008221",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 60,
+          "kit_label": "Pompe à palettes sèches VT 4.10 MONO 0.37kW- G008221",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.37
+        },
+        {
+          "id": 9,
+          "kit_label": "Pompe à palettes sèches VT 4.10 MONO 0.37kW- G008221",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 112,
+          "kit_label": "Pompe à palettes sèches VT 4.25 MONO 0.80kW- G008786",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 61,
+          "kit_label": "Pompe à palettes sèches VT 4.25 MONO 0.80kW- G008786",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.8
+        },
+        {
+          "id": 10,
+          "kit_label": "Pompe à palettes sèches VT 4.25 MONO 0.80kW- G008786",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 113,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250/0-400 VARIAIR TRI 7.5kW- G050517",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 62,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250/0-400 VARIAIR TRI 7.5kW- G050517",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 7.5
+        },
+        {
+          "id": 11,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250/0-400 VARIAIR TRI 7.5kW- G050517",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 114,
+          "kit_label": "Pompe à palettes sèches VX 4.40 MONO 1.1kW- G013536",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 63,
+          "kit_label": "Pompe à palettes sèches VX 4.40 MONO 1.1kW- G013536",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 1.1
+        },
+        {
+          "id": 12,
+          "kit_label": "Pompe à palettes sèches VX 4.40 MONO 1.1kW- G013536",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 115,
+          "kit_label": "Pompe à bec BCV 100 VARIAIR TRI 4kW- G051416",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 64,
+          "kit_label": "Pompe à bec BCV 100 VARIAIR TRI 4kW- G051416",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 13,
+          "kit_label": "Pompe à bec BCV 100 VARIAIR TRI 4kW- G051416",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 50
+        },
+        {
+          "id": 116,
+          "kit_label": "Pompe à palettes sèches KVT 3.140/0-400 VARIAIR TRI 4kW- G021367",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 65,
+          "kit_label": "Pompe à palettes sèches KVT 3.140/0-400 VARIAIR TRI 4kW- G021367",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 14,
+          "kit_label": "Pompe à palettes sèches KVT 3.140/0-400 VARIAIR TRI 4kW- G021367",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 117,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360 TRI 11.0kW- G018598",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 66,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360 TRI 11.0kW- G018598",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 15,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360 TRI 11.0kW- G018598",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 118,
+          "kit_label": "Pompe à palettes sèches KVT 3.140 TRI 4kW- G024007",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 67,
+          "kit_label": "Pompe à palettes sèches KVT 3.140 TRI 4kW- G024007",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 16,
+          "kit_label": "Pompe à palettes sèches KVT 3.140 TRI 4kW- G024007",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 119,
+          "kit_label": "Pompe à palettes sèches VX 4.10 MONO 0.37kW- G013532",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 68,
+          "kit_label": "Pompe à palettes sèches VX 4.10 MONO 0.37kW- G013532",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.37
+        },
+        {
+          "id": 17,
+          "kit_label": "Pompe à palettes sèches VX 4.10 MONO 0.37kW- G013532",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 120,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250/0-400 VARIAIR TRI 7.5kW- UNKNOW006",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 69,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250/0-400 VARIAIR TRI 7.5kW- UNKNOW006",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 7.5
+        },
+        {
+          "id": 18,
+          "kit_label": "Pompe à palettes sèches VTLF 2.250/0-400 VARIAIR TRI 7.5kW- UNKNOW006",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 121,
+          "kit_label": "Pompe à palettes sèches VT 4.40 MONO 1.1kW- G008411",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 70,
+          "kit_label": "Pompe à palettes sèches VT 4.40 MONO 1.1kW- G008411",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 1.1
+        },
+        {
+          "id": 19,
+          "kit_label": "Pompe à palettes sèches VT 4.40 MONO 1.1kW- G008411",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 122,
+          "kit_label": "Pompe à palettes sèches VT 4.10 TRI 0.37kW- G008220",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 71,
+          "kit_label": "Pompe à palettes sèches VT 4.10 TRI 0.37kW- G008220",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.37
+        },
+        {
+          "id": 20,
+          "kit_label": "Pompe à palettes sèches VT 4.10 TRI 0.37kW- G008220",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 123,
+          "kit_label": "Pompe à palettes sèches KVX 3.140 TRI 4kW- G024084",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 72,
+          "kit_label": "Pompe à palettes sèches KVX 3.140 TRI 4kW- G024084",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 21,
+          "kit_label": "Pompe à palettes sèches KVX 3.140 TRI 4kW- G024084",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 124,
+          "kit_label": "Pompe à palettes sèches VTLF 2.400 TRI 7.5kW- UNKNOW001",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 73,
+          "kit_label": "Pompe à palettes sèches VTLF 2.400 TRI 7.5kW- UNKNOW001",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 7.5
+        },
+        {
+          "id": 22,
+          "kit_label": "Pompe à palettes sèches VTLF 2.400 TRI 7.5kW- UNKNOW001",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 125,
+          "kit_label": "Pompe à palettes sèches KVT 3.100/0-400 VARIAIR TRI 4kW- UNKNOW004",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 74,
+          "kit_label": "Pompe à palettes sèches KVT 3.100/0-400 VARIAIR TRI 4kW- UNKNOW004",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 23,
+          "kit_label": "Pompe à palettes sèches KVT 3.100/0-400 VARIAIR TRI 4kW- UNKNOW004",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 126,
+          "kit_label": "Pompe à palettes sèches VT 4.4 MONO 0.18kW- G053620",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 75,
+          "kit_label": "Pompe à palettes sèches VT 4.4 MONO 0.18kW- G053620",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.18
+        },
+        {
+          "id": 24,
+          "kit_label": "Pompe à palettes sèches VT 4.4 MONO 0.18kW- G053620",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 127,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360/0-400 VARIAIR TRI 11kW- UNKNOW007",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 76,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360/0-400 VARIAIR TRI 11kW- UNKNOW007",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 25,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360/0-400 VARIAIR TRI 11kW- UNKNOW007",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 128,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500 TRI 11.0kW- G024212",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 77,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500 TRI 11.0kW- G024212",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 26,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500 TRI 11.0kW- G024212",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 129,
+          "kit_label": "Pompe à palettes sèches KVT 3.60 TRI 2.2kW- G024026",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 78,
+          "kit_label": "Pompe à palettes sèches KVT 3.60 TRI 2.2kW- G024026",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 2.2
+        },
+        {
+          "id": 27,
+          "kit_label": "Pompe à palettes sèches KVT 3.60 TRI 2.2kW- G024026",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 130,
+          "kit_label": "Pompe à bec BCV 300 VARIAIR TRI 7.5kW- G051415",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 79,
+          "kit_label": "Pompe à bec BCV 300 VARIAIR TRI 7.5kW- G051415",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 28,
+          "kit_label": "Pompe à bec BCV 300 VARIAIR TRI 7.5kW- G051415",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 131,
+          "kit_label": "Pompe à palettes sèches VT 4.40 TRI 0.75kW- G027221",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 80,
+          "kit_label": "Pompe à palettes sèches VT 4.40 TRI 0.75kW- G027221",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.75
+        },
+        {
+          "id": 29,
+          "kit_label": "Pompe à palettes sèches VT 4.40 TRI 0.75kW- G027221",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 132,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500/0-400 VARIAIR TRI 11kW- UNKNOW010",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 81,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500/0-400 VARIAIR TRI 11kW- UNKNOW010",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 30,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500/0-400 VARIAIR TRI 11kW- UNKNOW010",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 133,
+          "kit_label": "Pompe à palettes sèches VT 4.16 MONO 0.55kW- G008162",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 82,
+          "kit_label": "Pompe à palettes sèches VT 4.16 MONO 0.55kW- G008162",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.55
+        },
+        {
+          "id": 31,
+          "kit_label": "Pompe à palettes sèches VT 4.16 MONO 0.55kW- G008162",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 134,
+          "kit_label": "Pompe à palettes sèches KVX 3.60 TRI 2.2kW- G024261",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 83,
+          "kit_label": "Pompe à palettes sèches KVX 3.60 TRI 2.2kW- G024261",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 2.2
+        },
+        {
+          "id": 32,
+          "kit_label": "Pompe à palettes sèches KVX 3.60 TRI 2.2kW- G024261",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 135,
+          "kit_label": "Pompe à palettes sèches VX 4.16 MONO 0.55kW- G013534",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 84,
+          "kit_label": "Pompe à palettes sèches VX 4.16 MONO 0.55kW- G013534",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.55
+        },
+        {
+          "id": 33,
+          "kit_label": "Pompe à palettes sèches VX 4.16 MONO 0.55kW- G013534",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 136,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500/0-400 VARIAIR TRI 11kW- UNKNOW009",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 85,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500/0-400 VARIAIR TRI 11kW- UNKNOW009",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 34,
+          "kit_label": "Pompe à palettes sèches VTLF 2.500/0-400 VARIAIR TRI 11kW- UNKNOW009",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 137,
+          "kit_label": "Pompe à palettes sèches VX 4.25 TRI 1.3kW- G050075",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 86,
+          "kit_label": "Pompe à palettes sèches VX 4.25 TRI 1.3kW- G050075",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 1.3
+        },
+        {
+          "id": 35,
+          "kit_label": "Pompe à palettes sèches VX 4.25 TRI 1.3kW- G050075",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 138,
+          "kit_label": "Pompe à palettes sèches VT 4.25 TRI 0.75kW- G026677",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 87,
+          "kit_label": "Pompe à palettes sèches VT 4.25 TRI 0.75kW- G026677",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.75
+        },
+        {
+          "id": 36,
+          "kit_label": "Pompe à palettes sèches VT 4.25 TRI 0.75kW- G026677",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 139,
+          "kit_label": "Pompe à bec BCV 300 TRI 5.5kW- G027360",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 88,
+          "kit_label": "Pompe à bec BCV 300 TRI 5.5kW- G027360",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 5.5
+        },
+        {
+          "id": 37,
+          "kit_label": "Pompe à bec BCV 300 TRI 5.5kW- G027360",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 140,
+          "kit_label": "Pompe à palettes sèches VXLF 2.500 TRI 11.0kW- G053273",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 89,
+          "kit_label": "Pompe à palettes sèches VXLF 2.500 TRI 11.0kW- G053273",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 38,
+          "kit_label": "Pompe à palettes sèches VXLF 2.500 TRI 11.0kW- G053273",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 141,
+          "kit_label": "Pompe à palettes sèches KVT 3.100 TRI 3kW- G024020",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 90,
+          "kit_label": "Pompe à palettes sèches KVT 3.100 TRI 3kW- G024020",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 3
+        },
+        {
+          "id": 39,
+          "kit_label": "Pompe à palettes sèches KVT 3.100 TRI 3kW- G024020",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 142,
+          "kit_label": "Pompe à palettes sèches KVT 3.140/0-400 VARIAIR TRI 4kW- G021365",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 91,
+          "kit_label": "Pompe à palettes sèches KVT 3.140/0-400 VARIAIR TRI 4kW- G021365",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 40,
+          "kit_label": "Pompe à palettes sèches KVT 3.140/0-400 VARIAIR TRI 4kW- G021365",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 143,
+          "kit_label": "Pompe à bec BCV 150 VARIAIR  TRI 4kW- G051414",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 92,
+          "kit_label": "Pompe à bec BCV 150 VARIAIR  TRI 4kW- G051414",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 41,
+          "kit_label": "Pompe à bec BCV 150 VARIAIR  TRI 4kW- G051414",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 144,
+          "kit_label": "Pompe à palettes sèches KVX 3.80 TRI 2.2kW- G024165",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 93,
+          "kit_label": "Pompe à palettes sèches KVX 3.80 TRI 2.2kW- G024165",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 2.2
+        },
+        {
+          "id": 42,
+          "kit_label": "Pompe à palettes sèches KVX 3.80 TRI 2.2kW- G024165",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 145,
+          "kit_label": "Pompe à palettes sèches KVT 3.100/0-400 VARIAIR TRI 4kW- UNKNOW005",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 94,
+          "kit_label": "Pompe à palettes sèches KVT 3.100/0-400 VARIAIR TRI 4kW- UNKNOW005",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 43,
+          "kit_label": "Pompe à palettes sèches KVT 3.100/0-400 VARIAIR TRI 4kW- UNKNOW005",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 146,
+          "kit_label": "Pompe à palettes sèches VX 4.40 TRI 1.3kW- G050049",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 95,
+          "kit_label": "Pompe à palettes sèches VX 4.40 TRI 1.3kW- G050049",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 1.3
+        },
+        {
+          "id": 44,
+          "kit_label": "Pompe à palettes sèches VX 4.40 TRI 1.3kW- G050049",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 147,
+          "kit_label": "Pompe à palettes sèches VT 4.4 24V DC 250WkW- G052386",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Continu",
+          "kat_valeur": 0
+        },
+        {
+          "id": 96,
+          "kit_label": "Pompe à palettes sèches VT 4.4 24V DC 250WkW- G052386",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.25
+        },
+        {
+          "id": 45,
+          "kit_label": "Pompe à palettes sèches VT 4.4 24V DC 250WkW- G052386",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 148,
+          "kit_label": "Pompe à bec BCV 150 TRI 3.0kW- G027359",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 97,
+          "kit_label": "Pompe à bec BCV 150 TRI 3.0kW- G027359",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 3
+        },
+        {
+          "id": 46,
+          "kit_label": "Pompe à bec BCV 150 TRI 3.0kW- G027359",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 149,
+          "kit_label": "Pompe à palettes sèches VT 4.8 TRI 0.37kW- G052508",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 98,
+          "kit_label": "Pompe à palettes sèches VT 4.8 TRI 0.37kW- G052508",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.37
+        },
+        {
+          "id": 47,
+          "kit_label": "Pompe à palettes sèches VT 4.8 TRI 0.37kW- G052508",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 150,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360/0-400 VARIAIR TRI 11kW- UNKNOW008",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 99,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360/0-400 VARIAIR TRI 11kW- UNKNOW008",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 11
+        },
+        {
+          "id": 48,
+          "kit_label": "Pompe à palettes sèches VTLF 2.360/0-400 VARIAIR TRI 11kW- UNKNOW008",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 151,
+          "kit_label": "Pompe à bec BCV 100 TRI 2.2kW- G027358",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 100,
+          "kit_label": "Pompe à bec BCV 100 TRI 2.2kW- G027358",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 2.2
+        },
+        {
+          "id": 49,
+          "kit_label": "Pompe à bec BCV 100 TRI 2.2kW- G027358",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 50
+        },
+        {
+          "id": 152,
+          "kit_label": "Pompe à palettes sèches KVX 3.100 TRI 3kW- G024262",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 101,
+          "kit_label": "Pompe à palettes sèches KVX 3.100 TRI 3kW- G024262",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 3
+        },
+        {
+          "id": 50,
+          "kit_label": "Pompe à palettes sèches KVX 3.100 TRI 3kW- G024262",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 100
+        },
+        {
+          "id": 153,
+          "kit_label": "Pompe à palettes sèches VTLF 2.200 TRI 4.0kW- G024175",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Triphasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 102,
+          "kit_label": "Pompe à palettes sèches VTLF 2.200 TRI 4.0kW- G024175",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 4
+        },
+        {
+          "id": 51,
+          "kit_label": "Pompe à palettes sèches VTLF 2.200 TRI 4.0kW- G024175",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 200
+        },
+        {
+          "id": 154,
+          "kit_label": "Pompe à palettes sèches VX 4.25 MONO 0.80kW- G013633",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 103,
+          "kit_label": "Pompe à palettes sèches VX 4.25 MONO 0.80kW- G013633",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.8
+        },
+        {
+          "id": 52,
+          "kit_label": "Pompe à palettes sèches VX 4.25 MONO 0.80kW- G013633",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 155,
+          "kit_label": "Pompe à palettes sèches VT 4.8 MONO 0.37kW- G053623",
+          "atr_label": "Nombre de phases",
+          "atr_val": "Monophasé",
+          "kat_valeur": 0
+        },
+        {
+          "id": 104,
+          "kit_label": "Pompe à palettes sèches VT 4.8 MONO 0.37kW- G053623",
+          "atr_label": "Puissance",
+          "atr_val": "kW",
+          "kat_valeur": 0.37
+        },
+        {
+          "id": 53,
+          "kit_label": "Pompe à palettes sèches VT 4.8 MONO 0.37kW- G053623",
+          "atr_label": "Pression",
+          "atr_val": "MBAR",
+          "kat_valeur": 150
+        },
+        {
+          "id": 158,
+          "kit_label": "jjj",
+          "atr_label": "Diamètre",
+          "atr_val": "Triphasé",
+          "kat_valeur": 2
+        },
+        {
+          "id": 156,
+          "kit_label": "111",
+          "atr_label": "222",
+          "atr_val": "kW",
+          "kat_valeur": 3
+        }
+      ],
+      "type": "VIEW",
+      "definition": " SELECT kat.kat_id AS id,\n    kit.kit_label,\n    attribute_carac.atr_label,\n    attribute.atr_val,\n    kat.kat_valeur\n   FROM (((kit_dev kit\n     JOIN kit_attribute_dev kat ON ((kit.kit_id = kat.fk_kit)))\n     JOIN attribute_dev attribute_carac ON ((((attribute_carac.atr_nat)::text = 'CARAC'::text) AND (kat.fk_attribute_carac = attribute_carac.atr_id))))\n     JOIN attribute_dev attribute ON ((kat.fk_attribute = attribute.atr_id)));",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "kit_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_label",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "atr_val",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null
+        },
+        {
+          "column_name": "kat_valeur",
+          "data_type": "double precision",
+          "is_nullable": "YES",
+          "column_default": null
+        }
+      ]
+    }
+  }
+}

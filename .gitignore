@@ -25,3 +25,6 @@ vite.config.ts.timestamp-*
 
 # Excel files
 static/Excel/
+
+# BDD-IA
+scripts/output/
