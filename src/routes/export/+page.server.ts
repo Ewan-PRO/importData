@@ -14,6 +14,7 @@ export interface ExportConfig {
 	includeRelations: boolean;
 	rowLimit?: number;
 	filters: Record<string, unknown>;
+	includeHeaders: boolean;
 }
 
 export interface TableInfo {
@@ -62,7 +63,7 @@ const exportSchema = z.object({
 });
 
 // Définition des tables et vues disponibles
-export const availableTables: TableInfo[] = [
+const availableTables: TableInfo[] = [
 	// Tables principales
 	{
 		name: 'kit',
@@ -441,34 +442,36 @@ export const actions: Actions = {
 
 				switch (tableName) {
 					case 'kit':
-						data = await prisma.kit.findMany({ take: limit });
+						data = await prisma.kit.findMany({ take: limit, orderBy: { kit_id: 'asc' } });
 						break;
 					case 'part':
 						data = await prisma.part.findMany({
 							take: limit,
-							include: { kit: true }
+							include: { kit: true },
+							orderBy: { par_id: 'asc' }
 						});
 						break;
 					case 'attribute':
-						data = await prisma.attribute.findMany({ take: limit });
+						data = await prisma.attribute.findMany({ take: limit, orderBy: { atr_id: 'asc' } });
 						break;
 					case 'kit_attribute':
 						data = await prisma.kit_attribute.findMany({
 							take: limit,
-							include: { kit: true, attribute_kit_attribute_fk_attributeToattribute: true }
+							include: { kit: true, attribute_kit_attribute_fk_attributeToattribute: true },
+							orderBy: { kat_id: 'asc' }
 						});
 						break;
 					case 'supplier':
-						data = await prisma.supplier.findMany({ take: limit });
+						data = await prisma.supplier.findMany({ take: limit, orderBy: { sup_id: 'asc' } });
 						break;
 					case 'supplier_dev':
-						data = await prisma.supplier_dev.findMany({ take: limit });
+						data = await prisma.supplier_dev.findMany({ take: limit, orderBy: { sup_id: 'asc' } });
 						break;
 					case 'v_kit_carac':
-						data = await prisma.v_kit_carac.findMany({ take: limit });
+						data = await prisma.v_kit_carac.findMany({ take: limit, orderBy: { id: 'asc' } });
 						break;
 					case 'v_categories':
-						data = await prisma.v_categories.findMany({ take: limit });
+						data = await prisma.v_categories.findMany({ take: limit, orderBy: { atr_id: 'asc' } });
 						break;
 					// Ajouter les autres tables selon les besoins
 				}

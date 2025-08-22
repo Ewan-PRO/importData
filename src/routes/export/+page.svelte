@@ -1,6 +1,6 @@
 <!-- src/routes/export/+page.svelte -->
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	// import { enhance } from '$app/forms'; // Non utilisé
 	import { fade, slide } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms/client';
 	import { Card, Spinner } from 'flowbite-svelte';
@@ -9,26 +9,26 @@
 	import * as Select from '$lib/components/ui/select';
 	import * as Table from '$lib/components/ui/table';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Separator } from '$lib/components/ui/separator';
+	// import { Separator } from '$lib/components/ui/separator'; // Non utilisé
 	import {
-		Download,
+		// Download, // Non utilisé
 		Database,
 		FileSpreadsheet,
 		FileText,
 		FileImage,
 		Settings,
 		Eye,
-		AlertCircle,
+		// AlertCircle, // Non utilisé
 		CheckCircle,
 		Filter,
-		Calendar,
-		Hash,
+		// Calendar, // Non utilisé
+		// Hash, // Non utilisé
 		BarChart3,
 		FileDown,
 		Play,
-		RotateCcw,
-		X,
-		Check
+		RotateCcw
+		// X, // Non utilisé
+		// Check // Non utilisé
 	} from 'lucide-svelte';
 	import type { TableInfo, ExportResult } from './+page.server.js';
 
@@ -39,7 +39,7 @@
 		form,
 		enhance: superEnhance,
 		submitting,
-		errors,
+		// errors, // Non utilisé
 		reset
 	} = superForm(data.form, {
 		dataType: 'json',
@@ -68,6 +68,13 @@
 	let previewData: Record<string, unknown[]> = {};
 	let exportResult: ExportResult | null = null;
 	let showAdvancedOptions = false;
+	let dateFrom = '';
+	let dateTo = '';
+
+	// Synchroniser les dates avec le formulaire
+	$: if (dateFrom || dateTo) {
+		$form.dateRange = { from: dateFrom, to: dateTo };
+	}
 
 	// Catégories de tables
 	const categories = [
@@ -145,11 +152,11 @@
 			case 'tables':
 				return 'default';
 			case 'views':
-				return 'secondary';
+				return 'bleu';
 			case 'dev_tables':
-				return 'outline';
+				return 'blanc';
 			case 'dev_views':
-				return 'outline';
+				return 'blanc';
 			default:
 				return 'default';
 		}
@@ -335,11 +342,11 @@
 								</span>
 							</Select.SelectTrigger>
 							<Select.SelectContent>
-								{#each categories as category}
+								{#each categories as category (category.value)}
 									<Select.SelectItem value={category.value}>
 										<span class="flex items-center gap-2">
 											<svelte:component this={category.icon} class="h-4 w-4" />
-											{category.label} ({tableCounts[category.value]})
+											{category.label} ({tableCounts[category.value as keyof typeof tableCounts]})
 										</span>
 									</Select.SelectItem>
 								{/each}
@@ -366,7 +373,7 @@
 				<!-- Liste des tables -->
 				<div class="mb-6 max-h-96 overflow-y-auto">
 					<div class="grid gap-3">
-						{#each filteredTables as table}
+						{#each filteredTables as table (table.name)}
 							<label
 								class="flex cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-gray-50"
 							>
@@ -412,7 +419,7 @@
 				<div class="mb-6">
 					<h3 class="mb-3 font-medium">Format d'export</h3>
 					<div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-						{#each exportFormats as format}
+						{#each exportFormats as format (format.value)}
 							<label
 								class="flex cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-gray-50 {$form.format ===
 								format.value
@@ -522,7 +529,7 @@
 											<input
 												id="dateFrom"
 												type="date"
-												bind:value={$form.dateRange?.from}
+												bind:value={dateFrom}
 												class="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
 											/>
 										</div>
@@ -531,7 +538,7 @@
 											<input
 												id="dateTo"
 												type="date"
-												bind:value={$form.dateRange?.to}
+												bind:value={dateTo}
 												class="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
 											/>
 										</div>
@@ -638,7 +645,7 @@
 										<Table.Root variant="striped">
 											<Table.Header>
 												<Table.Row variant="striped">
-													{#each Object.keys(rows[0]) as column}
+													{#each Object.keys(rows[0] as Record<string, unknown>) as column}
 														<Table.Head variant="striped">{column}</Table.Head>
 													{/each}
 												</Table.Row>
@@ -646,10 +653,11 @@
 											<Table.Body>
 												{#each rows.slice(0, 5) as row, rowIndex}
 													<Table.Row variant="striped">
-														{#each Object.keys(rows[0]) as column}
+														{#each Object.keys(rows[0] as Record<string, unknown>) as column}
 															<Table.Cell variant="striped" {rowIndex}>
-																{row[column] !== null && row[column] !== undefined
-																	? row[column]
+																{@const typedRow = row as Record<string, unknown>}
+																{typedRow[column] !== null && typedRow[column] !== undefined
+																	? String(typedRow[column])
 																	: ''}
 															</Table.Cell>
 														{/each}
