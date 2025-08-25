@@ -555,7 +555,7 @@
 						<div class="space-y-4">
 							<!-- Groupement par catégorie -->
 							<div class="rounded-lg border p-4">
-								<h4 class="mb-2 font-medium text-gray-600">Fournisseurs</h4>
+								<h3 class="mb-2 font-medium text-gray-600">Fournisseurs</h3>
 								<div class="space-y-2">
 									{#each availableTables.filter((t) => t.category === 'supplier') as table}
 										<label class="flex items-center space-x-2">
@@ -573,7 +573,7 @@
 							</div>
 
 							<div class="rounded-lg border p-4">
-								<h4 class="mb-2 font-medium text-gray-600">Attributs</h4>
+								<h3 class="mb-2 font-medium text-gray-600">Attributs</h3>
 								<div class="space-y-2">
 									{#each availableTables.filter((t) => t.category === 'attribute') as table}
 										<label class="flex items-center space-x-2">
@@ -591,7 +591,7 @@
 							</div>
 
 							<div class="rounded-lg border p-4">
-								<h4 class="mb-2 font-medium text-gray-600">Catégories</h4>
+								<h3 class="mb-2 font-medium text-gray-600">Catégories</h3>
 								<div class="space-y-2">
 									{#each availableTables.filter((t) => t.category === 'category') as table}
 										<label class="flex items-center space-x-2">

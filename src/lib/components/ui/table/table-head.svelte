@@ -22,8 +22,8 @@
 			: variant === 'striped'
 				? 'border-x border-black bg-[#dbeafe] px-4 py-3 text-left align-middle font-semibold whitespace-nowrap text-gray-900'
 				: variant === 'success'
-					? 'border-x border-black bg-green-500 px-4 py-3 text-left align-middle font-bold whitespace-nowrap text-white'
-					: 'border-x border-black bg-red-500 px-4 py-3 text-left align-middle font-bold whitespace-nowrap text-white',
+					? 'border-x border-black bg-green-700 px-4 py-3 text-left align-middle font-bold whitespace-nowrap text-white'
+					: 'border-x border-black bg-red-600 px-4 py-3 text-left align-middle font-bold whitespace-nowrap text-white',
 		className
 	)}
 	{...restProps}

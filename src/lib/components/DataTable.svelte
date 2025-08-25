@@ -132,6 +132,7 @@
 									class="h-4 w-4 rounded text-blue-600"
 									checked={selectedItems.includes(item)}
 									on:change={() => handleSelect(item)}
+									aria-label="Sélectionner cet élément"
 								/>
 							</td>
 						{/if}
@@ -185,6 +186,7 @@
 								class="mr-3 h-4 w-4 rounded text-blue-600"
 								checked={selectedItems.includes(item)}
 								on:change={() => handleSelect(item)}
+								aria-label="Sélectionner cet élément"
 							/>
 							<h3 class="font-bold">Niv 1 : {item.atr_0_label || ''}</h3>
 						</div>
