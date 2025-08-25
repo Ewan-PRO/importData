@@ -569,7 +569,7 @@
 								<div class="flex-1">
 									<div class="flex items-center gap-2">
 										<svelte:component this={format.icon} class="h-5 w-5 text-gray-900" />
-										<span class="font-medium text-gray-900">{format.label}</span>
+										<span class="font-medium text-gray-900 whitespace-nowrap">{format.label}</span>
 										{#if format.recommended}
 											<Badge variant="noir">Recommandé</Badge>
 										{/if}
