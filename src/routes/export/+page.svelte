@@ -331,7 +331,8 @@
 					>
 						1
 					</div>
-					<span>Sélection des tables</span>
+					<span class="hidden sm:inline">Sélection des tables</span>
+					<span class="sm:hidden">Tables</span>
 				</div>
 			</div>
 			<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
@@ -342,7 +343,8 @@
 					>
 						2
 					</div>
-					<span>Configuration</span>
+					<span class="hidden sm:inline">Configuration</span>
+					<span class="sm:hidden">Config</span>
 				</div>
 			</div>
 			<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
@@ -353,7 +355,8 @@
 					>
 						3
 					</div>
-					<span>Aperçu & Export</span>
+					<span class="hidden sm:inline">Aperçu & Export</span>
+					<span class="sm:hidden">Export</span>
 				</div>
 			</div>
 		</div>

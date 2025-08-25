@@ -447,7 +447,8 @@
 					>
 						1
 					</div>
-					<span>Sélection du fichier</span>
+					<span class="hidden sm:inline">Sélection du fichier</span>
+					<span class="sm:hidden">Fichier</span>
 				</div>
 			</div>
 			<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
@@ -458,7 +459,8 @@
 					>
 						2
 					</div>
-					<span>Mappage colonnes</span>
+					<span class="hidden sm:inline">Mappage colonnes</span>
+					<span class="sm:hidden">Config</span>
 				</div>
 			</div>
 			<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
@@ -469,7 +471,8 @@
 					>
 						3
 					</div>
-					<span>Validation & Import</span>
+					<span class="hidden sm:inline">Validation & Import</span>
+					<span class="sm:hidden">Import</span>
 				</div>
 			</div>
 		</div>
@@ -487,7 +490,7 @@
 				<div
 					role="button"
 					tabindex="0"
-					class={`mb-4 rounded-lg border-2 border-dashed p-8 text-center transition-colors ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
+					class={`mb-4 rounded-lg border-2 border-dashed p-8 text-center transition-colors hover:border-blue-400 hover:bg-blue-50 ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
 					on:dragenter|preventDefault={handleDragEnter}
 					on:dragleave|preventDefault={handleDragLeave}
 					on:dragover|preventDefault={handleDragOver}
