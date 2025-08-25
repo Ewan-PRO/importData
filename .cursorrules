@@ -79,6 +79,54 @@ node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 - Validation formulaires avec Zod + SvelteKit Superforms
 - Structure dans `src/lib/components/ui/`
 
+**Button variants :**
+- `bleu` (default) - Primary blue button
+- `vert` - Success/confirmation actions
+- `rouge` - Danger/delete actions  
+- `jaune` - Warning actions
+- `noir` - Secondary dark actions
+- `blanc` - Alternative/outline style
+- `link` - Text link style
+
+**Note:** `outline` variant n'existe pas - utiliser `blanc` pour style outline.
+
+**Badge variants :**
+- `default` (default) - Primary badge style
+- `bleu` - Blue informational badge
+- `vert` - Success/positive badge
+- `rouge` - Error/danger badge
+- `noir` - Secondary/neutral badge
+- `blanc` - Alternative/outline style badge
+
+**Note:** `outline` variant n'existe pas pour badges - utiliser `blanc` pour style outline.
+
+## Toast Notifications (Sonner)
+
+**Setup :** svelte-sonner installé, Toaster configuré dans +layout.svelte
+
+**Usage correct :**
+```typescript
+// ✅ Import correct
+import { toast } from 'svelte-sonner';
+import { Toaster } from 'svelte-sonner';
+
+// ✅ Usage
+toast.error('Message d\'erreur');
+toast.success('Opération réussie');
+toast('Message info');
+```
+
+**Erreurs à éviter :**
+```typescript
+// ❌ N'JAMAIS importer depuis les composants UI
+import { toast } from '$lib/components/ui/sonner';
+```
+
+**Timing :**
+- Toasts au chargement : `setTimeout(() => toast.error('msg'), 100)` dans `onMount`
+- Handlers événements : appel direct sans délai
+- Après navigation : fonctionne immédiatement
+
 ## Réponses en français
 
 - Toujours répondre en français

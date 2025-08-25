@@ -188,3 +188,51 @@ const data: TableData[] = [];
 - `blanc` - Alternative/outline style badge
 
 **Note:** `outline` variant does not exist for badges - use `blanc` instead for outline-style badges.
+
+## Toast Notifications (Sonner)
+
+This project uses **svelte-sonner** for toast notifications.
+
+### Setup Requirements
+
+1. **Installation:** Already installed as dependency
+2. **Toaster Component:** Must be placed in root layout (`+layout.svelte`)
+3. **Import:** Always import directly from `'svelte-sonner'`
+
+### Correct Usage
+
+```typescript
+// ✅ CORRECT Import
+import { toast } from 'svelte-sonner';
+
+// ✅ CORRECT Toaster setup (already in +layout.svelte)
+import { Toaster } from 'svelte-sonner';
+<Toaster position="top-center" richColors={true} />
+
+// ✅ CORRECT Usage
+toast.error('Error message');
+toast.success('Success message');  
+toast('Info message');
+```
+
+### Common Mistakes to Avoid
+
+```typescript
+// ❌ WRONG - Don't import from UI components
+import { toast } from '$lib/components/ui/sonner';
+
+// ❌ WRONG - Don't use custom wrapper component for basic toasts
+import { Toaster } from '$lib/components/ui/sonner/sonner.svelte';
+```
+
+### Timing Best Practices
+
+- **Page load toasts:** Use `setTimeout` with small delay (100ms) in `onMount`
+- **Event handlers:** Call directly without delay
+- **After navigation:** Works immediately after redirects
+
+### Authentication Integration
+
+The project has built-in auth error toasts:
+- Protected routes automatically show toast on unauthorized access
+- Handled via URL params and `onMount` in homepage
