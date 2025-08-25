@@ -4,6 +4,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { z } from 'zod';
 import { superValidate } from 'sveltekit-superforms/server';
 import { zod } from 'sveltekit-superforms/adapters';
+import { protect } from '$lib/auth/protect';
 
 // Fonction utilitaire pour convertir en toute sécurité les valeurs FormData en string
 function safeFormDataToString(value: FormDataEntryValue | null): string {
@@ -37,7 +38,11 @@ const kitSchema = z.object({
 });
 
 // Cette fonction sera utilisée à la fois sur le serveur et le kit
-export const load = (async ({ fetch, depends }) => {
+export const load = (async (event) => {
+	// Protection de la route - redirection vers / si non connecté
+	await protect(event);
+	
+	const { fetch, depends } = event;
 	depends('app:kits'); // Pour permettre l'invalidation avec invalidateAll()
 
 	try {
@@ -66,7 +71,11 @@ export const load = (async ({ fetch, depends }) => {
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
-	create: async ({ request, fetch }) => {
+	create: async (event) => {
+		// Protection de l'action - redirection vers / si non connecté
+		await protect(event);
+		
+		const { request, fetch } = event;
 		const formData = await request.formData();
 		const form = await superValidate(formData, zod(kitSchema));
 
@@ -102,7 +111,11 @@ export const actions: Actions = {
 		}
 	},
 
-	update: async ({ request, fetch }) => {
+	update: async (event) => {
+		// Protection de l'action - redirection vers / si non connecté
+		await protect(event);
+		
+		const { request, fetch } = event;
 		const formData = await request.formData();
 		const id = safeFormDataToString(formData.get('id'));
 
@@ -141,7 +154,11 @@ export const actions: Actions = {
 		}
 	},
 
-	delete: async ({ request, fetch }) => {
+	delete: async (event) => {
+		// Protection de l'action - redirection vers / si non connecté
+		await protect(event);
+		
+		const { request, fetch } = event;
 		const formData = await request.formData();
 		const id = safeFormDataToString(formData.get('id'));
 

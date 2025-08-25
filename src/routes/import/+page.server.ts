@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import { superValidate } from 'sveltekit-superforms/server';
 import { z } from 'zod';
 import { zod } from 'sveltekit-superforms/adapters';
+import { protect } from '$lib/auth/protect';
 
 const prisma = new PrismaClient();
 
@@ -153,7 +154,11 @@ function validateAtr0Label(
 }
 
 export const actions: Actions = {
-	validate: async ({ request }) => {
+	validate: async (event) => {
+		// Protection de l'action - redirection vers / si non connecté
+		await protect(event);
+		
+		const { request } = event;
 		try {
 			console.log('Début de la validation côté serveur');
 			// Validation du formulaire avec SuperForms
@@ -307,7 +312,11 @@ export const actions: Actions = {
 		}
 	},
 
-	process: async ({ request }) => {
+	process: async (event) => {
+		// Protection de l'action - redirection vers / si non connecté
+		await protect(event);
+		
+		const { request } = event;
 		try {
 			// Validation du formulaire avec SuperForms
 			const form = await superValidate(request, zod(importSchema));
@@ -968,7 +977,11 @@ function getValidationRules(tableName: string): ValidationRules {
 }
 
 // Pour SuperForms, nous devons également fournir la fonction de chargement
-export const load: ServerLoad = async ({ url }) => {
+export const load: ServerLoad = async (event) => {
+	// Protection de la route - redirection vers / si non connecté
+	await protect(event);
+	
+	const { url } = event;
 	console.log('🚀 [IMPORT] Début du chargement de la page import');
 	console.log('🔍 [IMPORT] URL:', url.pathname);
 

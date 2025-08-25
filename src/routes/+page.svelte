@@ -2,8 +2,38 @@
 	import { LogIn } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import UserInfo from '$lib/components/UserInfo.svelte';
+	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 
 	export let data;
+
+	// Afficher le toast d'erreur au chargement de la page si nécessaire
+	onMount(() => {
+		if (data.authError) {
+			const routeNames: Record<string, string> = {
+				'categories': 'la page des catégories',
+				'kits': 'la page des kits',
+				'import': 'la page d\'import',
+				'export': 'la page d\'export'
+			};
+			
+			const routeName = routeNames[data.authError] || 'cette page';
+			const message = `Vous devez être connecté pour accéder à ${routeName}`;
+			
+			// Ajouter un délai pour s'assurer que le DOM est prêt
+			setTimeout(() => {
+				toast.error(message, {
+					duration: 5000
+				});
+			}, 100);
+			
+			// Nettoyer l'URL pour éviter que le toast réapparaisse au refresh
+			const url = new URL(window.location.href);
+			url.searchParams.delete('error');
+			url.searchParams.delete('route');
+			window.history.replaceState({}, '', url.toString());
+		}
+	});
 </script>
 
 <div class="mx-auto max-w-3xl">
@@ -23,6 +53,7 @@
 					Se connecter
 				</Button>
 			</form>
+			
 		</div>
 	{/if}
 </div>

@@ -4,7 +4,7 @@
 	import AuthButton from '$lib/components/AuthButton.svelte';
 	import { isAuthenticated } from '$lib/auth';
 	import { page } from '$app/stores';
-	import { Toaster } from '$lib/components/ui/sonner';
+	import { Toaster } from 'svelte-sonner';
 	import { Menu, X } from 'lucide-svelte';
 
 	interface PageData {
@@ -131,5 +131,10 @@
 		<slot />
 	</main>
 
-	<Toaster />
+	<Toaster 
+		position="top-center" 
+		richColors={true}
+		closeButton={true}
+		duration={5000}
+	/>
 </div>

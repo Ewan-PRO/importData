@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { superValidate } from 'sveltekit-superforms/server';
 import { zod } from 'sveltekit-superforms/adapters';
 import { PrismaClient } from '@prisma/client';
+import { protect } from '$lib/auth/protect';
 
 const prisma = new PrismaClient();
 
@@ -391,7 +392,11 @@ async function getTablesInfo(): Promise<TableInfo[]> {
 	return tablesWithCounts;
 }
 
-export const load = (async ({ depends }) => {
+export const load = (async (event) => {
+	// Protection de la route - redirection vers / si non connecté
+	await protect(event);
+	
+	const { depends } = event;
 	depends('app:export');
 
 	try {
@@ -425,7 +430,11 @@ export const load = (async ({ depends }) => {
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
-	preview: async ({ request }) => {
+	preview: async (event) => {
+		// Protection de l'action - redirection vers / si non connecté
+		await protect(event);
+		
+		const { request } = event;
 		const form = await superValidate(request, zod(exportSchema));
 
 		if (!form.valid) {
@@ -490,7 +499,11 @@ export const actions: Actions = {
 		}
 	},
 
-	export: async ({ request, fetch }) => {
+	export: async (event) => {
+		// Protection de l'action - redirection vers / si non connecté
+		await protect(event);
+		
+		const { request, fetch } = event;
 		console.log('🚀 [SERVER] Action export déclenchée');
 		const form = await superValidate(request, zod(exportSchema));
 
