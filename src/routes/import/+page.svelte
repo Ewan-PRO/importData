@@ -437,40 +437,43 @@
 
 	<Alert.GlobalAlert />
 
-	<div class="steps mb-8 flex justify-between">
-		<div class={`step-item ${step >= 1 ? 'text-blue-700' : ''} flex-1`}>
-			<div class="flex items-center">
-				<div
-					class={`mr-2 flex h-8 w-8 items-center justify-center rounded-full ${step >= 1 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
-				>
-					1
+	<!-- Indicateur d'étapes -->
+	<Card class="mb-8 w-full max-w-none">
+		<div class="steps flex justify-between">
+			<div class={`step-item ${step >= 1 ? 'text-blue-700' : ''} flex-1`}>
+				<div class="flex items-center">
+					<div
+						class={`mr-2 flex h-8 w-8 items-center justify-center rounded-full ${step >= 1 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
+					>
+						1
+					</div>
+					<span>Sélection du fichier</span>
 				</div>
-				<span>Sélection du fichier</span>
+			</div>
+			<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
+			<div class={`step-item ${step >= 2 ? 'text-blue-700' : ''} flex-1`}>
+				<div class="flex items-center">
+					<div
+						class={`mr-2 flex h-8 w-8 items-center justify-center rounded-full ${step >= 2 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
+					>
+						2
+					</div>
+					<span>Mappage colonnes</span>
+				</div>
+			</div>
+			<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
+			<div class={`step-item ${step >= 3 ? 'text-blue-700' : ''} flex-1`}>
+				<div class="flex items-center">
+					<div
+						class={`mr-2 flex h-8 w-8 items-center justify-center rounded-full ${step >= 3 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
+					>
+						3
+					</div>
+					<span>Validation & Import</span>
+				</div>
 			</div>
 		</div>
-		<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
-		<div class={`step-item ${step >= 2 ? 'text-blue-700' : ''} flex-1`}>
-			<div class="flex items-center">
-				<div
-					class={`mr-2 flex h-8 w-8 items-center justify-center rounded-full ${step >= 2 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
-				>
-					2
-				</div>
-				<span>Mappage des colonnes</span>
-			</div>
-		</div>
-		<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
-		<div class={`step-item ${step >= 3 ? 'text-blue-700' : ''} flex-1`}>
-			<div class="flex items-center">
-				<div
-					class={`mr-2 flex h-8 w-8 items-center justify-center rounded-full ${step >= 3 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
-				>
-					3
-				</div>
-				<span>Validation & Import</span>
-			</div>
-		</div>
-	</div>
+	</Card>
 
 	<Card class="mx-auto w-full max-w-6xl">
 		{#if step === 1}
