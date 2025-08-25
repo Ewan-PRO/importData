@@ -1,8 +1,3 @@
-<svelte:head>
-	<title>CenovDistribution - Système de gestion des kits et composants</title>
-	<meta name="description" content="Plateforme de gestion hiérarchique des kits, pièces et attributs. Importez et exportez vos données techniques, gérez les catégories et les relations entre composants." />
-</svelte:head>
-
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
@@ -20,6 +15,7 @@
 	let loaded = false;
 
 	onMount(() => {
+		document.body.classList.add('js-enabled');
 		loaded = true;
 	});
 
@@ -33,11 +29,15 @@
 	];
 </script>
 
-<div
-	class="min-h-screen bg-gray-50 transition-opacity duration-300 {loaded
-		? 'opacity-100'
-		: 'opacity-0'}"
->
+<svelte:head>
+	<title>CenovDistribution - Système de gestion des kits et composants</title>
+	<meta
+		name="description"
+		content="Plateforme de gestion hiérarchique des kits, pièces et attributs. Importez et exportez vos données techniques, gérez les catégories et les relations entre composants."
+	/>
+</svelte:head>
+
+<div class="page-transition-container min-h-screen bg-gray-50 {loaded ? 'loaded' : ''}">
 	<header class="bg-white shadow">
 		<div class="container mx-auto px-4">
 			<!-- Top bar -->

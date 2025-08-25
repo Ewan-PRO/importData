@@ -14,6 +14,14 @@
 	--color-primary-800: #1d496f;
 	--color-primary-900: #1b3a56;
 	--color-primary-950: #13283e;
+
+	--font-family-sans: 'Poppins', sans-serif;
+	--font-family-secondary: 'Open Sans', sans-serif;
 }
 
 @source "../node_modules/flowbite-svelte/dist";
+
+/* Classes utilitaires pour les polices */
+.font-secondary {
+	font-family: var(--font-family-secondary);
+}
