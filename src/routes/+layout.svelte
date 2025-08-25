@@ -5,6 +5,7 @@
 	import { isAuthenticated } from '$lib/auth';
 	import { page } from '$app/stores';
 	import { Toaster } from '$lib/components/ui/sonner';
+	import { Menu, X } from 'lucide-svelte';
 
 	interface PageData {
 		user?: any;
@@ -13,6 +14,7 @@
 	export let data: PageData;
 	$: user = data.user;
 	let loaded = false;
+	let mobileMenuOpen = false;
 
 	onMount(() => {
 		document.body.classList.add('js-enabled');
@@ -40,20 +42,41 @@
 <div class="page-transition-container min-h-screen bg-gray-50 {loaded ? 'loaded' : ''}">
 	<header class="bg-white shadow">
 		<div class="container mx-auto px-4">
-			<!-- Top bar -->
+			<!-- Desktop & Mobile Top bar -->
 			<div class="flex items-center justify-between py-4">
 				<a href="/" class="text-xl font-bold text-[#e31206]">CenovDistribution</a>
-				<div class="flex items-center space-x-4">
+
+				<!-- Desktop user info & auth -->
+				<div class="hidden items-center space-x-4 md:flex">
 					{#if isAuthenticated(user)}
-						<span>Bonjour, {user.name || 'Client'}</span>
+						<span class="text-sm text-gray-700">Bonjour, {user.name || 'Client'}</span>
 					{/if}
 					<AuthButton {user} />
 				</div>
+
+				<!-- Mobile menu button & auth -->
+				<div class="flex items-center space-x-2 md:hidden">
+					{#if isAuthenticated(user)}
+						<button
+							class="rounded-md p-2 hover:bg-gray-200"
+							on:click={() => (mobileMenuOpen = !mobileMenuOpen)}
+							aria-label="Menu principal"
+						>
+							{#if mobileMenuOpen}
+								<X class="h-6 w-6 text-gray-700" />
+							{:else}
+								<Menu class="h-6 w-6 text-gray-700" />
+							{/if}
+						</button>
+					{:else}
+						<AuthButton {user} />
+					{/if}
+				</div>
 			</div>
 
-			<!-- Navigation -->
+			<!-- Desktop Navigation -->
 			{#if isAuthenticated(user)}
-				<nav class="border-t border-gray-200">
+				<nav class="hidden border-t border-gray-200 md:block">
 					<div class="flex space-x-8 py-3">
 						{#each navItems as item}
 							<a
@@ -66,6 +89,38 @@
 								{item.label}
 							</a>
 						{/each}
+					</div>
+				</nav>
+			{/if}
+
+			<!-- Mobile Navigation -->
+			{#if isAuthenticated(user) && mobileMenuOpen}
+				<nav class="border-t border-gray-200 bg-gray-50 md:hidden">
+					<!-- User info in mobile -->
+					<div class="border-b border-gray-200 px-4 py-3">
+						<p class="text-sm font-medium text-gray-900">Bonjour,</p>
+						<p class="truncate text-sm text-gray-600">{user.name || 'Client'}</p>
+					</div>
+
+					<!-- Navigation links -->
+					<div class="py-2">
+						{#each navItems as item}
+							<a
+								href={item.href}
+								class="block px-4 py-3 text-sm font-medium transition-colors hover:bg-blue-200 {$page
+									.url.pathname === item.href
+									? 'border-r-4 border-[#e31206] bg-red-50 text-[#e31206]'
+									: 'text-gray-700'}"
+								on:click={() => (mobileMenuOpen = false)}
+							>
+								{item.label}
+							</a>
+						{/each}
+					</div>
+
+					<!-- Auth button in mobile -->
+					<div class="border-t border-gray-200 p-4">
+						<AuthButton {user} />
 					</div>
 				</nav>
 			{/if}

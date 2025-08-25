@@ -188,16 +188,16 @@
 								on:change={() => handleSelect(item)}
 								aria-label="Sélectionner cet élément"
 							/>
-							<h3 class="font-bold">Niv 1 : {item.atr_0_label || ''}</h3>
+							<h2 class="font-bold">Niv 1 : {item.atr_0_label || ''}</h2>
 						</div>
 					{:else}
-						<h3 class="font-bold">Niv 1 : {item.atr_0_label || ''}</h3>
+						<h2 class="font-bold">Niv 1 : {item.atr_0_label || ''}</h2>
 					{/if}
 					<div class="flex space-x-2">
-						<button class="text-blue-600" on:click={() => handleEdit(item)}>
+						<button class="text-blue-600" on:click={() => handleEdit(item)} aria-label="Modifier cet élément">
 							<SquarePen class="h-4 w-4" />
 						</button>
-						<button class="text-red-600" on:click={() => handleDelete(item)}>
+						<button class="text-red-600" on:click={() => handleDelete(item)} aria-label="Supprimer cet élément">
 							<Trash2 class="h-4 w-4" />
 						</button>
 					</div>
