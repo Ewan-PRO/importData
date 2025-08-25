@@ -395,7 +395,7 @@ async function getTablesInfo(): Promise<TableInfo[]> {
 export const load = (async (event) => {
 	// Protection de la route - redirection vers / si non connecté
 	await protect(event);
-	
+
 	const { depends } = event;
 	depends('app:export');
 
@@ -433,13 +433,17 @@ export const actions: Actions = {
 	preview: async (event) => {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
-		
+
 		const { request } = event;
+		console.log('🔍 [PREVIEW] Action preview déclenchée');
 		const form = await superValidate(request, zod(exportSchema));
 
 		if (!form.valid) {
+			console.error('❌ [PREVIEW] Formulaire invalide:', form.errors);
 			return fail(400, { form });
 		}
+
+		console.log("📊 [PREVIEW] Configuration d'aperçu reçue:", form.data);
 
 		try {
 			const { selectedTables, rowLimit } = form.data;
@@ -489,9 +493,10 @@ export const actions: Actions = {
 				previewData[tableName] = data;
 			}
 
+			console.log('✅ [PREVIEW] Aperçu généré avec succès, tables:', Object.keys(previewData));
 			return { form, success: true, preview: previewData };
 		} catch (err) {
-			console.error("Erreur lors de l'aperçu:", err);
+			console.error("❌ [PREVIEW] Erreur lors de l'aperçu:", err);
 			return fail(500, {
 				form,
 				error: "Erreur lors de l'aperçu des données"
@@ -502,17 +507,23 @@ export const actions: Actions = {
 	export: async (event) => {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
-		
+
 		const { request, fetch } = event;
 		console.log('🚀 [SERVER] Action export déclenchée');
+
 		const form = await superValidate(request, zod(exportSchema));
+
+		console.log('📝 [SERVER] Données reçues après validation:');
+		console.log('  - Valid:', form.valid);
+		console.log('  - Data:', form.data);
+		console.log('  - Errors:', form.errors);
 
 		if (!form.valid) {
 			console.error('❌ [SERVER] Formulaire invalide:', form.errors);
 			return fail(400, { form });
 		}
 
-		console.log('📊 [SERVER] Configuration d\'export:', form.data);
+		console.log("📊 [SERVER] Configuration d'export validée:", form.data);
 
 		try {
 			// Rediriger vers l'API d'export pour le traitement
@@ -526,7 +537,7 @@ export const actions: Actions = {
 			});
 
 			console.log('📨 [SERVER] Réponse API reçue:', response.status, response.statusText);
-			
+
 			// Vérifier si c'est un fichier binaire (headers Content-Type)
 			const contentType = response.headers.get('content-type');
 			console.log('📄 [SERVER] Content-Type de la réponse:', contentType);
@@ -537,7 +548,7 @@ export const actions: Actions = {
 				try {
 					errorData = await response.json();
 				} catch {
-					errorData = { error: 'Erreur de communication avec l\'API' };
+					errorData = { error: "Erreur de communication avec l'API" };
 				}
 				return fail(response.status, {
 					form,
@@ -546,13 +557,19 @@ export const actions: Actions = {
 			}
 
 			// Si c'est un fichier binaire ou HTML (PDF), on devrait gérer le téléchargement différemment
-			if (contentType && (contentType.includes('application/vnd.openxml') || contentType.includes('text/csv') || contentType.includes('application/xml') || contentType.includes('text/html'))) {
+			if (
+				contentType &&
+				(contentType.includes('application/vnd.openxml') ||
+					contentType.includes('text/csv') ||
+					contentType.includes('application/xml') ||
+					contentType.includes('text/html'))
+			) {
 				console.log('📁 [SERVER] Fichier binaire détecté, lecture des headers personnalisés');
 				const exportResultHeader = response.headers.get('X-Export-Result');
 				if (exportResultHeader) {
 					const result = JSON.parse(exportResultHeader);
-					console.log('📦 [SERVER] Résultat d\'export extrait des headers:', result);
-					
+					console.log("📦 [SERVER] Résultat d'export extrait des headers:", result);
+
 					// Dans ce cas, nous devons gérer le téléchargement côté client
 					const finalResult = { ...result, needsClientDownload: true, downloadUrl: '/export/api' };
 					console.log('🎯 [SERVER] Retour du résultat final:', finalResult);

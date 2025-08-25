@@ -26,6 +26,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const config: ExportConfig = await request.json();
 		console.log('🚀 [EXPORT] Configuration reçue:', config);
+		console.log('📊 [EXPORT] Tables sélectionnées:', config.selectedTables);
+		console.log('📋 [EXPORT] Format:', config.format);
 
 		// Validation des données
 		if (!config.selectedTables || config.selectedTables.length === 0) {
@@ -461,8 +463,13 @@ function processRelationalData(
 				if (record.kit_document && Array.isArray(record.kit_document)) {
 					processedRecord.related_documents = (record.kit_document as unknown[]).length;
 				}
-				if (record.kit_kit_kit_kit_fk_kit_parentTokit && Array.isArray(record.kit_kit_kit_kit_fk_kit_parentTokit)) {
-					processedRecord.related_kits = (record.kit_kit_kit_kit_fk_kit_parentTokit as unknown[]).length;
+				if (
+					record.kit_kit_kit_kit_fk_kit_parentTokit &&
+					Array.isArray(record.kit_kit_kit_kit_fk_kit_parentTokit)
+				) {
+					processedRecord.related_kits = (
+						record.kit_kit_kit_kit_fk_kit_parentTokit as unknown[]
+					).length;
 				}
 				break;
 
@@ -478,8 +485,15 @@ function processRelationalData(
 					const kit = record.kit as Record<string, unknown>;
 					processedRecord.kit_info = (kit.kit_label as string) || (kit.kit_id as string);
 				}
-				if (record.attribute_kit_attribute_fk_attributeToattribute && typeof record.attribute_kit_attribute_fk_attributeToattribute === 'object' && record.attribute_kit_attribute_fk_attributeToattribute !== null) {
-					const attr = record.attribute_kit_attribute_fk_attributeToattribute as Record<string, unknown>;
+				if (
+					record.attribute_kit_attribute_fk_attributeToattribute &&
+					typeof record.attribute_kit_attribute_fk_attributeToattribute === 'object' &&
+					record.attribute_kit_attribute_fk_attributeToattribute !== null
+				) {
+					const attr = record.attribute_kit_attribute_fk_attributeToattribute as Record<
+						string,
+						unknown
+					>;
 					processedRecord.attribute_info = attr.atr_label as string;
 				}
 				break;
@@ -592,7 +606,10 @@ async function generateCSVFile(
 				}
 
 				// Échappement des guillemets et des virgules
-				if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+				if (
+					typeof value === 'string' &&
+					(value.includes(',') || value.includes('"') || value.includes('\n'))
+				) {
 					value = `"${value.replace(/"/g, '""')}"`;
 				}
 
@@ -614,9 +631,7 @@ async function generateCSVFile(
 }
 
 // Génération d'un fichier PDF (simplifié)
-async function generatePDFFile(
-	exportDataList: ExportData[]
-): Promise<ExportFile> {
+async function generatePDFFile(exportDataList: ExportData[]): Promise<ExportFile> {
 	// Pour une implémentation complète du PDF, vous pouvez utiliser jsPDF ou Puppeteer
 	// Ici, nous créons un rapport simple en HTML puis nous le convertissons conceptuellement
 
@@ -682,7 +697,10 @@ async function generatePDFFile(
 
 				// Échappement HTML
 				const stringValue = String(value);
-				const escapedValue = stringValue.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+				const escapedValue = stringValue
+					.replace(/&/g, '&amp;')
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;');
 				htmlContent += `<td>${escapedValue}</td>`;
 			}
 			htmlContent += '</tr>';
@@ -717,9 +735,7 @@ async function generatePDFFile(
 }
 
 // Génération d'un fichier XML
-async function generateXMLFile(
-	exportDataList: ExportData[]
-): Promise<ExportFile> {
+async function generateXMLFile(exportDataList: ExportData[]): Promise<ExportFile> {
 	const xmlData: Record<string, unknown> = {
 		export: {
 			'@_generated': new Date().toISOString(),

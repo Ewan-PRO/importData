@@ -92,9 +92,35 @@
 	let dateFrom = '';
 	let dateTo = '';
 
+	// Configuration d'export sauvegardée pour persistance entre aperçu et export
+	let savedExportConfig: any = null;
+
 	// Synchroniser les dates avec le formulaire
 	$: if (dateFrom || dateTo) {
 		$form.dateRange = { from: dateFrom, to: dateTo };
+	}
+
+	// Sauvegarder et synchroniser la configuration quand on arrive à l'étape 3 avec des données d'aperçu
+	$: if (step === 3 && Object.keys(previewData).length > 0 && !savedExportConfig) {
+		savedExportConfig = { ...$form };
+		console.log('💾 [CLIENT] Configuration sauvegardée automatiquement:', savedExportConfig);
+	}
+
+	// Synchroniser les données du formulaire avec la config sauvegardée quand on est à l'étape 3
+	$: if (step === 3 && savedExportConfig) {
+		console.log('🔄 [CLIENT] Synchronisation automatique des données du formulaire');
+		console.log('📋 [CLIENT] Config sauvegardée:', savedExportConfig);
+		console.log('📋 [CLIENT] Formulaire avant sync:', { ...$form });
+
+		$form.selectedTables = savedExportConfig.selectedTables;
+		$form.format = savedExportConfig.format;
+		$form.includeRelations = savedExportConfig.includeRelations;
+		$form.includeHeaders = savedExportConfig.includeHeaders;
+		$form.rowLimit = savedExportConfig.rowLimit;
+		$form.filters = savedExportConfig.filters;
+		$form.dateRange = savedExportConfig.dateRange;
+
+		console.log('📋 [CLIENT] Formulaire après sync:', { ...$form });
 	}
 
 	// Catégories de tables
@@ -208,8 +234,9 @@
 	async function triggerClientDownload(result: ExportResult) {
 		try {
 			console.log('🌐 [CLIENT] Lancement requête de téléchargement');
+			console.log('📋 [CLIENT] Configuration actuelle du formulaire:', $form);
 
-			// Refaire la requête POST pour obtenir le fichier
+			// Utiliser les données du formulaire (qui sont synchronisées avec savedExportConfig)
 			const response = await fetch('/export/api', {
 				method: 'POST',
 				headers: {
@@ -288,6 +315,7 @@
 		step = 1;
 		previewData = {};
 		exportResult = null;
+		savedExportConfig = null;
 		showAdvancedOptions = false;
 		reset();
 	}
@@ -569,7 +597,7 @@
 								<div class="flex-1">
 									<div class="flex items-center gap-2">
 										<svelte:component this={format.icon} class="h-5 w-5 text-gray-900" />
-										<span class="font-medium text-gray-900 whitespace-nowrap">{format.label}</span>
+										<span class="font-medium whitespace-nowrap text-gray-900">{format.label}</span>
 										{#if format.recommended}
 											<Badge variant="noir">Recommandé</Badge>
 										{/if}
@@ -732,8 +760,13 @@
 							</Button>
 							<Button
 								onclick={() => {
+									// Sauvegarder la configuration pour l'export direct
+									savedExportConfig = { ...$form };
+									console.log(
+										'💾 [CLIENT] Configuration sauvegardée pour export direct:',
+										savedExportConfig
+									);
 									step = 3;
-									// Simuler l'aperçu pour accéder directement à l'export
 								}}
 								variant="vert"
 							>
@@ -807,15 +840,6 @@
 
 				<!-- Export final -->
 				<form method="POST" action="?/export" use:superEnhance>
-					<!-- Champs cachés avec toute la configuration -->
-					<input type="hidden" name="selectedTables" value={JSON.stringify($form.selectedTables)} />
-					<input type="hidden" name="format" value={$form.format} />
-					<input type="hidden" name="includeRelations" value={$form.includeRelations} />
-					<input type="hidden" name="includeHeaders" value={$form.includeHeaders} />
-					<input type="hidden" name="rowLimit" value={$form.rowLimit} />
-					<input type="hidden" name="filters" value={JSON.stringify($form.filters)} />
-					<input type="hidden" name="dateRange" value={JSON.stringify($form.dateRange)} />
-
 					<div class="flex justify-between">
 						<Button variant="noir" onclick={() => goToStep(2)}>
 							<CircleArrowLeft class="mr-2 h-4 w-4" />
