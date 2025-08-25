@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>CenovDistribution - Système de gestion des kits et composants</title>
+	<meta name="description" content="Plateforme de gestion hiérarchique des kits, pièces et attributs. Importez et exportez vos données techniques, gérez les catégories et les relations entre composants." />
+</svelte:head>
+
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';

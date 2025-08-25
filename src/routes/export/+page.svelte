@@ -313,7 +313,7 @@
 
 <div class="mx-auto my-8 max-w-7xl">
 	<div class="mb-6">
-		<h1 class="text-2xl font-bold">Export de données</h1>
+		<h1 class="text-2xl font-bold">Export de données :</h1>
 		<p class="text-gray-600">
 			Exportez vos données dans différents formats avec des options avancées
 		</p>
@@ -362,7 +362,7 @@
 	<!-- Résumé des données -->
 	<Card class="mb-6 w-full max-w-none">
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-			<div class="border-blue-200 bg-blue-50 p-4 rounded-lg border">
+			<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
 				<div class="flex items-center justify-between">
 					<div>
 						<div class="text-2xl font-bold text-blue-600">{data.totalTables}</div>
@@ -371,7 +371,7 @@
 					<Database class="h-8 w-8 text-blue-500" />
 				</div>
 			</div>
-			<div class="border-green-200 bg-green-50 p-4 rounded-lg border">
+			<div class="rounded-lg border border-green-200 bg-green-50 p-4">
 				<div class="flex items-center justify-between">
 					<div>
 						<div class="text-2xl font-bold text-green-600">{formatNumber(data.totalRows)}</div>
@@ -380,7 +380,7 @@
 					<BarChart3 class="h-8 w-8 text-green-500" />
 				</div>
 			</div>
-			<div class="border-purple-200 bg-purple-50 p-4 rounded-lg border">
+			<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
 				<div class="flex items-center justify-between">
 					<div>
 						<div class="text-2xl font-bold text-purple-600">{$form.selectedTables.length}</div>
