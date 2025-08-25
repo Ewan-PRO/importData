@@ -4,7 +4,7 @@
 	export let user: any;
 </script>
 
-<form method="POST" action="?/{user ? 'signOut' : 'signIn'}">
+<form method="POST" action="/auth?/{user ? 'signOut' : 'signIn'}">
 	<Button type="submit" variant="bleu" class="me-2 mb-2">
 		{#if user}
 			<LogOut size={16} />
