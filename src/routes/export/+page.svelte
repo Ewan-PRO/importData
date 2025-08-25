@@ -547,7 +547,7 @@
 
 				<!-- Format d'export -->
 				<div class="mb-6">
-					<h3 class="mb-3 font-medium">Format d'export</h3>
+					<h3 class="mb-3 font-medium text-gray-900">Format d'export :</h3>
 					<div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
 						{#each exportFormats as format (format.value)}
 							<label
@@ -565,13 +565,13 @@
 
 								<div class="flex-1">
 									<div class="flex items-center gap-2">
-										<svelte:component this={format.icon} class="h-5 w-5 text-gray-500" />
-										<span class="font-medium">{format.label}</span>
+										<svelte:component this={format.icon} class="h-5 w-5 text-gray-900" />
+										<span class="font-medium text-gray-900">{format.label}</span>
 										{#if format.recommended}
-											<Badge variant="default">Recommandé</Badge>
+											<Badge variant="noir">Recommandé</Badge>
 										{/if}
 									</div>
-									<div class="text-sm text-gray-500">{format.description}</div>
+									<div class="text-sm text-gray-900">{format.description}</div>
 								</div>
 							</label>
 						{/each}
@@ -670,7 +670,7 @@
 
 					<!-- Résumé de la sélection -->
 					<div class="mb-6 rounded-lg bg-gray-50 p-4">
-						<h4 class="mb-2 font-medium">Résumé de votre export</h4>
+						<h3 class="mb-2 font-medium">Résumé de votre export</h3>
 						<div class="grid gap-2 text-sm">
 							<div><strong>Tables sélectionnées:</strong> {$form.selectedTables.length}</div>
 							<div>
