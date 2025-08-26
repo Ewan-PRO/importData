@@ -243,7 +243,7 @@
 							placeholder={field.placeholder || ''}
 							required={field.required}
 							bind:value={formData[field.key]}
-							class={errors[field.key] ? 'border-red-500' : ''}
+							class={errors[field.key] ? 'border-red-500' : modifiedFields[field.key] ? 'bg-orange-100' : ''}
 						/>
 					{:else if field.type === 'select'}
 						<div class="relative">
@@ -257,7 +257,7 @@
 								}}
 							>
 								<Select.SelectTrigger
-									class={errors[field.key] ? 'border-red-500' : ''}
+									class={errors[field.key] ? 'border-red-500' : modifiedFields[field.key] ? 'bg-orange-100' : ''}
 									hasValue={!!(formData[field.key] && formData[field.key] !== '')}
 								>
 									{formData[field.key]
@@ -322,7 +322,7 @@
 								const target = e.target as HTMLInputElement;
 								updateFormData(field.key, target.value);
 							}}
-							class={errors[field.key] ? 'border-red-500' : ''}
+							class={errors[field.key] ? 'border-red-500' : modifiedFields[field.key] ? 'bg-orange-100' : ''}
 						/>
 					{/if}
 
