@@ -11,7 +11,9 @@
 				bleu: 'bg-blue-100 text-blue-800 border-blue-400 dark:bg-gray-700 dark:text-blue-400',
 				noir: 'bg-gray-100 text-gray-800 border-gray-400 dark:bg-gray-700 dark:text-gray-400',
 				blanc:
-					'bg-white text-gray-800 border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600'
+					'bg-white text-gray-800 border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600',
+				orange:
+					'bg-orange-100 text-orange-800 border-orange-400 dark:bg-gray-700 dark:text-orange-400'
 			}
 		},
 		defaultVariants: {

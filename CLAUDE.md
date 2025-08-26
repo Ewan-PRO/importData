@@ -169,9 +169,10 @@ const data: TableData[] = [];
 ## UI Component Guidelines
 
 **Button variants available:**
+
 - `bleu` (default) - Primary blue button
 - `vert` - Success/confirmation actions
-- `rouge` - Danger/delete actions  
+- `rouge` - Danger/delete actions
 - `jaune` - Warning actions
 - `noir` - Secondary dark actions
 - `blanc` - Alternative/outline style
@@ -180,12 +181,14 @@ const data: TableData[] = [];
 **Note:** `outline` variant does not exist - use `blanc` instead for outline-style buttons.
 
 **Badge variants available:**
+
 - `default` (default) - Primary badge style
 - `bleu` - Blue informational badge
 - `vert` - Success/positive badge
 - `rouge` - Error/danger badge
 - `noir` - Secondary/neutral badge
 - `blanc` - Alternative/outline style badge
+- `orange` - Modification badge
 
 **Note:** `outline` variant does not exist for badges - use `blanc` instead for outline-style badges.
 
@@ -211,7 +214,7 @@ import { Toaster } from 'svelte-sonner';
 
 // ✅ CORRECT Usage
 toast.error('Error message');
-toast.success('Success message');  
+toast.success('Success message');
 toast('Info message');
 ```
 
@@ -234,5 +237,6 @@ import { Toaster } from '$lib/components/ui/sonner/sonner.svelte';
 ### Authentication Integration
 
 The project has built-in auth error toasts:
+
 - Protected routes automatically show toast on unauthorized access
 - Handled via URL params and `onMount` in homepage

@@ -36,6 +36,8 @@
 	let isInitialized = false;
 	let searchTerms: Record<string, string> = {}; // Pour stocker les termes de recherche par champ
 	let deleteConfirmationText = ''; // Pour la confirmation de suppression
+	let originalData: Record<string, any> = {}; // Pour stocker les valeurs initiales
+	let modifiedFields: Record<string, boolean> = {}; // Pour tracker les champs modifiés
 
 	// Variable réactive pour l'état du bouton supprimer
 	$: isDeleteConfirmed = deleteConfirmationText.trim() === 'SUPPRIMER';
@@ -45,9 +47,11 @@
 		if (isOpen && !isInitialized) {
 			console.log('Initialisation du formulaire');
 			formData = { ...data };
+			originalData = { ...data }; // Sauvegarder les valeurs initiales
 			errors = {};
 			searchTerms = {}; // Réinitialiser les termes de recherche
 			deleteConfirmationText = ''; // Réinitialiser la confirmation de suppression
+			modifiedFields = {}; // Réinitialiser les champs modifiés
 			isInitialized = true;
 			console.log('FormData initialisé:', formData);
 		} else if (!isOpen) {
@@ -71,7 +75,19 @@
 
 	function updateFormData(key: string, value: any) {
 		formData = { ...formData, [key]: value };
+		
+		// Vérifier si la valeur a été modifiée par rapport à l'original
+		const originalValue = originalData[key] || '';
+		const currentValue = value || '';
+		
+		// Marquer le champ comme modifié si les valeurs diffèrent
+		modifiedFields = { 
+			...modifiedFields, 
+			[key]: isEdit && originalValue.toString() !== currentValue.toString() 
+		};
+		
 		console.log('FormData mis à jour:', formData);
+		console.log('Champs modifiés:', modifiedFields);
 	}
 
 	function updateSearchTerm(fieldKey: string, value: string) {
@@ -153,6 +169,9 @@
 				data: finalData,
 				isEdit
 			});
+			
+			// Réinitialiser les champs modifiés après soumission réussie
+			modifiedFields = {};
 			isOpen = false;
 		} else {
 			console.log('Formulaire invalide - Erreurs:', errors);
@@ -209,9 +228,13 @@
 				<div>
 					<div class="mb-2 flex items-center justify-between">
 						<Label for={field.key}>{field.label}</Label>
-						{#if formData[field.key] && formData[field.key] !== ''}
-							<Badge variant="vert">Valeur remplie</Badge>
-						{/if}
+						<div class="flex gap-2">
+							{#if modifiedFields[field.key]}
+								<Badge variant="orange">Modifié</Badge>
+							{:else if formData[field.key] && formData[field.key] !== ''}
+								<Badge variant="vert">Valeur remplie</Badge>
+							{/if}
+						</div>
 					</div>
 
 					{#if field.type === 'textarea'}
