@@ -53,11 +53,11 @@ interface AttributeCreateInput {
 }
 
 // Fonction pour récupérer les catégories selon l'environnement
-export async function getCategories(sortOrder: 'asc' | 'desc' = 'asc') {
+export async function getCategories(sortOrder: 'asc' | 'desc' = 'asc', sortBy: 'row_key' | 'atr_id' = 'row_key') {
 	const useDevViews = env.USE_DEV_VIEWS === 'true' || dev;
 	if (useDevViews) {
 		return await prisma.v_categories_dev.findMany({
-			orderBy: { row_key: sortOrder } // row_key conserve l'ordre alphabétique de la vue
+			orderBy: { [sortBy]: sortOrder } // row_key pour ordre alphabétique, atr_id pour ordre de création
 		});
 	} else {
 		return await prisma.v_categories.findMany({

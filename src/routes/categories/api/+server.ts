@@ -14,7 +14,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		// Test de connexion à la base de données
 		await prisma.$connect();
 		const sortOrder = (url.searchParams.get('sortOrder') || 'asc') as 'asc' | 'desc';
-		const categories = await getCategories(sortOrder);
+		const sortBy = (url.searchParams.get('sortBy') || 'row_key') as 'row_key' | 'atr_id';
+		const categories = await getCategories(sortOrder, sortBy);
 		return json(categories);
 	} catch (error) {
 		console.error('❌ [API-CATEGORIES] Erreur lors de la récupération des catégories:', error);

@@ -22,7 +22,7 @@
 
 	let searchTerm = $state('');
 	let selectedField = $state(fields.length > 0 ? fields[0].key : '');
-	let sortOrder = $state('asc'); // 'asc' = Ordre naturel de la vue, 'desc' = Ordre inversé
+	let sortOrder = $state('asc'); // 'asc' = Ordre naturel de la vue, 'desc' = Ordre inversé, 'id_desc' = Tri par atr_id DESC
 
 	const selectedFieldLabel = $derived(
 		fields.find((f) => f.key === selectedField)?.label ?? 'Sélectionner un champ'
@@ -114,7 +114,7 @@
 					}}
 				>
 					<Select.Trigger class="w-full" hasValue={!!sortOrder}>
-						{sortOrder === 'asc' ? '🔤 Ordre par défaut' : '🔄 Ordre inversé'}
+						{sortOrder === 'asc' ? '🔤 Ordre par défaut' : sortOrder === 'desc' ? '🔄 Ordre inversé' : '🆔 Tri par ID décroissant'}
 					</Select.Trigger>
 					<Select.Content>
 						<Select.Item value="asc" label="🔤 Ordre par défaut">
@@ -122,6 +122,9 @@
 						</Select.Item>
 						<Select.Item value="desc" label="🔄 Ordre inversé">
 							🔄 Ordre inversé
+						</Select.Item>
+						<Select.Item value="id_desc" label="🆔 Tri par ID décroissant">
+							🆔 Tri par ID décroissant
 						</Select.Item>
 					</Select.Content>
 				</Select.Root>
