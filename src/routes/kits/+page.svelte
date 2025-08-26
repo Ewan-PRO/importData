@@ -240,12 +240,21 @@
 	async function handleSort(event: CustomEvent<{ order: 'asc' | 'desc' }>): Promise<void> {
 		console.log('Tri demandé:', event.detail.order);
 		try {
-			const response = await fetch(`/kits/api?sortOrder=${event.detail.order}`);
+			// La vue a maintenant un tri ASC fixe, donc on inverse localement pour DESC
+			const response = await fetch('/kits/api');
 			if (response.ok) {
-				const sortedKits = await response.json();
+				let sortedKits = await response.json();
+				
+				// Si ordre inversé demandé, inverser le tableau
+				if (event.detail.order === 'desc') {
+					sortedKits = [...sortedKits].reverse();
+				}
+				
 				data.kits = sortedKits;
 				filteredKits = [...sortedKits];
-				toast.success(`Tri appliqué : ${event.detail.order === 'asc' ? 'Ordre par défaut' : 'Ordre inversé'}`);
+				toast.success(
+					`Tri appliqué : ${event.detail.order === 'asc' ? 'Ordre par défaut' : 'Ordre inversé'}`
+				);
 			} else {
 				toast.error('Erreur lors du tri');
 			}
@@ -269,7 +278,7 @@
 		// Validation numérique pour kat_valeur
 		const katValeur = event.detail.data.kat_valeur;
 		const katValeurStr = String(katValeur || '').trim();
-		
+
 		if (!katValeur || katValeurStr === '') {
 			Alert.alertActions.warning('La valeur numérique est obligatoire');
 			return;
@@ -306,7 +315,7 @@
 		if (atrLabelInput) atrLabelInput.value = event.detail.data.atr_label || '';
 		if (atrValInput) atrValInput.value = event.detail.data.atr_val || '';
 		if (katValeurInput) katValeurInput.value = String(event.detail.data.kat_valeur || '');
-		
+
 		// Pour la modification, s'assurer que l'ID est présent
 		if (selectedKit?.id && idInput) {
 			idInput.value = String(selectedKit.id);
@@ -430,13 +439,14 @@
 
 	<Alert.GlobalAlert />
 
-	<!-- Composant de filtrage avec bouton d'ajout et tri -->
+	<!-- Composant de filtrage avec bouton d'ajout -->
 	<Filter
 		fields={filterFields}
 		placeholder="Rechercher un kit..."
 		showAddButton={true}
 		addButtonText="Ajouter un kit"
 		showSortFilter={true}
+		hideIdDesc={true}
 		on:filter={handleFilter}
 		on:reset={handleResetFilter}
 		on:add={handleAddKit}

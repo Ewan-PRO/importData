@@ -67,16 +67,12 @@ export async function getCategories(sortOrder: 'asc' | 'desc' = 'asc', sortBy: '
 }
 
 // Fonction pour récupérer les kits selon l'environnement  
-export async function getKits(sortOrder: 'asc' | 'desc' = 'asc') {
+export async function getKits() {
 	const useDevViews = env.USE_DEV_VIEWS === 'true' || dev;
 	if (useDevViews) {
-		return await prisma.v_kit_carac_dev.findMany({
-			orderBy: { id: sortOrder }
-		});
+		return await prisma.v_kit_carac_dev.findMany();
 	} else {
-		return await prisma.v_kit_carac.findMany({
-			orderBy: { id: sortOrder }
-		});
+		return await prisma.v_kit_carac.findMany();
 	}
 }
 

@@ -11,13 +11,15 @@
 		placeholder = 'Rechercher ...',
 		showAddButton = true,
 		addButtonText = 'Ajouter',
-		showSortFilter = false
+		showSortFilter = false,
+		hideIdDesc = false
 	}: {
 		fields?: { key: string; label: string }[];
 		placeholder?: string;
 		showAddButton?: boolean;
 		addButtonText?: string;
 		showSortFilter?: boolean;
+		hideIdDesc?: boolean;
 	} = $props();
 
 	let searchTerm = $state('');
@@ -123,9 +125,11 @@
 						<Select.Item value="desc" label="🔄 Ordre inversé">
 							🔄 Ordre inversé
 						</Select.Item>
-						<Select.Item value="id_desc" label="🆔 Tri par ID décroissant">
-							🆔 Tri par ID décroissant
-						</Select.Item>
+						{#if !hideIdDesc}
+							<Select.Item value="id_desc" label="🆔 Tri par ID décroissant">
+								🆔 Tri par ID décroissant
+							</Select.Item>
+						{/if}
 					</Select.Content>
 				</Select.Root>
 			</div>

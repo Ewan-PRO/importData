@@ -9,8 +9,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	try {
 		// Test de connexion à la base de données
 		await prisma.$connect();
-		const sortOrder = (url.searchParams.get('sortOrder') || 'asc') as 'asc' | 'desc';
-		const kits = await getKits(sortOrder);
+		const kits = await getKits();
 		return json(kits);
 	} catch (error) {
 		console.error('❌ [API-KITS] Erreur lors de la récupération des kits:', error);
