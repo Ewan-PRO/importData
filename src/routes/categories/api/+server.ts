@@ -9,11 +9,12 @@ import {
 	createAttribute
 } from '$lib/server/db';
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ url }) => {
 	try {
 		// Test de connexion à la base de données
 		await prisma.$connect();
-		const categories = await getCategories();
+		const sortOrder = (url.searchParams.get('sortOrder') || 'asc') as 'asc' | 'desc';
+		const categories = await getCategories(sortOrder);
 		return json(categories);
 	} catch (error) {
 		console.error('❌ [API-CATEGORIES] Erreur lors de la récupération des catégories:', error);

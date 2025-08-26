@@ -5,11 +5,12 @@ import { prisma, getKits } from '$lib/server/db';
 // Type pour la transaction Prisma
 type PrismaTransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ url }) => {
 	try {
 		// Test de connexion à la base de données
 		await prisma.$connect();
-		const kits = await getKits();
+		const sortOrder = (url.searchParams.get('sortOrder') || 'asc') as 'asc' | 'desc';
+		const kits = await getKits(sortOrder);
 		return json(kits);
 	} catch (error) {
 		console.error('❌ [API-KITS] Erreur lors de la récupération des kits:', error);

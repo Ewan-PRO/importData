@@ -10,20 +10,25 @@
 		fields = [],
 		placeholder = 'Rechercher ...',
 		showAddButton = true,
-		addButtonText = 'Ajouter'
+		addButtonText = 'Ajouter',
+		showSortFilter = false
 	}: {
 		fields?: { key: string; label: string }[];
 		placeholder?: string;
 		showAddButton?: boolean;
 		addButtonText?: string;
+		showSortFilter?: boolean;
 	} = $props();
 
 	let searchTerm = $state('');
 	let selectedField = $state(fields.length > 0 ? fields[0].key : '');
+	let sortOrder = $state('asc'); // 'asc' = Ordre naturel de la vue, 'desc' = Ordre inversé
 
 	const selectedFieldLabel = $derived(
 		fields.find((f) => f.key === selectedField)?.label ?? 'Sélectionner un champ'
 	);
+
+	// Éviter les appels automatiques, laisser le Select gérer le changement
 
 	const dispatch = createEventDispatcher();
 
@@ -37,11 +42,18 @@
 	function handleReset() {
 		searchTerm = '';
 		selectedField = fields.length > 0 ? fields[0].key : '';
+		sortOrder = 'asc'; // Remettre à 'asc' pour revenir à l'ordre par défaut de la vue
 		dispatch('reset');
 	}
 
 	function handleAddClick() {
 		dispatch('add');
+	}
+
+	function handleSortChange() {
+		dispatch('sort', {
+			order: sortOrder
+		});
 	}
 </script>
 
@@ -89,8 +101,33 @@
 		</div>
 	</div>
 
-	<!-- Groupe de boutons -->
+	<!-- Groupe avec select de tri et boutons -->
 	<div class="flex flex-wrap gap-3 sm:flex-nowrap sm:items-start">
+		{#if showSortFilter}
+			<div class="w-full sm:w-40">
+				<Select.Root 
+					type="single" 
+					bind:value={sortOrder} 
+					onValueChange={(value) => {
+						sortOrder = value || 'asc';
+						handleSortChange();
+					}}
+				>
+					<Select.Trigger class="w-full" hasValue={!!sortOrder}>
+						{sortOrder === 'asc' ? '🔤 Ordre par défaut' : '🔄 Ordre inversé'}
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value="asc" label="🔤 Ordre par défaut">
+							🔤 Ordre par défaut
+						</Select.Item>
+						<Select.Item value="desc" label="🔄 Ordre inversé">
+							🔄 Ordre inversé
+						</Select.Item>
+					</Select.Content>
+				</Select.Root>
+			</div>
+		{/if}
+		
 		<Button variant="noir" class="flex-1 sm:flex-initial" onclick={handleReset}>
 			<RefreshCcw class="mr-2 h-4 w-4" />
 			Réinitialiser

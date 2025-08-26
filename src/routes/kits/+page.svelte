@@ -224,9 +224,35 @@
 		console.log('Résultats filtrés:', filteredKits);
 	}
 
-	function handleResetFilter(): void {
+	async function handleResetFilter(): Promise<void> {
 		console.log('Réinitialisation du filtre');
 		filteredKits = [...data.kits];
+		// Recharger les données dans l'ordre par défaut (ID décroissant pour kits)
+		try {
+			await invalidateAll();
+			toast.success('Données réinitialisées');
+		} catch (error) {
+			console.error('Erreur lors de la réinitialisation:', error);
+			toast.error('Erreur lors de la réinitialisation');
+		}
+	}
+
+	async function handleSort(event: CustomEvent<{ order: 'asc' | 'desc' }>): Promise<void> {
+		console.log('Tri demandé:', event.detail.order);
+		try {
+			const response = await fetch(`/kits/api?sortOrder=${event.detail.order}`);
+			if (response.ok) {
+				const sortedKits = await response.json();
+				data.kits = sortedKits;
+				filteredKits = [...sortedKits];
+				toast.success(`Tri appliqué : ${event.detail.order === 'asc' ? 'Ordre par défaut' : 'Ordre inversé'}`);
+			} else {
+				toast.error('Erreur lors du tri');
+			}
+		} catch (error) {
+			console.error('Erreur lors du tri:', error);
+			toast.error('Erreur lors du tri');
+		}
 	}
 
 	function handleAddKit(): void {
@@ -404,15 +430,17 @@
 
 	<Alert.GlobalAlert />
 
-	<!-- Composant de filtrage avec bouton d'ajout -->
+	<!-- Composant de filtrage avec bouton d'ajout et tri -->
 	<Filter
 		fields={filterFields}
 		placeholder="Rechercher un kit..."
 		showAddButton={true}
 		addButtonText="Ajouter un kit"
+		showSortFilter={true}
 		on:filter={handleFilter}
 		on:reset={handleResetFilter}
 		on:add={handleAddKit}
+		on:sort={handleSort}
 	/>
 
 	<!-- Tableau des données -->

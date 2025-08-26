@@ -46,8 +46,8 @@ export const load = (async (event) => {
 	depends('app:kits'); // Pour permettre l'invalidation avec invalidateAll()
 
 	try {
-		// Récupérer les kits via l'API
-		const kitsResponse = await fetch('/kits/api');
+		// Récupérer les kits via l'API (par défaut ordre naturel de la vue - ID croissant)
+		const kitsResponse = await fetch('/kits/api?sortOrder=asc');
 
 		if (!kitsResponse.ok) {
 			throw new Error(`Erreur API: ${kitsResponse.status} - ${kitsResponse.statusText}`);

@@ -53,22 +53,30 @@ interface AttributeCreateInput {
 }
 
 // Fonction pour récupérer les catégories selon l'environnement
-export async function getCategories() {
+export async function getCategories(sortOrder: 'asc' | 'desc' = 'asc') {
 	const useDevViews = env.USE_DEV_VIEWS === 'true' || dev;
 	if (useDevViews) {
-		return await prisma.v_categories_dev.findMany();
+		return await prisma.v_categories_dev.findMany({
+			orderBy: { row_key: sortOrder } // row_key conserve l'ordre alphabétique de la vue
+		});
 	} else {
-		return await prisma.v_categories.findMany();
+		return await prisma.v_categories.findMany({
+			orderBy: { atr_id: sortOrder }
+		});
 	}
 }
 
-// Fonction pour récupérer les kits selon l'environnement
-export async function getKits() {
+// Fonction pour récupérer les kits selon l'environnement  
+export async function getKits(sortOrder: 'asc' | 'desc' = 'asc') {
 	const useDevViews = env.USE_DEV_VIEWS === 'true' || dev;
 	if (useDevViews) {
-		return await prisma.v_kit_carac_dev.findMany();
+		return await prisma.v_kit_carac_dev.findMany({
+			orderBy: { id: sortOrder }
+		});
 	} else {
-		return await prisma.v_kit_carac.findMany();
+		return await prisma.v_kit_carac.findMany({
+			orderBy: { id: sortOrder }
+		});
 	}
 }
 

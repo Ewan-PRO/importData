@@ -326,9 +326,34 @@
 		filterField = field;
 	}
 
-	function handleFilterReset(): void {
+	async function handleFilterReset(): Promise<void> {
 		filterTerm = '';
 		filterField = '';
+		// Recharger les données dans l'ordre par défaut (alphabétique pour catégories)
+		try {
+			await invalidateAll();
+			toast.success('Données réinitialisées');
+		} catch (error) {
+			console.error('Erreur lors de la réinitialisation:', error);
+			toast.error('Erreur lors de la réinitialisation');
+		}
+	}
+
+	async function handleSort(event: CustomEvent<{ order: 'asc' | 'desc' }>): Promise<void> {
+		console.log('Tri demandé:', event.detail.order);
+		try {
+			const response = await fetch(`/categories/api?sortOrder=${event.detail.order}`);
+			if (response.ok) {
+				const sortedCategories = await response.json();
+				data.categories = sortedCategories;
+				toast.success(`Tri appliqué : ${event.detail.order === 'asc' ? 'Ordre par défaut' : 'Ordre inversé'}`);
+			} else {
+				toast.error('Erreur lors du tri');
+			}
+		} catch (error) {
+			console.error('Erreur lors du tri:', error);
+			toast.error('Erreur lors du tri');
+		}
 	}
 
 	async function handleEditSubmit(event: FormEvent): Promise<void> {
@@ -562,11 +587,13 @@
 			placeholder="Rechercher une catégorie..."
 			showAddButton={true}
 			addButtonText="Ajouter une catégorie"
+			showSortFilter={true}
 			on:filter={(event) => {
 				handleFilter(event);
 			}}
 			on:reset={handleFilterReset}
 			on:add={openAddForm}
+			on:sort={handleSort}
 		/>
 	</div>
 

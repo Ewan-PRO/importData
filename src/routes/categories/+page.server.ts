@@ -88,8 +88,8 @@ export const load = (async (event) => {
 	depends('app:categories'); // Pour permettre l'invalidation avec invalidateAll()
 
 	try {
-		// Récupérer les catégories via l'API
-		const categoriesResponse = await fetch('/categories/api');
+		// Récupérer les catégories via l'API (par défaut ordre naturel de la vue)
+		const categoriesResponse = await fetch('/categories/api?sortOrder=asc');
 
 		if (!categoriesResponse.ok) {
 			throw new Error(
