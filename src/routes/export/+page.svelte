@@ -135,17 +135,17 @@
 	// Formats d'export
 	const exportFormats = [
 		{
-			value: 'xlsx',
-			label: 'Excel (.xlsx)',
-			icon: FileSpreadsheet,
-			description: 'Classeur Excel avec plusieurs feuilles',
-			recommended: true
-		},
-		{
 			value: 'csv',
 			label: 'CSV (.csv)',
 			icon: FileText,
-			description: 'Fichier texte séparé par des virgules'
+			description: 'Fichier texte séparé par des virgules',
+			recommended: true
+		},
+		{
+			value: 'xlsx',
+			label: 'Excel (.xlsx)',
+			icon: FileSpreadsheet,
+			description: 'Classeur Excel avec plusieurs feuilles'
 		},
 		{
 			value: 'pdf',
@@ -536,7 +536,7 @@
 					<div class="grid gap-3">
 						{#each filteredTables as table (table.name)}
 							<label
-								class="flex cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-gray-50"
+								class="flex cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100"
 							>
 								<input
 									type="checkbox"

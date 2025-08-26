@@ -409,7 +409,7 @@ export const load = (async (event) => {
 		// Données par défaut
 		form.data = {
 			selectedTables: [],
-			format: 'xlsx',
+			format: 'csv',
 			includeRelations: false,
 			filters: {},
 			includeHeaders: true
