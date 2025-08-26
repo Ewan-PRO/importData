@@ -119,7 +119,12 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const id = safeFormDataToString(formData.get('id'));
 
+		console.log('=== ACTION UPDATE DEBUG ===');
+		console.log('FormData reçue:', Object.fromEntries(formData.entries()));
+		console.log('ID extrait:', id);
+
 		if (!id) {
+			console.log('❌ ID manquant - Échec de l\'action update');
 			return fail(400, { error: 'ID de kit manquant' });
 		}
 
@@ -131,7 +136,10 @@ export const actions: Actions = {
 			kat_valeur: safeFormDataToString(formData.get('kat_valeur'))
 		};
 
+		console.log('Données de mise à jour:', updateData);
+
 		try {
+			console.log('Envoi de la requête PUT vers:', `/kits/api/${id}`);
 			const response = await fetch(`/kits/api/${id}`, {
 				method: 'PUT',
 				headers: {
@@ -140,13 +148,18 @@ export const actions: Actions = {
 				body: JSON.stringify(updateData)
 			});
 
+			console.log('Statut de la réponse API:', response.status);
+
 			if (!response.ok) {
 				const errorData = await response.json();
+				console.log('❌ Erreur API:', errorData);
 				return fail(response.status, {
 					error: errorData.error ?? 'Erreur lors de la mise à jour du kit'
 				});
 			}
 
+			const responseData = await response.json();
+			console.log('✅ Succès API:', responseData);
 			return { success: true };
 		} catch (err) {
 			console.error('Erreur lors de la mise à jour du kit:', err);

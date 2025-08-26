@@ -237,18 +237,22 @@
 		console.log('=== Début handleFormSubmit ===');
 		console.log('Données du formulaire reçues:', event.detail.data);
 		console.log('selectedKit actuel:', selectedKit);
+		console.log('editFormOpen:', editFormOpen);
+		console.log('addFormOpen:', addFormOpen);
 
 		// Validation numérique pour kat_valeur
 		const katValeur = event.detail.data.kat_valeur;
-		if (!katValeur || katValeur.trim() === '') {
+		const katValeurStr = String(katValeur || '').trim();
+		
+		if (!katValeur || katValeurStr === '') {
 			Alert.alertActions.warning('La valeur numérique est obligatoire');
 			return;
 		}
 
 		// Vérifier si c'est un nombre valide
-		const numericValue = parseFloat(katValeur);
+		const numericValue = parseFloat(katValeurStr);
 		// Regex corrigée pour accepter : entiers, décimaux, négatifs, notation scientifique
-		const isValidNumber = /^-?\d+(\.\d+)?([eE][-+]?\d+)?$/.test(katValeur.trim());
+		const isValidNumber = /^-?\d+(\.\d+)?([eE][-+]?\d+)?$/.test(katValeurStr);
 
 		if (isNaN(numericValue) || !isFinite(numericValue) || !isValidNumber) {
 			Alert.alertActions.warning(
@@ -270,17 +274,25 @@
 		const katValeurInput = formElement.querySelector(
 			'input[name="kat_valeur"]'
 		) as HTMLInputElement;
+		const idInput = formElement.querySelector('input[name="id"]') as HTMLInputElement;
 
 		if (kitLabelInput) kitLabelInput.value = event.detail.data.kit_label || '';
 		if (atrLabelInput) atrLabelInput.value = event.detail.data.atr_label || '';
 		if (atrValInput) atrValInput.value = event.detail.data.atr_val || '';
-		if (katValeurInput) katValeurInput.value = event.detail.data.kat_valeur || '';
+		if (katValeurInput) katValeurInput.value = String(event.detail.data.kat_valeur || '');
+		
+		// Pour la modification, s'assurer que l'ID est présent
+		if (selectedKit?.id && idInput) {
+			idInput.value = String(selectedKit.id);
+			console.log('ID défini dans le formulaire caché:', idInput.value);
+		}
 
 		console.log('Champs cachés remplis avec:', {
 			kit_label: kitLabelInput?.value,
 			atr_label: atrLabelInput?.value,
 			atr_val: atrValInput?.value,
-			kat_valeur: katValeurInput?.value
+			kat_valeur: katValeurInput?.value,
+			id: idInput?.value
 		});
 
 		// Soumettre le formulaire
@@ -490,9 +502,7 @@
 		<input type="hidden" name="atr_label" value="" />
 		<input type="hidden" name="atr_val" value="" />
 		<input type="hidden" name="kat_valeur" value="" />
-		{#if selectedKit?.id}
-			<input type="hidden" name="id" value={selectedKit.id} />
-		{/if}
+		<input type="hidden" name="id" value="" />
 	</form>
 
 	<!-- Formulaire de suppression -->
