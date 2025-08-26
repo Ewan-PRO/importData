@@ -28,7 +28,8 @@
 		Play,
 		RotateCcw,
 		CircleArrowRight,
-		CircleArrowLeft
+		CircleArrowLeft,
+		CirclePlus
 		// X, // Non utilisé
 		// Check // Non utilisé
 	} from 'lucide-svelte';
@@ -114,7 +115,7 @@
 
 		$form.selectedTables = savedExportConfig.selectedTables;
 		$form.format = savedExportConfig.format;
-		$form.includeRelations = savedExportConfig.includeRelations;
+		// $form.includeRelations = savedExportConfig.includeRelations; // Supprimé
 		$form.includeHeaders = savedExportConfig.includeHeaders;
 		$form.rowLimit = savedExportConfig.rowLimit;
 		$form.filters = savedExportConfig.filters;
@@ -635,20 +636,10 @@
 									bind:checked={$form.includeHeaders}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
-								<span>Inclure les en-têtes de colonnes</span>
+								<span>{$form.includeHeaders ? 'Inclure les en-têtes de colonnes' : 'Données uniquement (sans en-têtes)'}</span>
 							</label>
 						</div>
 
-						<div class="flex items-center space-x-4">
-							<label class="flex cursor-pointer items-center space-x-2">
-								<input
-									type="checkbox"
-									bind:checked={$form.includeRelations}
-									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-								/>
-								<span>Inclure les données relationnelles</span>
-							</label>
-						</div>
 
 						<!-- Limite de lignes -->
 						<div class="flex items-center space-x-4">
@@ -708,10 +699,6 @@
 								<strong>Format:</strong>
 								{exportFormats.find((f) => f.value === $form.format)?.label}
 							</div>
-							<div>
-								<strong>Inclure relations:</strong>
-								{$form.includeRelations ? 'Oui' : 'Non'}
-							</div>
 							{#if $form.rowLimit}
 								<div><strong>Limite:</strong> {formatNumber($form.rowLimit)} lignes</div>
 							{/if}
@@ -737,7 +724,6 @@
 					<!-- Champs cachés -->
 					<input type="hidden" name="selectedTables" value={JSON.stringify($form.selectedTables)} />
 					<input type="hidden" name="format" value={$form.format} />
-					<input type="hidden" name="includeRelations" value={$form.includeRelations} />
 					<input type="hidden" name="includeHeaders" value={$form.includeHeaders} />
 					<input type="hidden" name="rowLimit" value={$form.rowLimit} />
 					<input type="hidden" name="filters" value={JSON.stringify($form.filters)} />
@@ -883,8 +869,8 @@
 
 						{#if exportResult.warnings.length > 0}
 							<div class="mb-4">
-								<h4 class="mb-2 font-medium text-amber-800">Avertissements:</h4>
-								<ul class="space-y-1 text-sm text-amber-700">
+								<h4 class="mb-2 font-medium text-red-800">Avertissements:</h4>
+								<ul class="space-y-1 text-sm text-red-700">
 									{#each exportResult.warnings as warning}
 										<li>• {warning}</li>
 									{/each}
@@ -904,7 +890,10 @@
 						{/if}
 
 						<div class="flex gap-2">
-							<Button variant="bleu" onclick={resetExport}>Nouvel export</Button>
+							<Button variant="vert" onclick={resetExport}>
+								<CirclePlus class="mr-2 h-4 w-4" />
+								Nouvel export
+							</Button>
 						</div>
 					</div>
 				{/if}
