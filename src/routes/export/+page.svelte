@@ -14,7 +14,6 @@
 		Database,
 		FileSpreadsheet,
 		FileText,
-		FileImage,
 		Eye,
 		CheckCircle,
 		Funnel,
@@ -127,12 +126,6 @@
 			label: 'Excel (.xlsx)',
 			icon: FileSpreadsheet,
 			description: 'Classeur Excel avec plusieurs feuilles'
-		},
-		{
-			value: 'pdf',
-			label: 'PDF (.pdf)',
-			icon: FileImage,
-			description: 'Rapport PDF formaté (aperçu limité)'
 		},
 		{
 			value: 'xml',

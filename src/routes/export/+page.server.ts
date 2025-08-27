@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
 // Types pour l'export
 export interface ExportConfig {
 	selectedTables: string[];
-	format: 'xlsx' | 'csv' | 'pdf' | 'xml';
+	format: 'xlsx' | 'csv' | 'xml';
 	includeRelations: boolean;
 	rowLimit?: number;
 	filters: Record<string, unknown>;
@@ -49,7 +49,7 @@ export interface ExportResult {
 // Schéma de validation pour l'export
 const exportSchema = z.object({
 	selectedTables: z.array(z.string()).min(1, 'Sélectionnez au moins une table'),
-	format: z.enum(['xlsx', 'csv', 'pdf', 'xml'], {
+	format: z.enum(['xlsx', 'csv', 'xml'], {
 		errorMap: () => ({ message: 'Format non supporté' })
 	}),
 	includeRelations: z.boolean().default(false),
@@ -579,13 +579,12 @@ export const actions: Actions = {
 				});
 			}
 
-			// Si c'est un fichier binaire ou HTML (PDF), on devrait gérer le téléchargement différemment
+			// Si c'est un fichier binaire, on devrait gérer le téléchargement différemment
 			if (
 				contentType &&
 				(contentType.includes('application/vnd.openxml') ||
 					contentType.includes('text/csv') ||
-					contentType.includes('application/xml') ||
-					contentType.includes('text/html'))
+					contentType.includes('application/xml'))
 			) {
 				console.log('📁 [SERVER] Fichier binaire détecté, lecture des headers personnalisés');
 				const exportResultHeader = response.headers.get('X-Export-Result');

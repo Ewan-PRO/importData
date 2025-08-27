@@ -15,6 +15,54 @@ interface ExportData {
 	totalRows: number;
 }
 
+// Fonction pour générer un nom de fichier intelligent
+function generateFileName(selectedTables: string[], format: string): string {
+	let tablePart: string;
+	
+	// Simplification des noms de tables
+	const simplifyTableName = (tableName: string): string => {
+		const aliases: Record<string, string> = {
+			// Tables principales
+			'kit': 'kit',
+			'part': 'part',
+			'attribute': 'attr',
+			'kit_attribute': 'kit-attr',
+			'kit_kit': 'kit-kit',
+			'document': 'doc',
+			'kit_document': 'kit-doc',
+			'supplier': 'supplier',
+			// Tables dev
+			'kit_dev': 'kit-dev',
+			'attribute_dev': 'attr-dev',
+			'kit_attribute_dev': 'kit-attr-dev',
+			'supplier_dev': 'supplier-dev',
+			// Vues
+			'v_kit_carac': 'kit-carac',
+			'v_categories': 'categories',
+			'v_kit_carac_dev': 'kit-carac-dev',
+			'v_categories_dev': 'categories-dev'
+		};
+		return aliases[tableName] || tableName;
+	};
+	
+	// Nombre total de tables disponibles (approximation basée sur le code existant)
+	const totalAvailableTables = 16;
+	
+	if (selectedTables.length === totalAvailableTables) {
+		tablePart = 'complet';
+	} else if (selectedTables.length === 1) {
+		tablePart = simplifyTableName(selectedTables[0]);
+	} else if (selectedTables.length <= 3) {
+		tablePart = selectedTables
+			.map(simplifyTableName)
+			.join('-');
+	} else {
+		tablePart = `${selectedTables.length}tables`;
+	}
+	
+	return `cenov_${tablePart}.${format}`;
+}
+
 interface ExportFile {
 	buffer: Buffer;
 	fileName: string;
@@ -34,7 +82,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			throw error(400, "Aucune table sélectionnée pour l'export");
 		}
 
-		const supportedFormats = ['xlsx', 'csv', 'pdf', 'xml'];
+		const supportedFormats = ['xlsx', 'csv', 'xml'];
 		if (!supportedFormats.includes(config.format)) {
 			throw error(400, `Format non supporté: ${config.format}`);
 		}
@@ -85,9 +133,6 @@ export const POST: RequestHandler = async ({ request }) => {
 				break;
 			case 'csv':
 				exportFile = await generateCSVFile(exportDataList, config);
-				break;
-			case 'pdf':
-				exportFile = await generatePDFFile(exportDataList);
 				break;
 			case 'xml':
 				exportFile = await generateXMLFile(exportDataList);
@@ -557,7 +602,7 @@ async function generateExcelFile(
 	// Génération du buffer
 	const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 
-	const fileName = `export-${new Date().toISOString().split('T')[0]}.xlsx`;
+	const fileName = generateFileName(exportDataList.map(d => d.tableName), 'xlsx');
 
 	return {
 		buffer: Buffer.from(buffer),
@@ -620,7 +665,7 @@ async function generateCSVFile(
 	}
 
 	const buffer = Buffer.from(csvContent, 'utf-8');
-	const fileName = `export-${new Date().toISOString().split('T')[0]}.csv`;
+	const fileName = generateFileName(exportDataList.map(d => d.tableName), 'csv');
 
 	return {
 		buffer,
@@ -630,109 +675,6 @@ async function generateCSVFile(
 	};
 }
 
-// Génération d'un fichier PDF (simplifié)
-async function generatePDFFile(exportDataList: ExportData[]): Promise<ExportFile> {
-	// Pour une implémentation complète du PDF, vous pouvez utiliser jsPDF ou Puppeteer
-	// Ici, nous créons un rapport simple en HTML puis nous le convertissons conceptuellement
-
-	let htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Export des données</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .table-section { margin-bottom: 30px; }
-        .table-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .summary { background-color: #e7f3ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-    </style>
-</head>
-<body>
-    <h1>Rapport d'export des données</h1>
-    <div class="summary">
-        <p><strong>Date d'export:</strong> ${new Date().toLocaleString()}</p>
-        <p><strong>Tables exportées:</strong> ${exportDataList.length}</p>
-        <p><strong>Total des lignes:</strong> ${exportDataList.reduce((sum, t) => sum + t.totalRows, 0)}</p>
-    </div>
-`;
-
-	for (const tableData of exportDataList) {
-		htmlContent += `
-    <div class="table-section">
-        <div class="table-title">Table: ${tableData.tableName} (${tableData.totalRows} lignes)</div>
-        <table>
-            <thead>
-                <tr>
-`;
-
-		// En-têtes
-		for (const column of tableData.columns) {
-			htmlContent += `<th>${column}</th>`;
-		}
-
-		htmlContent += `
-                </tr>
-            </thead>
-            <tbody>
-`;
-
-		// Données (limitées pour le PDF)
-		const limitedData = tableData.data.slice(0, 50); // Limite pour éviter les PDF trop lourds
-		for (const row of limitedData) {
-			htmlContent += '<tr>';
-			for (const column of tableData.columns) {
-				let value = row[column];
-				if (value === null || value === undefined) {
-					value = '';
-				} else if (typeof value === 'object') {
-					value = JSON.stringify(value);
-				} else {
-					value = String(value);
-				}
-
-				// Échappement HTML
-				const stringValue = String(value);
-				const escapedValue = stringValue
-					.replace(/&/g, '&amp;')
-					.replace(/</g, '&lt;')
-					.replace(/>/g, '&gt;');
-				htmlContent += `<td>${escapedValue}</td>`;
-			}
-			htmlContent += '</tr>';
-		}
-
-		htmlContent += `
-            </tbody>
-        </table>
-    </div>
-`;
-
-		if (tableData.totalRows > 50) {
-			htmlContent += `<p><em>Note: Seules les 50 premières lignes sont affichées dans ce rapport PDF.</em></p>`;
-		}
-	}
-
-	htmlContent += `
-</body>
-</html>`;
-
-	// Ici, dans une vraie implémentation, vous utiliseriez une librairie comme Puppeteer
-	// pour convertir le HTML en PDF. Pour l'instant, nous retournons le HTML.
-	const buffer = Buffer.from(htmlContent, 'utf-8');
-	const fileName = `export-report-${new Date().toISOString().split('T')[0]}.html`;
-
-	return {
-		buffer,
-		fileName,
-		mimeType: 'text/html', // 'application/pdf' pour un vrai PDF
-		size: buffer.length
-	};
-}
 
 // Génération d'un fichier XML
 async function generateXMLFile(exportDataList: ExportData[]): Promise<ExportFile> {
@@ -780,7 +722,7 @@ async function generateXMLFile(exportDataList: ExportData[]): Promise<ExportFile
 
 	const xmlContent = '<?xml version="1.0" encoding="UTF-8"?>\n' + builder.build(xmlData);
 	const buffer = Buffer.from(xmlContent, 'utf-8');
-	const fileName = `export-${new Date().toISOString().split('T')[0]}.xml`;
+	const fileName = generateFileName(exportDataList.map(d => d.tableName), 'xml');
 
 	return {
 		buffer,
