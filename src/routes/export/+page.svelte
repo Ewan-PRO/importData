@@ -112,7 +112,7 @@
 
 	// Catégories de tables
 	const categories = [
-		{ value: 'all', label: 'Toutes les tables', icon: Database },
+		{ value: 'all', label: 'Toutes les sources', icon: Database },
 		{ value: 'tables', label: 'Tables', icon: Database },
 		{ value: 'views', label: 'Vues', icon: Eye }
 	];
@@ -338,8 +338,8 @@
 					>
 						1
 					</div>
-					<span class="hidden sm:inline">Sélection des tables</span>
-					<span class="sm:hidden">Tables</span>
+					<span class="hidden sm:inline">Sélection des sources</span>
+					<span class="sm:hidden">Sources</span>
 				</div>
 			</div>
 			<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
@@ -376,7 +376,7 @@
 				<div class="flex items-center justify-between">
 					<div>
 						<div class="text-2xl font-bold text-blue-600">{data.totalTables}</div>
-						<div class="text-sm text-blue-800">Tables disponibles</div>
+						<div class="text-sm text-blue-800">Sources disponibles</div>
 					</div>
 					<Database class="h-8 w-8 text-blue-500" />
 				</div>
@@ -394,7 +394,7 @@
 				<div class="flex items-center justify-between">
 					<div>
 						<div class="text-2xl font-bold text-purple-600">{$form.selectedTables.length}</div>
-						<div class="text-sm text-purple-800">Tables sélectionnées</div>
+						<div class="text-sm text-purple-800">Sources sélectionnées</div>
 					</div>
 					<CheckCircle class="h-8 w-8 text-purple-500" />
 				</div>
@@ -406,19 +406,23 @@
 		{#if step === 1}
 			<!-- Étape 1: Sélection des tables -->
 			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-bold text-black">Sélection des tables à exporter :</h2>
+				<h2 class="mb-4 text-xl font-bold text-black">Sélection des sources à exporter :</h2>
 
 				<!-- Filtres -->
 				<div class="mb-6 space-y-4">
 					<div class="flex flex-wrap gap-4">
 						<!-- Recherche -->
-						<div class="min-w-64 flex-1">
-							<Input type="text" bind:value={searchTerm} placeholder="Rechercher une table..." />
+						<div class="min-w-72 flex-[4]">
+							<Input
+								type="text"
+								bind:value={searchTerm}
+								placeholder="Rechercher une table, une vue..."
+							/>
 						</div>
 
 						<!-- Sélection par catégorie -->
 						<Select.Select type="single" bind:value={selectedCategory}>
-							<Select.SelectTrigger class="w-48">
+							<Select.SelectTrigger class="min-w-28 flex-1">
 								<span class="flex items-center gap-2">
 									<Filter class="h-4 w-4" />
 									{categories.find((c) => c.value === selectedCategory)?.label || 'Toutes'}
