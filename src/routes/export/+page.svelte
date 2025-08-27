@@ -10,19 +10,16 @@
 	import * as Table from '$lib/components/ui/table';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
+	import { toast } from 'svelte-sonner';
 	import {
-		// Download, // Non utilisé
 		Database,
 		FileSpreadsheet,
 		FileText,
 		FileImage,
 		Settings,
 		Eye,
-		// AlertCircle, // Non utilisé
 		CheckCircle,
 		Filter,
-		// Calendar, // Non utilisé
-		// Hash, // Non utilisé
 		BarChart3,
 		FileDown,
 		Play,
@@ -30,8 +27,6 @@
 		CircleArrowRight,
 		CircleArrowLeft,
 		CirclePlus
-		// X, // Non utilisé
-		// Check // Non utilisé
 	} from 'lucide-svelte';
 	import type { TableInfo, ExportResult } from './+page.server.js';
 
@@ -89,17 +84,9 @@
 	let searchTerm = '';
 	let previewData: Record<string, unknown[]> = {};
 	let exportResult: ExportResult | null = null;
-	let showAdvancedOptions = false;
-	let dateFrom = '';
-	let dateTo = '';
 
 	// Configuration d'export sauvegardée pour persistance entre aperçu et export
 	let savedExportConfig: any = null;
-
-	// Synchroniser les dates avec le formulaire
-	$: if (dateFrom || dateTo) {
-		$form.dateRange = { from: dateFrom, to: dateTo };
-	}
 
 	// Sauvegarder et synchroniser la configuration quand on arrive à l'étape 3 avec des données d'aperçu
 	$: if (step === 3 && Object.keys(previewData).length > 0 && !savedExportConfig) {
@@ -119,7 +106,6 @@
 		$form.includeHeaders = savedExportConfig.includeHeaders;
 		$form.rowLimit = savedExportConfig.rowLimit;
 		$form.filters = savedExportConfig.filters;
-		$form.dateRange = savedExportConfig.dateRange;
 
 		console.log('📋 [CLIENT] Formulaire après sync:', { ...$form });
 	}
@@ -317,7 +303,6 @@
 		previewData = {};
 		exportResult = null;
 		savedExportConfig = null;
-		showAdvancedOptions = false;
 		reset();
 	}
 
@@ -329,11 +314,15 @@
 	// Validation des données avant de passer à l'étape suivante
 	function validateAndNext() {
 		if ($form.selectedTables.length === 0) {
-			Alert.alertActions.error('Veuillez sélectionner au moins une table');
+			toast.error('Aucune table sélectionnée', {
+				description: 'Veuillez sélectionner au moins une table à exporter.'
+			});
 			return;
 		}
 		if (!$form.format) {
-			Alert.alertActions.error("Veuillez sélectionner un format d'export");
+			toast.error('Format non sélectionné', {
+				description: "Veuillez sélectionner un format d'export."
+			});
 			return;
 		}
 		step = 2;
@@ -636,10 +625,13 @@
 									bind:checked={$form.includeHeaders}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
-								<span>{$form.includeHeaders ? 'Inclure les en-têtes de colonnes' : 'Données uniquement (sans en-têtes)'}</span>
+								<span
+									>{$form.includeHeaders
+										? 'Inclure les en-têtes de colonnes'
+										: 'Données uniquement (sans en-têtes)'}</span
+								>
 							</label>
 						</div>
-
 
 						<!-- Limite de lignes -->
 						<div class="flex items-center space-x-4">
@@ -657,68 +649,30 @@
 						</div>
 					</div>
 
-					<!-- Options avancées -->
+					<!-- Format de fichier -->
 					<div class="mb-6">
-						<button
-							type="button"
-							onclick={() => (showAdvancedOptions = !showAdvancedOptions)}
-							class="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
-						>
-							<Settings class="h-4 w-4" />
-							Options avancées
-						</button>
-
-						{#if showAdvancedOptions}
-							<div transition:slide class="mt-4 space-y-4 rounded-lg border border-gray-200 p-4">
-								<!-- Filtre par date -->
-								<div>
-									<h4 class="mb-2 font-medium">
-										Filtre par date (pour les tables avec created_at/updated_at)
-									</h4>
-									<div class="flex gap-4">
-										<div>
-											<label for="dateFrom" class="block text-sm text-gray-600">Du:</label>
-											<Input id="dateFrom" type="date" bind:value={dateFrom} />
+						<h3 class="mb-3 font-medium text-gray-900">Format de fichier :</h3>
+						<div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+							{#each exportFormats as format (format.value)}
+								<div
+									class="flex items-center space-x-3 rounded-lg border p-4 {$form.format ===
+									format.value
+										? 'border-blue-500 bg-blue-50'
+										: 'hover:bg-gray-50'}"
+								>
+									<div class="flex-1">
+										<div class="mb-1 flex items-center gap-2">
+											<svelte:component this={format.icon} class="h-5 w-5 text-gray-900" />
+											<span class="font-medium text-gray-900">{format.label}</span>
+											{#if format.recommended}
+												<Badge variant="noir">Recommandé</Badge>
+											{/if}
 										</div>
-										<div>
-											<label for="dateTo" class="block text-sm text-gray-600">Au:</label>
-											<Input id="dateTo" type="date" bind:value={dateTo} />
-										</div>
+										<div class="text-sm text-gray-600">{format.description}</div>
 									</div>
 								</div>
-							</div>
-						{/if}
-					</div>
-
-					<!-- Résumé de la sélection -->
-					<div class="mb-6 rounded-lg bg-gray-50 p-4">
-						<h3 class="mb-2 font-medium">Résumé de votre export</h3>
-						<div class="grid gap-2 text-sm">
-							<div><strong>Tables sélectionnées:</strong> {$form.selectedTables.length}</div>
-							<div>
-								<strong>Format:</strong>
-								{exportFormats.find((f) => f.value === $form.format)?.label}
-							</div>
-							{#if $form.rowLimit}
-								<div><strong>Limite:</strong> {formatNumber($form.rowLimit)} lignes</div>
-							{/if}
+							{/each}
 						</div>
-
-						<!-- Liste des tables -->
-						<details class="mt-2">
-							<summary class="cursor-pointer text-sm text-blue-600">Tables sélectionnées</summary>
-							<div class="mt-2 space-y-1">
-								{#each $form.selectedTables as tableName}
-									{@const tableInfo = data.tables.find((t) => t.name === tableName)}
-									<div class="flex items-center justify-between text-xs">
-										<span>{tableInfo?.displayName || tableName}</span>
-										<span class="text-gray-500"
-											>{formatNumber(tableInfo?.rowCount || 0)} lignes</span
-										>
-									</div>
-								{/each}
-							</div>
-						</details>
 					</div>
 
 					<!-- Champs cachés -->
@@ -727,7 +681,6 @@
 					<input type="hidden" name="includeHeaders" value={$form.includeHeaders} />
 					<input type="hidden" name="rowLimit" value={$form.rowLimit} />
 					<input type="hidden" name="filters" value={JSON.stringify($form.filters)} />
-					<input type="hidden" name="dateRange" value={JSON.stringify($form.dateRange)} />
 
 					<div class="flex justify-between">
 						<Button variant="noir" onclick={() => goToStep(1)}>
@@ -766,7 +719,12 @@
 		{:else if step === 3}
 			<!-- Étape 3: Aperçu et export -->
 			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-semibold">Aperçu des données</h2>
+				<div class="mb-4 flex items-center justify-between">
+					<h2 class="text-xl font-semibold text-black">Aperçu des données :</h2>
+					<Badge variant="bleu">
+						Format: {exportFormats.find((f) => f.value === $form.format)?.label || $form.format}
+					</Badge>
+				</div>
 
 				{#if Object.keys(previewData).length > 0}
 					<!-- Aperçu des données -->
