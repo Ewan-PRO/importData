@@ -113,10 +113,8 @@
 	// Catégories de tables
 	const categories = [
 		{ value: 'all', label: 'Toutes les tables', icon: Database },
-		{ value: 'tables', label: 'Tables principales', icon: Database },
-		{ value: 'views', label: 'Vues', icon: Eye },
-		{ value: 'dev_tables', label: 'Tables de dev', icon: Database },
-		{ value: 'dev_views', label: 'Vues de dev', icon: Eye }
+		{ value: 'tables', label: 'Tables', icon: Database },
+		{ value: 'views', label: 'Vues', icon: Eye }
 	];
 
 	// Formats d'export
@@ -162,19 +160,14 @@
 	$: tableCounts = {
 		all: data.tables.length,
 		tables: data.tables.filter((t: TableInfo) => t.category === 'tables').length,
-		views: data.tables.filter((t: TableInfo) => t.category === 'views').length,
-		dev_tables: data.tables.filter((t: TableInfo) => t.category === 'dev_tables').length,
-		dev_views: data.tables.filter((t: TableInfo) => t.category === 'dev_views').length
+		views: data.tables.filter((t: TableInfo) => t.category === 'views').length
 	};
 
 	// Icones pour les types de tables
 	function getTableIcon(category: string) {
 		switch (category) {
 			case 'views':
-			case 'dev_views':
 				return Eye;
-			case 'dev_tables':
-				return Database;
 			default:
 				return Database;
 		}
@@ -184,15 +177,11 @@
 	function getBadgeVariant(category: string) {
 		switch (category) {
 			case 'tables':
-				return 'default';
+				return 'noir';
 			case 'views':
 				return 'bleu';
-			case 'dev_tables':
-				return 'blanc';
-			case 'dev_views':
-				return 'blanc';
 			default:
-				return 'default';
+				return 'noir';
 		}
 	}
 
@@ -487,7 +476,7 @@
 								}}
 								class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 							/>
-							<span>Tables principales ({tableCounts.tables})</span>
+							<span>Tables ({tableCounts.tables})</span>
 						</label>
 
 						<label class="flex cursor-pointer items-center space-x-2">
@@ -613,7 +602,7 @@
 		{:else if step === 2}
 			<!-- Étape 2: Configuration des paramètres -->
 			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-semibold">Configuration de l'export</h2>
+				<h2 class="mb-4 text-xl font-semibold text-black">Configuration de l'export :</h2>
 
 				<form method="POST" action="?/preview" use:superEnhance>
 					<!-- Configuration de base -->
@@ -813,7 +802,7 @@
 							<h3 class="text-lg font-medium text-green-800">Export réussi</h3>
 						</div>
 
-						<div class="mb-4 space-y-2 text-sm">
+						<div class="mb-4 space-y-2 text-sm text-black">
 							<div><strong>Fichier:</strong> {exportResult.fileName}</div>
 							<div>
 								<strong>Taille:</strong>

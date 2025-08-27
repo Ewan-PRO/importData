@@ -21,7 +21,7 @@ export interface ExportConfig {
 export interface TableInfo {
 	name: string;
 	displayName: string;
-	category: 'tables' | 'views' | 'dev_tables' | 'dev_views';
+	category: 'tables' | 'views';
 	rowCount: number;
 	columns: ColumnInfo[];
 	relations?: string[];
@@ -195,7 +195,7 @@ const availableTables: TableInfo[] = [
 	{
 		name: 'kit_dev',
 		displayName: 'Kits (Dev)',
-		category: 'dev_tables',
+		category: 'tables',
 		rowCount: 0,
 		columns: [
 			{ name: 'kit_id', type: 'number', required: true, description: 'ID du kit' },
@@ -207,7 +207,7 @@ const availableTables: TableInfo[] = [
 	{
 		name: 'attribute_dev',
 		displayName: 'Attributs (Dev)',
-		category: 'dev_tables',
+		category: 'tables',
 		rowCount: 0,
 		columns: [
 			{ name: 'atr_id', type: 'number', required: true, description: "ID de l'attribut" },
@@ -221,7 +221,7 @@ const availableTables: TableInfo[] = [
 	{
 		name: 'kit_attribute_dev',
 		displayName: 'Kit-Attributs (Dev)',
-		category: 'dev_tables',
+		category: 'tables',
 		rowCount: 0,
 		columns: [
 			{ name: 'kat_id', type: 'number', required: true, description: 'ID de la relation' },
@@ -241,7 +241,7 @@ const availableTables: TableInfo[] = [
 	{
 		name: 'supplier_dev',
 		displayName: 'Fournisseurs (Dev)',
-		category: 'dev_tables',
+		category: 'tables',
 		rowCount: 0,
 		columns: [
 			{ name: 'sup_id', type: 'number', required: true, description: 'ID du fournisseur' },
@@ -286,7 +286,7 @@ const availableTables: TableInfo[] = [
 	{
 		name: 'v_kit_carac_dev',
 		displayName: 'Vue Kit-Caractéristiques (Dev)',
-		category: 'dev_views',
+		category: 'views',
 		rowCount: 0,
 		columns: [
 			{ name: 'id', type: 'number', required: true, description: 'ID unique' },
@@ -299,7 +299,7 @@ const availableTables: TableInfo[] = [
 	{
 		name: 'v_categories_dev',
 		displayName: 'Vue Catégories (Dev)',
-		category: 'dev_views',
+		category: 'views',
 		rowCount: 0,
 		columns: [
 			{ name: 'row_key', type: 'number', required: true, description: 'Clé de ligne' },
