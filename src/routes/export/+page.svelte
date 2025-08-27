@@ -725,7 +725,7 @@
 												</Table.Row>
 											</Table.Header>
 											<Table.Body>
-												{#each rows.slice(0, 5) as row, rowIndex}
+												{#each rows as row, rowIndex}
 													<Table.Row variant="striped">
 														{#each Object.keys(rows[0] as Record<string, unknown>) as column}
 															<Table.Cell variant="striped" {rowIndex}>
@@ -740,11 +740,6 @@
 											</Table.Body>
 										</Table.Root>
 									</div>
-									{#if rows.length > 5}
-										<p class="mt-2 text-sm text-gray-500">
-											... et {rows.length - 5} ligne(s) supplémentaire(s)
-										</p>
-									{/if}
 								{:else}
 									<p class="text-gray-500">Aucune donnée disponible</p>
 								{/if}

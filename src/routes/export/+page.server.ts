@@ -446,12 +446,12 @@ export const actions: Actions = {
 		console.log("📊 [PREVIEW] Configuration d'aperçu reçue:", form.data);
 
 		try {
-			const { selectedTables, rowLimit } = form.data;
+			const { selectedTables } = form.data;
 			const previewData: Record<string, unknown[]> = {};
 
 			// Récupérer un aperçu des données pour chaque table sélectionnée
 			for (const tableName of selectedTables) {
-				const limit = Math.min(rowLimit || 10, 10); // Max 10 lignes pour l'aperçu
+				const limit = 5; // Exactement 5 lignes pour l'aperçu
 				let data: unknown[] = [];
 
 				switch (tableName) {
@@ -486,6 +486,15 @@ export const actions: Actions = {
 						break;
 					case 'kit_attribute_dev':
 						data = await prisma.kit_attribute_dev.findMany({ take: limit, orderBy: { kat_id: 'asc' } });
+						break;
+					case 'kit_kit':
+						data = await prisma.kit_kit.findMany({ take: limit, orderBy: { kik_id: 'asc' } });
+						break;
+					case 'document':
+						data = await prisma.document.findMany({ take: limit, orderBy: { doc_id: 'asc' } });
+						break;
+					case 'kit_document':
+						data = await prisma.kit_document.findMany({ take: limit, orderBy: { kid_id: 'asc' } });
 						break;
 					case 'supplier_dev':
 						data = await prisma.supplier_dev.findMany({ take: limit, orderBy: { sup_id: 'asc' } });
