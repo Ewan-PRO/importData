@@ -478,6 +478,15 @@ export const actions: Actions = {
 					case 'supplier':
 						data = await prisma.supplier.findMany({ take: limit, orderBy: { sup_id: 'asc' } });
 						break;
+					case 'kit_dev':
+						data = await prisma.kit_dev.findMany({ take: limit, orderBy: { kit_id: 'asc' } });
+						break;
+					case 'attribute_dev':
+						data = await prisma.attribute_dev.findMany({ take: limit, orderBy: { atr_id: 'asc' } });
+						break;
+					case 'kit_attribute_dev':
+						data = await prisma.kit_attribute_dev.findMany({ take: limit, orderBy: { kat_id: 'asc' } });
+						break;
 					case 'supplier_dev':
 						data = await prisma.supplier_dev.findMany({ take: limit, orderBy: { sup_id: 'asc' } });
 						break;
@@ -487,7 +496,12 @@ export const actions: Actions = {
 					case 'v_categories':
 						data = await prisma.v_categories.findMany({ take: limit, orderBy: { atr_id: 'asc' } });
 						break;
-					// Ajouter les autres tables selon les besoins
+					case 'v_kit_carac_dev':
+						data = await prisma.v_kit_carac_dev.findMany({ take: limit, orderBy: { id: 'asc' } });
+						break;
+					case 'v_categories_dev':
+						data = await prisma.v_categories_dev.findMany({ take: limit, orderBy: { row_key: 'asc' } });
+						break;
 				}
 
 				previewData[tableName] = data;

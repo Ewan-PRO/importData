@@ -166,13 +166,13 @@
 	$: if (selectedCategory !== previousSelectedCategory && previousSelectedCategory !== undefined) {
 		const categoryInfo = categories.find((c) => c.value === selectedCategory);
 		const count = tableCounts[selectedCategory as keyof typeof tableCounts];
-		
+
 		if (categoryInfo) {
 			toast.success(`Filtre appliqué : ${categoryInfo.label}`, {
 				description: `${count} source${count > 1 ? 's' : ''} disponible${count > 1 ? 's' : ''}`
 			});
 		}
-		
+
 		previousSelectedCategory = selectedCategory;
 	}
 
@@ -347,7 +347,7 @@
 			<div class={`step-item ${step >= 1 ? 'text-blue-700' : ''} flex-1`}>
 				<div class="flex items-center">
 					<div
-						class={`mr-2 flex h-8 w-8 items-center justify-center rounded-full ${step >= 1 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
+						class={`mr-1 flex h-8 w-8 items-center justify-center rounded-full sm:mr-2 ${step >= 1 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
 					>
 						1
 					</div>
@@ -359,7 +359,7 @@
 			<div class={`step-item ${step >= 2 ? 'text-blue-700' : ''} flex-1`}>
 				<div class="flex items-center">
 					<div
-						class={`mr-2 flex h-8 w-8 items-center justify-center rounded-full ${step >= 2 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
+						class={`mr-1 flex h-8 w-8 items-center justify-center rounded-full sm:mr-2 ${step >= 2 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
 					>
 						2
 					</div>
@@ -371,7 +371,7 @@
 			<div class={`step-item ${step >= 3 ? 'text-blue-700' : ''} flex-1`}>
 				<div class="flex items-center">
 					<div
-						class={`mr-2 flex h-8 w-8 items-center justify-center rounded-full ${step >= 3 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
+						class={`mr-1 flex h-8 w-8 items-center justify-center rounded-full sm:mr-2 ${step >= 3 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
 					>
 						3
 					</div>
@@ -634,11 +634,15 @@
 									bind:checked={$form.includeHeaders}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
-								<span
-									>{$form.includeHeaders
-										? 'Inclure les en-têtes de colonnes'
-										: 'Données uniquement (sans en-têtes)'}</span
-								>
+								<span>
+									{#if $form.includeHeaders}
+										<span class="hidden sm:inline">Inclure les en-têtes de colonnes</span>
+										<span class="sm:hidden">Avec en-têtes</span>
+									{:else}
+										<span class="hidden sm:inline">Données uniquement (sans en-têtes)</span>
+										<span class="sm:hidden">Données seules</span>
+									{/if}
+								</span>
 							</label>
 						</div>
 
@@ -654,34 +658,8 @@
 								placeholder="Pas de limite"
 								min="1"
 								max="1000000"
-								class="w-40"
+								class="w-48"
 							/>
-						</div>
-					</div>
-
-					<!-- Format de fichier -->
-					<div class="mb-6">
-						<h3 class="mb-3 font-medium text-gray-900">Format de fichier :</h3>
-						<div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-							{#each exportFormats as format (format.value)}
-								<div
-									class="flex items-center space-x-3 rounded-lg border p-4 {$form.format ===
-									format.value
-										? 'border-blue-500 bg-blue-50'
-										: 'hover:bg-gray-50'}"
-								>
-									<div class="flex-1">
-										<div class="mb-1 flex items-center gap-2">
-											<svelte:component this={format.icon} class="h-5 w-5 text-gray-900" />
-											<span class="font-medium text-gray-900">{format.label}</span>
-											{#if format.recommended}
-												<Badge variant="noir">Recommandé</Badge>
-											{/if}
-										</div>
-										<div class="text-sm text-gray-600">{format.description}</div>
-									</div>
-								</div>
-							{/each}
 						</div>
 					</div>
 
