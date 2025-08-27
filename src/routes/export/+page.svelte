@@ -1,7 +1,6 @@
 <!-- src/routes/export/+page.svelte -->
 <script lang="ts">
-	// import { enhance } from '$app/forms'; // Non utilisé
-	import { fade, slide } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms/client';
 	import { Card, Spinner } from 'flowbite-svelte';
 	import * as Alert from '$lib/components/ui/alert';
@@ -16,13 +15,11 @@
 		FileSpreadsheet,
 		FileText,
 		FileImage,
-		Settings,
 		Eye,
 		CheckCircle,
-		Filter,
-		BarChart3,
+		Funnel,
+		ChartColumn,
 		FileDown,
-		Play,
 		RotateCcw,
 		CircleArrowRight,
 		CircleArrowLeft,
@@ -102,7 +99,6 @@
 
 		$form.selectedTables = savedExportConfig.selectedTables;
 		$form.format = savedExportConfig.format;
-		// $form.includeRelations = savedExportConfig.includeRelations; // Supprimé
 		$form.includeHeaders = savedExportConfig.includeHeaders;
 		$form.rowLimit = savedExportConfig.rowLimit;
 		$form.filters = savedExportConfig.filters;
@@ -112,7 +108,7 @@
 
 	// Catégories de tables
 	const categories = [
-		{ value: 'all', label: 'Toutes les sources', icon: Database },
+		{ value: 'all', label: 'Toutes les sources', icon: Funnel },
 		{ value: 'tables', label: 'Tables', icon: Database },
 		{ value: 'views', label: 'Vues', icon: Eye }
 	];
@@ -162,6 +158,23 @@
 		tables: data.tables.filter((t: TableInfo) => t.category === 'tables').length,
 		views: data.tables.filter((t: TableInfo) => t.category === 'views').length
 	};
+
+	// Variable pour tracking le changement de catégorie et éviter le toast au chargement initial
+	let previousSelectedCategory = selectedCategory;
+
+	// Toast de succès lors du changement de catégorie
+	$: if (selectedCategory !== previousSelectedCategory && previousSelectedCategory !== undefined) {
+		const categoryInfo = categories.find((c) => c.value === selectedCategory);
+		const count = tableCounts[selectedCategory as keyof typeof tableCounts];
+		
+		if (categoryInfo) {
+			toast.success(`Filtre appliqué : ${categoryInfo.label}`, {
+				description: `${count} source${count > 1 ? 's' : ''} disponible${count > 1 ? 's' : ''}`
+			});
+		}
+		
+		previousSelectedCategory = selectedCategory;
+	}
 
 	// Icones pour les types de tables
 	function getTableIcon(category: string) {
@@ -387,7 +400,7 @@
 						<div class="text-2xl font-bold text-green-600">{formatNumber(data.totalRows)}</div>
 						<div class="text-sm text-green-800">Lignes totales</div>
 					</div>
-					<BarChart3 class="h-8 w-8 text-green-500" />
+					<ChartColumn class="h-8 w-8 text-green-500" />
 				</div>
 			</div>
 			<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
@@ -424,7 +437,7 @@
 						<Select.Select type="single" bind:value={selectedCategory}>
 							<Select.SelectTrigger class="min-w-28 flex-1">
 								<span class="flex items-center gap-2">
-									<Filter class="h-4 w-4" />
+									<Funnel class="h-4 w-4" />
 									{categories.find((c) => c.value === selectedCategory)?.label || 'Toutes'}
 								</span>
 							</Select.SelectTrigger>
@@ -454,63 +467,66 @@
 							<span>Sélectionner tout ({filteredTables.length})</span>
 						</label>
 
-						<label class="flex cursor-pointer items-center space-x-2">
-							<input
-								type="checkbox"
-								checked={$form.selectedTables.filter(
-									(t) => data.tables.find((table) => table.name === t)?.category === 'tables'
-								).length === tableCounts.tables && tableCounts.tables > 0}
-								onchange={() => {
-									const tablesInCategory = data.tables
-										.filter((t) => t.category === 'tables')
-										.map((t) => t.name);
-									const isAllSelected = tablesInCategory.every((tableName) =>
-										$form.selectedTables.includes(tableName)
-									);
-									if (isAllSelected) {
-										$form.selectedTables = $form.selectedTables.filter(
-											(t) => !tablesInCategory.includes(t)
+						<!-- Cases spécifiques - uniquement quand 'all' est sélectionné pour éviter la redondance -->
+						{#if selectedCategory === 'all'}
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="checkbox"
+									checked={$form.selectedTables.filter(
+										(t) => data.tables.find((table) => table.name === t)?.category === 'tables'
+									).length === tableCounts.tables && tableCounts.tables > 0}
+									onchange={() => {
+										const tablesInCategory = data.tables
+											.filter((t) => t.category === 'tables')
+											.map((t) => t.name);
+										const isAllSelected = tablesInCategory.every((tableName) =>
+											$form.selectedTables.includes(tableName)
 										);
-									} else {
-										const newSelection = [
-											...new Set([...$form.selectedTables, ...tablesInCategory])
-										];
-										$form.selectedTables = newSelection;
-									}
-								}}
-								class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-							/>
-							<span>Tables ({tableCounts.tables})</span>
-						</label>
+										if (isAllSelected) {
+											$form.selectedTables = $form.selectedTables.filter(
+												(t) => !tablesInCategory.includes(t)
+											);
+										} else {
+											const newSelection = [
+												...new Set([...$form.selectedTables, ...tablesInCategory])
+											];
+											$form.selectedTables = newSelection;
+										}
+									}}
+									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span>Tables ({tableCounts.tables})</span>
+							</label>
 
-						<label class="flex cursor-pointer items-center space-x-2">
-							<input
-								type="checkbox"
-								checked={$form.selectedTables.filter(
-									(t) => data.tables.find((table) => table.name === t)?.category === 'views'
-								).length === tableCounts.views && tableCounts.views > 0}
-								onchange={() => {
-									const tablesInCategory = data.tables
-										.filter((t) => t.category === 'views')
-										.map((t) => t.name);
-									const isAllSelected = tablesInCategory.every((tableName) =>
-										$form.selectedTables.includes(tableName)
-									);
-									if (isAllSelected) {
-										$form.selectedTables = $form.selectedTables.filter(
-											(t) => !tablesInCategory.includes(t)
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="checkbox"
+									checked={$form.selectedTables.filter(
+										(t) => data.tables.find((table) => table.name === t)?.category === 'views'
+									).length === tableCounts.views && tableCounts.views > 0}
+									onchange={() => {
+										const tablesInCategory = data.tables
+											.filter((t) => t.category === 'views')
+											.map((t) => t.name);
+										const isAllSelected = tablesInCategory.every((tableName) =>
+											$form.selectedTables.includes(tableName)
 										);
-									} else {
-										const newSelection = [
-											...new Set([...$form.selectedTables, ...tablesInCategory])
-										];
-										$form.selectedTables = newSelection;
-									}
-								}}
-								class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-							/>
-							<span>Vues ({tableCounts.views})</span>
-						</label>
+										if (isAllSelected) {
+											$form.selectedTables = $form.selectedTables.filter(
+												(t) => !tablesInCategory.includes(t)
+											);
+										} else {
+											const newSelection = [
+												...new Set([...$form.selectedTables, ...tablesInCategory])
+											];
+											$form.selectedTables = newSelection;
+										}
+									}}
+									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span>Vues ({tableCounts.views})</span>
+							</label>
+						{/if}
 					</div>
 				</div>
 
@@ -628,7 +644,8 @@
 
 						<!-- Limite de lignes -->
 						<div class="flex items-center space-x-4">
-							<label for="rowLimit" class="text-sm font-medium">Limite de lignes (optionnel):</label
+							<label for="rowLimit" class="text-sm font-medium"
+								>Limite de lignes (optionnel) :</label
 							>
 							<Input
 								id="rowLimit"
@@ -637,7 +654,7 @@
 								placeholder="Pas de limite"
 								min="1"
 								max="1000000"
-								class="w-32"
+								class="w-40"
 							/>
 						</div>
 					</div>
@@ -680,32 +697,15 @@
 							<CircleArrowLeft class="mr-2 h-4 w-4" />
 							Retour
 						</Button>
-						<div class="flex gap-2">
-							<Button type="submit" variant="bleu">
-								{#if $submitting}
-									<Spinner class="mr-2 h-4 w-4" />
-									Génération de l'aperçu...
-								{:else}
-									<Eye class="mr-2 h-4 w-4" />
-									Aperçu
-								{/if}
-							</Button>
-							<Button
-								onclick={() => {
-									// Sauvegarder la configuration pour l'export direct
-									savedExportConfig = { ...$form };
-									console.log(
-										'💾 [CLIENT] Configuration sauvegardée pour export direct:',
-										savedExportConfig
-									);
-									step = 3;
-								}}
-								variant="vert"
-							>
-								<Play class="mr-2 h-4 w-4" />
-								Exporter directement
-							</Button>
-						</div>
+						<Button type="submit" variant="bleu">
+							{#if $submitting}
+								<Spinner class="mr-2 h-4 w-4" />
+								Génération de l'aperçu...
+							{:else}
+								<Eye class="mr-2 h-4 w-4" />
+								Aperçu
+							{/if}
+						</Button>
 					</div>
 				</form>
 			</div>
@@ -797,7 +797,7 @@
 		{:else if step === 4}
 			<!-- Étape 4: Résultat de l'export -->
 			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-semibold text-black">Export terminé</h2>
+				<h2 class="mb-4 text-xl font-semibold text-black">Export terminé :</h2>
 
 				{#if exportResult}
 					<div class="rounded-lg border border-green-200 bg-green-50 p-6">
