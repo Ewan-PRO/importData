@@ -12,8 +12,8 @@
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs/promises';
 import path from 'path';
-import { fetchAllTables } from './fetch-all-tables.mjs';
-import { fetchAllViews } from './fetch-all-views.mjs';
+import { getAllTables, getTableData } from './fetch-all-tables.mjs';
+import { getAllViews, getAllMaterializedViews, getViewData, getViewColumns } from './fetch-all-views.mjs';
 
 const prisma = new PrismaClient({
 	log: ['error', 'warn'],
@@ -78,18 +78,69 @@ async function fetchCenovData() {
 			console.log(`   Tables: ${dbInfo.schema.table_count}, Vues: ${dbInfo.schema.view_count}\n`);
 		}
 
-		// Récupération des tables et vues en parallèle
+		// Récupération des listes de tables et vues
 		console.log('📊 Récupération des données...\n');
-		const [tablesData, viewsData] = await Promise.all([
-			fetchAllTables().catch((error) => {
-				console.error('Erreur tables:', error.message);
-				return { error: error.message, tables: {} };
-			}),
-			fetchAllViews().catch((error) => {
-				console.error('Erreur vues:', error.message);
-				return { error: error.message, views: {} };
-			})
+		console.log('🔍 Récupération de la liste des tables...');
+		const tables = await getAllTables();
+		console.log(`📊 ${tables.length} tables trouvées dans le schéma public`);
+
+		console.log('🔍 Récupération de la liste des vues...');
+		const [views, materializedViews] = await Promise.all([
+			getAllViews(),
+			getAllMaterializedViews()
 		]);
+
+		const allViews = [
+			...views.map((v) => ({ ...v, type: 'VIEW' })),
+			...materializedViews.map((v) => ({ ...v, type: 'MATERIALIZED VIEW' }))
+		];
+
+		console.log(`📊 ${allViews.length} vues trouvées dans le schéma public`);
+		console.log(`   - ${views.length} vues normales`);
+		console.log(`   - ${materializedViews.length} vues matérialisées`);
+
+		// Compilation des données
+		const compiledTables = {};
+		const compiledViews = {};
+		let totalTablesRows = 0;
+		let totalViewsRows = 0;
+		let tablesWithErrors = 0;
+		let viewsWithErrors = 0;
+
+		// Récupération des données de chaque table
+		for (const table of tables) {
+			try {
+				const tableData = await getTableData(table.table_name);
+				compiledTables[table.table_name] = tableData;
+				totalTablesRows += tableData.rowCount;
+				console.log(`✅ ${table.table_name}: ${tableData.rowCount} lignes`);
+			} catch (error) {
+				console.error(`❌ Erreur ${table.table_name}:`, error.message);
+				tablesWithErrors++;
+			}
+		}
+
+		// Récupération des données de chaque vue
+		for (const view of allViews) {
+			try {
+				const viewData = await getViewData(view.view_name);
+				const viewColumns = await getViewColumns(view.view_name);
+				compiledViews[view.view_name] = {
+					...viewData,
+					type: view.type,
+					definition: view.view_definition,
+					columns: viewColumns
+				};
+				totalViewsRows += viewData.rowCount;
+				console.log(`✅ ${view.view_name} (${view.type}): ${viewData.rowCount} lignes`);
+			} catch (error) {
+				console.error(`❌ Erreur ${view.view_name}:`, error.message);
+				viewsWithErrors++;
+			}
+		}
+
+		const tablesData = { tables: compiledTables };
+		const viewsData = { views: compiledViews };
 
 		const endTime = new Date();
 		const duration = endTime - startTime;
@@ -106,20 +157,14 @@ async function fetchCenovData() {
 			},
 			summary: {
 				tables: {
-					count: Object.keys(tablesData.tables || {}).length,
-					totalRows: Object.values(tablesData.tables || {}).reduce(
-						(sum, table) => sum + (table.rowCount || 0),
-						0
-					),
-					errors: Object.values(tablesData.tables || {}).filter((table) => table.error).length
+					count: tables.length,
+					totalRows: totalTablesRows,
+					errors: tablesWithErrors
 				},
 				views: {
-					count: Object.keys(viewsData.views || {}).length,
-					totalRows: Object.values(viewsData.views || {}).reduce(
-						(sum, view) => sum + (view.rowCount || 0),
-						0
-					),
-					errors: Object.values(viewsData.views || {}).filter((view) => view.error).length
+					count: allViews.length,
+					totalRows: totalViewsRows,
+					errors: viewsWithErrors
 				}
 			},
 			data: {
@@ -127,8 +172,8 @@ async function fetchCenovData() {
 				views: viewsData.views || {}
 			},
 			errors: {
-				tables: tablesData.error || null,
-				views: viewsData.error || null
+				tables: tablesWithErrors > 0 ? `${tablesWithErrors} tables avec erreurs` : null,
+				views: viewsWithErrors > 0 ? `${viewsWithErrors} vues avec erreurs` : null
 			}
 		};
 

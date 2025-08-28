@@ -114,7 +114,7 @@ async function fetchAllTables() {
 }
 
 // Exécution si le script est lancé directement
-if (import.meta.url.includes('fetch-all-tables.mjs')) {
+if (import.meta.url.includes('fetch-all-tables.mjs') && process.argv[1] && process.argv[1].includes('fetch-all-tables.mjs')) {
 	console.log('🚀 Démarrage du script de récupération des tables...');
 	fetchAllTables()
 		.then(() => {
