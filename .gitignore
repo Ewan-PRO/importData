@@ -27,4 +27,5 @@ vite.config.ts.timestamp-*
 static/Excel/
 
 # BDD-IA
-scripts/BDD-IA/output/
+scripts/BDD-IA/cenov/output/
+scripts/BDD-IA/cenov_dev_ewan/output/
