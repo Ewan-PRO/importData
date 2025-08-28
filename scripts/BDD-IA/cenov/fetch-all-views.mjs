@@ -14,9 +14,31 @@ import fs from 'fs/promises';
 import path from 'path';
 
 const prisma = new PrismaClient({
+	datasources: {
+		db: {
+			url: process.env.DATABASE_URL || process.env.CENOV_DATABASE_URL
+		}
+	},
 	log: ['error', 'warn'],
 	errorFormat: 'pretty'
 });
+
+/**
+ * Convertit les BigInt en Number pour éviter les erreurs de sérialisation JSON
+ */
+function convertBigIntToNumber(obj) {
+	if (obj === null || obj === undefined) return obj;
+	if (typeof obj === 'bigint') return Number(obj);
+	if (Array.isArray(obj)) return obj.map(convertBigIntToNumber);
+	if (typeof obj === 'object') {
+		const converted = {};
+		for (const [key, value] of Object.entries(obj)) {
+			converted[key] = convertBigIntToNumber(value);
+		}
+		return converted;
+	}
+	return obj;
+}
 
 /**
  * Récupère la liste de toutes les vues du schéma public
@@ -30,7 +52,7 @@ async function getAllViews() {
     WHERE table_schema = 'public'
     ORDER BY table_name
   `;
-	return result;
+	return convertBigIntToNumber(result);
 }
 
 /**
@@ -45,7 +67,7 @@ async function getAllMaterializedViews() {
     WHERE schemaname = 'public'
     ORDER BY matviewname
   `;
-	return result;
+	return convertBigIntToNumber(result);
 }
 
 /**
@@ -58,7 +80,7 @@ async function getViewData(viewName) {
 		return {
 			viewName,
 			rowCount: result.length,
-			data: result
+			data: convertBigIntToNumber(result)
 		};
 	} catch (error) {
 		console.error(`Erreur lors de la récupération de ${viewName}:`, error.message);
@@ -87,7 +109,7 @@ async function getViewColumns(viewName) {
       AND table_name = ${viewName}
       ORDER BY ordinal_position
     `;
-		return result;
+		return convertBigIntToNumber(result);
 	} catch (error) {
 		console.error(`Erreur lors de la récupération des colonnes de ${viewName}:`, error.message);
 		return [];

@@ -14,9 +14,31 @@ import fs from 'fs/promises';
 import path from 'path';
 
 const prisma = new PrismaClient({
+	datasources: {
+		db: {
+			url: process.env.DATABASE_URL || process.env.CENOV_DATABASE_URL
+		}
+	},
 	log: ['error', 'warn'],
 	errorFormat: 'pretty'
 });
+
+/**
+ * Convertit les BigInt en Number pour éviter les erreurs de sérialisation JSON
+ */
+function convertBigIntToNumber(obj) {
+	if (obj === null || obj === undefined) return obj;
+	if (typeof obj === 'bigint') return Number(obj);
+	if (Array.isArray(obj)) return obj.map(convertBigIntToNumber);
+	if (typeof obj === 'object') {
+		const converted = {};
+		for (const [key, value] of Object.entries(obj)) {
+			converted[key] = convertBigIntToNumber(value);
+		}
+		return converted;
+	}
+	return obj;
+}
 
 /**
  * Récupère la liste de toutes les tables du schéma public
@@ -29,7 +51,7 @@ async function getAllTables() {
     AND table_type = 'BASE TABLE'
     ORDER BY table_name
   `;
-	return result;
+	return convertBigIntToNumber(result);
 }
 
 /**
@@ -42,7 +64,7 @@ async function getTableData(tableName) {
 		return {
 			tableName,
 			rowCount: result.length,
-			data: result
+			data: convertBigIntToNumber(result)
 		};
 	} catch (error) {
 		console.error(`Erreur lors de la récupération de ${tableName}:`, error.message);
