@@ -106,7 +106,7 @@ async function fetchAllTables() {
 
 		const outputFile = path.join(
 			outputDir,
-			`tables-data-${new Date().toISOString().split('T')[0]}.json`
+			`cenov-tables-export-${new Date().toISOString().split('T')[0]}.json`
 		);
 		await fs.writeFile(outputFile, JSON.stringify(results, null, 2));
 
