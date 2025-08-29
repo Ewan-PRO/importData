@@ -1,0 +1,180 @@
+generator cenov_dev_ewan_client {
+  provider = "prisma-client-js"
+  output   = "../generated/cenov_dev_ewan"
+}
+
+datasource cenov_dev_ewan_db {
+  provider = "postgresql"
+  url      = env("CENOV_DEV_DATABASE_URL")
+  schemas  = ["produit", "public"]
+}
+
+model categorie {
+  cat_id             Int                                 @id @default(autoincrement())
+  fk_parent          Int?
+  cat_code           String?                             @cenov_dev_ewan_db.VarChar(60)
+  cat_label          String?                             @cenov_dev_ewan_db.VarChar(100)
+  categorie          categorie?                          @relation("categorieTocategorie", fields: [fk_parent], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_categorie_fk_parent_fkey")
+  other_categorie    categorie[]                         @relation("categorieTocategorie")
+  categorie_attribut categorie_attribut_cenov_dev_ewan[]
+  produit_categorie  produit_categorie_cenov_dev_ewan[]
+
+  @@unique([fk_parent, cat_code], map: "produit_categorie_prc_code_index")
+  @@schema("produit")
+}
+
+model categorie_attribut_cenov_dev_ewan {
+  fk_categorie Int
+  fk_attribute Int
+  attribut     attribut_cenov_dev_ewan @relation(fields: [fk_attribute], references: [atr_id], onDelete: NoAction, onUpdate: NoAction, map: "categorie_attribute_fk_attribute_fkey")
+  categorie    categorie               @relation(fields: [fk_categorie], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "categorie_attribute_fk_categorie_fkey")
+
+  @@id([fk_categorie, fk_attribute])
+  @@map("categorie_attribut")
+  @@schema("produit")
+}
+
+model cross_ref {
+  crf_id     Int
+  fk_produit Int
+  produit    produit @relation(fields: [fk_produit], references: [pro_id], onDelete: NoAction, onUpdate: NoAction, map: "cross_ref_produit_pro_id_fk")
+
+  @@id([crf_id, fk_produit])
+  @@schema("produit")
+}
+
+model famille {
+  fam_id        Int         @id(map: "produit_famille_pkey") @default(autoincrement())
+  fk_parent     Int?
+  fam_code      String?     @cenov_dev_ewan_db.VarChar(60)
+  fam_label     String?     @cenov_dev_ewan_db.VarChar(100)
+  fk_supplier   Int
+  fournisseur   fournisseur @relation(fields: [fk_supplier], references: [frs_id], onDelete: NoAction, onUpdate: NoAction, map: "famille_supplier_sup_id_fk")
+  famille       famille?    @relation("familleTofamille", fields: [fk_parent], references: [fam_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_famille_fk_parent_fkey")
+  other_famille famille[]   @relation("familleTofamille")
+
+  @@unique([fk_parent, fam_code], map: "produit_famille_prf_code_index")
+  @@schema("produit")
+}
+
+model produit {
+  pro_id            Int                                @id @default(autoincrement())
+  pro_code          String?                            @cenov_dev_ewan_db.VarChar(20)
+  fk_supplier       Int?
+  fk_kit            Int?
+  fk_famille        Int?
+  fk_sfamille       Int?
+  fk_ssfamille      Int?
+  created_at        DateTime?                          @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  updated_at        DateTime?                          @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  cross_ref         cross_ref[]
+  kit               kit_cenov_dev_ewan?                @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
+  fournisseur       fournisseur?                       @relation(fields: [fk_supplier], references: [frs_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_supplier_sup_id_fk")
+  produit_categorie produit_categorie_cenov_dev_ewan[]
+  tarif_achat       tarif_achat_cenov_dev_ewan[]
+
+  @@schema("produit")
+}
+
+model produit_categorie_cenov_dev_ewan {
+  fk_produit   Int
+  fk_categorie Int
+  categorie    categorie @relation(fields: [fk_categorie], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_categorie_categorie_prc_id_fk")
+  produit      produit   @relation(fields: [fk_produit], references: [pro_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_categorie_produit_pro_id_fk")
+
+  @@id([fk_produit, fk_categorie])
+  @@map("produit_categorie")
+  @@schema("produit")
+}
+
+model tarif_achat_cenov_dev_ewan {
+  fk_produit      Int
+  taa_date        DateTime @cenov_dev_ewan_db.Date
+  taa_montant     Float?
+  taa_remise      Float?
+  taa_montant_net Float?   @default(dbgenerated("(taa_montant * ((1)::double precision - (taa_remise / (100)::double precision)))"))
+  produit         produit  @relation(fields: [fk_produit], references: [pro_id], onDelete: NoAction, onUpdate: NoAction, map: "cross_ref_produit_pro_id_fk")
+
+  @@id([fk_produit, taa_date])
+  @@index([fk_produit, taa_date], map: "tarif_achat_taa_date_fk_produit_index")
+  @@map("tarif_achat")
+  @@schema("produit")
+}
+
+model attribut_cenov_dev_ewan {
+  atr_id                                                   Int                                 @id(map: "attribute_pkey") @default(autoincrement())
+  atr_nat                                                  String?                             @cenov_dev_ewan_db.VarChar(60)
+  atr_val                                                  String?                             @cenov_dev_ewan_db.VarChar(60)
+  atr_label                                                String?                             @cenov_dev_ewan_db.VarChar(100)
+  created_at                                               DateTime?                           @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  updated_at                                               DateTime?                           @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  categorie_attribut                                       categorie_attribut_cenov_dev_ewan[]
+  kit_attribute_kit_attribute_fk_attribute_caracToattribut kit_attribute_cenov_dev_ewan[]      @relation("kit_attribute_cenov_dev_ewan_fk_attribute_caracToattribut")
+  kit_attribute_kit_attribute_fk_attribute_unitToattribut  kit_attribute_cenov_dev_ewan[]      @relation("kit_attribute_cenov_dev_ewan_fk_attribute_unitToattribut")
+
+  @@unique([atr_nat, atr_val], map: "idx_attribute")
+  @@map("attribut")
+  @@schema("public")
+}
+
+model fournisseur {
+  frs_id    Int       @id(map: "supplier_pk") @default(autoincrement())
+  frs_code  String    @cenov_dev_ewan_db.VarChar(10)
+  frs_label String?   @cenov_dev_ewan_db.VarChar(70)
+  famille   famille[]
+  produit   produit[]
+
+  @@index([frs_code], map: "supplier_sup_code_index")
+  @@schema("public")
+}
+
+model kit_cenov_dev_ewan {
+  kit_id        Int                            @id @default(autoincrement())
+  kit_label     String?                        @cenov_dev_ewan_db.VarChar(100)
+  created_at    DateTime?                      @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  updated_at    DateTime?                      @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  produit       produit[]
+  kit_attribute kit_attribute_cenov_dev_ewan[]
+  part_nc       part_nc_cenov_dev_ewan[]
+
+  @@map("kit")
+  @@schema("public")
+}
+
+model kit_attribute_cenov_dev_ewan {
+  fk_kit                                              Int?
+  fk_attribute_carac                                  Int?
+  fk_attribute_unit                                   Int?
+  kat_valeur                                          String?                  @cenov_dev_ewan_db.VarChar(50)
+  created_at                                          DateTime?                @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  updated_at                                          DateTime?                @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  kat_id                                              Int                      @id @default(autoincrement())
+  attribut_kit_attribute_fk_attribute_caracToattribut attribut_cenov_dev_ewan? @relation("kit_attribute_cenov_dev_ewan_fk_attribute_caracToattribut", fields: [fk_attribute_carac], references: [atr_id], onDelete: NoAction, onUpdate: NoAction)
+  attribut_kit_attribute_fk_attribute_unitToattribut  attribut_cenov_dev_ewan? @relation("kit_attribute_cenov_dev_ewan_fk_attribute_unitToattribut", fields: [fk_attribute_unit], references: [atr_id], onDelete: Cascade, onUpdate: NoAction, map: "kit_attribute_fk_attribute_fkey")
+  kit                                                 kit_cenov_dev_ewan?      @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("kit_attribute")
+  @@schema("public")
+}
+
+model part_nc_cenov_dev_ewan {
+  par_id     Int                 @id(map: "part_pkey") @default(autoincrement())
+  fk_kit     Int?
+  par_label  String?             @cenov_dev_ewan_db.VarChar(100)
+  created_at DateTime?           @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  updated_at DateTime?           @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  kit        kit_cenov_dev_ewan? @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction, map: "part_fk_kit_fkey")
+
+  @@map("part_nc")
+  @@schema("public")
+}
+
+model famille_ewan {
+  fam_id      Int     @id
+  fk_parent   Int?
+  fam_code    String? @cenov_dev_ewan_db.VarChar(60)
+  fam_label   String? @cenov_dev_ewan_db.VarChar(100)
+  fk_supplier Int?
+
+  @@schema("produit")
+}

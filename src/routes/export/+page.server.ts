@@ -485,7 +485,10 @@ export const actions: Actions = {
 						data = await prisma.attribute_dev.findMany({ take: limit, orderBy: { atr_id: 'asc' } });
 						break;
 					case 'kit_attribute_dev':
-						data = await prisma.kit_attribute_dev.findMany({ take: limit, orderBy: { kat_id: 'asc' } });
+						data = await prisma.kit_attribute_dev.findMany({
+							take: limit,
+							orderBy: { kat_id: 'asc' }
+						});
 						break;
 					case 'kit_kit':
 						data = await prisma.kit_kit.findMany({ take: limit, orderBy: { kik_id: 'asc' } });
@@ -509,7 +512,10 @@ export const actions: Actions = {
 						data = await prisma.v_kit_carac_dev.findMany({ take: limit, orderBy: { id: 'asc' } });
 						break;
 					case 'v_categories_dev':
-						data = await prisma.v_categories_dev.findMany({ take: limit, orderBy: { row_key: 'asc' } });
+						data = await prisma.v_categories_dev.findMany({
+							take: limit,
+							orderBy: { row_key: 'asc' }
+						});
 						break;
 				}
 

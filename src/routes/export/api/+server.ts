@@ -18,48 +18,46 @@ interface ExportData {
 // Fonction pour générer un nom de fichier intelligent
 function generateFileName(selectedTables: string[], format: string): string {
 	let tablePart: string;
-	
+
 	// Simplification des noms de tables
 	const simplifyTableName = (tableName: string): string => {
 		const aliases: Record<string, string> = {
 			// Tables principales
-			'kit': 'kit',
-			'part': 'part',
-			'attribute': 'attr',
-			'kit_attribute': 'kit-attr',
-			'kit_kit': 'kit-kit',
-			'document': 'doc',
-			'kit_document': 'kit-doc',
-			'supplier': 'supplier',
+			kit: 'kit',
+			part: 'part',
+			attribute: 'attr',
+			kit_attribute: 'kit-attr',
+			kit_kit: 'kit-kit',
+			document: 'doc',
+			kit_document: 'kit-doc',
+			supplier: 'supplier',
 			// Tables dev
-			'kit_dev': 'kit-dev',
-			'attribute_dev': 'attr-dev',
-			'kit_attribute_dev': 'kit-attr-dev',
-			'supplier_dev': 'supplier-dev',
+			kit_dev: 'kit-dev',
+			attribute_dev: 'attr-dev',
+			kit_attribute_dev: 'kit-attr-dev',
+			supplier_dev: 'supplier-dev',
 			// Vues
-			'v_kit_carac': 'kit-carac',
-			'v_categories': 'categories',
-			'v_kit_carac_dev': 'kit-carac-dev',
-			'v_categories_dev': 'categories-dev'
+			v_kit_carac: 'kit-carac',
+			v_categories: 'categories',
+			v_kit_carac_dev: 'kit-carac-dev',
+			v_categories_dev: 'categories-dev'
 		};
 		return aliases[tableName] || tableName;
 	};
-	
+
 	// Nombre total de tables disponibles (approximation basée sur le code existant)
 	const totalAvailableTables = 16;
-	
+
 	if (selectedTables.length === totalAvailableTables) {
 		tablePart = 'complet';
 	} else if (selectedTables.length === 1) {
 		tablePart = simplifyTableName(selectedTables[0]);
 	} else if (selectedTables.length <= 3) {
-		tablePart = selectedTables
-			.map(simplifyTableName)
-			.join('-');
+		tablePart = selectedTables.map(simplifyTableName).join('-');
 	} else {
 		tablePart = `${selectedTables.length}tables`;
 	}
-	
+
 	return `cenov_${tablePart}.${format}`;
 }
 
@@ -602,7 +600,10 @@ async function generateExcelFile(
 	// Génération du buffer
 	const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 
-	const fileName = generateFileName(exportDataList.map(d => d.tableName), 'xlsx');
+	const fileName = generateFileName(
+		exportDataList.map((d) => d.tableName),
+		'xlsx'
+	);
 
 	return {
 		buffer: Buffer.from(buffer),
@@ -665,7 +666,10 @@ async function generateCSVFile(
 	}
 
 	const buffer = Buffer.from(csvContent, 'utf-8');
-	const fileName = generateFileName(exportDataList.map(d => d.tableName), 'csv');
+	const fileName = generateFileName(
+		exportDataList.map((d) => d.tableName),
+		'csv'
+	);
 
 	return {
 		buffer,
@@ -674,7 +678,6 @@ async function generateCSVFile(
 		size: buffer.length
 	};
 }
-
 
 // Génération d'un fichier XML
 async function generateXMLFile(exportDataList: ExportData[]): Promise<ExportFile> {
@@ -722,7 +725,10 @@ async function generateXMLFile(exportDataList: ExportData[]): Promise<ExportFile
 
 	const xmlContent = '<?xml version="1.0" encoding="UTF-8"?>\n' + builder.build(xmlData);
 	const buffer = Buffer.from(xmlContent, 'utf-8');
-	const fileName = generateFileName(exportDataList.map(d => d.tableName), 'xml');
+	const fileName = generateFileName(
+		exportDataList.map((d) => d.tableName),
+		'xml'
+	);
 
 	return {
 		buffer,
