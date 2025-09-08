@@ -1,6 +1,7 @@
 generator cenov_dev_ewan_client {
-  provider = "prisma-client-js"
-  output   = "../generated/cenov_dev_ewan"
+  provider        = "prisma-client-js"
+  output          = "../generated/cenov_dev_ewan"
+  previewFeatures = ["views"]
 }
 
 datasource cenov_dev_ewan_db {
@@ -177,4 +178,66 @@ model famille_ewan {
   fk_supplier Int?
 
   @@schema("produit")
+}
+
+view v_tarif_achat {
+  fk_produit      Int?
+  taa_date        DateTime? @cenov_dev_ewan_db.Date
+  taa_montant     Float?
+  taa_remise      Float?
+  taa_montant_net Float?
+
+  @@schema("produit")
+}
+
+view produit_v_produit_categorie_attribut {
+  pro_id    Int?
+  kit_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_id    Int?
+  atr_label String? @cenov_dev_ewan_db.VarChar(100)
+  cat_label String? @cenov_dev_ewan_db.VarChar(100)
+
+  @@map("v_produit_categorie_attribut")
+  @@schema("produit")
+}
+
+view public_v_produit_categorie_attribut {
+  pro_id    Int?
+  kit_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_id    Int?
+  atr_label String? @cenov_dev_ewan_db.VarChar(100)
+  cat_label String? @cenov_dev_ewan_db.VarChar(100)
+
+  @@map("v_produit_categorie_attribut")
+  @@schema("public")
+}
+
+view v_categorie {
+  atr_0_id    Int?
+  atr_0_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_1_id    Int?
+  atr_1_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_2_id    Int?
+  atr_2_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_3_id    Int?
+  atr_3_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_4_id    Int?
+  atr_4_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_5_id    Int?
+  atr_5_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_6_id    Int?
+  atr_6_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_7_id    Int?
+  atr_7_label String? @cenov_dev_ewan_db.VarChar(100)
+
+  @@schema("public")
+}
+
+view v_kit_caracteristique {
+  kit_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_label String? @cenov_dev_ewan_db.VarChar(100)
+  valeur    String? @cenov_dev_ewan_db.VarChar(50)
+  unit      String? @cenov_dev_ewan_db.VarChar(60)
+
+  @@schema("public")
 }

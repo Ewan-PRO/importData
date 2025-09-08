@@ -36,12 +36,46 @@ pnpm test         # Run tests once
 
 **Database operations:**
 
+**CENOV Database (Main - Production):**
 ```bash
-pnpm prisma:generate  # Generate Prisma client
-pnpm prisma:migrate   # Run database migrations
-pnpm prisma:studio    # Open Prisma Studio
-pnpm prisma:push      # Push schema to database
-pnpm prisma:pull      # Pull schema from database
+pnpm prisma:generate                        # Generate Prisma client (cenov)
+pnpm prisma:migrate                        # Run database migrations (cenov)
+pnpm prisma:studio                         # Open Prisma Studio (cenov)
+pnpm prisma:push                          # Push schema to database (cenov)
+pnpm prisma:pull                          # Pull schema from database (cenov)
+```
+
+**CENOV_DEV_EWAN Database (Development):**
+```bash
+pnpm prisma:generate-dev                   # Generate Prisma client (cenov_dev_ewan)
+pnpm prisma:migrate-dev                    # Run database migrations (cenov_dev_ewan)
+pnpm prisma:studio-dev                     # Open Prisma Studio (cenov_dev_ewan)
+pnpm prisma:push-dev                       # Push schema to database (cenov_dev_ewan)
+pnpm prisma:pull-dev                       # Pull schema from database (cenov_dev_ewan)
+```
+
+**Generate both clients:**
+```bash
+pnpm prisma:generate-all                   # Generate both clients (runs automatically on pnpm install)
+```
+
+**Manual commands (if needed):**
+```bash
+# CENOV:
+npx prisma generate --schema prisma/schema.prisma
+npx prisma migrate dev --schema prisma/schema.prisma
+npx prisma migrate deploy --schema prisma/schema.prisma
+npx prisma db push --schema prisma/schema.prisma
+npx prisma db pull --schema prisma/schema.prisma
+npx prisma studio --schema prisma/schema.prisma
+
+# CENOV_DEV_EWAN:
+npx prisma generate --schema prisma/cenov_dev_ewan/schema.prisma
+npx prisma migrate dev --schema prisma/cenov_dev_ewan/schema.prisma
+npx prisma migrate deploy --schema prisma/cenov_dev_ewan/schema.prisma
+npx prisma db push --schema prisma/cenov_dev_ewan/schema.prisma  
+npx prisma db pull --schema prisma/cenov_dev_ewan/schema.prisma
+npx prisma studio --schema prisma/cenov_dev_ewan/schema.prisma
 ```
 
 **Installing dependencies:**
@@ -75,15 +109,44 @@ _Exports all Cenov database data in read-only mode to JSON files in `scripts/BDD
 
 ### Database Design
 
-The application manages a hierarchical kit and parts system with:
+**Dual Database Architecture:**
 
-- **Kits:** Main entities that can contain parts and other kits (kit_kit relationships)
-- **Attributes:** Key-value pairs with characteristics (attribute table)
-- **Parts:** Components belonging to kits
-- **Documents:** File attachments for kits
-- **Views:** Materialized views for categories (v_categories, v_kit_carac) with dev variants
+The application uses **TWO separate databases**:
+
+1. **CENOV Database** (`DATABASE_URL`) - Main production database
+   - Primary kit and parts management system
+   - Tables: attribute, document, kit, kit_attribute, kit_document, kit_kit, part, supplier
+   - Views: v_categories, v_kit_carac with dev variants
+
+2. **CENOV_DEV_EWAN Database** (`CENOV_DEV_DATABASE_URL`) - Extended development database  
+   - Product catalog and supplier management
+   - Schemas: `produit` and `public`  
+   - Tables: categorie, famille, produit, fournisseur, kit, attribut, etc.
+   - Views: v_produit_categorie_attribut, v_tarif_achat, mv_categorie
 
 **Database Export:** Complete Cenov database data (12 tables, 4 views) available as JSON files in `scripts/BDD-IA/output/` for AI analysis and consultation.
+
+### Prisma Client Usage
+
+**Import the correct client:**
+```typescript
+// For CENOV database (main):
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+// For CENOV_DEV_EWAN database:
+import { PrismaClient as CenovDevPrismaClient } from '../../prisma/generated/cenov_dev_ewan';
+const cenovDevPrisma = new CenovDevPrismaClient();
+
+// Usage examples:
+const kits = await prisma.kit.findMany();           // CENOV database
+const products = await cenovDevPrisma.produit.findMany();  // CENOV_DEV_EWAN database
+```
+
+**Database Connection Management:**
+- CENOV: Standard Prisma client for main operations
+- CENOV_DEV_EWAN: Separate client for product catalog features
+- Both databases can be used simultaneously in the same application
 
 ### Key Files Structure
 
@@ -94,10 +157,31 @@ The application manages a hierarchical kit and parts system with:
 
 ### Prisma Workflow
 
-Standard Prisma workflow:
+**Dual Schema Workflow:**
 
+**For CENOV Database (main):**
 1. Edit `prisma/schema.prisma`
-2. Run Prisma commands directly on the main schema
+2. Run: `npx prisma generate --schema prisma/schema.prisma`
+3. Run: `npx prisma db push --schema prisma/schema.prisma` (or migrate)
+
+**For CENOV_DEV_EWAN Database:**
+1. Edit `prisma/cenov_dev_ewan/schema.prisma`  
+2. Run: `npx prisma generate --schema prisma/cenov_dev_ewan/schema.prisma`
+3. Run: `npx prisma db push --schema prisma/cenov_dev_ewan/schema.prisma` (or migrate)
+
+**⚠️ Common Issues & Solutions:**
+
+- **"Model already exists" error:** Always specify `--schema` flag to avoid conflicts
+- **Generation conflicts:** Never run `prisma generate` without `--schema` flag
+- **Wrong client imported:** Check import paths - use generated clients from correct output directories
+
+**Quick fixes:**
+```bash
+# Clear and regenerate both clients:
+rm -rf prisma/generated/ node_modules/.prisma/
+npx prisma generate --schema prisma/schema.prisma
+npx prisma generate --schema prisma/cenov_dev_ewan/schema.prisma
+```
 
 ### Authentication
 

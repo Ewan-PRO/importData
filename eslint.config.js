@@ -17,6 +17,9 @@ export default ts.config(
 	prettier,
 	...svelte.configs.prettier,
 	{
+		ignores: ['prisma/generated/**/*']
+	},
+	{
 		languageOptions: {
 			globals: { ...globals.browser, ...globals.node }
 		},
@@ -24,7 +27,7 @@ export default ts.config(
 	},
 	{
 		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
-		ignores: ['eslint.config.js', 'svelte.config.js'],
+		ignores: ['eslint.config.js', 'svelte.config.js', 'prisma/generated/**/*'],
 		languageOptions: {
 			parserOptions: {
 				projectService: true,

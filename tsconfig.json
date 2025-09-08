@@ -11,5 +11,8 @@
 		"strict": true,
 		"module": "es2020",
 		"moduleResolution": "bundler"
-	}
+	},
+	"exclude": [
+		"prisma/generated/**/*"
+	]
 }

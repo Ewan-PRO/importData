@@ -78,6 +78,31 @@ export type part_nc_cenov_dev_ewan = $Result.DefaultSelection<Prisma.$part_nc_ce
  * 
  */
 export type famille_ewan = $Result.DefaultSelection<Prisma.$famille_ewanPayload>
+/**
+ * Model v_tarif_achat
+ * 
+ */
+export type v_tarif_achat = $Result.DefaultSelection<Prisma.$v_tarif_achatPayload>
+/**
+ * Model produit_v_produit_categorie_attribut
+ * 
+ */
+export type produit_v_produit_categorie_attribut = $Result.DefaultSelection<Prisma.$produit_v_produit_categorie_attributPayload>
+/**
+ * Model public_v_produit_categorie_attribut
+ * 
+ */
+export type public_v_produit_categorie_attribut = $Result.DefaultSelection<Prisma.$public_v_produit_categorie_attributPayload>
+/**
+ * Model v_categorie
+ * 
+ */
+export type v_categorie = $Result.DefaultSelection<Prisma.$v_categoriePayload>
+/**
+ * Model v_kit_caracteristique
+ * 
+ */
+export type v_kit_caracteristique = $Result.DefaultSelection<Prisma.$v_kit_caracteristiquePayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -326,6 +351,56 @@ export class PrismaClient<
     * ```
     */
   get famille_ewan(): Prisma.famille_ewanDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.v_tarif_achat`: Exposes CRUD operations for the **v_tarif_achat** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more V_tarif_achats
+    * const v_tarif_achats = await prisma.v_tarif_achat.findMany()
+    * ```
+    */
+  get v_tarif_achat(): Prisma.v_tarif_achatDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.produit_v_produit_categorie_attribut`: Exposes CRUD operations for the **produit_v_produit_categorie_attribut** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Produit_v_produit_categorie_attributs
+    * const produit_v_produit_categorie_attributs = await prisma.produit_v_produit_categorie_attribut.findMany()
+    * ```
+    */
+  get produit_v_produit_categorie_attribut(): Prisma.produit_v_produit_categorie_attributDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.public_v_produit_categorie_attribut`: Exposes CRUD operations for the **public_v_produit_categorie_attribut** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Public_v_produit_categorie_attributs
+    * const public_v_produit_categorie_attributs = await prisma.public_v_produit_categorie_attribut.findMany()
+    * ```
+    */
+  get public_v_produit_categorie_attribut(): Prisma.public_v_produit_categorie_attributDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.v_categorie`: Exposes CRUD operations for the **v_categorie** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more V_categories
+    * const v_categories = await prisma.v_categorie.findMany()
+    * ```
+    */
+  get v_categorie(): Prisma.v_categorieDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.v_kit_caracteristique`: Exposes CRUD operations for the **v_kit_caracteristique** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more V_kit_caracteristiques
+    * const v_kit_caracteristiques = await prisma.v_kit_caracteristique.findMany()
+    * ```
+    */
+  get v_kit_caracteristique(): Prisma.v_kit_caracteristiqueDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -384,8 +459,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 6.14.0
-   * Query Engine version: 717184b7b35ea05dfa71a3236b7af656013e1e49
+   * Prisma Client JS version: 6.15.0
+   * Query Engine version: 85179d7826409ee107a6ba334b5e305ae3fba9fb
    */
   export type PrismaVersion = {
     client: string
@@ -778,7 +853,12 @@ export namespace Prisma {
     kit_cenov_dev_ewan: 'kit_cenov_dev_ewan',
     kit_attribute_cenov_dev_ewan: 'kit_attribute_cenov_dev_ewan',
     part_nc_cenov_dev_ewan: 'part_nc_cenov_dev_ewan',
-    famille_ewan: 'famille_ewan'
+    famille_ewan: 'famille_ewan',
+    v_tarif_achat: 'v_tarif_achat',
+    produit_v_produit_categorie_attribut: 'produit_v_produit_categorie_attribut',
+    public_v_produit_categorie_attribut: 'public_v_produit_categorie_attribut',
+    v_categorie: 'v_categorie',
+    v_kit_caracteristique: 'v_kit_caracteristique'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -797,7 +877,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "categorie" | "categorie_attribut_cenov_dev_ewan" | "cross_ref" | "famille" | "produit" | "produit_categorie_cenov_dev_ewan" | "tarif_achat_cenov_dev_ewan" | "attribut_cenov_dev_ewan" | "fournisseur" | "kit_cenov_dev_ewan" | "kit_attribute_cenov_dev_ewan" | "part_nc_cenov_dev_ewan" | "famille_ewan"
+      modelProps: "categorie" | "categorie_attribut_cenov_dev_ewan" | "cross_ref" | "famille" | "produit" | "produit_categorie_cenov_dev_ewan" | "tarif_achat_cenov_dev_ewan" | "attribut_cenov_dev_ewan" | "fournisseur" | "kit_cenov_dev_ewan" | "kit_attribute_cenov_dev_ewan" | "part_nc_cenov_dev_ewan" | "famille_ewan" | "v_tarif_achat" | "produit_v_produit_categorie_attribut" | "public_v_produit_categorie_attribut" | "v_categorie" | "v_kit_caracteristique"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1763,6 +1843,156 @@ export namespace Prisma {
           }
         }
       }
+      v_tarif_achat: {
+        payload: Prisma.$v_tarif_achatPayload<ExtArgs>
+        fields: Prisma.v_tarif_achatFieldRefs
+        operations: {
+          findFirst: {
+            args: Prisma.v_tarif_achatFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$v_tarif_achatPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.v_tarif_achatFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$v_tarif_achatPayload>
+          }
+          findMany: {
+            args: Prisma.v_tarif_achatFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$v_tarif_achatPayload>[]
+          }
+          aggregate: {
+            args: Prisma.V_tarif_achatAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateV_tarif_achat>
+          }
+          groupBy: {
+            args: Prisma.v_tarif_achatGroupByArgs<ExtArgs>
+            result: $Utils.Optional<V_tarif_achatGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.v_tarif_achatCountArgs<ExtArgs>
+            result: $Utils.Optional<V_tarif_achatCountAggregateOutputType> | number
+          }
+        }
+      }
+      produit_v_produit_categorie_attribut: {
+        payload: Prisma.$produit_v_produit_categorie_attributPayload<ExtArgs>
+        fields: Prisma.produit_v_produit_categorie_attributFieldRefs
+        operations: {
+          findFirst: {
+            args: Prisma.produit_v_produit_categorie_attributFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$produit_v_produit_categorie_attributPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.produit_v_produit_categorie_attributFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$produit_v_produit_categorie_attributPayload>
+          }
+          findMany: {
+            args: Prisma.produit_v_produit_categorie_attributFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$produit_v_produit_categorie_attributPayload>[]
+          }
+          aggregate: {
+            args: Prisma.Produit_v_produit_categorie_attributAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateProduit_v_produit_categorie_attribut>
+          }
+          groupBy: {
+            args: Prisma.produit_v_produit_categorie_attributGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Produit_v_produit_categorie_attributGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.produit_v_produit_categorie_attributCountArgs<ExtArgs>
+            result: $Utils.Optional<Produit_v_produit_categorie_attributCountAggregateOutputType> | number
+          }
+        }
+      }
+      public_v_produit_categorie_attribut: {
+        payload: Prisma.$public_v_produit_categorie_attributPayload<ExtArgs>
+        fields: Prisma.public_v_produit_categorie_attributFieldRefs
+        operations: {
+          findFirst: {
+            args: Prisma.public_v_produit_categorie_attributFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$public_v_produit_categorie_attributPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.public_v_produit_categorie_attributFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$public_v_produit_categorie_attributPayload>
+          }
+          findMany: {
+            args: Prisma.public_v_produit_categorie_attributFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$public_v_produit_categorie_attributPayload>[]
+          }
+          aggregate: {
+            args: Prisma.Public_v_produit_categorie_attributAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePublic_v_produit_categorie_attribut>
+          }
+          groupBy: {
+            args: Prisma.public_v_produit_categorie_attributGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Public_v_produit_categorie_attributGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.public_v_produit_categorie_attributCountArgs<ExtArgs>
+            result: $Utils.Optional<Public_v_produit_categorie_attributCountAggregateOutputType> | number
+          }
+        }
+      }
+      v_categorie: {
+        payload: Prisma.$v_categoriePayload<ExtArgs>
+        fields: Prisma.v_categorieFieldRefs
+        operations: {
+          findFirst: {
+            args: Prisma.v_categorieFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$v_categoriePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.v_categorieFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$v_categoriePayload>
+          }
+          findMany: {
+            args: Prisma.v_categorieFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$v_categoriePayload>[]
+          }
+          aggregate: {
+            args: Prisma.V_categorieAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateV_categorie>
+          }
+          groupBy: {
+            args: Prisma.v_categorieGroupByArgs<ExtArgs>
+            result: $Utils.Optional<V_categorieGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.v_categorieCountArgs<ExtArgs>
+            result: $Utils.Optional<V_categorieCountAggregateOutputType> | number
+          }
+        }
+      }
+      v_kit_caracteristique: {
+        payload: Prisma.$v_kit_caracteristiquePayload<ExtArgs>
+        fields: Prisma.v_kit_caracteristiqueFieldRefs
+        operations: {
+          findFirst: {
+            args: Prisma.v_kit_caracteristiqueFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$v_kit_caracteristiquePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.v_kit_caracteristiqueFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$v_kit_caracteristiquePayload>
+          }
+          findMany: {
+            args: Prisma.v_kit_caracteristiqueFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$v_kit_caracteristiquePayload>[]
+          }
+          aggregate: {
+            args: Prisma.V_kit_caracteristiqueAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateV_kit_caracteristique>
+          }
+          groupBy: {
+            args: Prisma.v_kit_caracteristiqueGroupByArgs<ExtArgs>
+            result: $Utils.Optional<V_kit_caracteristiqueGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.v_kit_caracteristiqueCountArgs<ExtArgs>
+            result: $Utils.Optional<V_kit_caracteristiqueCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1868,6 +2098,11 @@ export namespace Prisma {
     kit_attribute_cenov_dev_ewan?: kit_attribute_cenov_dev_ewanOmit
     part_nc_cenov_dev_ewan?: part_nc_cenov_dev_ewanOmit
     famille_ewan?: famille_ewanOmit
+    v_tarif_achat?: v_tarif_achatOmit
+    produit_v_produit_categorie_attribut?: produit_v_produit_categorie_attributOmit
+    public_v_produit_categorie_attribut?: public_v_produit_categorie_attributOmit
+    v_categorie?: v_categorieOmit
+    v_kit_caracteristique?: v_kit_caracteristiqueOmit
   }
 
   /* Types for Logging */
@@ -16928,6 +17163,3145 @@ export namespace Prisma {
 
 
   /**
+   * Model v_tarif_achat
+   */
+
+  export type AggregateV_tarif_achat = {
+    _count: V_tarif_achatCountAggregateOutputType | null
+    _avg: V_tarif_achatAvgAggregateOutputType | null
+    _sum: V_tarif_achatSumAggregateOutputType | null
+    _min: V_tarif_achatMinAggregateOutputType | null
+    _max: V_tarif_achatMaxAggregateOutputType | null
+  }
+
+  export type V_tarif_achatAvgAggregateOutputType = {
+    fk_produit: number | null
+    taa_montant: number | null
+    taa_remise: number | null
+    taa_montant_net: number | null
+  }
+
+  export type V_tarif_achatSumAggregateOutputType = {
+    fk_produit: number | null
+    taa_montant: number | null
+    taa_remise: number | null
+    taa_montant_net: number | null
+  }
+
+  export type V_tarif_achatMinAggregateOutputType = {
+    fk_produit: number | null
+    taa_date: Date | null
+    taa_montant: number | null
+    taa_remise: number | null
+    taa_montant_net: number | null
+  }
+
+  export type V_tarif_achatMaxAggregateOutputType = {
+    fk_produit: number | null
+    taa_date: Date | null
+    taa_montant: number | null
+    taa_remise: number | null
+    taa_montant_net: number | null
+  }
+
+  export type V_tarif_achatCountAggregateOutputType = {
+    fk_produit: number
+    taa_date: number
+    taa_montant: number
+    taa_remise: number
+    taa_montant_net: number
+    _all: number
+  }
+
+
+  export type V_tarif_achatAvgAggregateInputType = {
+    fk_produit?: true
+    taa_montant?: true
+    taa_remise?: true
+    taa_montant_net?: true
+  }
+
+  export type V_tarif_achatSumAggregateInputType = {
+    fk_produit?: true
+    taa_montant?: true
+    taa_remise?: true
+    taa_montant_net?: true
+  }
+
+  export type V_tarif_achatMinAggregateInputType = {
+    fk_produit?: true
+    taa_date?: true
+    taa_montant?: true
+    taa_remise?: true
+    taa_montant_net?: true
+  }
+
+  export type V_tarif_achatMaxAggregateInputType = {
+    fk_produit?: true
+    taa_date?: true
+    taa_montant?: true
+    taa_remise?: true
+    taa_montant_net?: true
+  }
+
+  export type V_tarif_achatCountAggregateInputType = {
+    fk_produit?: true
+    taa_date?: true
+    taa_montant?: true
+    taa_remise?: true
+    taa_montant_net?: true
+    _all?: true
+  }
+
+  export type V_tarif_achatAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which v_tarif_achat to aggregate.
+     */
+    where?: v_tarif_achatWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of v_tarif_achats to fetch.
+     */
+    orderBy?: v_tarif_achatOrderByWithRelationInput | v_tarif_achatOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` v_tarif_achats from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` v_tarif_achats.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned v_tarif_achats
+    **/
+    _count?: true | V_tarif_achatCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: V_tarif_achatAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: V_tarif_achatSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: V_tarif_achatMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: V_tarif_achatMaxAggregateInputType
+  }
+
+  export type GetV_tarif_achatAggregateType<T extends V_tarif_achatAggregateArgs> = {
+        [P in keyof T & keyof AggregateV_tarif_achat]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateV_tarif_achat[P]>
+      : GetScalarType<T[P], AggregateV_tarif_achat[P]>
+  }
+
+
+
+
+  export type v_tarif_achatGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: v_tarif_achatWhereInput
+    orderBy?: v_tarif_achatOrderByWithAggregationInput | v_tarif_achatOrderByWithAggregationInput[]
+    by: V_tarif_achatScalarFieldEnum[] | V_tarif_achatScalarFieldEnum
+    having?: v_tarif_achatScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: V_tarif_achatCountAggregateInputType | true
+    _avg?: V_tarif_achatAvgAggregateInputType
+    _sum?: V_tarif_achatSumAggregateInputType
+    _min?: V_tarif_achatMinAggregateInputType
+    _max?: V_tarif_achatMaxAggregateInputType
+  }
+
+  export type V_tarif_achatGroupByOutputType = {
+    fk_produit: number | null
+    taa_date: Date | null
+    taa_montant: number | null
+    taa_remise: number | null
+    taa_montant_net: number | null
+    _count: V_tarif_achatCountAggregateOutputType | null
+    _avg: V_tarif_achatAvgAggregateOutputType | null
+    _sum: V_tarif_achatSumAggregateOutputType | null
+    _min: V_tarif_achatMinAggregateOutputType | null
+    _max: V_tarif_achatMaxAggregateOutputType | null
+  }
+
+  type GetV_tarif_achatGroupByPayload<T extends v_tarif_achatGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<V_tarif_achatGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof V_tarif_achatGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], V_tarif_achatGroupByOutputType[P]>
+            : GetScalarType<T[P], V_tarif_achatGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type v_tarif_achatSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    fk_produit?: boolean
+    taa_date?: boolean
+    taa_montant?: boolean
+    taa_remise?: boolean
+    taa_montant_net?: boolean
+  }, ExtArgs["result"]["v_tarif_achat"]>
+
+
+
+  export type v_tarif_achatSelectScalar = {
+    fk_produit?: boolean
+    taa_date?: boolean
+    taa_montant?: boolean
+    taa_remise?: boolean
+    taa_montant_net?: boolean
+  }
+
+  export type v_tarif_achatOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"fk_produit" | "taa_date" | "taa_montant" | "taa_remise" | "taa_montant_net", ExtArgs["result"]["v_tarif_achat"]>
+
+  export type $v_tarif_achatPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "v_tarif_achat"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      fk_produit: number | null
+      taa_date: Date | null
+      taa_montant: number | null
+      taa_remise: number | null
+      taa_montant_net: number | null
+    }, ExtArgs["result"]["v_tarif_achat"]>
+    composites: {}
+  }
+
+  type v_tarif_achatGetPayload<S extends boolean | null | undefined | v_tarif_achatDefaultArgs> = $Result.GetResult<Prisma.$v_tarif_achatPayload, S>
+
+  type v_tarif_achatCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<v_tarif_achatFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: V_tarif_achatCountAggregateInputType | true
+    }
+
+  export interface v_tarif_achatDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['v_tarif_achat'], meta: { name: 'v_tarif_achat' } }
+    /**
+     * Find the first V_tarif_achat that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_tarif_achatFindFirstArgs} args - Arguments to find a V_tarif_achat
+     * @example
+     * // Get one V_tarif_achat
+     * const v_tarif_achat = await prisma.v_tarif_achat.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends v_tarif_achatFindFirstArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, v_tarif_achatFindFirstArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma__v_tarif_achatClient<$Result.GetResult<Prisma.$v_tarif_achatPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first V_tarif_achat that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_tarif_achatFindFirstOrThrowArgs} args - Arguments to find a V_tarif_achat
+     * @example
+     * // Get one V_tarif_achat
+     * const v_tarif_achat = await prisma.v_tarif_achat.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends v_tarif_achatFindFirstOrThrowArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, v_tarif_achatFindFirstOrThrowArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma__v_tarif_achatClient<$Result.GetResult<Prisma.$v_tarif_achatPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more V_tarif_achats that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_tarif_achatFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all V_tarif_achats
+     * const v_tarif_achats = await prisma.v_tarif_achat.findMany()
+     * 
+     * // Get first 10 V_tarif_achats
+     * const v_tarif_achats = await prisma.v_tarif_achat.findMany({ take: 10 })
+     * 
+     * // Only select the `fk_produit`
+     * const v_tarif_achatWithFk_produitOnly = await prisma.v_tarif_achat.findMany({ select: { fk_produit: true } })
+     * 
+     */
+    findMany<T extends v_tarif_achatFindManyArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, v_tarif_achatFindManyArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma.PrismaPromise<$Result.GetResult<Prisma.$v_tarif_achatPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of V_tarif_achats.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_tarif_achatCountArgs} args - Arguments to filter V_tarif_achats to count.
+     * @example
+     * // Count the number of V_tarif_achats
+     * const count = await prisma.v_tarif_achat.count({
+     *   where: {
+     *     // ... the filter for the V_tarif_achats we want to count
+     *   }
+     * })
+    **/
+    count<T extends v_tarif_achatCountArgs>(
+      args?: Subset<T, v_tarif_achatCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], V_tarif_achatCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a V_tarif_achat.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {V_tarif_achatAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends V_tarif_achatAggregateArgs>(args: Subset<T, V_tarif_achatAggregateArgs>): Prisma.PrismaPromise<GetV_tarif_achatAggregateType<T>>
+
+    /**
+     * Group by V_tarif_achat.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_tarif_achatGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends v_tarif_achatGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: v_tarif_achatGroupByArgs['orderBy'] }
+        : { orderBy?: v_tarif_achatGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, v_tarif_achatGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetV_tarif_achatGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the v_tarif_achat model
+   */
+  readonly fields: v_tarif_achatFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for v_tarif_achat.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__v_tarif_achatClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the v_tarif_achat model
+   */
+  interface v_tarif_achatFieldRefs {
+    readonly fk_produit: FieldRef<"v_tarif_achat", 'Int'>
+    readonly taa_date: FieldRef<"v_tarif_achat", 'DateTime'>
+    readonly taa_montant: FieldRef<"v_tarif_achat", 'Float'>
+    readonly taa_remise: FieldRef<"v_tarif_achat", 'Float'>
+    readonly taa_montant_net: FieldRef<"v_tarif_achat", 'Float'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * v_tarif_achat findFirst
+   */
+  export type v_tarif_achatFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the v_tarif_achat
+     */
+    select?: v_tarif_achatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the v_tarif_achat
+     */
+    omit?: v_tarif_achatOmit<ExtArgs> | null
+    /**
+     * Filter, which v_tarif_achat to fetch.
+     */
+    where?: v_tarif_achatWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of v_tarif_achats to fetch.
+     */
+    orderBy?: v_tarif_achatOrderByWithRelationInput | v_tarif_achatOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` v_tarif_achats from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` v_tarif_achats.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of v_tarif_achats.
+     */
+    distinct?: V_tarif_achatScalarFieldEnum | V_tarif_achatScalarFieldEnum[]
+  }
+
+  /**
+   * v_tarif_achat findFirstOrThrow
+   */
+  export type v_tarif_achatFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the v_tarif_achat
+     */
+    select?: v_tarif_achatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the v_tarif_achat
+     */
+    omit?: v_tarif_achatOmit<ExtArgs> | null
+    /**
+     * Filter, which v_tarif_achat to fetch.
+     */
+    where?: v_tarif_achatWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of v_tarif_achats to fetch.
+     */
+    orderBy?: v_tarif_achatOrderByWithRelationInput | v_tarif_achatOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` v_tarif_achats from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` v_tarif_achats.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of v_tarif_achats.
+     */
+    distinct?: V_tarif_achatScalarFieldEnum | V_tarif_achatScalarFieldEnum[]
+  }
+
+  /**
+   * v_tarif_achat findMany
+   */
+  export type v_tarif_achatFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the v_tarif_achat
+     */
+    select?: v_tarif_achatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the v_tarif_achat
+     */
+    omit?: v_tarif_achatOmit<ExtArgs> | null
+    /**
+     * Filter, which v_tarif_achats to fetch.
+     */
+    where?: v_tarif_achatWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of v_tarif_achats to fetch.
+     */
+    orderBy?: v_tarif_achatOrderByWithRelationInput | v_tarif_achatOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` v_tarif_achats from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` v_tarif_achats.
+     */
+    skip?: number
+    distinct?: V_tarif_achatScalarFieldEnum | V_tarif_achatScalarFieldEnum[]
+  }
+
+  /**
+   * v_tarif_achat without action
+   */
+  export type v_tarif_achatDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the v_tarif_achat
+     */
+    select?: v_tarif_achatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the v_tarif_achat
+     */
+    omit?: v_tarif_achatOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model produit_v_produit_categorie_attribut
+   */
+
+  export type AggregateProduit_v_produit_categorie_attribut = {
+    _count: Produit_v_produit_categorie_attributCountAggregateOutputType | null
+    _avg: Produit_v_produit_categorie_attributAvgAggregateOutputType | null
+    _sum: Produit_v_produit_categorie_attributSumAggregateOutputType | null
+    _min: Produit_v_produit_categorie_attributMinAggregateOutputType | null
+    _max: Produit_v_produit_categorie_attributMaxAggregateOutputType | null
+  }
+
+  export type Produit_v_produit_categorie_attributAvgAggregateOutputType = {
+    pro_id: number | null
+    atr_id: number | null
+  }
+
+  export type Produit_v_produit_categorie_attributSumAggregateOutputType = {
+    pro_id: number | null
+    atr_id: number | null
+  }
+
+  export type Produit_v_produit_categorie_attributMinAggregateOutputType = {
+    pro_id: number | null
+    kit_label: string | null
+    atr_id: number | null
+    atr_label: string | null
+    cat_label: string | null
+  }
+
+  export type Produit_v_produit_categorie_attributMaxAggregateOutputType = {
+    pro_id: number | null
+    kit_label: string | null
+    atr_id: number | null
+    atr_label: string | null
+    cat_label: string | null
+  }
+
+  export type Produit_v_produit_categorie_attributCountAggregateOutputType = {
+    pro_id: number
+    kit_label: number
+    atr_id: number
+    atr_label: number
+    cat_label: number
+    _all: number
+  }
+
+
+  export type Produit_v_produit_categorie_attributAvgAggregateInputType = {
+    pro_id?: true
+    atr_id?: true
+  }
+
+  export type Produit_v_produit_categorie_attributSumAggregateInputType = {
+    pro_id?: true
+    atr_id?: true
+  }
+
+  export type Produit_v_produit_categorie_attributMinAggregateInputType = {
+    pro_id?: true
+    kit_label?: true
+    atr_id?: true
+    atr_label?: true
+    cat_label?: true
+  }
+
+  export type Produit_v_produit_categorie_attributMaxAggregateInputType = {
+    pro_id?: true
+    kit_label?: true
+    atr_id?: true
+    atr_label?: true
+    cat_label?: true
+  }
+
+  export type Produit_v_produit_categorie_attributCountAggregateInputType = {
+    pro_id?: true
+    kit_label?: true
+    atr_id?: true
+    atr_label?: true
+    cat_label?: true
+    _all?: true
+  }
+
+  export type Produit_v_produit_categorie_attributAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which produit_v_produit_categorie_attribut to aggregate.
+     */
+    where?: produit_v_produit_categorie_attributWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of produit_v_produit_categorie_attributs to fetch.
+     */
+    orderBy?: produit_v_produit_categorie_attributOrderByWithRelationInput | produit_v_produit_categorie_attributOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` produit_v_produit_categorie_attributs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` produit_v_produit_categorie_attributs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned produit_v_produit_categorie_attributs
+    **/
+    _count?: true | Produit_v_produit_categorie_attributCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Produit_v_produit_categorie_attributAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Produit_v_produit_categorie_attributSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Produit_v_produit_categorie_attributMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Produit_v_produit_categorie_attributMaxAggregateInputType
+  }
+
+  export type GetProduit_v_produit_categorie_attributAggregateType<T extends Produit_v_produit_categorie_attributAggregateArgs> = {
+        [P in keyof T & keyof AggregateProduit_v_produit_categorie_attribut]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateProduit_v_produit_categorie_attribut[P]>
+      : GetScalarType<T[P], AggregateProduit_v_produit_categorie_attribut[P]>
+  }
+
+
+
+
+  export type produit_v_produit_categorie_attributGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: produit_v_produit_categorie_attributWhereInput
+    orderBy?: produit_v_produit_categorie_attributOrderByWithAggregationInput | produit_v_produit_categorie_attributOrderByWithAggregationInput[]
+    by: Produit_v_produit_categorie_attributScalarFieldEnum[] | Produit_v_produit_categorie_attributScalarFieldEnum
+    having?: produit_v_produit_categorie_attributScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Produit_v_produit_categorie_attributCountAggregateInputType | true
+    _avg?: Produit_v_produit_categorie_attributAvgAggregateInputType
+    _sum?: Produit_v_produit_categorie_attributSumAggregateInputType
+    _min?: Produit_v_produit_categorie_attributMinAggregateInputType
+    _max?: Produit_v_produit_categorie_attributMaxAggregateInputType
+  }
+
+  export type Produit_v_produit_categorie_attributGroupByOutputType = {
+    pro_id: number | null
+    kit_label: string | null
+    atr_id: number | null
+    atr_label: string | null
+    cat_label: string | null
+    _count: Produit_v_produit_categorie_attributCountAggregateOutputType | null
+    _avg: Produit_v_produit_categorie_attributAvgAggregateOutputType | null
+    _sum: Produit_v_produit_categorie_attributSumAggregateOutputType | null
+    _min: Produit_v_produit_categorie_attributMinAggregateOutputType | null
+    _max: Produit_v_produit_categorie_attributMaxAggregateOutputType | null
+  }
+
+  type GetProduit_v_produit_categorie_attributGroupByPayload<T extends produit_v_produit_categorie_attributGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Produit_v_produit_categorie_attributGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Produit_v_produit_categorie_attributGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Produit_v_produit_categorie_attributGroupByOutputType[P]>
+            : GetScalarType<T[P], Produit_v_produit_categorie_attributGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type produit_v_produit_categorie_attributSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    pro_id?: boolean
+    kit_label?: boolean
+    atr_id?: boolean
+    atr_label?: boolean
+    cat_label?: boolean
+  }, ExtArgs["result"]["produit_v_produit_categorie_attribut"]>
+
+
+
+  export type produit_v_produit_categorie_attributSelectScalar = {
+    pro_id?: boolean
+    kit_label?: boolean
+    atr_id?: boolean
+    atr_label?: boolean
+    cat_label?: boolean
+  }
+
+  export type produit_v_produit_categorie_attributOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"pro_id" | "kit_label" | "atr_id" | "atr_label" | "cat_label", ExtArgs["result"]["produit_v_produit_categorie_attribut"]>
+
+  export type $produit_v_produit_categorie_attributPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "produit_v_produit_categorie_attribut"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      pro_id: number | null
+      kit_label: string | null
+      atr_id: number | null
+      atr_label: string | null
+      cat_label: string | null
+    }, ExtArgs["result"]["produit_v_produit_categorie_attribut"]>
+    composites: {}
+  }
+
+  type produit_v_produit_categorie_attributGetPayload<S extends boolean | null | undefined | produit_v_produit_categorie_attributDefaultArgs> = $Result.GetResult<Prisma.$produit_v_produit_categorie_attributPayload, S>
+
+  type produit_v_produit_categorie_attributCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<produit_v_produit_categorie_attributFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: Produit_v_produit_categorie_attributCountAggregateInputType | true
+    }
+
+  export interface produit_v_produit_categorie_attributDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['produit_v_produit_categorie_attribut'], meta: { name: 'produit_v_produit_categorie_attribut' } }
+    /**
+     * Find the first Produit_v_produit_categorie_attribut that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {produit_v_produit_categorie_attributFindFirstArgs} args - Arguments to find a Produit_v_produit_categorie_attribut
+     * @example
+     * // Get one Produit_v_produit_categorie_attribut
+     * const produit_v_produit_categorie_attribut = await prisma.produit_v_produit_categorie_attribut.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends produit_v_produit_categorie_attributFindFirstArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, produit_v_produit_categorie_attributFindFirstArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma__produit_v_produit_categorie_attributClient<$Result.GetResult<Prisma.$produit_v_produit_categorie_attributPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Produit_v_produit_categorie_attribut that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {produit_v_produit_categorie_attributFindFirstOrThrowArgs} args - Arguments to find a Produit_v_produit_categorie_attribut
+     * @example
+     * // Get one Produit_v_produit_categorie_attribut
+     * const produit_v_produit_categorie_attribut = await prisma.produit_v_produit_categorie_attribut.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends produit_v_produit_categorie_attributFindFirstOrThrowArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, produit_v_produit_categorie_attributFindFirstOrThrowArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma__produit_v_produit_categorie_attributClient<$Result.GetResult<Prisma.$produit_v_produit_categorie_attributPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Produit_v_produit_categorie_attributs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {produit_v_produit_categorie_attributFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Produit_v_produit_categorie_attributs
+     * const produit_v_produit_categorie_attributs = await prisma.produit_v_produit_categorie_attribut.findMany()
+     * 
+     * // Get first 10 Produit_v_produit_categorie_attributs
+     * const produit_v_produit_categorie_attributs = await prisma.produit_v_produit_categorie_attribut.findMany({ take: 10 })
+     * 
+     * // Only select the `pro_id`
+     * const produit_v_produit_categorie_attributWithPro_idOnly = await prisma.produit_v_produit_categorie_attribut.findMany({ select: { pro_id: true } })
+     * 
+     */
+    findMany<T extends produit_v_produit_categorie_attributFindManyArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, produit_v_produit_categorie_attributFindManyArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma.PrismaPromise<$Result.GetResult<Prisma.$produit_v_produit_categorie_attributPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of Produit_v_produit_categorie_attributs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {produit_v_produit_categorie_attributCountArgs} args - Arguments to filter Produit_v_produit_categorie_attributs to count.
+     * @example
+     * // Count the number of Produit_v_produit_categorie_attributs
+     * const count = await prisma.produit_v_produit_categorie_attribut.count({
+     *   where: {
+     *     // ... the filter for the Produit_v_produit_categorie_attributs we want to count
+     *   }
+     * })
+    **/
+    count<T extends produit_v_produit_categorie_attributCountArgs>(
+      args?: Subset<T, produit_v_produit_categorie_attributCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Produit_v_produit_categorie_attributCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Produit_v_produit_categorie_attribut.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Produit_v_produit_categorie_attributAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Produit_v_produit_categorie_attributAggregateArgs>(args: Subset<T, Produit_v_produit_categorie_attributAggregateArgs>): Prisma.PrismaPromise<GetProduit_v_produit_categorie_attributAggregateType<T>>
+
+    /**
+     * Group by Produit_v_produit_categorie_attribut.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {produit_v_produit_categorie_attributGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends produit_v_produit_categorie_attributGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: produit_v_produit_categorie_attributGroupByArgs['orderBy'] }
+        : { orderBy?: produit_v_produit_categorie_attributGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, produit_v_produit_categorie_attributGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetProduit_v_produit_categorie_attributGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the produit_v_produit_categorie_attribut model
+   */
+  readonly fields: produit_v_produit_categorie_attributFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for produit_v_produit_categorie_attribut.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__produit_v_produit_categorie_attributClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the produit_v_produit_categorie_attribut model
+   */
+  interface produit_v_produit_categorie_attributFieldRefs {
+    readonly pro_id: FieldRef<"produit_v_produit_categorie_attribut", 'Int'>
+    readonly kit_label: FieldRef<"produit_v_produit_categorie_attribut", 'String'>
+    readonly atr_id: FieldRef<"produit_v_produit_categorie_attribut", 'Int'>
+    readonly atr_label: FieldRef<"produit_v_produit_categorie_attribut", 'String'>
+    readonly cat_label: FieldRef<"produit_v_produit_categorie_attribut", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * produit_v_produit_categorie_attribut findFirst
+   */
+  export type produit_v_produit_categorie_attributFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the produit_v_produit_categorie_attribut
+     */
+    select?: produit_v_produit_categorie_attributSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the produit_v_produit_categorie_attribut
+     */
+    omit?: produit_v_produit_categorie_attributOmit<ExtArgs> | null
+    /**
+     * Filter, which produit_v_produit_categorie_attribut to fetch.
+     */
+    where?: produit_v_produit_categorie_attributWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of produit_v_produit_categorie_attributs to fetch.
+     */
+    orderBy?: produit_v_produit_categorie_attributOrderByWithRelationInput | produit_v_produit_categorie_attributOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` produit_v_produit_categorie_attributs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` produit_v_produit_categorie_attributs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of produit_v_produit_categorie_attributs.
+     */
+    distinct?: Produit_v_produit_categorie_attributScalarFieldEnum | Produit_v_produit_categorie_attributScalarFieldEnum[]
+  }
+
+  /**
+   * produit_v_produit_categorie_attribut findFirstOrThrow
+   */
+  export type produit_v_produit_categorie_attributFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the produit_v_produit_categorie_attribut
+     */
+    select?: produit_v_produit_categorie_attributSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the produit_v_produit_categorie_attribut
+     */
+    omit?: produit_v_produit_categorie_attributOmit<ExtArgs> | null
+    /**
+     * Filter, which produit_v_produit_categorie_attribut to fetch.
+     */
+    where?: produit_v_produit_categorie_attributWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of produit_v_produit_categorie_attributs to fetch.
+     */
+    orderBy?: produit_v_produit_categorie_attributOrderByWithRelationInput | produit_v_produit_categorie_attributOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` produit_v_produit_categorie_attributs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` produit_v_produit_categorie_attributs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of produit_v_produit_categorie_attributs.
+     */
+    distinct?: Produit_v_produit_categorie_attributScalarFieldEnum | Produit_v_produit_categorie_attributScalarFieldEnum[]
+  }
+
+  /**
+   * produit_v_produit_categorie_attribut findMany
+   */
+  export type produit_v_produit_categorie_attributFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the produit_v_produit_categorie_attribut
+     */
+    select?: produit_v_produit_categorie_attributSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the produit_v_produit_categorie_attribut
+     */
+    omit?: produit_v_produit_categorie_attributOmit<ExtArgs> | null
+    /**
+     * Filter, which produit_v_produit_categorie_attributs to fetch.
+     */
+    where?: produit_v_produit_categorie_attributWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of produit_v_produit_categorie_attributs to fetch.
+     */
+    orderBy?: produit_v_produit_categorie_attributOrderByWithRelationInput | produit_v_produit_categorie_attributOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` produit_v_produit_categorie_attributs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` produit_v_produit_categorie_attributs.
+     */
+    skip?: number
+    distinct?: Produit_v_produit_categorie_attributScalarFieldEnum | Produit_v_produit_categorie_attributScalarFieldEnum[]
+  }
+
+  /**
+   * produit_v_produit_categorie_attribut without action
+   */
+  export type produit_v_produit_categorie_attributDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the produit_v_produit_categorie_attribut
+     */
+    select?: produit_v_produit_categorie_attributSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the produit_v_produit_categorie_attribut
+     */
+    omit?: produit_v_produit_categorie_attributOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model public_v_produit_categorie_attribut
+   */
+
+  export type AggregatePublic_v_produit_categorie_attribut = {
+    _count: Public_v_produit_categorie_attributCountAggregateOutputType | null
+    _avg: Public_v_produit_categorie_attributAvgAggregateOutputType | null
+    _sum: Public_v_produit_categorie_attributSumAggregateOutputType | null
+    _min: Public_v_produit_categorie_attributMinAggregateOutputType | null
+    _max: Public_v_produit_categorie_attributMaxAggregateOutputType | null
+  }
+
+  export type Public_v_produit_categorie_attributAvgAggregateOutputType = {
+    pro_id: number | null
+    atr_id: number | null
+  }
+
+  export type Public_v_produit_categorie_attributSumAggregateOutputType = {
+    pro_id: number | null
+    atr_id: number | null
+  }
+
+  export type Public_v_produit_categorie_attributMinAggregateOutputType = {
+    pro_id: number | null
+    kit_label: string | null
+    atr_id: number | null
+    atr_label: string | null
+    cat_label: string | null
+  }
+
+  export type Public_v_produit_categorie_attributMaxAggregateOutputType = {
+    pro_id: number | null
+    kit_label: string | null
+    atr_id: number | null
+    atr_label: string | null
+    cat_label: string | null
+  }
+
+  export type Public_v_produit_categorie_attributCountAggregateOutputType = {
+    pro_id: number
+    kit_label: number
+    atr_id: number
+    atr_label: number
+    cat_label: number
+    _all: number
+  }
+
+
+  export type Public_v_produit_categorie_attributAvgAggregateInputType = {
+    pro_id?: true
+    atr_id?: true
+  }
+
+  export type Public_v_produit_categorie_attributSumAggregateInputType = {
+    pro_id?: true
+    atr_id?: true
+  }
+
+  export type Public_v_produit_categorie_attributMinAggregateInputType = {
+    pro_id?: true
+    kit_label?: true
+    atr_id?: true
+    atr_label?: true
+    cat_label?: true
+  }
+
+  export type Public_v_produit_categorie_attributMaxAggregateInputType = {
+    pro_id?: true
+    kit_label?: true
+    atr_id?: true
+    atr_label?: true
+    cat_label?: true
+  }
+
+  export type Public_v_produit_categorie_attributCountAggregateInputType = {
+    pro_id?: true
+    kit_label?: true
+    atr_id?: true
+    atr_label?: true
+    cat_label?: true
+    _all?: true
+  }
+
+  export type Public_v_produit_categorie_attributAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which public_v_produit_categorie_attribut to aggregate.
+     */
+    where?: public_v_produit_categorie_attributWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of public_v_produit_categorie_attributs to fetch.
+     */
+    orderBy?: public_v_produit_categorie_attributOrderByWithRelationInput | public_v_produit_categorie_attributOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` public_v_produit_categorie_attributs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` public_v_produit_categorie_attributs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned public_v_produit_categorie_attributs
+    **/
+    _count?: true | Public_v_produit_categorie_attributCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Public_v_produit_categorie_attributAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Public_v_produit_categorie_attributSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Public_v_produit_categorie_attributMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Public_v_produit_categorie_attributMaxAggregateInputType
+  }
+
+  export type GetPublic_v_produit_categorie_attributAggregateType<T extends Public_v_produit_categorie_attributAggregateArgs> = {
+        [P in keyof T & keyof AggregatePublic_v_produit_categorie_attribut]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePublic_v_produit_categorie_attribut[P]>
+      : GetScalarType<T[P], AggregatePublic_v_produit_categorie_attribut[P]>
+  }
+
+
+
+
+  export type public_v_produit_categorie_attributGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: public_v_produit_categorie_attributWhereInput
+    orderBy?: public_v_produit_categorie_attributOrderByWithAggregationInput | public_v_produit_categorie_attributOrderByWithAggregationInput[]
+    by: Public_v_produit_categorie_attributScalarFieldEnum[] | Public_v_produit_categorie_attributScalarFieldEnum
+    having?: public_v_produit_categorie_attributScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Public_v_produit_categorie_attributCountAggregateInputType | true
+    _avg?: Public_v_produit_categorie_attributAvgAggregateInputType
+    _sum?: Public_v_produit_categorie_attributSumAggregateInputType
+    _min?: Public_v_produit_categorie_attributMinAggregateInputType
+    _max?: Public_v_produit_categorie_attributMaxAggregateInputType
+  }
+
+  export type Public_v_produit_categorie_attributGroupByOutputType = {
+    pro_id: number | null
+    kit_label: string | null
+    atr_id: number | null
+    atr_label: string | null
+    cat_label: string | null
+    _count: Public_v_produit_categorie_attributCountAggregateOutputType | null
+    _avg: Public_v_produit_categorie_attributAvgAggregateOutputType | null
+    _sum: Public_v_produit_categorie_attributSumAggregateOutputType | null
+    _min: Public_v_produit_categorie_attributMinAggregateOutputType | null
+    _max: Public_v_produit_categorie_attributMaxAggregateOutputType | null
+  }
+
+  type GetPublic_v_produit_categorie_attributGroupByPayload<T extends public_v_produit_categorie_attributGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Public_v_produit_categorie_attributGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Public_v_produit_categorie_attributGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Public_v_produit_categorie_attributGroupByOutputType[P]>
+            : GetScalarType<T[P], Public_v_produit_categorie_attributGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type public_v_produit_categorie_attributSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    pro_id?: boolean
+    kit_label?: boolean
+    atr_id?: boolean
+    atr_label?: boolean
+    cat_label?: boolean
+  }, ExtArgs["result"]["public_v_produit_categorie_attribut"]>
+
+
+
+  export type public_v_produit_categorie_attributSelectScalar = {
+    pro_id?: boolean
+    kit_label?: boolean
+    atr_id?: boolean
+    atr_label?: boolean
+    cat_label?: boolean
+  }
+
+  export type public_v_produit_categorie_attributOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"pro_id" | "kit_label" | "atr_id" | "atr_label" | "cat_label", ExtArgs["result"]["public_v_produit_categorie_attribut"]>
+
+  export type $public_v_produit_categorie_attributPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "public_v_produit_categorie_attribut"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      pro_id: number | null
+      kit_label: string | null
+      atr_id: number | null
+      atr_label: string | null
+      cat_label: string | null
+    }, ExtArgs["result"]["public_v_produit_categorie_attribut"]>
+    composites: {}
+  }
+
+  type public_v_produit_categorie_attributGetPayload<S extends boolean | null | undefined | public_v_produit_categorie_attributDefaultArgs> = $Result.GetResult<Prisma.$public_v_produit_categorie_attributPayload, S>
+
+  type public_v_produit_categorie_attributCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<public_v_produit_categorie_attributFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: Public_v_produit_categorie_attributCountAggregateInputType | true
+    }
+
+  export interface public_v_produit_categorie_attributDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['public_v_produit_categorie_attribut'], meta: { name: 'public_v_produit_categorie_attribut' } }
+    /**
+     * Find the first Public_v_produit_categorie_attribut that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {public_v_produit_categorie_attributFindFirstArgs} args - Arguments to find a Public_v_produit_categorie_attribut
+     * @example
+     * // Get one Public_v_produit_categorie_attribut
+     * const public_v_produit_categorie_attribut = await prisma.public_v_produit_categorie_attribut.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends public_v_produit_categorie_attributFindFirstArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, public_v_produit_categorie_attributFindFirstArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma__public_v_produit_categorie_attributClient<$Result.GetResult<Prisma.$public_v_produit_categorie_attributPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Public_v_produit_categorie_attribut that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {public_v_produit_categorie_attributFindFirstOrThrowArgs} args - Arguments to find a Public_v_produit_categorie_attribut
+     * @example
+     * // Get one Public_v_produit_categorie_attribut
+     * const public_v_produit_categorie_attribut = await prisma.public_v_produit_categorie_attribut.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends public_v_produit_categorie_attributFindFirstOrThrowArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, public_v_produit_categorie_attributFindFirstOrThrowArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma__public_v_produit_categorie_attributClient<$Result.GetResult<Prisma.$public_v_produit_categorie_attributPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Public_v_produit_categorie_attributs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {public_v_produit_categorie_attributFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Public_v_produit_categorie_attributs
+     * const public_v_produit_categorie_attributs = await prisma.public_v_produit_categorie_attribut.findMany()
+     * 
+     * // Get first 10 Public_v_produit_categorie_attributs
+     * const public_v_produit_categorie_attributs = await prisma.public_v_produit_categorie_attribut.findMany({ take: 10 })
+     * 
+     * // Only select the `pro_id`
+     * const public_v_produit_categorie_attributWithPro_idOnly = await prisma.public_v_produit_categorie_attribut.findMany({ select: { pro_id: true } })
+     * 
+     */
+    findMany<T extends public_v_produit_categorie_attributFindManyArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, public_v_produit_categorie_attributFindManyArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma.PrismaPromise<$Result.GetResult<Prisma.$public_v_produit_categorie_attributPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of Public_v_produit_categorie_attributs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {public_v_produit_categorie_attributCountArgs} args - Arguments to filter Public_v_produit_categorie_attributs to count.
+     * @example
+     * // Count the number of Public_v_produit_categorie_attributs
+     * const count = await prisma.public_v_produit_categorie_attribut.count({
+     *   where: {
+     *     // ... the filter for the Public_v_produit_categorie_attributs we want to count
+     *   }
+     * })
+    **/
+    count<T extends public_v_produit_categorie_attributCountArgs>(
+      args?: Subset<T, public_v_produit_categorie_attributCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Public_v_produit_categorie_attributCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Public_v_produit_categorie_attribut.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Public_v_produit_categorie_attributAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Public_v_produit_categorie_attributAggregateArgs>(args: Subset<T, Public_v_produit_categorie_attributAggregateArgs>): Prisma.PrismaPromise<GetPublic_v_produit_categorie_attributAggregateType<T>>
+
+    /**
+     * Group by Public_v_produit_categorie_attribut.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {public_v_produit_categorie_attributGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends public_v_produit_categorie_attributGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: public_v_produit_categorie_attributGroupByArgs['orderBy'] }
+        : { orderBy?: public_v_produit_categorie_attributGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, public_v_produit_categorie_attributGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPublic_v_produit_categorie_attributGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the public_v_produit_categorie_attribut model
+   */
+  readonly fields: public_v_produit_categorie_attributFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for public_v_produit_categorie_attribut.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__public_v_produit_categorie_attributClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the public_v_produit_categorie_attribut model
+   */
+  interface public_v_produit_categorie_attributFieldRefs {
+    readonly pro_id: FieldRef<"public_v_produit_categorie_attribut", 'Int'>
+    readonly kit_label: FieldRef<"public_v_produit_categorie_attribut", 'String'>
+    readonly atr_id: FieldRef<"public_v_produit_categorie_attribut", 'Int'>
+    readonly atr_label: FieldRef<"public_v_produit_categorie_attribut", 'String'>
+    readonly cat_label: FieldRef<"public_v_produit_categorie_attribut", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * public_v_produit_categorie_attribut findFirst
+   */
+  export type public_v_produit_categorie_attributFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the public_v_produit_categorie_attribut
+     */
+    select?: public_v_produit_categorie_attributSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the public_v_produit_categorie_attribut
+     */
+    omit?: public_v_produit_categorie_attributOmit<ExtArgs> | null
+    /**
+     * Filter, which public_v_produit_categorie_attribut to fetch.
+     */
+    where?: public_v_produit_categorie_attributWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of public_v_produit_categorie_attributs to fetch.
+     */
+    orderBy?: public_v_produit_categorie_attributOrderByWithRelationInput | public_v_produit_categorie_attributOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` public_v_produit_categorie_attributs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` public_v_produit_categorie_attributs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of public_v_produit_categorie_attributs.
+     */
+    distinct?: Public_v_produit_categorie_attributScalarFieldEnum | Public_v_produit_categorie_attributScalarFieldEnum[]
+  }
+
+  /**
+   * public_v_produit_categorie_attribut findFirstOrThrow
+   */
+  export type public_v_produit_categorie_attributFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the public_v_produit_categorie_attribut
+     */
+    select?: public_v_produit_categorie_attributSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the public_v_produit_categorie_attribut
+     */
+    omit?: public_v_produit_categorie_attributOmit<ExtArgs> | null
+    /**
+     * Filter, which public_v_produit_categorie_attribut to fetch.
+     */
+    where?: public_v_produit_categorie_attributWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of public_v_produit_categorie_attributs to fetch.
+     */
+    orderBy?: public_v_produit_categorie_attributOrderByWithRelationInput | public_v_produit_categorie_attributOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` public_v_produit_categorie_attributs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` public_v_produit_categorie_attributs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of public_v_produit_categorie_attributs.
+     */
+    distinct?: Public_v_produit_categorie_attributScalarFieldEnum | Public_v_produit_categorie_attributScalarFieldEnum[]
+  }
+
+  /**
+   * public_v_produit_categorie_attribut findMany
+   */
+  export type public_v_produit_categorie_attributFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the public_v_produit_categorie_attribut
+     */
+    select?: public_v_produit_categorie_attributSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the public_v_produit_categorie_attribut
+     */
+    omit?: public_v_produit_categorie_attributOmit<ExtArgs> | null
+    /**
+     * Filter, which public_v_produit_categorie_attributs to fetch.
+     */
+    where?: public_v_produit_categorie_attributWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of public_v_produit_categorie_attributs to fetch.
+     */
+    orderBy?: public_v_produit_categorie_attributOrderByWithRelationInput | public_v_produit_categorie_attributOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` public_v_produit_categorie_attributs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` public_v_produit_categorie_attributs.
+     */
+    skip?: number
+    distinct?: Public_v_produit_categorie_attributScalarFieldEnum | Public_v_produit_categorie_attributScalarFieldEnum[]
+  }
+
+  /**
+   * public_v_produit_categorie_attribut without action
+   */
+  export type public_v_produit_categorie_attributDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the public_v_produit_categorie_attribut
+     */
+    select?: public_v_produit_categorie_attributSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the public_v_produit_categorie_attribut
+     */
+    omit?: public_v_produit_categorie_attributOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model v_categorie
+   */
+
+  export type AggregateV_categorie = {
+    _count: V_categorieCountAggregateOutputType | null
+    _avg: V_categorieAvgAggregateOutputType | null
+    _sum: V_categorieSumAggregateOutputType | null
+    _min: V_categorieMinAggregateOutputType | null
+    _max: V_categorieMaxAggregateOutputType | null
+  }
+
+  export type V_categorieAvgAggregateOutputType = {
+    atr_0_id: number | null
+    atr_1_id: number | null
+    atr_2_id: number | null
+    atr_3_id: number | null
+    atr_4_id: number | null
+    atr_5_id: number | null
+    atr_6_id: number | null
+    atr_7_id: number | null
+  }
+
+  export type V_categorieSumAggregateOutputType = {
+    atr_0_id: number | null
+    atr_1_id: number | null
+    atr_2_id: number | null
+    atr_3_id: number | null
+    atr_4_id: number | null
+    atr_5_id: number | null
+    atr_6_id: number | null
+    atr_7_id: number | null
+  }
+
+  export type V_categorieMinAggregateOutputType = {
+    atr_0_id: number | null
+    atr_0_label: string | null
+    atr_1_id: number | null
+    atr_1_label: string | null
+    atr_2_id: number | null
+    atr_2_label: string | null
+    atr_3_id: number | null
+    atr_3_label: string | null
+    atr_4_id: number | null
+    atr_4_label: string | null
+    atr_5_id: number | null
+    atr_5_label: string | null
+    atr_6_id: number | null
+    atr_6_label: string | null
+    atr_7_id: number | null
+    atr_7_label: string | null
+  }
+
+  export type V_categorieMaxAggregateOutputType = {
+    atr_0_id: number | null
+    atr_0_label: string | null
+    atr_1_id: number | null
+    atr_1_label: string | null
+    atr_2_id: number | null
+    atr_2_label: string | null
+    atr_3_id: number | null
+    atr_3_label: string | null
+    atr_4_id: number | null
+    atr_4_label: string | null
+    atr_5_id: number | null
+    atr_5_label: string | null
+    atr_6_id: number | null
+    atr_6_label: string | null
+    atr_7_id: number | null
+    atr_7_label: string | null
+  }
+
+  export type V_categorieCountAggregateOutputType = {
+    atr_0_id: number
+    atr_0_label: number
+    atr_1_id: number
+    atr_1_label: number
+    atr_2_id: number
+    atr_2_label: number
+    atr_3_id: number
+    atr_3_label: number
+    atr_4_id: number
+    atr_4_label: number
+    atr_5_id: number
+    atr_5_label: number
+    atr_6_id: number
+    atr_6_label: number
+    atr_7_id: number
+    atr_7_label: number
+    _all: number
+  }
+
+
+  export type V_categorieAvgAggregateInputType = {
+    atr_0_id?: true
+    atr_1_id?: true
+    atr_2_id?: true
+    atr_3_id?: true
+    atr_4_id?: true
+    atr_5_id?: true
+    atr_6_id?: true
+    atr_7_id?: true
+  }
+
+  export type V_categorieSumAggregateInputType = {
+    atr_0_id?: true
+    atr_1_id?: true
+    atr_2_id?: true
+    atr_3_id?: true
+    atr_4_id?: true
+    atr_5_id?: true
+    atr_6_id?: true
+    atr_7_id?: true
+  }
+
+  export type V_categorieMinAggregateInputType = {
+    atr_0_id?: true
+    atr_0_label?: true
+    atr_1_id?: true
+    atr_1_label?: true
+    atr_2_id?: true
+    atr_2_label?: true
+    atr_3_id?: true
+    atr_3_label?: true
+    atr_4_id?: true
+    atr_4_label?: true
+    atr_5_id?: true
+    atr_5_label?: true
+    atr_6_id?: true
+    atr_6_label?: true
+    atr_7_id?: true
+    atr_7_label?: true
+  }
+
+  export type V_categorieMaxAggregateInputType = {
+    atr_0_id?: true
+    atr_0_label?: true
+    atr_1_id?: true
+    atr_1_label?: true
+    atr_2_id?: true
+    atr_2_label?: true
+    atr_3_id?: true
+    atr_3_label?: true
+    atr_4_id?: true
+    atr_4_label?: true
+    atr_5_id?: true
+    atr_5_label?: true
+    atr_6_id?: true
+    atr_6_label?: true
+    atr_7_id?: true
+    atr_7_label?: true
+  }
+
+  export type V_categorieCountAggregateInputType = {
+    atr_0_id?: true
+    atr_0_label?: true
+    atr_1_id?: true
+    atr_1_label?: true
+    atr_2_id?: true
+    atr_2_label?: true
+    atr_3_id?: true
+    atr_3_label?: true
+    atr_4_id?: true
+    atr_4_label?: true
+    atr_5_id?: true
+    atr_5_label?: true
+    atr_6_id?: true
+    atr_6_label?: true
+    atr_7_id?: true
+    atr_7_label?: true
+    _all?: true
+  }
+
+  export type V_categorieAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which v_categorie to aggregate.
+     */
+    where?: v_categorieWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of v_categories to fetch.
+     */
+    orderBy?: v_categorieOrderByWithRelationInput | v_categorieOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` v_categories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` v_categories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned v_categories
+    **/
+    _count?: true | V_categorieCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: V_categorieAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: V_categorieSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: V_categorieMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: V_categorieMaxAggregateInputType
+  }
+
+  export type GetV_categorieAggregateType<T extends V_categorieAggregateArgs> = {
+        [P in keyof T & keyof AggregateV_categorie]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateV_categorie[P]>
+      : GetScalarType<T[P], AggregateV_categorie[P]>
+  }
+
+
+
+
+  export type v_categorieGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: v_categorieWhereInput
+    orderBy?: v_categorieOrderByWithAggregationInput | v_categorieOrderByWithAggregationInput[]
+    by: V_categorieScalarFieldEnum[] | V_categorieScalarFieldEnum
+    having?: v_categorieScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: V_categorieCountAggregateInputType | true
+    _avg?: V_categorieAvgAggregateInputType
+    _sum?: V_categorieSumAggregateInputType
+    _min?: V_categorieMinAggregateInputType
+    _max?: V_categorieMaxAggregateInputType
+  }
+
+  export type V_categorieGroupByOutputType = {
+    atr_0_id: number | null
+    atr_0_label: string | null
+    atr_1_id: number | null
+    atr_1_label: string | null
+    atr_2_id: number | null
+    atr_2_label: string | null
+    atr_3_id: number | null
+    atr_3_label: string | null
+    atr_4_id: number | null
+    atr_4_label: string | null
+    atr_5_id: number | null
+    atr_5_label: string | null
+    atr_6_id: number | null
+    atr_6_label: string | null
+    atr_7_id: number | null
+    atr_7_label: string | null
+    _count: V_categorieCountAggregateOutputType | null
+    _avg: V_categorieAvgAggregateOutputType | null
+    _sum: V_categorieSumAggregateOutputType | null
+    _min: V_categorieMinAggregateOutputType | null
+    _max: V_categorieMaxAggregateOutputType | null
+  }
+
+  type GetV_categorieGroupByPayload<T extends v_categorieGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<V_categorieGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof V_categorieGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], V_categorieGroupByOutputType[P]>
+            : GetScalarType<T[P], V_categorieGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type v_categorieSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    atr_0_id?: boolean
+    atr_0_label?: boolean
+    atr_1_id?: boolean
+    atr_1_label?: boolean
+    atr_2_id?: boolean
+    atr_2_label?: boolean
+    atr_3_id?: boolean
+    atr_3_label?: boolean
+    atr_4_id?: boolean
+    atr_4_label?: boolean
+    atr_5_id?: boolean
+    atr_5_label?: boolean
+    atr_6_id?: boolean
+    atr_6_label?: boolean
+    atr_7_id?: boolean
+    atr_7_label?: boolean
+  }, ExtArgs["result"]["v_categorie"]>
+
+
+
+  export type v_categorieSelectScalar = {
+    atr_0_id?: boolean
+    atr_0_label?: boolean
+    atr_1_id?: boolean
+    atr_1_label?: boolean
+    atr_2_id?: boolean
+    atr_2_label?: boolean
+    atr_3_id?: boolean
+    atr_3_label?: boolean
+    atr_4_id?: boolean
+    atr_4_label?: boolean
+    atr_5_id?: boolean
+    atr_5_label?: boolean
+    atr_6_id?: boolean
+    atr_6_label?: boolean
+    atr_7_id?: boolean
+    atr_7_label?: boolean
+  }
+
+  export type v_categorieOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"atr_0_id" | "atr_0_label" | "atr_1_id" | "atr_1_label" | "atr_2_id" | "atr_2_label" | "atr_3_id" | "atr_3_label" | "atr_4_id" | "atr_4_label" | "atr_5_id" | "atr_5_label" | "atr_6_id" | "atr_6_label" | "atr_7_id" | "atr_7_label", ExtArgs["result"]["v_categorie"]>
+
+  export type $v_categoriePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "v_categorie"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      atr_0_id: number | null
+      atr_0_label: string | null
+      atr_1_id: number | null
+      atr_1_label: string | null
+      atr_2_id: number | null
+      atr_2_label: string | null
+      atr_3_id: number | null
+      atr_3_label: string | null
+      atr_4_id: number | null
+      atr_4_label: string | null
+      atr_5_id: number | null
+      atr_5_label: string | null
+      atr_6_id: number | null
+      atr_6_label: string | null
+      atr_7_id: number | null
+      atr_7_label: string | null
+    }, ExtArgs["result"]["v_categorie"]>
+    composites: {}
+  }
+
+  type v_categorieGetPayload<S extends boolean | null | undefined | v_categorieDefaultArgs> = $Result.GetResult<Prisma.$v_categoriePayload, S>
+
+  type v_categorieCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<v_categorieFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: V_categorieCountAggregateInputType | true
+    }
+
+  export interface v_categorieDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['v_categorie'], meta: { name: 'v_categorie' } }
+    /**
+     * Find the first V_categorie that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_categorieFindFirstArgs} args - Arguments to find a V_categorie
+     * @example
+     * // Get one V_categorie
+     * const v_categorie = await prisma.v_categorie.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends v_categorieFindFirstArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, v_categorieFindFirstArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma__v_categorieClient<$Result.GetResult<Prisma.$v_categoriePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first V_categorie that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_categorieFindFirstOrThrowArgs} args - Arguments to find a V_categorie
+     * @example
+     * // Get one V_categorie
+     * const v_categorie = await prisma.v_categorie.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends v_categorieFindFirstOrThrowArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, v_categorieFindFirstOrThrowArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma__v_categorieClient<$Result.GetResult<Prisma.$v_categoriePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more V_categories that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_categorieFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all V_categories
+     * const v_categories = await prisma.v_categorie.findMany()
+     * 
+     * // Get first 10 V_categories
+     * const v_categories = await prisma.v_categorie.findMany({ take: 10 })
+     * 
+     * // Only select the `atr_0_id`
+     * const v_categorieWithAtr_0_idOnly = await prisma.v_categorie.findMany({ select: { atr_0_id: true } })
+     * 
+     */
+    findMany<T extends v_categorieFindManyArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, v_categorieFindManyArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma.PrismaPromise<$Result.GetResult<Prisma.$v_categoriePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of V_categories.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_categorieCountArgs} args - Arguments to filter V_categories to count.
+     * @example
+     * // Count the number of V_categories
+     * const count = await prisma.v_categorie.count({
+     *   where: {
+     *     // ... the filter for the V_categories we want to count
+     *   }
+     * })
+    **/
+    count<T extends v_categorieCountArgs>(
+      args?: Subset<T, v_categorieCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], V_categorieCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a V_categorie.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {V_categorieAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends V_categorieAggregateArgs>(args: Subset<T, V_categorieAggregateArgs>): Prisma.PrismaPromise<GetV_categorieAggregateType<T>>
+
+    /**
+     * Group by V_categorie.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_categorieGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends v_categorieGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: v_categorieGroupByArgs['orderBy'] }
+        : { orderBy?: v_categorieGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, v_categorieGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetV_categorieGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the v_categorie model
+   */
+  readonly fields: v_categorieFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for v_categorie.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__v_categorieClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the v_categorie model
+   */
+  interface v_categorieFieldRefs {
+    readonly atr_0_id: FieldRef<"v_categorie", 'Int'>
+    readonly atr_0_label: FieldRef<"v_categorie", 'String'>
+    readonly atr_1_id: FieldRef<"v_categorie", 'Int'>
+    readonly atr_1_label: FieldRef<"v_categorie", 'String'>
+    readonly atr_2_id: FieldRef<"v_categorie", 'Int'>
+    readonly atr_2_label: FieldRef<"v_categorie", 'String'>
+    readonly atr_3_id: FieldRef<"v_categorie", 'Int'>
+    readonly atr_3_label: FieldRef<"v_categorie", 'String'>
+    readonly atr_4_id: FieldRef<"v_categorie", 'Int'>
+    readonly atr_4_label: FieldRef<"v_categorie", 'String'>
+    readonly atr_5_id: FieldRef<"v_categorie", 'Int'>
+    readonly atr_5_label: FieldRef<"v_categorie", 'String'>
+    readonly atr_6_id: FieldRef<"v_categorie", 'Int'>
+    readonly atr_6_label: FieldRef<"v_categorie", 'String'>
+    readonly atr_7_id: FieldRef<"v_categorie", 'Int'>
+    readonly atr_7_label: FieldRef<"v_categorie", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * v_categorie findFirst
+   */
+  export type v_categorieFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the v_categorie
+     */
+    select?: v_categorieSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the v_categorie
+     */
+    omit?: v_categorieOmit<ExtArgs> | null
+    /**
+     * Filter, which v_categorie to fetch.
+     */
+    where?: v_categorieWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of v_categories to fetch.
+     */
+    orderBy?: v_categorieOrderByWithRelationInput | v_categorieOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` v_categories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` v_categories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of v_categories.
+     */
+    distinct?: V_categorieScalarFieldEnum | V_categorieScalarFieldEnum[]
+  }
+
+  /**
+   * v_categorie findFirstOrThrow
+   */
+  export type v_categorieFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the v_categorie
+     */
+    select?: v_categorieSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the v_categorie
+     */
+    omit?: v_categorieOmit<ExtArgs> | null
+    /**
+     * Filter, which v_categorie to fetch.
+     */
+    where?: v_categorieWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of v_categories to fetch.
+     */
+    orderBy?: v_categorieOrderByWithRelationInput | v_categorieOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` v_categories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` v_categories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of v_categories.
+     */
+    distinct?: V_categorieScalarFieldEnum | V_categorieScalarFieldEnum[]
+  }
+
+  /**
+   * v_categorie findMany
+   */
+  export type v_categorieFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the v_categorie
+     */
+    select?: v_categorieSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the v_categorie
+     */
+    omit?: v_categorieOmit<ExtArgs> | null
+    /**
+     * Filter, which v_categories to fetch.
+     */
+    where?: v_categorieWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of v_categories to fetch.
+     */
+    orderBy?: v_categorieOrderByWithRelationInput | v_categorieOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` v_categories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` v_categories.
+     */
+    skip?: number
+    distinct?: V_categorieScalarFieldEnum | V_categorieScalarFieldEnum[]
+  }
+
+  /**
+   * v_categorie without action
+   */
+  export type v_categorieDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the v_categorie
+     */
+    select?: v_categorieSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the v_categorie
+     */
+    omit?: v_categorieOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model v_kit_caracteristique
+   */
+
+  export type AggregateV_kit_caracteristique = {
+    _count: V_kit_caracteristiqueCountAggregateOutputType | null
+    _min: V_kit_caracteristiqueMinAggregateOutputType | null
+    _max: V_kit_caracteristiqueMaxAggregateOutputType | null
+  }
+
+  export type V_kit_caracteristiqueMinAggregateOutputType = {
+    kit_label: string | null
+    atr_label: string | null
+    valeur: string | null
+    unit: string | null
+  }
+
+  export type V_kit_caracteristiqueMaxAggregateOutputType = {
+    kit_label: string | null
+    atr_label: string | null
+    valeur: string | null
+    unit: string | null
+  }
+
+  export type V_kit_caracteristiqueCountAggregateOutputType = {
+    kit_label: number
+    atr_label: number
+    valeur: number
+    unit: number
+    _all: number
+  }
+
+
+  export type V_kit_caracteristiqueMinAggregateInputType = {
+    kit_label?: true
+    atr_label?: true
+    valeur?: true
+    unit?: true
+  }
+
+  export type V_kit_caracteristiqueMaxAggregateInputType = {
+    kit_label?: true
+    atr_label?: true
+    valeur?: true
+    unit?: true
+  }
+
+  export type V_kit_caracteristiqueCountAggregateInputType = {
+    kit_label?: true
+    atr_label?: true
+    valeur?: true
+    unit?: true
+    _all?: true
+  }
+
+  export type V_kit_caracteristiqueAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which v_kit_caracteristique to aggregate.
+     */
+    where?: v_kit_caracteristiqueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of v_kit_caracteristiques to fetch.
+     */
+    orderBy?: v_kit_caracteristiqueOrderByWithRelationInput | v_kit_caracteristiqueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` v_kit_caracteristiques from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` v_kit_caracteristiques.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned v_kit_caracteristiques
+    **/
+    _count?: true | V_kit_caracteristiqueCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: V_kit_caracteristiqueMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: V_kit_caracteristiqueMaxAggregateInputType
+  }
+
+  export type GetV_kit_caracteristiqueAggregateType<T extends V_kit_caracteristiqueAggregateArgs> = {
+        [P in keyof T & keyof AggregateV_kit_caracteristique]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateV_kit_caracteristique[P]>
+      : GetScalarType<T[P], AggregateV_kit_caracteristique[P]>
+  }
+
+
+
+
+  export type v_kit_caracteristiqueGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: v_kit_caracteristiqueWhereInput
+    orderBy?: v_kit_caracteristiqueOrderByWithAggregationInput | v_kit_caracteristiqueOrderByWithAggregationInput[]
+    by: V_kit_caracteristiqueScalarFieldEnum[] | V_kit_caracteristiqueScalarFieldEnum
+    having?: v_kit_caracteristiqueScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: V_kit_caracteristiqueCountAggregateInputType | true
+    _min?: V_kit_caracteristiqueMinAggregateInputType
+    _max?: V_kit_caracteristiqueMaxAggregateInputType
+  }
+
+  export type V_kit_caracteristiqueGroupByOutputType = {
+    kit_label: string | null
+    atr_label: string | null
+    valeur: string | null
+    unit: string | null
+    _count: V_kit_caracteristiqueCountAggregateOutputType | null
+    _min: V_kit_caracteristiqueMinAggregateOutputType | null
+    _max: V_kit_caracteristiqueMaxAggregateOutputType | null
+  }
+
+  type GetV_kit_caracteristiqueGroupByPayload<T extends v_kit_caracteristiqueGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<V_kit_caracteristiqueGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof V_kit_caracteristiqueGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], V_kit_caracteristiqueGroupByOutputType[P]>
+            : GetScalarType<T[P], V_kit_caracteristiqueGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type v_kit_caracteristiqueSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    kit_label?: boolean
+    atr_label?: boolean
+    valeur?: boolean
+    unit?: boolean
+  }, ExtArgs["result"]["v_kit_caracteristique"]>
+
+
+
+  export type v_kit_caracteristiqueSelectScalar = {
+    kit_label?: boolean
+    atr_label?: boolean
+    valeur?: boolean
+    unit?: boolean
+  }
+
+  export type v_kit_caracteristiqueOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"kit_label" | "atr_label" | "valeur" | "unit", ExtArgs["result"]["v_kit_caracteristique"]>
+
+  export type $v_kit_caracteristiquePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "v_kit_caracteristique"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      kit_label: string | null
+      atr_label: string | null
+      valeur: string | null
+      unit: string | null
+    }, ExtArgs["result"]["v_kit_caracteristique"]>
+    composites: {}
+  }
+
+  type v_kit_caracteristiqueGetPayload<S extends boolean | null | undefined | v_kit_caracteristiqueDefaultArgs> = $Result.GetResult<Prisma.$v_kit_caracteristiquePayload, S>
+
+  type v_kit_caracteristiqueCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<v_kit_caracteristiqueFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: V_kit_caracteristiqueCountAggregateInputType | true
+    }
+
+  export interface v_kit_caracteristiqueDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['v_kit_caracteristique'], meta: { name: 'v_kit_caracteristique' } }
+    /**
+     * Find the first V_kit_caracteristique that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_kit_caracteristiqueFindFirstArgs} args - Arguments to find a V_kit_caracteristique
+     * @example
+     * // Get one V_kit_caracteristique
+     * const v_kit_caracteristique = await prisma.v_kit_caracteristique.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends v_kit_caracteristiqueFindFirstArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, v_kit_caracteristiqueFindFirstArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma__v_kit_caracteristiqueClient<$Result.GetResult<Prisma.$v_kit_caracteristiquePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first V_kit_caracteristique that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_kit_caracteristiqueFindFirstOrThrowArgs} args - Arguments to find a V_kit_caracteristique
+     * @example
+     * // Get one V_kit_caracteristique
+     * const v_kit_caracteristique = await prisma.v_kit_caracteristique.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends v_kit_caracteristiqueFindFirstOrThrowArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, v_kit_caracteristiqueFindFirstOrThrowArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma__v_kit_caracteristiqueClient<$Result.GetResult<Prisma.$v_kit_caracteristiquePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more V_kit_caracteristiques that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_kit_caracteristiqueFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all V_kit_caracteristiques
+     * const v_kit_caracteristiques = await prisma.v_kit_caracteristique.findMany()
+     * 
+     * // Get first 10 V_kit_caracteristiques
+     * const v_kit_caracteristiques = await prisma.v_kit_caracteristique.findMany({ take: 10 })
+     * 
+     * // Only select the `kit_label`
+     * const v_kit_caracteristiqueWithKit_labelOnly = await prisma.v_kit_caracteristique.findMany({ select: { kit_label: true } })
+     * 
+     */
+    findMany<T extends v_kit_caracteristiqueFindManyArgs, TakeDependenciesValidator extends "take" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}, SkipDependenciesValidator extends "skip" extends Prisma.Keys<T> ? {
+      orderBy: {}
+    } : {}>(args?: SelectSubset<T, v_kit_caracteristiqueFindManyArgs<ExtArgs>> & TakeDependenciesValidator & SkipDependenciesValidator): Prisma.PrismaPromise<$Result.GetResult<Prisma.$v_kit_caracteristiquePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of V_kit_caracteristiques.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_kit_caracteristiqueCountArgs} args - Arguments to filter V_kit_caracteristiques to count.
+     * @example
+     * // Count the number of V_kit_caracteristiques
+     * const count = await prisma.v_kit_caracteristique.count({
+     *   where: {
+     *     // ... the filter for the V_kit_caracteristiques we want to count
+     *   }
+     * })
+    **/
+    count<T extends v_kit_caracteristiqueCountArgs>(
+      args?: Subset<T, v_kit_caracteristiqueCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], V_kit_caracteristiqueCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a V_kit_caracteristique.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {V_kit_caracteristiqueAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends V_kit_caracteristiqueAggregateArgs>(args: Subset<T, V_kit_caracteristiqueAggregateArgs>): Prisma.PrismaPromise<GetV_kit_caracteristiqueAggregateType<T>>
+
+    /**
+     * Group by V_kit_caracteristique.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {v_kit_caracteristiqueGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends v_kit_caracteristiqueGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: v_kit_caracteristiqueGroupByArgs['orderBy'] }
+        : { orderBy?: v_kit_caracteristiqueGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, v_kit_caracteristiqueGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetV_kit_caracteristiqueGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the v_kit_caracteristique model
+   */
+  readonly fields: v_kit_caracteristiqueFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for v_kit_caracteristique.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__v_kit_caracteristiqueClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the v_kit_caracteristique model
+   */
+  interface v_kit_caracteristiqueFieldRefs {
+    readonly kit_label: FieldRef<"v_kit_caracteristique", 'String'>
+    readonly atr_label: FieldRef<"v_kit_caracteristique", 'String'>
+    readonly valeur: FieldRef<"v_kit_caracteristique", 'String'>
+    readonly unit: FieldRef<"v_kit_caracteristique", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * v_kit_caracteristique findFirst
+   */
+  export type v_kit_caracteristiqueFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the v_kit_caracteristique
+     */
+    select?: v_kit_caracteristiqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the v_kit_caracteristique
+     */
+    omit?: v_kit_caracteristiqueOmit<ExtArgs> | null
+    /**
+     * Filter, which v_kit_caracteristique to fetch.
+     */
+    where?: v_kit_caracteristiqueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of v_kit_caracteristiques to fetch.
+     */
+    orderBy?: v_kit_caracteristiqueOrderByWithRelationInput | v_kit_caracteristiqueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` v_kit_caracteristiques from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` v_kit_caracteristiques.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of v_kit_caracteristiques.
+     */
+    distinct?: V_kit_caracteristiqueScalarFieldEnum | V_kit_caracteristiqueScalarFieldEnum[]
+  }
+
+  /**
+   * v_kit_caracteristique findFirstOrThrow
+   */
+  export type v_kit_caracteristiqueFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the v_kit_caracteristique
+     */
+    select?: v_kit_caracteristiqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the v_kit_caracteristique
+     */
+    omit?: v_kit_caracteristiqueOmit<ExtArgs> | null
+    /**
+     * Filter, which v_kit_caracteristique to fetch.
+     */
+    where?: v_kit_caracteristiqueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of v_kit_caracteristiques to fetch.
+     */
+    orderBy?: v_kit_caracteristiqueOrderByWithRelationInput | v_kit_caracteristiqueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` v_kit_caracteristiques from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` v_kit_caracteristiques.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of v_kit_caracteristiques.
+     */
+    distinct?: V_kit_caracteristiqueScalarFieldEnum | V_kit_caracteristiqueScalarFieldEnum[]
+  }
+
+  /**
+   * v_kit_caracteristique findMany
+   */
+  export type v_kit_caracteristiqueFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the v_kit_caracteristique
+     */
+    select?: v_kit_caracteristiqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the v_kit_caracteristique
+     */
+    omit?: v_kit_caracteristiqueOmit<ExtArgs> | null
+    /**
+     * Filter, which v_kit_caracteristiques to fetch.
+     */
+    where?: v_kit_caracteristiqueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of v_kit_caracteristiques to fetch.
+     */
+    orderBy?: v_kit_caracteristiqueOrderByWithRelationInput | v_kit_caracteristiqueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` v_kit_caracteristiques from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` v_kit_caracteristiques.
+     */
+    skip?: number
+    distinct?: V_kit_caracteristiqueScalarFieldEnum | V_kit_caracteristiqueScalarFieldEnum[]
+  }
+
+  /**
+   * v_kit_caracteristique without action
+   */
+  export type v_kit_caracteristiqueDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the v_kit_caracteristique
+     */
+    select?: v_kit_caracteristiqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the v_kit_caracteristique
+     */
+    omit?: v_kit_caracteristiqueOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -17076,6 +20450,71 @@ export namespace Prisma {
   };
 
   export type Famille_ewanScalarFieldEnum = (typeof Famille_ewanScalarFieldEnum)[keyof typeof Famille_ewanScalarFieldEnum]
+
+
+  export const V_tarif_achatScalarFieldEnum: {
+    fk_produit: 'fk_produit',
+    taa_date: 'taa_date',
+    taa_montant: 'taa_montant',
+    taa_remise: 'taa_remise',
+    taa_montant_net: 'taa_montant_net'
+  };
+
+  export type V_tarif_achatScalarFieldEnum = (typeof V_tarif_achatScalarFieldEnum)[keyof typeof V_tarif_achatScalarFieldEnum]
+
+
+  export const Produit_v_produit_categorie_attributScalarFieldEnum: {
+    pro_id: 'pro_id',
+    kit_label: 'kit_label',
+    atr_id: 'atr_id',
+    atr_label: 'atr_label',
+    cat_label: 'cat_label'
+  };
+
+  export type Produit_v_produit_categorie_attributScalarFieldEnum = (typeof Produit_v_produit_categorie_attributScalarFieldEnum)[keyof typeof Produit_v_produit_categorie_attributScalarFieldEnum]
+
+
+  export const Public_v_produit_categorie_attributScalarFieldEnum: {
+    pro_id: 'pro_id',
+    kit_label: 'kit_label',
+    atr_id: 'atr_id',
+    atr_label: 'atr_label',
+    cat_label: 'cat_label'
+  };
+
+  export type Public_v_produit_categorie_attributScalarFieldEnum = (typeof Public_v_produit_categorie_attributScalarFieldEnum)[keyof typeof Public_v_produit_categorie_attributScalarFieldEnum]
+
+
+  export const V_categorieScalarFieldEnum: {
+    atr_0_id: 'atr_0_id',
+    atr_0_label: 'atr_0_label',
+    atr_1_id: 'atr_1_id',
+    atr_1_label: 'atr_1_label',
+    atr_2_id: 'atr_2_id',
+    atr_2_label: 'atr_2_label',
+    atr_3_id: 'atr_3_id',
+    atr_3_label: 'atr_3_label',
+    atr_4_id: 'atr_4_id',
+    atr_4_label: 'atr_4_label',
+    atr_5_id: 'atr_5_id',
+    atr_5_label: 'atr_5_label',
+    atr_6_id: 'atr_6_id',
+    atr_6_label: 'atr_6_label',
+    atr_7_id: 'atr_7_id',
+    atr_7_label: 'atr_7_label'
+  };
+
+  export type V_categorieScalarFieldEnum = (typeof V_categorieScalarFieldEnum)[keyof typeof V_categorieScalarFieldEnum]
+
+
+  export const V_kit_caracteristiqueScalarFieldEnum: {
+    kit_label: 'kit_label',
+    atr_label: 'atr_label',
+    valeur: 'valeur',
+    unit: 'unit'
+  };
+
+  export type V_kit_caracteristiqueScalarFieldEnum = (typeof V_kit_caracteristiqueScalarFieldEnum)[keyof typeof V_kit_caracteristiqueScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -17933,6 +21372,259 @@ export namespace Prisma {
     fam_code?: StringNullableWithAggregatesFilter<"famille_ewan"> | string | null
     fam_label?: StringNullableWithAggregatesFilter<"famille_ewan"> | string | null
     fk_supplier?: IntNullableWithAggregatesFilter<"famille_ewan"> | number | null
+  }
+
+  export type v_tarif_achatWhereInput = {
+    AND?: v_tarif_achatWhereInput | v_tarif_achatWhereInput[]
+    OR?: v_tarif_achatWhereInput[]
+    NOT?: v_tarif_achatWhereInput | v_tarif_achatWhereInput[]
+    fk_produit?: IntNullableFilter<"v_tarif_achat"> | number | null
+    taa_date?: DateTimeNullableFilter<"v_tarif_achat"> | Date | string | null
+    taa_montant?: FloatNullableFilter<"v_tarif_achat"> | number | null
+    taa_remise?: FloatNullableFilter<"v_tarif_achat"> | number | null
+    taa_montant_net?: FloatNullableFilter<"v_tarif_achat"> | number | null
+  }
+
+  export type v_tarif_achatOrderByWithRelationInput = {
+    fk_produit?: SortOrderInput | SortOrder
+    taa_date?: SortOrderInput | SortOrder
+    taa_montant?: SortOrderInput | SortOrder
+    taa_remise?: SortOrderInput | SortOrder
+    taa_montant_net?: SortOrderInput | SortOrder
+  }
+
+  export type v_tarif_achatOrderByWithAggregationInput = {
+    fk_produit?: SortOrderInput | SortOrder
+    taa_date?: SortOrderInput | SortOrder
+    taa_montant?: SortOrderInput | SortOrder
+    taa_remise?: SortOrderInput | SortOrder
+    taa_montant_net?: SortOrderInput | SortOrder
+    _count?: v_tarif_achatCountOrderByAggregateInput
+    _avg?: v_tarif_achatAvgOrderByAggregateInput
+    _max?: v_tarif_achatMaxOrderByAggregateInput
+    _min?: v_tarif_achatMinOrderByAggregateInput
+    _sum?: v_tarif_achatSumOrderByAggregateInput
+  }
+
+  export type v_tarif_achatScalarWhereWithAggregatesInput = {
+    AND?: v_tarif_achatScalarWhereWithAggregatesInput | v_tarif_achatScalarWhereWithAggregatesInput[]
+    OR?: v_tarif_achatScalarWhereWithAggregatesInput[]
+    NOT?: v_tarif_achatScalarWhereWithAggregatesInput | v_tarif_achatScalarWhereWithAggregatesInput[]
+    fk_produit?: IntNullableWithAggregatesFilter<"v_tarif_achat"> | number | null
+    taa_date?: DateTimeNullableWithAggregatesFilter<"v_tarif_achat"> | Date | string | null
+    taa_montant?: FloatNullableWithAggregatesFilter<"v_tarif_achat"> | number | null
+    taa_remise?: FloatNullableWithAggregatesFilter<"v_tarif_achat"> | number | null
+    taa_montant_net?: FloatNullableWithAggregatesFilter<"v_tarif_achat"> | number | null
+  }
+
+  export type produit_v_produit_categorie_attributWhereInput = {
+    AND?: produit_v_produit_categorie_attributWhereInput | produit_v_produit_categorie_attributWhereInput[]
+    OR?: produit_v_produit_categorie_attributWhereInput[]
+    NOT?: produit_v_produit_categorie_attributWhereInput | produit_v_produit_categorie_attributWhereInput[]
+    pro_id?: IntNullableFilter<"produit_v_produit_categorie_attribut"> | number | null
+    kit_label?: StringNullableFilter<"produit_v_produit_categorie_attribut"> | string | null
+    atr_id?: IntNullableFilter<"produit_v_produit_categorie_attribut"> | number | null
+    atr_label?: StringNullableFilter<"produit_v_produit_categorie_attribut"> | string | null
+    cat_label?: StringNullableFilter<"produit_v_produit_categorie_attribut"> | string | null
+  }
+
+  export type produit_v_produit_categorie_attributOrderByWithRelationInput = {
+    pro_id?: SortOrderInput | SortOrder
+    kit_label?: SortOrderInput | SortOrder
+    atr_id?: SortOrderInput | SortOrder
+    atr_label?: SortOrderInput | SortOrder
+    cat_label?: SortOrderInput | SortOrder
+  }
+
+  export type produit_v_produit_categorie_attributOrderByWithAggregationInput = {
+    pro_id?: SortOrderInput | SortOrder
+    kit_label?: SortOrderInput | SortOrder
+    atr_id?: SortOrderInput | SortOrder
+    atr_label?: SortOrderInput | SortOrder
+    cat_label?: SortOrderInput | SortOrder
+    _count?: produit_v_produit_categorie_attributCountOrderByAggregateInput
+    _avg?: produit_v_produit_categorie_attributAvgOrderByAggregateInput
+    _max?: produit_v_produit_categorie_attributMaxOrderByAggregateInput
+    _min?: produit_v_produit_categorie_attributMinOrderByAggregateInput
+    _sum?: produit_v_produit_categorie_attributSumOrderByAggregateInput
+  }
+
+  export type produit_v_produit_categorie_attributScalarWhereWithAggregatesInput = {
+    AND?: produit_v_produit_categorie_attributScalarWhereWithAggregatesInput | produit_v_produit_categorie_attributScalarWhereWithAggregatesInput[]
+    OR?: produit_v_produit_categorie_attributScalarWhereWithAggregatesInput[]
+    NOT?: produit_v_produit_categorie_attributScalarWhereWithAggregatesInput | produit_v_produit_categorie_attributScalarWhereWithAggregatesInput[]
+    pro_id?: IntNullableWithAggregatesFilter<"produit_v_produit_categorie_attribut"> | number | null
+    kit_label?: StringNullableWithAggregatesFilter<"produit_v_produit_categorie_attribut"> | string | null
+    atr_id?: IntNullableWithAggregatesFilter<"produit_v_produit_categorie_attribut"> | number | null
+    atr_label?: StringNullableWithAggregatesFilter<"produit_v_produit_categorie_attribut"> | string | null
+    cat_label?: StringNullableWithAggregatesFilter<"produit_v_produit_categorie_attribut"> | string | null
+  }
+
+  export type public_v_produit_categorie_attributWhereInput = {
+    AND?: public_v_produit_categorie_attributWhereInput | public_v_produit_categorie_attributWhereInput[]
+    OR?: public_v_produit_categorie_attributWhereInput[]
+    NOT?: public_v_produit_categorie_attributWhereInput | public_v_produit_categorie_attributWhereInput[]
+    pro_id?: IntNullableFilter<"public_v_produit_categorie_attribut"> | number | null
+    kit_label?: StringNullableFilter<"public_v_produit_categorie_attribut"> | string | null
+    atr_id?: IntNullableFilter<"public_v_produit_categorie_attribut"> | number | null
+    atr_label?: StringNullableFilter<"public_v_produit_categorie_attribut"> | string | null
+    cat_label?: StringNullableFilter<"public_v_produit_categorie_attribut"> | string | null
+  }
+
+  export type public_v_produit_categorie_attributOrderByWithRelationInput = {
+    pro_id?: SortOrderInput | SortOrder
+    kit_label?: SortOrderInput | SortOrder
+    atr_id?: SortOrderInput | SortOrder
+    atr_label?: SortOrderInput | SortOrder
+    cat_label?: SortOrderInput | SortOrder
+  }
+
+  export type public_v_produit_categorie_attributOrderByWithAggregationInput = {
+    pro_id?: SortOrderInput | SortOrder
+    kit_label?: SortOrderInput | SortOrder
+    atr_id?: SortOrderInput | SortOrder
+    atr_label?: SortOrderInput | SortOrder
+    cat_label?: SortOrderInput | SortOrder
+    _count?: public_v_produit_categorie_attributCountOrderByAggregateInput
+    _avg?: public_v_produit_categorie_attributAvgOrderByAggregateInput
+    _max?: public_v_produit_categorie_attributMaxOrderByAggregateInput
+    _min?: public_v_produit_categorie_attributMinOrderByAggregateInput
+    _sum?: public_v_produit_categorie_attributSumOrderByAggregateInput
+  }
+
+  export type public_v_produit_categorie_attributScalarWhereWithAggregatesInput = {
+    AND?: public_v_produit_categorie_attributScalarWhereWithAggregatesInput | public_v_produit_categorie_attributScalarWhereWithAggregatesInput[]
+    OR?: public_v_produit_categorie_attributScalarWhereWithAggregatesInput[]
+    NOT?: public_v_produit_categorie_attributScalarWhereWithAggregatesInput | public_v_produit_categorie_attributScalarWhereWithAggregatesInput[]
+    pro_id?: IntNullableWithAggregatesFilter<"public_v_produit_categorie_attribut"> | number | null
+    kit_label?: StringNullableWithAggregatesFilter<"public_v_produit_categorie_attribut"> | string | null
+    atr_id?: IntNullableWithAggregatesFilter<"public_v_produit_categorie_attribut"> | number | null
+    atr_label?: StringNullableWithAggregatesFilter<"public_v_produit_categorie_attribut"> | string | null
+    cat_label?: StringNullableWithAggregatesFilter<"public_v_produit_categorie_attribut"> | string | null
+  }
+
+  export type v_categorieWhereInput = {
+    AND?: v_categorieWhereInput | v_categorieWhereInput[]
+    OR?: v_categorieWhereInput[]
+    NOT?: v_categorieWhereInput | v_categorieWhereInput[]
+    atr_0_id?: IntNullableFilter<"v_categorie"> | number | null
+    atr_0_label?: StringNullableFilter<"v_categorie"> | string | null
+    atr_1_id?: IntNullableFilter<"v_categorie"> | number | null
+    atr_1_label?: StringNullableFilter<"v_categorie"> | string | null
+    atr_2_id?: IntNullableFilter<"v_categorie"> | number | null
+    atr_2_label?: StringNullableFilter<"v_categorie"> | string | null
+    atr_3_id?: IntNullableFilter<"v_categorie"> | number | null
+    atr_3_label?: StringNullableFilter<"v_categorie"> | string | null
+    atr_4_id?: IntNullableFilter<"v_categorie"> | number | null
+    atr_4_label?: StringNullableFilter<"v_categorie"> | string | null
+    atr_5_id?: IntNullableFilter<"v_categorie"> | number | null
+    atr_5_label?: StringNullableFilter<"v_categorie"> | string | null
+    atr_6_id?: IntNullableFilter<"v_categorie"> | number | null
+    atr_6_label?: StringNullableFilter<"v_categorie"> | string | null
+    atr_7_id?: IntNullableFilter<"v_categorie"> | number | null
+    atr_7_label?: StringNullableFilter<"v_categorie"> | string | null
+  }
+
+  export type v_categorieOrderByWithRelationInput = {
+    atr_0_id?: SortOrderInput | SortOrder
+    atr_0_label?: SortOrderInput | SortOrder
+    atr_1_id?: SortOrderInput | SortOrder
+    atr_1_label?: SortOrderInput | SortOrder
+    atr_2_id?: SortOrderInput | SortOrder
+    atr_2_label?: SortOrderInput | SortOrder
+    atr_3_id?: SortOrderInput | SortOrder
+    atr_3_label?: SortOrderInput | SortOrder
+    atr_4_id?: SortOrderInput | SortOrder
+    atr_4_label?: SortOrderInput | SortOrder
+    atr_5_id?: SortOrderInput | SortOrder
+    atr_5_label?: SortOrderInput | SortOrder
+    atr_6_id?: SortOrderInput | SortOrder
+    atr_6_label?: SortOrderInput | SortOrder
+    atr_7_id?: SortOrderInput | SortOrder
+    atr_7_label?: SortOrderInput | SortOrder
+  }
+
+  export type v_categorieOrderByWithAggregationInput = {
+    atr_0_id?: SortOrderInput | SortOrder
+    atr_0_label?: SortOrderInput | SortOrder
+    atr_1_id?: SortOrderInput | SortOrder
+    atr_1_label?: SortOrderInput | SortOrder
+    atr_2_id?: SortOrderInput | SortOrder
+    atr_2_label?: SortOrderInput | SortOrder
+    atr_3_id?: SortOrderInput | SortOrder
+    atr_3_label?: SortOrderInput | SortOrder
+    atr_4_id?: SortOrderInput | SortOrder
+    atr_4_label?: SortOrderInput | SortOrder
+    atr_5_id?: SortOrderInput | SortOrder
+    atr_5_label?: SortOrderInput | SortOrder
+    atr_6_id?: SortOrderInput | SortOrder
+    atr_6_label?: SortOrderInput | SortOrder
+    atr_7_id?: SortOrderInput | SortOrder
+    atr_7_label?: SortOrderInput | SortOrder
+    _count?: v_categorieCountOrderByAggregateInput
+    _avg?: v_categorieAvgOrderByAggregateInput
+    _max?: v_categorieMaxOrderByAggregateInput
+    _min?: v_categorieMinOrderByAggregateInput
+    _sum?: v_categorieSumOrderByAggregateInput
+  }
+
+  export type v_categorieScalarWhereWithAggregatesInput = {
+    AND?: v_categorieScalarWhereWithAggregatesInput | v_categorieScalarWhereWithAggregatesInput[]
+    OR?: v_categorieScalarWhereWithAggregatesInput[]
+    NOT?: v_categorieScalarWhereWithAggregatesInput | v_categorieScalarWhereWithAggregatesInput[]
+    atr_0_id?: IntNullableWithAggregatesFilter<"v_categorie"> | number | null
+    atr_0_label?: StringNullableWithAggregatesFilter<"v_categorie"> | string | null
+    atr_1_id?: IntNullableWithAggregatesFilter<"v_categorie"> | number | null
+    atr_1_label?: StringNullableWithAggregatesFilter<"v_categorie"> | string | null
+    atr_2_id?: IntNullableWithAggregatesFilter<"v_categorie"> | number | null
+    atr_2_label?: StringNullableWithAggregatesFilter<"v_categorie"> | string | null
+    atr_3_id?: IntNullableWithAggregatesFilter<"v_categorie"> | number | null
+    atr_3_label?: StringNullableWithAggregatesFilter<"v_categorie"> | string | null
+    atr_4_id?: IntNullableWithAggregatesFilter<"v_categorie"> | number | null
+    atr_4_label?: StringNullableWithAggregatesFilter<"v_categorie"> | string | null
+    atr_5_id?: IntNullableWithAggregatesFilter<"v_categorie"> | number | null
+    atr_5_label?: StringNullableWithAggregatesFilter<"v_categorie"> | string | null
+    atr_6_id?: IntNullableWithAggregatesFilter<"v_categorie"> | number | null
+    atr_6_label?: StringNullableWithAggregatesFilter<"v_categorie"> | string | null
+    atr_7_id?: IntNullableWithAggregatesFilter<"v_categorie"> | number | null
+    atr_7_label?: StringNullableWithAggregatesFilter<"v_categorie"> | string | null
+  }
+
+  export type v_kit_caracteristiqueWhereInput = {
+    AND?: v_kit_caracteristiqueWhereInput | v_kit_caracteristiqueWhereInput[]
+    OR?: v_kit_caracteristiqueWhereInput[]
+    NOT?: v_kit_caracteristiqueWhereInput | v_kit_caracteristiqueWhereInput[]
+    kit_label?: StringNullableFilter<"v_kit_caracteristique"> | string | null
+    atr_label?: StringNullableFilter<"v_kit_caracteristique"> | string | null
+    valeur?: StringNullableFilter<"v_kit_caracteristique"> | string | null
+    unit?: StringNullableFilter<"v_kit_caracteristique"> | string | null
+  }
+
+  export type v_kit_caracteristiqueOrderByWithRelationInput = {
+    kit_label?: SortOrderInput | SortOrder
+    atr_label?: SortOrderInput | SortOrder
+    valeur?: SortOrderInput | SortOrder
+    unit?: SortOrderInput | SortOrder
+  }
+
+  export type v_kit_caracteristiqueOrderByWithAggregationInput = {
+    kit_label?: SortOrderInput | SortOrder
+    atr_label?: SortOrderInput | SortOrder
+    valeur?: SortOrderInput | SortOrder
+    unit?: SortOrderInput | SortOrder
+    _count?: v_kit_caracteristiqueCountOrderByAggregateInput
+    _max?: v_kit_caracteristiqueMaxOrderByAggregateInput
+    _min?: v_kit_caracteristiqueMinOrderByAggregateInput
+  }
+
+  export type v_kit_caracteristiqueScalarWhereWithAggregatesInput = {
+    AND?: v_kit_caracteristiqueScalarWhereWithAggregatesInput | v_kit_caracteristiqueScalarWhereWithAggregatesInput[]
+    OR?: v_kit_caracteristiqueScalarWhereWithAggregatesInput[]
+    NOT?: v_kit_caracteristiqueScalarWhereWithAggregatesInput | v_kit_caracteristiqueScalarWhereWithAggregatesInput[]
+    kit_label?: StringNullableWithAggregatesFilter<"v_kit_caracteristique"> | string | null
+    atr_label?: StringNullableWithAggregatesFilter<"v_kit_caracteristique"> | string | null
+    valeur?: StringNullableWithAggregatesFilter<"v_kit_caracteristique"> | string | null
+    unit?: StringNullableWithAggregatesFilter<"v_kit_caracteristique"> | string | null
   }
 
   export type categorieCreateInput = {
@@ -19452,6 +23144,212 @@ export namespace Prisma {
     fam_id?: SortOrder
     fk_parent?: SortOrder
     fk_supplier?: SortOrder
+  }
+
+  export type v_tarif_achatCountOrderByAggregateInput = {
+    fk_produit?: SortOrder
+    taa_date?: SortOrder
+    taa_montant?: SortOrder
+    taa_remise?: SortOrder
+    taa_montant_net?: SortOrder
+  }
+
+  export type v_tarif_achatAvgOrderByAggregateInput = {
+    fk_produit?: SortOrder
+    taa_montant?: SortOrder
+    taa_remise?: SortOrder
+    taa_montant_net?: SortOrder
+  }
+
+  export type v_tarif_achatMaxOrderByAggregateInput = {
+    fk_produit?: SortOrder
+    taa_date?: SortOrder
+    taa_montant?: SortOrder
+    taa_remise?: SortOrder
+    taa_montant_net?: SortOrder
+  }
+
+  export type v_tarif_achatMinOrderByAggregateInput = {
+    fk_produit?: SortOrder
+    taa_date?: SortOrder
+    taa_montant?: SortOrder
+    taa_remise?: SortOrder
+    taa_montant_net?: SortOrder
+  }
+
+  export type v_tarif_achatSumOrderByAggregateInput = {
+    fk_produit?: SortOrder
+    taa_montant?: SortOrder
+    taa_remise?: SortOrder
+    taa_montant_net?: SortOrder
+  }
+
+  export type produit_v_produit_categorie_attributCountOrderByAggregateInput = {
+    pro_id?: SortOrder
+    kit_label?: SortOrder
+    atr_id?: SortOrder
+    atr_label?: SortOrder
+    cat_label?: SortOrder
+  }
+
+  export type produit_v_produit_categorie_attributAvgOrderByAggregateInput = {
+    pro_id?: SortOrder
+    atr_id?: SortOrder
+  }
+
+  export type produit_v_produit_categorie_attributMaxOrderByAggregateInput = {
+    pro_id?: SortOrder
+    kit_label?: SortOrder
+    atr_id?: SortOrder
+    atr_label?: SortOrder
+    cat_label?: SortOrder
+  }
+
+  export type produit_v_produit_categorie_attributMinOrderByAggregateInput = {
+    pro_id?: SortOrder
+    kit_label?: SortOrder
+    atr_id?: SortOrder
+    atr_label?: SortOrder
+    cat_label?: SortOrder
+  }
+
+  export type produit_v_produit_categorie_attributSumOrderByAggregateInput = {
+    pro_id?: SortOrder
+    atr_id?: SortOrder
+  }
+
+  export type public_v_produit_categorie_attributCountOrderByAggregateInput = {
+    pro_id?: SortOrder
+    kit_label?: SortOrder
+    atr_id?: SortOrder
+    atr_label?: SortOrder
+    cat_label?: SortOrder
+  }
+
+  export type public_v_produit_categorie_attributAvgOrderByAggregateInput = {
+    pro_id?: SortOrder
+    atr_id?: SortOrder
+  }
+
+  export type public_v_produit_categorie_attributMaxOrderByAggregateInput = {
+    pro_id?: SortOrder
+    kit_label?: SortOrder
+    atr_id?: SortOrder
+    atr_label?: SortOrder
+    cat_label?: SortOrder
+  }
+
+  export type public_v_produit_categorie_attributMinOrderByAggregateInput = {
+    pro_id?: SortOrder
+    kit_label?: SortOrder
+    atr_id?: SortOrder
+    atr_label?: SortOrder
+    cat_label?: SortOrder
+  }
+
+  export type public_v_produit_categorie_attributSumOrderByAggregateInput = {
+    pro_id?: SortOrder
+    atr_id?: SortOrder
+  }
+
+  export type v_categorieCountOrderByAggregateInput = {
+    atr_0_id?: SortOrder
+    atr_0_label?: SortOrder
+    atr_1_id?: SortOrder
+    atr_1_label?: SortOrder
+    atr_2_id?: SortOrder
+    atr_2_label?: SortOrder
+    atr_3_id?: SortOrder
+    atr_3_label?: SortOrder
+    atr_4_id?: SortOrder
+    atr_4_label?: SortOrder
+    atr_5_id?: SortOrder
+    atr_5_label?: SortOrder
+    atr_6_id?: SortOrder
+    atr_6_label?: SortOrder
+    atr_7_id?: SortOrder
+    atr_7_label?: SortOrder
+  }
+
+  export type v_categorieAvgOrderByAggregateInput = {
+    atr_0_id?: SortOrder
+    atr_1_id?: SortOrder
+    atr_2_id?: SortOrder
+    atr_3_id?: SortOrder
+    atr_4_id?: SortOrder
+    atr_5_id?: SortOrder
+    atr_6_id?: SortOrder
+    atr_7_id?: SortOrder
+  }
+
+  export type v_categorieMaxOrderByAggregateInput = {
+    atr_0_id?: SortOrder
+    atr_0_label?: SortOrder
+    atr_1_id?: SortOrder
+    atr_1_label?: SortOrder
+    atr_2_id?: SortOrder
+    atr_2_label?: SortOrder
+    atr_3_id?: SortOrder
+    atr_3_label?: SortOrder
+    atr_4_id?: SortOrder
+    atr_4_label?: SortOrder
+    atr_5_id?: SortOrder
+    atr_5_label?: SortOrder
+    atr_6_id?: SortOrder
+    atr_6_label?: SortOrder
+    atr_7_id?: SortOrder
+    atr_7_label?: SortOrder
+  }
+
+  export type v_categorieMinOrderByAggregateInput = {
+    atr_0_id?: SortOrder
+    atr_0_label?: SortOrder
+    atr_1_id?: SortOrder
+    atr_1_label?: SortOrder
+    atr_2_id?: SortOrder
+    atr_2_label?: SortOrder
+    atr_3_id?: SortOrder
+    atr_3_label?: SortOrder
+    atr_4_id?: SortOrder
+    atr_4_label?: SortOrder
+    atr_5_id?: SortOrder
+    atr_5_label?: SortOrder
+    atr_6_id?: SortOrder
+    atr_6_label?: SortOrder
+    atr_7_id?: SortOrder
+    atr_7_label?: SortOrder
+  }
+
+  export type v_categorieSumOrderByAggregateInput = {
+    atr_0_id?: SortOrder
+    atr_1_id?: SortOrder
+    atr_2_id?: SortOrder
+    atr_3_id?: SortOrder
+    atr_4_id?: SortOrder
+    atr_5_id?: SortOrder
+    atr_6_id?: SortOrder
+    atr_7_id?: SortOrder
+  }
+
+  export type v_kit_caracteristiqueCountOrderByAggregateInput = {
+    kit_label?: SortOrder
+    atr_label?: SortOrder
+    valeur?: SortOrder
+    unit?: SortOrder
+  }
+
+  export type v_kit_caracteristiqueMaxOrderByAggregateInput = {
+    kit_label?: SortOrder
+    atr_label?: SortOrder
+    valeur?: SortOrder
+    unit?: SortOrder
+  }
+
+  export type v_kit_caracteristiqueMinOrderByAggregateInput = {
+    kit_label?: SortOrder
+    atr_label?: SortOrder
+    valeur?: SortOrder
+    unit?: SortOrder
   }
 
   export type categorieCreateNestedOneWithoutOther_categorieInput = {

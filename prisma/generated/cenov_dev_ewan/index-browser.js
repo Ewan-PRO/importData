@@ -20,12 +20,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.14.0
- * Query Engine version: 717184b7b35ea05dfa71a3236b7af656013e1e49
+ * Prisma Client JS version: 6.15.0
+ * Query Engine version: 85179d7826409ee107a6ba334b5e305ae3fba9fb
  */
 Prisma.prismaVersion = {
-  client: "6.14.0",
-  engine: "717184b7b35ea05dfa71a3236b7af656013e1e49"
+  client: "6.15.0",
+  engine: "85179d7826409ee107a6ba334b5e305ae3fba9fb"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -218,6 +218,56 @@ exports.Prisma.Famille_ewanScalarFieldEnum = {
   fk_supplier: 'fk_supplier'
 };
 
+exports.Prisma.V_tarif_achatScalarFieldEnum = {
+  fk_produit: 'fk_produit',
+  taa_date: 'taa_date',
+  taa_montant: 'taa_montant',
+  taa_remise: 'taa_remise',
+  taa_montant_net: 'taa_montant_net'
+};
+
+exports.Prisma.Produit_v_produit_categorie_attributScalarFieldEnum = {
+  pro_id: 'pro_id',
+  kit_label: 'kit_label',
+  atr_id: 'atr_id',
+  atr_label: 'atr_label',
+  cat_label: 'cat_label'
+};
+
+exports.Prisma.Public_v_produit_categorie_attributScalarFieldEnum = {
+  pro_id: 'pro_id',
+  kit_label: 'kit_label',
+  atr_id: 'atr_id',
+  atr_label: 'atr_label',
+  cat_label: 'cat_label'
+};
+
+exports.Prisma.V_categorieScalarFieldEnum = {
+  atr_0_id: 'atr_0_id',
+  atr_0_label: 'atr_0_label',
+  atr_1_id: 'atr_1_id',
+  atr_1_label: 'atr_1_label',
+  atr_2_id: 'atr_2_id',
+  atr_2_label: 'atr_2_label',
+  atr_3_id: 'atr_3_id',
+  atr_3_label: 'atr_3_label',
+  atr_4_id: 'atr_4_id',
+  atr_4_label: 'atr_4_label',
+  atr_5_id: 'atr_5_id',
+  atr_5_label: 'atr_5_label',
+  atr_6_id: 'atr_6_id',
+  atr_6_label: 'atr_6_label',
+  atr_7_id: 'atr_7_id',
+  atr_7_label: 'atr_7_label'
+};
+
+exports.Prisma.V_kit_caracteristiqueScalarFieldEnum = {
+  kit_label: 'kit_label',
+  atr_label: 'atr_label',
+  valeur: 'valeur',
+  unit: 'unit'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -247,7 +297,12 @@ exports.Prisma.ModelName = {
   kit_cenov_dev_ewan: 'kit_cenov_dev_ewan',
   kit_attribute_cenov_dev_ewan: 'kit_attribute_cenov_dev_ewan',
   part_nc_cenov_dev_ewan: 'part_nc_cenov_dev_ewan',
-  famille_ewan: 'famille_ewan'
+  famille_ewan: 'famille_ewan',
+  v_tarif_achat: 'v_tarif_achat',
+  produit_v_produit_categorie_attribut: 'produit_v_produit_categorie_attribut',
+  public_v_produit_categorie_attribut: 'public_v_produit_categorie_attribut',
+  v_categorie: 'v_categorie',
+  v_kit_caracteristique: 'v_kit_caracteristique'
 };
 
 /**

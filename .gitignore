@@ -29,3 +29,6 @@ static/Excel/
 # BDD-IA
 scripts/BDD-IA/cenov/output/
 scripts/BDD-IA/cenov_dev_ewan/output/
+
+# Prisma generated clients
+prisma/generated/
