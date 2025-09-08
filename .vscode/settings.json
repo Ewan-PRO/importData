@@ -20,13 +20,19 @@
 	},
 	"peacock.color": "#ff3d00",
 	"files.exclude": {
-		"**/node_modules/@prisma": true,
+		"**/node_modules": true,
+		"**/.git": true,
+		"**/.svelte-kit": true,
+		"**/build": true,
 		"prisma/**/generated": true
 	},
 	"search.exclude": {
-		"**/node_modules/@prisma": true,
+		"**/node_modules": true,
+		"**/.git": true,
+		"**/.svelte-kit": true,
+		"**/build": true,
 		"prisma/**/generated": true
 	},
-	"typescript.preferences.includePackageJsonAutoImports": "off",
-	"typescript.preferences.excludePackageJsonAutoImports": ["@prisma/client"]
+	"prisma.fileWatcher": false,
+	"typescript.preferences.includePackageJsonAutoImports": "off"
 }

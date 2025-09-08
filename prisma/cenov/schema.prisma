@@ -21,6 +21,17 @@ model attribute {
   @@unique([atr_nat, atr_val], map: "idx_attribute")
 }
 
+model attribute_dev {
+  atr_id     Int       @id @default(autoincrement())
+  atr_nat    String?   @db.VarChar(60)
+  atr_val    String?   @db.VarChar(60)
+  atr_label  String?   @db.VarChar(100)
+  created_at DateTime? @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+
+  @@unique([atr_nat, atr_val], map: "idx_attribute_dev")
+}
+
 model document {
   doc_id        Int            @id @default(autoincrement())
   doc_name      String?        @db.VarChar(100)
@@ -53,6 +64,23 @@ model kit_attribute {
   attribute_kit_attribute_fk_attribute_caracToattribute attribute? @relation("kit_attribute_fk_attribute_caracToattribute", fields: [fk_attribute_carac], references: [atr_id], onDelete: NoAction, onUpdate: NoAction)
   attribute_kit_attribute_fk_attributeToattribute       attribute? @relation("kit_attribute_fk_attributeToattribute", fields: [fk_attribute], references: [atr_id], onDelete: NoAction, onUpdate: NoAction)
   kit                                                   kit?       @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model kit_attribute_dev {
+  fk_kit             Int?
+  fk_attribute_carac Int?
+  fk_attribute       Int?
+  kat_valeur         Float?
+  created_at         DateTime? @default(now()) @db.Timestamp(6)
+  updated_at         DateTime? @default(now()) @db.Timestamp(6)
+  kat_id             Int       @id @default(autoincrement())
+}
+
+model kit_dev {
+  kit_id     Int       @id @default(autoincrement())
+  kit_label  String?   @unique(map: "idx_kit_dev") @db.VarChar(100)
+  created_at DateTime? @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
 }
 
 model kit_document {
@@ -95,34 +123,6 @@ model supplier {
   @@index([sup_code], map: "supplier_sup_code_index")
 }
 
-model attribute_dev {
-  atr_id     Int       @id @default(autoincrement())
-  atr_nat    String?   @db.VarChar(60)
-  atr_val    String?   @db.VarChar(60)
-  atr_label  String?   @db.VarChar(100)
-  created_at DateTime? @db.Timestamp(6)
-  updated_at DateTime? @db.Timestamp(6)
-
-  @@unique([atr_nat, atr_val], map: "idx_attribute_dev")
-}
-
-model kit_dev {
-  kit_id     Int       @id @default(autoincrement())
-  kit_label  String?   @unique(map: "idx_kit_dev") @db.VarChar(100)
-  created_at DateTime? @db.Timestamp(6)
-  updated_at DateTime? @db.Timestamp(6)
-}
-
-model kit_attribute_dev {
-  fk_kit             Int?
-  fk_attribute_carac Int?
-  fk_attribute       Int?
-  kat_valeur         Float?
-  created_at         DateTime? @default(now()) @db.Timestamp(6)
-  updated_at         DateTime? @default(now()) @db.Timestamp(6)
-  kat_id             Int       @id @default(autoincrement())
-}
-
 model supplier_dev {
   sup_id    Int     @id @default(autoincrement())
   sup_code  String? @db.VarChar(10)
@@ -132,8 +132,8 @@ model supplier_dev {
 }
 
 view v_categories {
-  atr_id      Int
-  atr_0_label String  @db.VarChar(100)
+  atr_id      Int?
+  atr_0_label String? @db.VarChar(100)
   atr_1_label String? @db.VarChar(100)
   atr_2_label String? @db.VarChar(100)
   atr_3_label String? @db.VarChar(100)
@@ -144,17 +144,15 @@ view v_categories {
 }
 
 view v_kit_carac {
-  id         Int
-  kit_label  String @db.VarChar(100)
-  atr_label  String @db.VarChar(100)
-  atr_val    String @db.VarChar(60)
-  kat_valeur Float
-
-  @@unique([kit_label, atr_label, atr_val], name: "v_kit_carac_unique")
+  id         Int?
+  kit_label  String? @db.VarChar(100)
+  atr_label  String? @db.VarChar(100)
+  atr_val    String? @db.VarChar(60)
+  kat_valeur Float?
 }
 
 view v_categories_dev {
-  row_key     Int
+  row_key     Int?
   atr_id      Int?
   atr_0_label String? @db.VarChar(100)
   atr_1_label String? @db.VarChar(100)
@@ -167,11 +165,9 @@ view v_categories_dev {
 }
 
 view v_kit_carac_dev {
-  id         Int
-  kit_label  String @db.VarChar(100)
-  atr_label  String @db.VarChar(100)
-  atr_val    String @db.VarChar(60)
-  kat_valeur Float
-
-  @@unique([kit_label, atr_label, atr_val], name: "v_kit_carac_dev_unique")
+  id         Int?
+  kit_label  String? @db.VarChar(100)
+  atr_label  String? @db.VarChar(100)
+  atr_val    String? @db.VarChar(60)
+  kat_valeur Float?
 }
