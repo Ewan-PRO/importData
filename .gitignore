@@ -32,3 +32,5 @@ scripts/BDD-IA/cenov_dev_ewan/output/
 
 # Prisma generated clients
 prisma/generated/
+!prisma/generated/cenov_dev_ewan/
+prisma/generated/cenov_dev_ewan/**

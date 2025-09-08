@@ -7,3 +7,5 @@ bun.lockb
 
 # Prisma generated clients
 prisma/generated/
+!prisma/generated/cenov_dev_ewan/
+prisma/generated/cenov_dev_ewan/**

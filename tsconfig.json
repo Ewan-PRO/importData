@@ -13,6 +13,7 @@
 		"moduleResolution": "bundler"
 	},
 	"exclude": [
-		"prisma/generated/**/*"
+		"prisma/generated/**/*",
+		"!prisma/generated/cenov_dev_ewan/**/*"
 	]
 }
