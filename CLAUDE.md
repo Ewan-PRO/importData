@@ -135,7 +135,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // For CENOV_DEV_EWAN database:
-import { PrismaClient as CenovDevPrismaClient } from '../../prisma/generated/cenov_dev_ewan';
+import { PrismaClient as CenovDevPrismaClient } from '../../prisma/cenov_dev_ewan/generated';
 const cenovDevPrisma = new CenovDevPrismaClient();
 
 // Usage examples:

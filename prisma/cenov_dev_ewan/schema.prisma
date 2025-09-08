@@ -1,6 +1,6 @@
 generator cenov_dev_ewan_client {
   provider        = "prisma-client-js"
-  output          = "../generated/cenov_dev_ewan"
+  output          = "./generated"
   previewFeatures = ["views"]
 }
 
