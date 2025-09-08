@@ -33,3 +33,8 @@ scripts/BDD-IA/cenov_dev_ewan/output/
 # Prisma generated clients
 prisma/generated/
 prisma/cenov_dev_ewan/generated/
+prisma/cenov/generated/
+
+# Prisma old files (deprecated structure)
+prisma/schema.prisma
+prisma/views/

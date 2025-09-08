@@ -62,12 +62,12 @@ pnpm prisma:generate-all                   # Generate both clients (runs automat
 **Manual commands (if needed):**
 ```bash
 # CENOV:
-npx prisma generate --schema prisma/schema.prisma
-npx prisma migrate dev --schema prisma/schema.prisma
-npx prisma migrate deploy --schema prisma/schema.prisma
-npx prisma db push --schema prisma/schema.prisma
-npx prisma db pull --schema prisma/schema.prisma
-npx prisma studio --schema prisma/schema.prisma
+npx prisma generate --schema prisma/cenov/schema.prisma
+npx prisma migrate dev --schema prisma/cenov/schema.prisma
+npx prisma migrate deploy --schema prisma/cenov/schema.prisma
+npx prisma db push --schema prisma/cenov/schema.prisma
+npx prisma db pull --schema prisma/cenov/schema.prisma
+npx prisma studio --schema prisma/cenov/schema.prisma
 
 # CENOV_DEV_EWAN:
 npx prisma generate --schema prisma/cenov_dev_ewan/schema.prisma
@@ -153,16 +153,16 @@ const products = await cenovDevPrisma.produit.findMany();  // CENOV_DEV_EWAN dat
 - `src/routes/` - SvelteKit pages (categories, kits, import, products)
 - `src/lib/components/` - Reusable Svelte components including UI library
 - `src/lib/schemas/dbSchema.ts` - Zod validation schemas for all database entities
-- `prisma/schema.prisma` - Main database schema
+- `prisma/cenov/schema.prisma` - Main database schema
 
 ### Prisma Workflow
 
 **Dual Schema Workflow:**
 
 **For CENOV Database (main):**
-1. Edit `prisma/schema.prisma`
-2. Run: `npx prisma generate --schema prisma/schema.prisma`
-3. Run: `npx prisma db push --schema prisma/schema.prisma` (or migrate)
+1. Edit `prisma/cenov/schema.prisma`
+2. Run: `npx prisma generate --schema prisma/cenov/schema.prisma`
+3. Run: `npx prisma db push --schema prisma/cenov/schema.prisma` (or migrate)
 
 **For CENOV_DEV_EWAN Database:**
 1. Edit `prisma/cenov_dev_ewan/schema.prisma`  
@@ -179,7 +179,7 @@ const products = await cenovDevPrisma.produit.findMany();  // CENOV_DEV_EWAN dat
 ```bash
 # Clear and regenerate both clients:
 rm -rf prisma/generated/ node_modules/.prisma/
-npx prisma generate --schema prisma/schema.prisma
+npx prisma generate --schema prisma/cenov/schema.prisma
 npx prisma generate --schema prisma/cenov_dev_ewan/schema.prisma
 ```
 
