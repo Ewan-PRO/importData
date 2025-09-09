@@ -3,17 +3,15 @@ import type { PageServerLoad, Actions } from './$types';
 import { z } from 'zod';
 import { superValidate } from 'sveltekit-superforms/server';
 import { zod } from 'sveltekit-superforms/adapters';
-import { PrismaClient } from '@prisma/client';
 import { protect } from '$lib/auth/protect';
 import {
 	getAllTables,
 	getTableMetadata,
 	countTableRows,
+	getClient,
 	type TableInfo as PrismaTableInfo,
 	type FieldInfo
 } from '$lib/prisma-meta';
-
-const prisma = new PrismaClient();
 
 // Types pour l'export
 export interface ExportConfig {
@@ -27,15 +25,11 @@ export interface ExportConfig {
 
 // Extension de TableInfo pour inclure les données d'export
 export interface ExportTableInfo extends PrismaTableInfo {
-	columns: ColumnInfo[];
+	columns: FieldInfo[];
 	relations?: string[];
 }
 
-export interface ColumnInfo {
-	name: string;
-	type: string;
-	required: boolean;
-}
+// Supprimé ColumnInfo - utilise FieldInfo de prisma-meta.ts
 
 export interface ExportResult {
 	success: boolean;
@@ -75,12 +69,7 @@ function generateExportTables(): ExportTableInfo[] {
 	return tables.map((table) => {
 		const metadata = getTableMetadata('cenov', table.name);
 
-		const columns: ColumnInfo[] =
-			metadata?.fields.map((field: FieldInfo) => ({
-				name: field.name,
-				type: field.type,
-				required: field.isRequired
-			})) || [];
+		const columns: FieldInfo[] = metadata?.fields || [];
 
 		return {
 			...table,
@@ -179,6 +168,7 @@ export const actions: Actions = {
 
 				try {
 					// Utiliser l'accès dynamique aux modèles Prisma
+					const prisma = getClient('cenov');
 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					const model = (prisma as Record<string, any>)[tableName];
 					if (!model) {
