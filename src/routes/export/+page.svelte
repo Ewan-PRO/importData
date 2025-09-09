@@ -534,6 +534,21 @@
 									type="checkbox"
 									bind:group={$form.selectedTables}
 									value={table.name}
+									onchange={() => {
+										// Toast info quand on sélectionne/désélectionne une table
+										const isSelected = $form.selectedTables.includes(table.name);
+										const tableType = table.category === 'view' ? 'vue' : 'table';
+										
+										if (isSelected) {
+											toast.info(`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} sélectionnée`, {
+												description: `${table.displayName} (${formatNumber(table.rowCount || 0)} lignes)`
+											});
+										} else {
+											toast.info(`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} désélectionnée`, {
+												description: table.displayName
+											});
+										}
+									}}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
 

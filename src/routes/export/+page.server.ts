@@ -35,7 +35,6 @@ export interface ColumnInfo {
 	name: string;
 	type: string;
 	required: boolean;
-	description?: string;
 }
 
 export interface ExportResult {
@@ -79,9 +78,8 @@ function generateExportTables(): ExportTableInfo[] {
 		const columns: ColumnInfo[] =
 			metadata?.fields.map((field: FieldInfo) => ({
 				name: field.name,
-				type: mapPrismaTypeToString(field.type),
-				required: field.isRequired,
-				description: generateFieldDescription(field.name)
+				type: field.type,
+				required: field.isRequired
 			})) || [];
 
 		return {
@@ -91,69 +89,6 @@ function generateExportTables(): ExportTableInfo[] {
 			relations: []
 		};
 	});
-}
-
-// Helper functions
-function mapPrismaTypeToString(prismaType: string): string {
-	switch (prismaType) {
-		case 'Int':
-		case 'Float':
-			return 'number';
-		case 'String':
-			return 'string';
-		case 'DateTime':
-			return 'datetime';
-		case 'Boolean':
-			return 'boolean';
-		case 'Bytes':
-			return 'binary';
-		default:
-			return 'string';
-	}
-}
-
-function generateFieldDescription(fieldName: string): string {
-	const descriptions: Record<string, string> = {
-		// IDs principaux
-		kit_id: 'ID du kit',
-		par_id: 'ID de la pièce',
-		atr_id: "ID de l'attribut",
-		doc_id: 'ID du document',
-		sup_id: 'ID du fournisseur',
-		kat_id: 'ID de la relation kit-attribut',
-		kik_id: 'ID de la relation kit-kit',
-		kid_id: 'ID de la relation kit-document',
-
-		// Labels
-		kit_label: 'Nom du kit',
-		par_label: 'Nom de la pièce',
-		atr_label: "Label de l'attribut",
-		doc_name: 'Nom du document',
-		sup_label: 'Nom du fournisseur',
-
-		// Autres champs courants
-		atr_nat: "Nature de l'attribut",
-		atr_val: "Valeur de l'attribut",
-		sup_code: 'Code fournisseur',
-		created_at: 'Date de création',
-		updated_at: 'Date de mise à jour',
-		kat_valeur: 'Valeur numérique',
-		kik_qty: 'Quantité',
-		kik_index: 'Index',
-		doc_extension: 'Extension du fichier',
-		doc_type: 'Type de document',
-		kid_description: 'Description',
-
-		// Clés étrangères
-		fk_kit: 'Kit lié',
-		fk_attribute: 'Attribut lié',
-		fk_attribute_carac: 'Attribut caractéristique',
-		fk_document: 'Document lié',
-		fk_kit_parent: 'Kit parent',
-		fk_kit_child: 'Kit enfant'
-	};
-
-	return descriptions[fieldName] || fieldName;
 }
 
 // Obtenir les informations sur les tables avec le compte de lignes
