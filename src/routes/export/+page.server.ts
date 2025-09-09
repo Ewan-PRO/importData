@@ -3,7 +3,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { z } from 'zod';
 import { superValidate } from 'sveltekit-superforms/server';
 import { zod } from 'sveltekit-superforms/adapters';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { protect } from '$lib/auth/protect';
 
 const prisma = new PrismaClient();
@@ -64,316 +64,156 @@ const exportSchema = z.object({
 		.optional()
 });
 
-// Définition des tables et vues disponibles
-const availableTables: TableInfo[] = [
-	// Tables principales
-	{
-		name: 'kit',
-		displayName: 'Kits',
-		category: 'tables',
-		rowCount: 0,
-		columns: [
-			{ name: 'kit_id', type: 'number', required: true, description: 'ID du kit' },
-			{ name: 'kit_label', type: 'string', required: false, description: 'Nom du kit' },
-			{ name: 'created_at', type: 'datetime', required: false, description: 'Date de création' },
-			{ name: 'updated_at', type: 'datetime', required: false, description: 'Date de mise à jour' }
-		],
-		relations: ['kit_attribute', 'kit_document', 'kit_kit', 'part']
-	},
-	{
-		name: 'part',
-		displayName: 'Pièces',
-		category: 'tables',
-		rowCount: 0,
-		columns: [
-			{ name: 'par_id', type: 'number', required: true, description: 'ID de la pièce' },
-			{ name: 'fk_kit', type: 'number', required: false, description: 'Kit parent' },
-			{ name: 'par_label', type: 'string', required: false, description: 'Nom de la pièce' },
-			{ name: 'created_at', type: 'datetime', required: false, description: 'Date de création' },
-			{ name: 'updated_at', type: 'datetime', required: false, description: 'Date de mise à jour' }
-		],
-		relations: ['kit']
-	},
-	{
-		name: 'attribute',
-		displayName: 'Attributs',
-		category: 'tables',
-		rowCount: 0,
-		columns: [
-			{ name: 'atr_id', type: 'number', required: true, description: "ID de l'attribut" },
-			{ name: 'atr_nat', type: 'string', required: false, description: "Nature de l'attribut" },
-			{ name: 'atr_val', type: 'string', required: false, description: "Valeur de l'attribut" },
-			{ name: 'atr_label', type: 'string', required: false, description: "Label de l'attribut" },
-			{ name: 'created_at', type: 'datetime', required: false, description: 'Date de création' },
-			{ name: 'updated_at', type: 'datetime', required: false, description: 'Date de mise à jour' }
-		],
-		relations: ['kit_attribute']
-	},
-	{
-		name: 'kit_attribute',
-		displayName: 'Kit-Attributs (Relations)',
-		category: 'tables',
-		rowCount: 0,
-		columns: [
-			{ name: 'kat_id', type: 'number', required: true, description: 'ID de la relation' },
-			{ name: 'fk_kit', type: 'number', required: false, description: 'Kit lié' },
-			{
-				name: 'fk_attribute_carac',
-				type: 'number',
-				required: false,
-				description: 'Attribut caractéristique'
-			},
-			{ name: 'fk_attribute', type: 'number', required: false, description: 'Attribut lié' },
-			{ name: 'kat_valeur', type: 'number', required: false, description: 'Valeur numérique' },
-			{ name: 'created_at', type: 'datetime', required: false, description: 'Date de création' },
-			{ name: 'updated_at', type: 'datetime', required: false, description: 'Date de mise à jour' }
-		],
-		relations: ['kit', 'attribute']
-	},
-	{
-		name: 'kit_kit',
-		displayName: 'Kit-Kit (Relations)',
-		category: 'tables',
-		rowCount: 0,
-		columns: [
-			{ name: 'kik_id', type: 'number', required: true, description: 'ID de la relation' },
-			{ name: 'fk_kit_parent', type: 'number', required: false, description: 'Kit parent' },
-			{ name: 'fk_kit_child', type: 'number', required: false, description: 'Kit enfant' },
-			{ name: 'kik_qty', type: 'number', required: false, description: 'Quantité' },
-			{ name: 'kik_index', type: 'number', required: false, description: 'Index' },
-			{ name: 'created_at', type: 'datetime', required: false, description: 'Date de création' },
-			{ name: 'updated_at', type: 'datetime', required: false, description: 'Date de mise à jour' }
-		],
-		relations: ['kit']
-	},
-	{
-		name: 'document',
-		displayName: 'Documents',
-		category: 'tables',
-		rowCount: 0,
-		columns: [
-			{ name: 'doc_id', type: 'number', required: true, description: 'ID du document' },
-			{ name: 'doc_name', type: 'string', required: false, description: 'Nom du document' },
-			{
-				name: 'doc_extension',
-				type: 'string',
-				required: false,
-				description: 'Extension du fichier'
-			},
-			{ name: 'doc_type', type: 'string', required: false, description: 'Type de document' }
-		],
-		relations: ['kit_document']
-	},
-	{
-		name: 'kit_document',
-		displayName: 'Kit-Documents (Relations)',
-		category: 'tables',
-		rowCount: 0,
-		columns: [
-			{ name: 'kid_id', type: 'number', required: true, description: 'ID de la relation' },
-			{ name: 'fk_kit', type: 'number', required: false, description: 'Kit lié' },
-			{ name: 'fk_document', type: 'number', required: false, description: 'Document lié' },
-			{ name: 'kid_description', type: 'string', required: false, description: 'Description' },
-			{ name: 'created_at', type: 'datetime', required: false, description: 'Date de création' },
-			{ name: 'updated_at', type: 'datetime', required: false, description: 'Date de mise à jour' }
-		],
-		relations: ['kit', 'document']
-	},
-	{
-		name: 'supplier',
-		displayName: 'Fournisseurs',
-		category: 'tables',
-		rowCount: 0,
-		columns: [
-			{ name: 'sup_id', type: 'number', required: true, description: 'ID du fournisseur' },
-			{ name: 'sup_code', type: 'string', required: true, description: 'Code fournisseur' },
-			{ name: 'sup_label', type: 'string', required: false, description: 'Nom du fournisseur' }
-		]
-	},
+// Génération automatique des tables et vues à partir du schéma Prisma
+function generateTablesFromSchema(): TableInfo[] {
+	const tables: TableInfo[] = [];
 
-	// Tables de développement
-	{
-		name: 'kit_dev',
-		displayName: 'Kits (Dev)',
-		category: 'tables',
-		rowCount: 0,
-		columns: [
-			{ name: 'kit_id', type: 'number', required: true, description: 'ID du kit' },
-			{ name: 'kit_label', type: 'string', required: false, description: 'Nom du kit' },
-			{ name: 'created_at', type: 'datetime', required: false, description: 'Date de création' },
-			{ name: 'updated_at', type: 'datetime', required: false, description: 'Date de mise à jour' }
-		]
-	},
-	{
-		name: 'attribute_dev',
-		displayName: 'Attributs (Dev)',
-		category: 'tables',
-		rowCount: 0,
-		columns: [
-			{ name: 'atr_id', type: 'number', required: true, description: "ID de l'attribut" },
-			{ name: 'atr_nat', type: 'string', required: false, description: "Nature de l'attribut" },
-			{ name: 'atr_val', type: 'string', required: false, description: "Valeur de l'attribut" },
-			{ name: 'atr_label', type: 'string', required: false, description: "Label de l'attribut" },
-			{ name: 'created_at', type: 'datetime', required: false, description: 'Date de création' },
-			{ name: 'updated_at', type: 'datetime', required: false, description: 'Date de mise à jour' }
-		]
-	},
-	{
-		name: 'kit_attribute_dev',
-		displayName: 'Kit-Attributs (Dev)',
-		category: 'tables',
-		rowCount: 0,
-		columns: [
-			{ name: 'kat_id', type: 'number', required: true, description: 'ID de la relation' },
-			{ name: 'fk_kit', type: 'number', required: false, description: 'Kit lié' },
-			{
-				name: 'fk_attribute_carac',
-				type: 'number',
-				required: false,
-				description: 'Attribut caractéristique'
-			},
-			{ name: 'fk_attribute', type: 'number', required: false, description: 'Attribut lié' },
-			{ name: 'kat_valeur', type: 'number', required: false, description: 'Valeur numérique' },
-			{ name: 'created_at', type: 'datetime', required: false, description: 'Date de création' },
-			{ name: 'updated_at', type: 'datetime', required: false, description: 'Date de mise à jour' }
-		]
-	},
-	{
-		name: 'supplier_dev',
-		displayName: 'Fournisseurs (Dev)',
-		category: 'tables',
-		rowCount: 0,
-		columns: [
-			{ name: 'sup_id', type: 'number', required: true, description: 'ID du fournisseur' },
-			{ name: 'sup_code', type: 'string', required: false, description: 'Code fournisseur' },
-			{ name: 'sup_label', type: 'string', required: false, description: 'Nom du fournisseur' }
-		]
-	},
+	// Traiter les modèles (tables)
+	for (const model of Prisma.dmmf.datamodel.models) {
+		// Générer les informations sur les colonnes
+		const columns: ColumnInfo[] = model.fields
+			.filter((field) => field.kind === 'scalar')
+			.map((field) => ({
+				name: field.name,
+				type: mapPrismaTypeToString(field.type),
+				required: field.isRequired,
+				description: generateFieldDescription(model.name, field.name)
+			}));
 
-	// Vues
-	{
-		name: 'v_kit_carac',
-		displayName: 'Vue Kit-Caractéristiques',
-		category: 'views',
-		rowCount: 0,
-		columns: [
-			{ name: 'id', type: 'number', required: true, description: 'ID unique' },
-			{ name: 'kit_label', type: 'string', required: true, description: 'Nom du kit' },
-			{ name: 'atr_label', type: 'string', required: true, description: "Label de l'attribut" },
-			{ name: 'atr_val', type: 'string', required: true, description: "Valeur de l'attribut" },
-			{ name: 'kat_valeur', type: 'number', required: true, description: 'Valeur numérique' }
-		]
-	},
-	{
-		name: 'v_categories',
-		displayName: 'Vue Catégories',
-		category: 'views',
-		rowCount: 0,
-		columns: [
-			{ name: 'atr_id', type: 'number', required: true, description: "ID de l'attribut" },
-			{ name: 'atr_0_label', type: 'string', required: true, description: 'Catégorie niveau 0' },
-			{ name: 'atr_1_label', type: 'string', required: false, description: 'Catégorie niveau 1' },
-			{ name: 'atr_2_label', type: 'string', required: false, description: 'Catégorie niveau 2' },
-			{ name: 'atr_3_label', type: 'string', required: false, description: 'Catégorie niveau 3' },
-			{ name: 'atr_4_label', type: 'string', required: false, description: 'Catégorie niveau 4' },
-			{ name: 'atr_5_label', type: 'string', required: false, description: 'Catégorie niveau 5' },
-			{ name: 'atr_6_label', type: 'string', required: false, description: 'Catégorie niveau 6' },
-			{ name: 'atr_7_label', type: 'string', required: false, description: 'Catégorie niveau 7' }
-		]
-	},
+		// Récupérer les relations
+		const relations = model.fields
+			.filter((field) => field.kind === 'object')
+			.map((field) => field.type);
 
-	// Vues de développement
-	{
-		name: 'v_kit_carac_dev',
-		displayName: 'Vue Kit-Caractéristiques (Dev)',
-		category: 'views',
-		rowCount: 0,
-		columns: [
-			{ name: 'id', type: 'number', required: true, description: 'ID unique' },
-			{ name: 'kit_label', type: 'string', required: true, description: 'Nom du kit' },
-			{ name: 'atr_label', type: 'string', required: true, description: "Label de l'attribut" },
-			{ name: 'atr_val', type: 'string', required: true, description: "Valeur de l'attribut" },
-			{ name: 'kat_valeur', type: 'number', required: true, description: 'Valeur numérique' }
-		]
-	},
-	{
-		name: 'v_categories_dev',
-		displayName: 'Vue Catégories (Dev)',
-		category: 'views',
-		rowCount: 0,
-		columns: [
-			{ name: 'row_key', type: 'number', required: true, description: 'Clé de ligne' },
-			{ name: 'atr_id', type: 'number', required: false, description: "ID de l'attribut" },
-			{ name: 'atr_0_label', type: 'string', required: false, description: 'Catégorie niveau 0' },
-			{ name: 'atr_1_label', type: 'string', required: false, description: 'Catégorie niveau 1' },
-			{ name: 'atr_2_label', type: 'string', required: false, description: 'Catégorie niveau 2' },
-			{ name: 'atr_3_label', type: 'string', required: false, description: 'Catégorie niveau 3' },
-			{ name: 'atr_4_label', type: 'string', required: false, description: 'Catégorie niveau 4' },
-			{ name: 'atr_5_label', type: 'string', required: false, description: 'Catégorie niveau 5' },
-			{ name: 'atr_6_label', type: 'string', required: false, description: 'Catégorie niveau 6' },
-			{ name: 'atr_7_label', type: 'string', required: false, description: 'Catégorie niveau 7' }
-		]
+		tables.push({
+			name: model.name,
+			displayName: generateDisplayName(model.name),
+			category: 'tables',
+			rowCount: 0,
+			columns,
+			relations
+		});
 	}
-];
+
+	// Traiter les vues (si disponibles)
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const datamodel = Prisma.dmmf.datamodel as any;
+	if (datamodel.views) {
+		for (const view of datamodel.views) {
+			const columns: ColumnInfo[] = view.fields
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				.filter((field: any) => field.kind === 'scalar')
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				.map((field: any) => ({
+					name: field.name,
+					type: mapPrismaTypeToString(field.type),
+					required: field.isRequired,
+					description: generateFieldDescription(view.name, field.name)
+				}));
+
+			tables.push({
+				name: view.name,
+				displayName: generateDisplayName(view.name),
+				category: 'views',
+				rowCount: 0,
+				columns
+			});
+		}
+	}
+
+	return tables;
+}
+
+// Helper functions
+function mapPrismaTypeToString(prismaType: string): string {
+	switch (prismaType) {
+		case 'Int':
+		case 'Float':
+			return 'number';
+		case 'String':
+			return 'string';
+		case 'DateTime':
+			return 'datetime';
+		case 'Boolean':
+			return 'boolean';
+		case 'Bytes':
+			return 'binary';
+		default:
+			return 'string';
+	}
+}
+
+function generateDisplayName(tableName: string): string {
+	const nameMap: Record<string, string> = {
+		kit: 'Kits',
+		part: 'Pièces',
+		attribute: 'Attributs',
+		kit_attribute: 'Kit-Attributs (Relations)',
+		kit_kit: 'Kit-Kit (Relations)',
+		document: 'Documents',
+		kit_document: 'Kit-Documents (Relations)',
+		supplier: 'Fournisseurs',
+		v_kit_carac: 'Vue Kit-Caractéristiques',
+		v_categories: 'Vue Catégories'
+	};
+	return nameMap[tableName] || tableName;
+}
+
+function generateFieldDescription(tableName: string, fieldName: string): string {
+	const descriptions: Record<string, string> = {
+		// IDs principaux
+		kit_id: 'ID du kit',
+		par_id: 'ID de la pièce',
+		atr_id: "ID de l'attribut",
+		doc_id: 'ID du document',
+		sup_id: 'ID du fournisseur',
+		kat_id: 'ID de la relation kit-attribut',
+		kik_id: 'ID de la relation kit-kit',
+		kid_id: 'ID de la relation kit-document',
+
+		// Labels
+		kit_label: 'Nom du kit',
+		par_label: 'Nom de la pièce',
+		atr_label: "Label de l'attribut",
+		doc_name: 'Nom du document',
+		sup_label: 'Nom du fournisseur',
+
+		// Autres champs courants
+		atr_nat: "Nature de l'attribut",
+		atr_val: "Valeur de l'attribut",
+		sup_code: 'Code fournisseur',
+		created_at: 'Date de création',
+		updated_at: 'Date de mise à jour',
+		kat_valeur: 'Valeur numérique',
+		kik_qty: 'Quantité',
+		kik_index: 'Index',
+		doc_extension: 'Extension du fichier',
+		doc_type: 'Type de document',
+		kid_description: 'Description',
+
+		// Clés étrangères
+		fk_kit: 'Kit lié',
+		fk_attribute: 'Attribut lié',
+		fk_attribute_carac: 'Attribut caractéristique',
+		fk_document: 'Document lié',
+		fk_kit_parent: 'Kit parent',
+		fk_kit_child: 'Kit enfant'
+	};
+
+	return descriptions[fieldName] || fieldName;
+}
 
 // Obtenir les informations sur les tables avec le compte de lignes
 async function getTablesInfo(): Promise<TableInfo[]> {
+	const availableTables = generateTablesFromSchema();
+
 	const tablesWithCounts = await Promise.all(
 		availableTables.map(async (table) => {
 			try {
-				let count = 0;
-
-				// Obtenir le nombre de lignes pour chaque table/vue
-				switch (table.name) {
-					case 'kit':
-						count = await prisma.kit.count();
-						break;
-					case 'part':
-						count = await prisma.part.count();
-						break;
-					case 'attribute':
-						count = await prisma.attribute.count();
-						break;
-					case 'kit_attribute':
-						count = await prisma.kit_attribute.count();
-						break;
-					case 'kit_kit':
-						count = await prisma.kit_kit.count();
-						break;
-					case 'document':
-						count = await prisma.document.count();
-						break;
-					case 'kit_document':
-						count = await prisma.kit_document.count();
-						break;
-					case 'supplier':
-						count = await prisma.supplier.count();
-						break;
-					case 'kit_dev':
-						count = await prisma.kit_dev.count();
-						break;
-					case 'attribute_dev':
-						count = await prisma.attribute_dev.count();
-						break;
-					case 'kit_attribute_dev':
-						count = await prisma.kit_attribute_dev.count();
-						break;
-					case 'supplier_dev':
-						count = await prisma.supplier_dev.count();
-						break;
-					case 'v_kit_carac':
-						count = await prisma.v_kit_carac.count();
-						break;
-					case 'v_categories':
-						count = await prisma.v_categories.count();
-						break;
-					case 'v_kit_carac_dev':
-						count = await prisma.v_kit_carac_dev.count();
-						break;
-					case 'v_categories_dev':
-						count = await prisma.v_categories_dev.count();
-						break;
-				}
+				// Utiliser l'accès dynamique aux modèles Prisma
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				const model = (prisma as Record<string, any>)[table.name];
+				const count = model ? await model.count() : 0;
 
 				return {
 					...table,
@@ -452,74 +292,36 @@ export const actions: Actions = {
 			// Récupérer un aperçu des données pour chaque table sélectionnée
 			for (const tableName of selectedTables) {
 				const limit = 5; // Exactement 5 lignes pour l'aperçu
-				let data: unknown[] = [];
 
-				switch (tableName) {
-					case 'kit':
-						data = await prisma.kit.findMany({ take: limit, orderBy: { kit_id: 'asc' } });
-						break;
-					case 'part':
-						data = await prisma.part.findMany({
-							take: limit,
-							include: { kit: true },
-							orderBy: { par_id: 'asc' }
-						});
-						break;
-					case 'attribute':
-						data = await prisma.attribute.findMany({ take: limit, orderBy: { atr_id: 'asc' } });
-						break;
-					case 'kit_attribute':
-						data = await prisma.kit_attribute.findMany({
-							take: limit,
-							include: { kit: true, attribute_kit_attribute_fk_attributeToattribute: true },
-							orderBy: { kat_id: 'asc' }
-						});
-						break;
-					case 'supplier':
-						data = await prisma.supplier.findMany({ take: limit, orderBy: { sup_id: 'asc' } });
-						break;
-					case 'kit_dev':
-						data = await prisma.kit_dev.findMany({ take: limit, orderBy: { kit_id: 'asc' } });
-						break;
-					case 'attribute_dev':
-						data = await prisma.attribute_dev.findMany({ take: limit, orderBy: { atr_id: 'asc' } });
-						break;
-					case 'kit_attribute_dev':
-						data = await prisma.kit_attribute_dev.findMany({
-							take: limit,
-							orderBy: { kat_id: 'asc' }
-						});
-						break;
-					case 'kit_kit':
-						data = await prisma.kit_kit.findMany({ take: limit, orderBy: { kik_id: 'asc' } });
-						break;
-					case 'document':
-						data = await prisma.document.findMany({ take: limit, orderBy: { doc_id: 'asc' } });
-						break;
-					case 'kit_document':
-						data = await prisma.kit_document.findMany({ take: limit, orderBy: { kid_id: 'asc' } });
-						break;
-					case 'supplier_dev':
-						data = await prisma.supplier_dev.findMany({ take: limit, orderBy: { sup_id: 'asc' } });
-						break;
-					case 'v_kit_carac':
-						data = await prisma.v_kit_carac.findMany({ take: limit, orderBy: { id: 'asc' } });
-						break;
-					case 'v_categories':
-						data = await prisma.v_categories.findMany({ take: limit, orderBy: { atr_id: 'asc' } });
-						break;
-					case 'v_kit_carac_dev':
-						data = await prisma.v_kit_carac_dev.findMany({ take: limit, orderBy: { id: 'asc' } });
-						break;
-					case 'v_categories_dev':
-						data = await prisma.v_categories_dev.findMany({
-							take: limit,
-							orderBy: { row_key: 'asc' }
-						});
-						break;
+				try {
+					// Utiliser l'accès dynamique aux modèles Prisma
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const model = (prisma as Record<string, any>)[tableName];
+					if (!model) {
+						console.warn(`Model ${tableName} non trouvé`);
+						continue;
+					}
+
+					// Déterminer la colonne pour l'ordre (premier champ ID disponible)
+					const availableTables = generateTablesFromSchema();
+					const tableInfo = availableTables.find((t) => t.name === tableName);
+					const primaryKeyColumn = tableInfo?.columns.find(
+						(col) => col.name.endsWith('_id') || col.name === 'id' || col.name === 'row_key'
+					);
+
+					const orderBy = primaryKeyColumn ? { [primaryKeyColumn.name]: 'asc' } : {};
+
+					// Récupérer les données avec l'ordre approprié
+					const data = await model.findMany({
+						take: limit,
+						...(Object.keys(orderBy).length > 0 && { orderBy })
+					});
+
+					previewData[tableName] = data;
+				} catch (modelErr) {
+					console.warn(`Erreur lors de la récupération des données pour ${tableName}:`, modelErr);
+					previewData[tableName] = [];
 				}
-
-				previewData[tableName] = data;
 			}
 
 			console.log('✅ [PREVIEW] Aperçu généré avec succès, tables:', Object.keys(previewData));
