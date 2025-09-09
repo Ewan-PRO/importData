@@ -14,7 +14,6 @@
 		"lint": "prettier --check . && eslint .",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
-		"prisma:transform": "node scripts/transform-prisma-schema.mjs",
 		"prisma:generate": "prisma generate --schema prisma/cenov/schema.prisma",
 		"prisma:migrate": "prisma migrate dev --schema prisma/cenov/schema.prisma",
 		"prisma:studio": "prisma studio --schema prisma/cenov/schema.prisma",
