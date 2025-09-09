@@ -1,22 +1,24 @@
 // src/lib/prisma-meta.ts - Micro-wrapper pour métadonnées Prisma
 import { Prisma, PrismaClient } from '@prisma/client';
-import { createRequire } from 'node:module';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
+// TEMPORAIREMENT EN COMMENTAIRE POUR LE DEPLOIEMENT - imports non utilisés
+// import { createRequire } from 'node:module';
+// import { fileURLToPath } from 'node:url';
+// import path from 'node:path';
 
 // Types Prisma pour les métadonnées
 type DMMFModel = Prisma.DMMF.Model;
 type DMMFField = Prisma.DMMF.Field;
 
+// TEMPORAIREMENT EN COMMENTAIRE POUR LE DEPLOIEMENT
 // Solution durable ESM/CommonJS : utiliser createRequire pour importer CommonJS
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const require = createRequire(import.meta.url);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+// const require = createRequire(import.meta.url);
 
-const devPrismaPath = path.resolve(__dirname, '../../prisma/cenov_dev_ewan/generated/index.js');
-const { Prisma: DevPrisma, PrismaClient: DevClient } = require(devPrismaPath);
+// const devPrismaPath = path.resolve(__dirname, '../../prisma/cenov_dev_ewan/generated/index.js');
+// const { Prisma: DevPrisma, PrismaClient: DevClient } = require(devPrismaPath);
 
-export type DatabaseName = 'cenov' | 'cenov_dev_ewan';
+export type DatabaseName = 'cenov'; // | 'cenov_dev_ewan' TEMPORAIREMENT EN COMMENTAIRE
 
 export interface TableInfo {
 	name: string;
@@ -38,11 +40,12 @@ export const DATABASES = {
 	cenov: {
 		dmmf: Prisma.dmmf,
 		client: new PrismaClient()
-	},
-	cenov_dev_ewan: {
-		dmmf: DevPrisma.dmmf,
-		client: new DevClient()
 	}
+	// TEMPORAIREMENT EN COMMENTAIRE POUR LE DEPLOIEMENT
+	// cenov_dev_ewan: {
+	// 	dmmf: DevPrisma.dmmf,
+	// 	client: new DevClient()
+	// }
 } as const;
 
 // Obtenir métadonnées d'une table spécifique
@@ -76,10 +79,11 @@ export function getAllTables(database: DatabaseName): TableInfo[] {
 	}));
 }
 
+// TEMPORAIREMENT EN COMMENTAIRE POUR LE DEPLOIEMENT
 // Obtenir toutes les tables des 2 bases
-export function getAllDatabaseTables(): TableInfo[] {
-	return [...getAllTables('cenov'), ...getAllTables('cenov_dev_ewan')];
-}
+// export function getAllDatabaseTables(): TableInfo[] {
+// 	return [...getAllTables('cenov'), ...getAllTables('cenov_dev_ewan')];
+// }
 
 // Obtenir client Prisma
 export function getClient(database: DatabaseName) {
