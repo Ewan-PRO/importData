@@ -24,7 +24,7 @@
 		CircleArrowLeft,
 		CirclePlus
 	} from 'lucide-svelte';
-	import type { TableInfo, ExportResult } from './+page.server.js';
+	import type { ExportTableInfo, ExportResult } from './+page.server.js';
 
 	export let data;
 
@@ -136,7 +136,7 @@
 	];
 
 	// Tables filtrées selon la catégorie et la recherche
-	$: filteredTables = data.tables.filter((table: TableInfo) => {
+	$: filteredTables = data.tables.filter((table: ExportTableInfo) => {
 		const matchesCategory = selectedCategory === 'all' || table.category === selectedCategory;
 		const matchesSearch =
 			searchTerm === '' ||
@@ -148,8 +148,8 @@
 	// Nombre de tables par catégorie
 	$: tableCounts = {
 		all: data.tables.length,
-		tables: data.tables.filter((t: TableInfo) => t.category === 'tables').length,
-		views: data.tables.filter((t: TableInfo) => t.category === 'views').length
+		table: data.tables.filter((t: ExportTableInfo) => t.category === 'table').length,
+		view: data.tables.filter((t: ExportTableInfo) => t.category === 'view').length
 	};
 
 	// Variable pour tracking le changement de catégorie et éviter le toast au chargement initial
@@ -182,10 +182,10 @@
 	// Couleur des badges selon la catégorie
 	function getBadgeVariant(category: string) {
 		switch (category) {
-			case 'tables':
+			case 'table':
 				return 'noir';
-			case 'views':
-				return 'bleu';
+			case 'view':
+				return 'vert';
 			default:
 				return 'noir';
 		}
@@ -263,15 +263,15 @@
 			$form.selectedTables = [];
 		} else {
 			// Sélectionner toutes les tables visibles
-			$form.selectedTables = filteredTables.map((t: TableInfo) => t.name);
+			$form.selectedTables = filteredTables.map((t: ExportTableInfo) => t.name);
 		}
 	}
 
 	// Sélection rapide par catégorie
 	function selectByCategory(category: string) {
 		const tablesInCategory = data.tables
-			.filter((t: TableInfo) => category === 'all' || t.category === category)
-			.map((t: TableInfo) => t.name);
+			.filter((t: ExportTableInfo) => category === 'all' || t.category === category)
+			.map((t: ExportTableInfo) => t.name);
 		$form.selectedTables = tablesInCategory;
 	}
 
@@ -466,11 +466,11 @@
 								<input
 									type="checkbox"
 									checked={$form.selectedTables.filter(
-										(t) => data.tables.find((table) => table.name === t)?.category === 'tables'
-									).length === tableCounts.tables && tableCounts.tables > 0}
+										(t) => data.tables.find((table) => table.name === t)?.category === 'table'
+									).length === tableCounts.table && tableCounts.table > 0}
 									onchange={() => {
 										const tablesInCategory = data.tables
-											.filter((t) => t.category === 'tables')
+											.filter((t) => t.category === 'table')
 											.map((t) => t.name);
 										const isAllSelected = tablesInCategory.every((tableName) =>
 											$form.selectedTables.includes(tableName)
@@ -488,18 +488,18 @@
 									}}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
-								<span>Tables ({tableCounts.tables})</span>
+								<span>Tables ({tableCounts.table})</span>
 							</label>
 
 							<label class="flex cursor-pointer items-center space-x-2">
 								<input
 									type="checkbox"
 									checked={$form.selectedTables.filter(
-										(t) => data.tables.find((table) => table.name === t)?.category === 'views'
-									).length === tableCounts.views && tableCounts.views > 0}
+										(t) => data.tables.find((table) => table.name === t)?.category === 'view'
+									).length === tableCounts.view && tableCounts.view > 0}
 									onchange={() => {
 										const tablesInCategory = data.tables
-											.filter((t) => t.category === 'views')
+											.filter((t) => t.category === 'view')
 											.map((t) => t.name);
 										const isAllSelected = tablesInCategory.every((tableName) =>
 											$form.selectedTables.includes(tableName)
@@ -517,7 +517,7 @@
 									}}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
-								<span>Vues ({tableCounts.views})</span>
+								<span>Vues ({tableCounts.view})</span>
 							</label>
 						{/if}
 					</div>
@@ -551,7 +551,7 @@
 												</Badge>
 											</div>
 											<div class="text-sm text-gray-500">
-												{table.name} • {formatNumber(table.rowCount)} lignes
+												{table.name} • {formatNumber(table.rowCount || 0)} lignes
 											</div>
 										</div>
 									</div>

@@ -3,8 +3,15 @@ import type { PageServerLoad, Actions } from './$types';
 import { z } from 'zod';
 import { superValidate } from 'sveltekit-superforms/server';
 import { zod } from 'sveltekit-superforms/adapters';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { protect } from '$lib/auth/protect';
+import {
+	getAllTables,
+	getTableMetadata,
+	countTableRows,
+	type TableInfo as PrismaTableInfo,
+	type FieldInfo
+} from '$lib/prisma-meta';
 
 const prisma = new PrismaClient();
 
@@ -18,11 +25,8 @@ export interface ExportConfig {
 	includeHeaders: boolean;
 }
 
-export interface TableInfo {
-	name: string;
-	displayName: string;
-	category: 'tables' | 'views';
-	rowCount: number;
+// Extension de TableInfo pour inclure les données d'export
+export interface ExportTableInfo extends PrismaTableInfo {
 	columns: ColumnInfo[];
 	relations?: string[];
 }
@@ -64,64 +68,29 @@ const exportSchema = z.object({
 		.optional()
 });
 
-// Génération automatique des tables et vues à partir du schéma Prisma
-function generateTablesFromSchema(): TableInfo[] {
-	const tables: TableInfo[] = [];
+// Génération des informations d'export à partir des métadonnées Prisma
+function generateExportTables(): ExportTableInfo[] {
+	// Récupérer toutes les tables CENOV uniquement
+	const tables = getAllTables('cenov');
 
-	// Traiter les modèles (tables)
-	for (const model of Prisma.dmmf.datamodel.models) {
-		// Générer les informations sur les colonnes
-		const columns: ColumnInfo[] = model.fields
-			.filter((field) => field.kind === 'scalar')
-			.map((field) => ({
+	return tables.map((table) => {
+		const metadata = getTableMetadata('cenov', table.name);
+
+		const columns: ColumnInfo[] =
+			metadata?.fields.map((field: FieldInfo) => ({
 				name: field.name,
 				type: mapPrismaTypeToString(field.type),
 				required: field.isRequired,
-				description: generateFieldDescription(model.name, field.name)
-			}));
+				description: generateFieldDescription(field.name)
+			})) || [];
 
-		// Récupérer les relations
-		const relations = model.fields
-			.filter((field) => field.kind === 'object')
-			.map((field) => field.type);
-
-		tables.push({
-			name: model.name,
-			displayName: generateDisplayName(model.name),
-			category: 'tables',
-			rowCount: 0,
+		return {
+			...table,
 			columns,
-			relations
-		});
-	}
-
-	// Traiter les vues (si disponibles)
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const datamodel = Prisma.dmmf.datamodel as any;
-	if (datamodel.views) {
-		for (const view of datamodel.views) {
-			const columns: ColumnInfo[] = view.fields
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				.filter((field: any) => field.kind === 'scalar')
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				.map((field: any) => ({
-					name: field.name,
-					type: mapPrismaTypeToString(field.type),
-					required: field.isRequired,
-					description: generateFieldDescription(view.name, field.name)
-				}));
-
-			tables.push({
-				name: view.name,
-				displayName: generateDisplayName(view.name),
-				category: 'views',
-				rowCount: 0,
-				columns
-			});
-		}
-	}
-
-	return tables;
+			// Relations peuvent être ajoutées plus tard si nécessaire
+			relations: []
+		};
+	});
 }
 
 // Helper functions
@@ -143,23 +112,7 @@ function mapPrismaTypeToString(prismaType: string): string {
 	}
 }
 
-function generateDisplayName(tableName: string): string {
-	const nameMap: Record<string, string> = {
-		kit: 'Kits',
-		part: 'Pièces',
-		attribute: 'Attributs',
-		kit_attribute: 'Kit-Attributs (Relations)',
-		kit_kit: 'Kit-Kit (Relations)',
-		document: 'Documents',
-		kit_document: 'Kit-Documents (Relations)',
-		supplier: 'Fournisseurs',
-		v_kit_carac: 'Vue Kit-Caractéristiques',
-		v_categories: 'Vue Catégories'
-	};
-	return nameMap[tableName] || tableName;
-}
-
-function generateFieldDescription(tableName: string, fieldName: string): string {
+function generateFieldDescription(fieldName: string): string {
 	const descriptions: Record<string, string> = {
 		// IDs principaux
 		kit_id: 'ID du kit',
@@ -204,17 +157,13 @@ function generateFieldDescription(tableName: string, fieldName: string): string 
 }
 
 // Obtenir les informations sur les tables avec le compte de lignes
-async function getTablesInfo(): Promise<TableInfo[]> {
-	const availableTables = generateTablesFromSchema();
+async function getTablesInfo(): Promise<ExportTableInfo[]> {
+	const availableTables = generateExportTables();
 
 	const tablesWithCounts = await Promise.all(
 		availableTables.map(async (table) => {
 			try {
-				// Utiliser l'accès dynamique aux modèles Prisma
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const model = (prisma as Record<string, any>)[table.name];
-				const count = model ? await model.count() : 0;
-
+				const count = await countTableRows('cenov', table.name);
 				return {
 					...table,
 					rowCount: count
@@ -259,7 +208,7 @@ export const load = (async (event) => {
 			form,
 			tables,
 			totalTables: tables.length,
-			totalRows: tables.reduce((sum, table) => sum + table.rowCount, 0)
+			totalRows: tables.reduce((sum, table) => sum + (table.rowCount || 0), 0)
 		};
 	} catch (err) {
 		throw error(
@@ -302,14 +251,10 @@ export const actions: Actions = {
 						continue;
 					}
 
-					// Déterminer la colonne pour l'ordre (premier champ ID disponible)
-					const availableTables = generateTablesFromSchema();
-					const tableInfo = availableTables.find((t) => t.name === tableName);
-					const primaryKeyColumn = tableInfo?.columns.find(
-						(col) => col.name.endsWith('_id') || col.name === 'id' || col.name === 'row_key'
-					);
-
-					const orderBy = primaryKeyColumn ? { [primaryKeyColumn.name]: 'asc' } : {};
+					// Déterminer la colonne pour l'ordre (clé primaire)
+					const metadata = getTableMetadata('cenov', tableName);
+					const primaryKey = metadata?.primaryKey;
+					const orderBy = primaryKey ? { [primaryKey]: 'asc' } : {};
 
 					// Récupérer les données avec l'ordre approprié
 					const data = await model.findMany({
