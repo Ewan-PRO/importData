@@ -5,7 +5,7 @@ import { superValidate } from 'sveltekit-superforms/server';
 import { zod } from 'sveltekit-superforms/adapters';
 import { protect } from '$lib/auth/protect';
 import {
-	getAllTables,
+	getAllDatabaseTables,
 	getTableMetadata,
 	countTableRows,
 	getClient,
@@ -63,18 +63,16 @@ const exportSchema = z.object({
 
 // Génération des informations d'export à partir des métadonnées Prisma
 function generateExportTables(): ExportTableInfo[] {
-	// Récupérer toutes les tables CENOV uniquement
-	const tables = getAllTables('cenov');
+	// Récupérer toutes les tables des deux bases de données
+	const tables = getAllDatabaseTables();
 
 	return tables.map((table) => {
-		const metadata = getTableMetadata('cenov', table.name);
-
+		const metadata = getTableMetadata(table.database, table.name);
 		const columns: FieldInfo[] = metadata?.fields || [];
 
 		return {
 			...table,
 			columns,
-			// Relations peuvent être ajoutées plus tard si nécessaire
 			relations: []
 		};
 	});
@@ -87,13 +85,12 @@ async function getTablesInfo(): Promise<ExportTableInfo[]> {
 	const tablesWithCounts = await Promise.all(
 		availableTables.map(async (table) => {
 			try {
-				const count = await countTableRows('cenov', table.name);
+				const count = await countTableRows(table.database, table.name);
 				return {
 					...table,
 					rowCount: count
 				};
-			} catch (err) {
-				console.warn(`Erreur lors du comptage des lignes pour ${table.name}:`, err);
+			} catch {
 				return {
 					...table,
 					rowCount: 0
@@ -106,20 +103,15 @@ async function getTablesInfo(): Promise<ExportTableInfo[]> {
 }
 
 export const load = (async (event) => {
-	// Protection de la route - redirection vers / si non connecté
 	await protect(event);
 
 	const { depends } = event;
 	depends('app:export');
 
 	try {
-		// Récupérer les informations sur les tables avec les compteurs
 		const tables = await getTablesInfo();
-
-		// Créer le formulaire vide pour l'export
 		const form = await superValidate(zod(exportSchema));
 
-		// Données par défaut
 		form.data = {
 			selectedTables: [],
 			format: 'csv',
@@ -144,19 +136,14 @@ export const load = (async (event) => {
 
 export const actions: Actions = {
 	preview: async (event) => {
-		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
 
 		const { request } = event;
-		console.log('🔍 [PREVIEW] Action preview déclenchée');
 		const form = await superValidate(request, zod(exportSchema));
 
 		if (!form.valid) {
-			console.error('❌ [PREVIEW] Formulaire invalide:', form.errors);
 			return fail(400, { form });
 		}
-
-		console.log("📊 [PREVIEW] Configuration d'aperçu reçue:", form.data);
 
 		try {
 			const { selectedTables } = form.data;
@@ -164,20 +151,25 @@ export const actions: Actions = {
 
 			// Récupérer un aperçu des données pour chaque table sélectionnée
 			for (const tableName of selectedTables) {
-				const limit = 5; // Exactement 5 lignes pour l'aperçu
+				const limit = 5;
 
 				try {
+					// Déterminer quelle base de données utiliser pour cette table
+					const allTables = getAllDatabaseTables();
+					const tableInfo = allTables.find(t => t.name === tableName);
+					const database = tableInfo?.database || 'cenov';
+
 					// Utiliser l'accès dynamique aux modèles Prisma
-					const prisma = getClient('cenov');
+					const prisma = getClient(database);
+					
 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					const model = (prisma as Record<string, any>)[tableName];
 					if (!model) {
-						console.warn(`Model ${tableName} non trouvé`);
 						continue;
 					}
 
 					// Déterminer la colonne pour l'ordre (clé primaire)
-					const metadata = getTableMetadata('cenov', tableName);
+					const metadata = getTableMetadata(database, tableName);
 					const primaryKey = metadata?.primaryKey;
 					const orderBy = primaryKey ? { [primaryKey]: 'asc' } : {};
 
@@ -188,16 +180,13 @@ export const actions: Actions = {
 					});
 
 					previewData[tableName] = data;
-				} catch (modelErr) {
-					console.warn(`Erreur lors de la récupération des données pour ${tableName}:`, modelErr);
+				} catch {
 					previewData[tableName] = [];
 				}
 			}
 
-			console.log('✅ [PREVIEW] Aperçu généré avec succès, tables:', Object.keys(previewData));
 			return { form, success: true, preview: previewData };
-		} catch (err) {
-			console.error("❌ [PREVIEW] Erreur lors de l'aperçu:", err);
+		} catch {
 			return fail(500, {
 				form,
 				error: "Erreur lors de l'aperçu des données"
@@ -206,29 +195,16 @@ export const actions: Actions = {
 	},
 
 	export: async (event) => {
-		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
 
 		const { request, fetch } = event;
-		console.log('🚀 [SERVER] Action export déclenchée');
-
 		const form = await superValidate(request, zod(exportSchema));
 
-		console.log('📝 [SERVER] Données reçues après validation:');
-		console.log('  - Valid:', form.valid);
-		console.log('  - Data:', form.data);
-		console.log('  - Errors:', form.errors);
-
 		if (!form.valid) {
-			console.error('❌ [SERVER] Formulaire invalide:', form.errors);
 			return fail(400, { form });
 		}
 
-		console.log("📊 [SERVER] Configuration d'export validée:", form.data);
-
 		try {
-			// Rediriger vers l'API d'export pour le traitement
-			console.log('📡 [SERVER] Envoi requête vers /export/api');
 			const response = await fetch('/export/api', {
 				method: 'POST',
 				headers: {
@@ -237,14 +213,9 @@ export const actions: Actions = {
 				body: JSON.stringify(form.data)
 			});
 
-			console.log('📨 [SERVER] Réponse API reçue:', response.status, response.statusText);
-
-			// Vérifier si c'est un fichier binaire (headers Content-Type)
 			const contentType = response.headers.get('content-type');
-			console.log('📄 [SERVER] Content-Type de la réponse:', contentType);
 
 			if (!response.ok) {
-				console.error('❌ [SERVER] Réponse API non OK:', response.status);
 				let errorData;
 				try {
 					errorData = await response.json();
@@ -257,35 +228,24 @@ export const actions: Actions = {
 				});
 			}
 
-			// Si c'est un fichier binaire, on devrait gérer le téléchargement différemment
 			if (
 				contentType &&
 				(contentType.includes('application/vnd.openxml') ||
 					contentType.includes('text/csv') ||
 					contentType.includes('application/xml'))
 			) {
-				console.log('📁 [SERVER] Fichier binaire détecté, lecture des headers personnalisés');
 				const exportResultHeader = response.headers.get('X-Export-Result');
 				if (exportResultHeader) {
 					const result = JSON.parse(exportResultHeader);
-					console.log("📦 [SERVER] Résultat d'export extrait des headers:", result);
-
-					// Dans ce cas, nous devons gérer le téléchargement côté client
 					const finalResult = { ...result, needsClientDownload: true, downloadUrl: '/export/api' };
-					console.log('🎯 [SERVER] Retour du résultat final:', finalResult);
 					return { form, success: true, result: finalResult };
-				} else {
-					console.warn('⚠️ [SERVER] Header X-Export-Result manquant');
 				}
 			}
 
-			// Tentative de lecture JSON pour les erreurs
 			let result;
 			try {
 				result = await response.json();
-				console.log('📦 [SERVER] Résultat JSON:', result);
-			} catch (jsonErr) {
-				console.error('❌ [SERVER] Impossible de parser la réponse en JSON:', jsonErr);
+			} catch {
 				return fail(500, {
 					form,
 					error: "Erreur lors du parsing de la réponse d'export"
@@ -293,8 +253,7 @@ export const actions: Actions = {
 			}
 
 			return { form, success: true, result };
-		} catch (err) {
-			console.error("❌ [SERVER] Erreur lors de l'export:", err);
+		} catch {
 			return fail(500, {
 				form,
 				error: "Erreur lors de l'export des données"

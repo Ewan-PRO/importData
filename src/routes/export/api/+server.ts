@@ -45,8 +45,7 @@ function generateFileName(selectedTables: string[], format: string): string {
 		return aliases[tableName] || tableName;
 	};
 
-	// Nombre total de tables disponibles (approximation basée sur le code existant)
-	const totalAvailableTables = 16;
+	const totalAvailableTables = 34;
 
 	if (selectedTables.length === totalAvailableTables) {
 		tablePart = 'complet';

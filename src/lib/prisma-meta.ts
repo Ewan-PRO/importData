@@ -1,24 +1,35 @@
 // src/lib/prisma-meta.ts - Micro-wrapper pour métadonnées Prisma
 import { Prisma, PrismaClient } from '@prisma/client';
-// TEMPORAIREMENT EN COMMENTAIRE POUR LE DEPLOIEMENT - imports non utilisés
-// import { createRequire } from 'node:module';
-// import { fileURLToPath } from 'node:url';
-// import path from 'node:path';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
 // Types Prisma pour les métadonnées
 type DMMFModel = Prisma.DMMF.Model;
 type DMMFField = Prisma.DMMF.Field;
 
-// TEMPORAIREMENT EN COMMENTAIRE POUR LE DEPLOIEMENT
-// Solution durable ESM/CommonJS : utiliser createRequire pour importer CommonJS
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
-// const require = createRequire(import.meta.url);
+// Import dynamique des clients Prisma
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
 
-// const devPrismaPath = path.resolve(__dirname, '../../prisma/cenov_dev_ewan/generated/index.js');
-// const { Prisma: DevPrisma, PrismaClient: DevClient } = require(devPrismaPath);
+// Clients Prisma 
+let CenovDevPrisma: typeof Prisma;
+let CenovDevPrismaClient: typeof PrismaClient;
 
-export type DatabaseName = 'cenov'; // | 'cenov_dev_ewan' TEMPORAIREMENT EN COMMENTAIRE
+try {
+	const devPrismaPath = path.resolve(__dirname, '../../prisma/cenov_dev_ewan/generated');
+	const devPrismaModule = require(devPrismaPath);
+	CenovDevPrisma = devPrismaModule.Prisma;
+	CenovDevPrismaClient = devPrismaModule.PrismaClient;
+} catch (error) {
+	console.error('❌ [PRISMA-META] Erreur lors du chargement du client CENOV_DEV_EWAN:', error);
+	// Fallback au client principal si le client dev n'est pas disponible
+	CenovDevPrisma = Prisma;
+	CenovDevPrismaClient = PrismaClient;
+}
+
+export type DatabaseName = 'cenov' | 'cenov_dev_ewan';
 
 export interface TableInfo {
 	name: string;
@@ -35,22 +46,35 @@ export interface FieldInfo {
 	isPrimaryKey: boolean;
 }
 
-// Configuration des bases
-export const DATABASES = {
-	cenov: {
-		dmmf: Prisma.dmmf,
-		client: new PrismaClient()
+// Cache pour les bases de données (singleton)
+let databasesCache: ReturnType<typeof createDatabases> | null = null;
+
+// Configuration des bases - création unique
+function createDatabases() {
+	return {
+		cenov: {
+			dmmf: Prisma.dmmf,
+			client: new PrismaClient()
+		},
+		cenov_dev_ewan: {
+			dmmf: CenovDevPrisma.dmmf,
+			client: new CenovDevPrismaClient()
+		}
+	};
+}
+
+// Accès aux bases avec cache
+export function getDatabases() {
+	if (!databasesCache) {
+		databasesCache = createDatabases();
 	}
-	// TEMPORAIREMENT EN COMMENTAIRE POUR LE DEPLOIEMENT
-	// cenov_dev_ewan: {
-	// 	dmmf: DevPrisma.dmmf,
-	// 	client: new DevClient()
-	// }
-} as const;
+	return databasesCache;
+}
 
 // Obtenir métadonnées d'une table spécifique
 export function getTableMetadata(database: DatabaseName, tableName: string) {
-	const model = DATABASES[database].dmmf.datamodel.models.find(
+	const databases = getDatabases();
+	const model = databases[database].dmmf.datamodel.models.find(
 		(m: DMMFModel) => m.name === tableName
 	);
 	if (!model) return null;
@@ -71,23 +95,30 @@ export function getTableMetadata(database: DatabaseName, tableName: string) {
 
 // Obtenir toutes les tables d'une base
 export function getAllTables(database: DatabaseName): TableInfo[] {
-	return DATABASES[database].dmmf.datamodel.models.map((model: DMMFModel) => ({
-		name: model.name,
-		displayName: humanizeTableName(model.name),
-		category: model.name.startsWith('v_') || model.name.includes('_v_') ? 'view' : 'table',
-		database
-	}));
+	const databases = getDatabases();
+	const tables = databases[database].dmmf.datamodel.models.map((model: DMMFModel) => {
+		const category: 'table' | 'view' = model.name.startsWith('v_') || model.name.includes('_v_') ? 'view' : 'table';
+		return {
+			name: model.name,
+			displayName: humanizeTableName(model.name),
+			category,
+			database
+		};
+	});
+	return tables;
 }
 
-// TEMPORAIREMENT EN COMMENTAIRE POUR LE DEPLOIEMENT
 // Obtenir toutes les tables des 2 bases
-// export function getAllDatabaseTables(): TableInfo[] {
-// 	return [...getAllTables('cenov'), ...getAllTables('cenov_dev_ewan')];
-// }
+export function getAllDatabaseTables(): TableInfo[] {
+	const cenovTables = getAllTables('cenov');
+	const cenovDevTables = getAllTables('cenov_dev_ewan');
+	return [...cenovTables, ...cenovDevTables];
+}
 
 // Obtenir client Prisma
 export function getClient(database: DatabaseName) {
-	return DATABASES[database].client;
+	const databases = getDatabases();
+	return databases[database].client;
 }
 
 // Compter lignes d'une table

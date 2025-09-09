@@ -27,6 +27,11 @@
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
 
 	export let data;
+	
+	// Debug basique
+	if (!data?.tables?.length) {
+		console.warn('⚠️ [CLIENT] Aucune table trouvée');
+	}
 
 	// Initialisation du formulaire SuperForm
 	const {
@@ -136,7 +141,7 @@
 	];
 
 	// Tables filtrées selon la catégorie et la recherche
-	$: filteredTables = data.tables.filter((table: ExportTableInfo) => {
+	$: filteredTables = (data?.tables || []).filter((table: ExportTableInfo) => {
 		const matchesCategory = selectedCategory === 'all' || table.category === selectedCategory;
 		const matchesSearch =
 			searchTerm === '' ||
@@ -147,9 +152,9 @@
 
 	// Nombre de tables par catégorie
 	$: tableCounts = {
-		all: data.tables.length,
-		table: data.tables.filter((t: ExportTableInfo) => t.category === 'table').length,
-		view: data.tables.filter((t: ExportTableInfo) => t.category === 'view').length
+		all: (data?.tables || []).length,
+		table: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'table').length,
+		view: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view').length
 	};
 
 	// Variable pour tracking le changement de catégorie et éviter le toast au chargement initial
@@ -526,7 +531,7 @@
 				<!-- Liste des tables -->
 				<div class="mb-6 max-h-96 overflow-y-auto">
 					<div class="grid gap-3">
-						{#each filteredTables as table (table.name)}
+						{#each filteredTables as table (`${table.database}-${table.name}`)}
 							<label
 								class="flex cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100"
 							>
