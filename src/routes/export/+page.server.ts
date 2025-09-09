@@ -29,8 +29,6 @@ export interface ExportTableInfo extends PrismaTableInfo {
 	relations?: string[];
 }
 
-// Supprimé ColumnInfo - utilise FieldInfo de prisma-meta.ts
-
 export interface ExportResult {
 	success: boolean;
 	message: string;
@@ -156,12 +154,18 @@ export const actions: Actions = {
 				try {
 					// Déterminer quelle base de données utiliser pour cette table
 					const allTables = getAllDatabaseTables();
-					const tableInfo = allTables.find(t => t.name === tableName);
-					const database = tableInfo?.database || 'cenov';
+					const tableInfo = allTables.find((t) => t.name === tableName);
+					
+					if (!tableInfo) {
+						console.error(`❌ [PREVIEW] Table non trouvée: ${tableName}`);
+						continue; // Passer à la table suivante
+					}
+					
+					const database = tableInfo.database;
 
 					// Utiliser l'accès dynamique aux modèles Prisma
 					const prisma = getClient(database);
-					
+
 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					const model = (prisma as Record<string, any>)[tableName];
 					if (!model) {

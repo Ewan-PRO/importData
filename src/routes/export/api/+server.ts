@@ -13,9 +13,30 @@ interface ExportData {
 	totalRows: number;
 }
 
-// Fonction pour générer un nom de fichier intelligent
+// Fonction pour générer un nom de fichier intelligent et dynamique
 function generateFileName(selectedTables: string[], format: string): string {
-	const totalAvailableTables = 34;
+	// Calculer dynamiquement le nombre total de tables disponibles
+	const allTables = getAllDatabaseTables();
+	const totalAvailableTables = allTables.length;
+	
+	// Déterminer les bases de données utilisées
+	const usedDatabases = new Set(
+		selectedTables
+			.map(tableName => allTables.find(t => t.name === tableName)?.database)
+			.filter(Boolean)
+	);
+	
+	// Préfixe selon les bases utilisées (vraiment dynamique)
+	let prefix: string;
+	if (usedDatabases.size === 0) {
+		prefix = 'export';
+	} else if (usedDatabases.size === 1) {
+		// Utiliser le vrai nom de base de données tel quel
+		prefix = Array.from(usedDatabases)[0] as string;
+	} else {
+		// Concaténer tous les noms de bases utilisées
+		prefix = Array.from(usedDatabases).sort().join('_');
+	}
 
 	let tablePart: string;
 	if (selectedTables.length === totalAvailableTables) {
@@ -28,7 +49,7 @@ function generateFileName(selectedTables: string[], format: string): string {
 		tablePart = `${selectedTables.length}tables`;
 	}
 
-	return `cenov_${tablePart}.${format}`;
+	return `${prefix}_${tablePart}.${format}`;
 }
 
 interface ExportFile {
