@@ -167,13 +167,18 @@
 		return matchesCategory && matchesSearch;
 	});
 
-	// Nombre de tables par catégorie - CORRIGÉ + BDD
+	// Nombre de tables par catégorie - CORRIGÉ + BDD + compteurs croisés
 	$: tableCounts = {
 		all: (data?.tables || []).length,
 		tables: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'table').length,
 		views: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view').length,
 		cenov: (data?.tables || []).filter((t: ExportTableInfo) => t.database === 'cenov').length,
-		cenov_dev_ewan: (data?.tables || []).filter((t: ExportTableInfo) => t.database === 'cenov_dev_ewan').length
+		cenov_dev_ewan: (data?.tables || []).filter((t: ExportTableInfo) => t.database === 'cenov_dev_ewan').length,
+		// Compteurs croisés
+		tables_cenov: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'table' && t.database === 'cenov').length,
+		views_cenov: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view' && t.database === 'cenov').length,
+		tables_cenov_dev_ewan: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'table' && t.database === 'cenov_dev_ewan').length,
+		views_cenov_dev_ewan: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view' && t.database === 'cenov_dev_ewan').length
 	};
 
 	// Variable pour tracking le changement de catégorie et éviter le toast au chargement initial
@@ -269,12 +274,18 @@
 			console.log('📋 [CLIENT] Configuration actuelle du formulaire:', $form);
 
 			// Utiliser les données du formulaire (qui sont synchronisées avec savedExportConfig)
+			// Transformer les IDs uniques en noms de tables simples pour l'API
+			const exportData = {
+				...$form,
+				selectedTables: $form.selectedTables.map(id => id.split('-').slice(1).join('-'))
+			};
+			
 			const response = await fetch('/export/api', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify($form)
+				body: JSON.stringify(exportData)
 			});
 
 			if (!response.ok) {
@@ -308,12 +319,16 @@
 
 	// Sélection/désélection de toutes les tables visibles
 	function toggleAllTables() {
-		if ($form.selectedTables.length === filteredTables.length) {
-			// Désélectionner toutes
-			$form.selectedTables = [];
+		const filteredTableIds = filteredTables.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
+		const selectedFilteredCount = filteredTableIds.filter(id => $form.selectedTables.includes(id)).length;
+		
+		if (selectedFilteredCount === filteredTables.length) {
+			// Désélectionner toutes les tables filtrées
+			$form.selectedTables = $form.selectedTables.filter(id => !filteredTableIds.includes(id));
 		} else {
 			// Sélectionner toutes les tables visibles
-			$form.selectedTables = filteredTables.map((t: ExportTableInfo) => t.name);
+			const newSelection = [...new Set([...$form.selectedTables, ...filteredTableIds])];
+			$form.selectedTables = newSelection;
 		}
 	}
 
@@ -321,29 +336,65 @@
 	function selectByCategory(category: string) {
 		const tablesInCategory = data.tables
 			.filter((t: ExportTableInfo) => category === 'all' || t.category === category)
-			.map((t: ExportTableInfo) => t.name);
+			.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
 		$form.selectedTables = tablesInCategory;
 	}
 
-	// Fonction pour basculer la sélection d'une catégorie
-	function toggleCategorySelection(category: 'table' | 'view') {
-		const tablesInCategory = data.tables
-			.filter((t: ExportTableInfo) => t.category === category)
-			.map((t: ExportTableInfo) => t.name);
+	// Fonction pour basculer la sélection d'une catégorie (avec filtre BDD optionnel)
+	function toggleCategorySelection(category: 'table' | 'view', restrictToDatabase?: 'cenov' | 'cenov_dev_ewan') {
+		let tablesInCategory = data.tables
+			.filter((t: ExportTableInfo) => t.category === category);
 		
-		const isAllSelected = tablesInCategory.every((tableName) =>
-			$form.selectedTables.includes(tableName)
+		// Si on est sur un filtre BDD spécifique, restreindre à cette BDD
+		if (restrictToDatabase) {
+			tablesInCategory = tablesInCategory.filter((t: ExportTableInfo) => t.database === restrictToDatabase);
+		}
+		
+		const tableIds = tablesInCategory.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
+		
+		const isAllSelected = tableIds.every((tableId) =>
+			$form.selectedTables.includes(tableId)
 		);
 		
 		if (isAllSelected) {
 			// Désélectionner toutes les tables de cette catégorie
 			$form.selectedTables = $form.selectedTables.filter(
-				(t) => !tablesInCategory.includes(t)
+				(id) => !tableIds.includes(id)
 			);
 		} else {
 			// Sélectionner toutes les tables de cette catégorie
 			const newSelection = [
-				...new Set([...$form.selectedTables, ...tablesInCategory])
+				...new Set([...$form.selectedTables, ...tableIds])
+			];
+			$form.selectedTables = newSelection;
+		}
+	}
+
+	// Fonction pour basculer la sélection d'une base de données (avec filtre catégorie optionnel)
+	function toggleDatabaseSelection(database: 'cenov' | 'cenov_dev_ewan', restrictToCategory?: 'table' | 'view') {
+		let tablesInDatabase = data.tables
+			.filter((t: ExportTableInfo) => t.database === database);
+		
+		// Si on est sur un filtre catégorie spécifique, restreindre à cette catégorie
+		if (restrictToCategory) {
+			tablesInDatabase = tablesInDatabase.filter((t: ExportTableInfo) => t.category === restrictToCategory);
+		}
+		
+		const tableIds = tablesInDatabase.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
+		
+		const isAllSelected = tableIds.every((tableId) =>
+			$form.selectedTables.includes(tableId)
+		);
+		
+		if (isAllSelected) {
+			// Désélectionner toutes les tables de cette base
+			$form.selectedTables = $form.selectedTables.filter(
+				(id) => !tableIds.includes(id)
+			);
+		} else {
+			// Sélectionner toutes les tables de cette base
+			const newSelection = [
+				...new Set([...$form.selectedTables, ...tableIds])
 			];
 			$form.selectedTables = newSelection;
 		}
@@ -473,7 +524,7 @@
 			<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
 				<div class="flex items-center justify-between">
 					<div>
-						<div class="text-2xl font-bold text-purple-600">{filteredTables.filter((table) => $form.selectedTables.includes(table.name)).length}</div>
+						<div class="text-2xl font-bold text-purple-600">{filteredTables.filter((table) => $form.selectedTables.includes(`${table.database}-${table.name}`)).length}</div>
 						<div class="text-sm text-purple-800">Sources sélectionnées</div>
 					</div>
 					<CheckCircle class="h-8 w-8 text-purple-500" />
@@ -533,21 +584,22 @@
 							<input
 								type="checkbox"
 								checked={filteredTables.length > 0 && 
-									filteredTables.every((table: ExportTableInfo) => $form.selectedTables.includes(table.name))}
+									filteredTables.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
 								onchange={toggleAllTables}
 								class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 							/>
 							<span>Sélectionner tout ({filteredTables.length})</span>
 						</label>
 
-						<!-- Cases spécifiques - uniquement quand 'all' est sélectionné pour éviter la redondance -->
+						<!-- Cases spécifiques selon le filtre sélectionné -->
 						{#if selectedCategory === 'all'}
+							<!-- Quand 'Toutes' est sélectionné : afficher Tables, Vues, Cenov, Cenov_dev_ewan -->
 							<label class="flex cursor-pointer items-center space-x-2">
 								<input
 									type="checkbox"
 									checked={tableCounts.tables > 0 && 
 										data.tables.filter((t: ExportTableInfo) => t.category === 'table')
-											.every((table: ExportTableInfo) => $form.selectedTables.includes(table.name))}
+											.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
 									onchange={() => toggleCategorySelection('table')}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
@@ -559,11 +611,85 @@
 									type="checkbox"
 									checked={tableCounts.views > 0 && 
 										data.tables.filter((t: ExportTableInfo) => t.category === 'view')
-											.every((table: ExportTableInfo) => $form.selectedTables.includes(table.name))}
+											.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
 									onchange={() => toggleCategorySelection('view')}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
 								<span>Vues ({tableCounts.views})</span>
+							</label>
+
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="checkbox"
+									checked={tableCounts.cenov > 0 && 
+										data.tables.filter((t: ExportTableInfo) => t.database === 'cenov')
+											.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
+									onchange={() => toggleDatabaseSelection('cenov')}
+									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span>🚀 Cenov ({tableCounts.cenov})</span>
+							</label>
+
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="checkbox"
+									checked={tableCounts.cenov_dev_ewan > 0 && 
+										data.tables.filter((t: ExportTableInfo) => t.database === 'cenov_dev_ewan')
+											.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
+									onchange={() => toggleDatabaseSelection('cenov_dev_ewan')}
+									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span>⚙️ Cenov_dev_ewan ({tableCounts.cenov_dev_ewan})</span>
+							</label>
+						{:else if selectedCategory === 'tables' || selectedCategory === 'views'}
+							<!-- Quand 'Tables' ou 'Vues' est sélectionné : afficher Cenov, Cenov_dev_ewan -->
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="checkbox"
+									checked={(selectedCategory === 'tables' ? tableCounts.tables_cenov : tableCounts.views_cenov) > 0 && 
+										data.tables.filter((t: ExportTableInfo) => t.database === 'cenov' && t.category === (selectedCategory === 'tables' ? 'table' : 'view'))
+											.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
+									onchange={() => toggleDatabaseSelection('cenov', selectedCategory === 'tables' ? 'table' : 'view')}
+									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span>🚀 Cenov ({selectedCategory === 'tables' ? tableCounts.tables_cenov : tableCounts.views_cenov})</span>
+							</label>
+
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="checkbox"
+									checked={(selectedCategory === 'tables' ? tableCounts.tables_cenov_dev_ewan : tableCounts.views_cenov_dev_ewan) > 0 && 
+										data.tables.filter((t: ExportTableInfo) => t.database === 'cenov_dev_ewan' && t.category === (selectedCategory === 'tables' ? 'table' : 'view'))
+											.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
+									onchange={() => toggleDatabaseSelection('cenov_dev_ewan', selectedCategory === 'tables' ? 'table' : 'view')}
+									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span>⚙️ Cenov_dev_ewan ({selectedCategory === 'tables' ? tableCounts.tables_cenov_dev_ewan : tableCounts.views_cenov_dev_ewan})</span>
+							</label>
+						{:else if selectedCategory === 'cenov' || selectedCategory === 'cenov_dev_ewan'}
+							<!-- Quand 'Cenov' ou 'Cenov_dev_ewan' est sélectionné : afficher Tables, Vues -->
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="checkbox"
+									checked={(selectedCategory === 'cenov' ? tableCounts.tables_cenov : tableCounts.tables_cenov_dev_ewan) > 0 && 
+										data.tables.filter((t: ExportTableInfo) => t.category === 'table' && t.database === selectedCategory)
+											.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
+									onchange={() => toggleCategorySelection('table', selectedCategory as 'cenov' | 'cenov_dev_ewan')}
+									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span>Tables ({selectedCategory === 'cenov' ? tableCounts.tables_cenov : tableCounts.tables_cenov_dev_ewan})</span>
+							</label>
+
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="checkbox"
+									checked={(selectedCategory === 'cenov' ? tableCounts.views_cenov : tableCounts.views_cenov_dev_ewan) > 0 && 
+										data.tables.filter((t: ExportTableInfo) => t.category === 'view' && t.database === selectedCategory)
+											.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
+									onchange={() => toggleCategorySelection('view', selectedCategory as 'cenov' | 'cenov_dev_ewan')}
+									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span>Vues ({selectedCategory === 'cenov' ? tableCounts.views_cenov : tableCounts.views_cenov_dev_ewan})</span>
 							</label>
 						{/if}
 					</div>
@@ -580,10 +706,11 @@
 								<input
 									type="checkbox"
 									bind:group={$form.selectedTables}
-									value={table.name}
+									value={`${table.database}-${table.name}`}
 									onchange={() => {
 										// Toast info quand on sélectionne/désélectionne une table
-										const isSelected = $form.selectedTables.includes(table.name);
+										const tableId = `${table.database}-${table.name}`;
+										const isSelected = $form.selectedTables.includes(tableId);
 										const tableType = table.category === 'view' ? 'vue' : 'table';
 										
 										if (isSelected) {
@@ -722,7 +849,7 @@
 					</div>
 
 					<!-- Champs cachés -->
-					<input type="hidden" name="selectedTables" value={JSON.stringify($form.selectedTables)} />
+					<input type="hidden" name="selectedTables" value={JSON.stringify($form.selectedTables.map(id => id.split('-').slice(1).join('-')))} />
 					<input type="hidden" name="format" value={$form.format} />
 					<input type="hidden" name="includeHeaders" value={$form.includeHeaders} />
 					<input type="hidden" name="rowLimit" value={$form.rowLimit} />
