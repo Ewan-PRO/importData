@@ -115,6 +115,11 @@ export function getAllDatabaseTables(): TableInfo[] {
 	return [...cenovTables, ...cenovDevTables];
 }
 
+// Obtenir tous les noms de bases de données
+export function getAllDatabaseNames(): DatabaseName[] {
+	return Object.keys(getDatabases()) as DatabaseName[];
+}
+
 // Obtenir client Prisma
 export function getClient(database: DatabaseName) {
 	const databases = getDatabases();
