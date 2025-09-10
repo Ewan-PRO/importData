@@ -22,7 +22,9 @@
 		RotateCcw,
 		CircleArrowRight,
 		CircleArrowLeft,
-		CirclePlus
+		CirclePlus,
+		Rocket,
+		Settings
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
 
@@ -114,7 +116,9 @@
 	const categories = [
 		{ value: 'all', label: 'Toutes les sources', icon: Funnel },
 		{ value: 'tables', label: 'Tables', icon: Database },
-		{ value: 'views', label: 'Vues', icon: Eye }
+		{ value: 'views', label: 'Vues', icon: Eye },
+		{ value: 'cenov', label: 'Cenov', icon: Rocket },
+		{ value: 'cenov_dev_ewan', label: 'Cenov_dev_ewan', icon: Settings }
 	];
 
 	// Formats d'export
@@ -140,15 +144,19 @@
 		}
 	];
 
-	// Tables filtrées selon la catégorie et la recherche - CORRIGÉ
+	// Tables filtrées selon la catégorie et la recherche - CORRIGÉ + BDD
 	$: filteredTables = (data?.tables || []).filter((table: ExportTableInfo) => {
-		// Mapping correct pour les catégories
+		// Mapping correct pour les catégories et bases de données
 		let matchesCategory = false;
 		if (selectedCategory === 'all') {
 			matchesCategory = true;
 		} else if (selectedCategory === 'tables' && table.category === 'table') {
 			matchesCategory = true;
 		} else if (selectedCategory === 'views' && table.category === 'view') {
+			matchesCategory = true;
+		} else if (selectedCategory === 'cenov' && table.database === 'cenov') {
+			matchesCategory = true;
+		} else if (selectedCategory === 'cenov_dev_ewan' && table.database === 'cenov_dev_ewan') {
 			matchesCategory = true;
 		}
 		
@@ -159,11 +167,13 @@
 		return matchesCategory && matchesSearch;
 	});
 
-	// Nombre de tables par catégorie - CORRIGÉ
+	// Nombre de tables par catégorie - CORRIGÉ + BDD
 	$: tableCounts = {
 		all: (data?.tables || []).length,
 		tables: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'table').length,
-		views: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view').length
+		views: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view').length,
+		cenov: (data?.tables || []).filter((t: ExportTableInfo) => t.database === 'cenov').length,
+		cenov_dev_ewan: (data?.tables || []).filter((t: ExportTableInfo) => t.database === 'cenov_dev_ewan').length
 	};
 
 	// Variable pour tracking le changement de catégorie et éviter le toast au chargement initial
@@ -180,6 +190,10 @@
 			count = tableCounts.tables;
 		} else if (selectedCategory === 'views') {
 			count = tableCounts.views;
+		} else if (selectedCategory === 'cenov') {
+			count = tableCounts.cenov;
+		} else if (selectedCategory === 'cenov_dev_ewan') {
+			count = tableCounts.cenov_dev_ewan;
 		} else {
 			count = 0;
 		}
@@ -212,6 +226,18 @@
 				return 'vert';
 			default:
 				return 'noir';
+		}
+	}
+
+	// Couleur et contenu des badges selon la base de données
+	function getDatabaseBadgeInfo(database: string) {
+		switch (database) {
+			case 'cenov':
+				return { variant: 'bleu' as const, label: '🚀 CENOV' };
+			case 'cenov_dev_ewan':
+				return { variant: 'orange' as const, label: '⚙️ CENOV_DEV_EWAN' };
+			default:
+				return { variant: 'noir' as const, label: database };
 		}
 	}
 
@@ -490,7 +516,9 @@
 											{category.label} ({
 												category.value === 'all' ? tableCounts.all :
 												category.value === 'tables' ? tableCounts.tables :
-												category.value === 'views' ? tableCounts.views : 0
+												category.value === 'views' ? tableCounts.views :
+												category.value === 'cenov' ? tableCounts.cenov :
+												category.value === 'cenov_dev_ewan' ? tableCounts.cenov_dev_ewan : 0
 											})
 										</span>
 									</Select.SelectItem>
@@ -545,6 +573,7 @@
 				<div class="mb-6 max-h-96 overflow-y-auto">
 					<div class="grid gap-3">
 						{#each filteredTables as table (`${table.database}-${table.name}`)}
+							{@const dbInfo = getDatabaseBadgeInfo(table.database)}
 							<label
 								class="flex cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100"
 							>
@@ -581,6 +610,9 @@
 												<span class="font-medium">{table.displayName}</span>
 												<Badge variant={getBadgeVariant(table.category)}>
 													{table.category.replace('_', ' ')}
+												</Badge>
+												<Badge variant={dbInfo.variant}>
+													{dbInfo.label}
 												</Badge>
 											</div>
 											<div class="text-sm text-gray-500">
