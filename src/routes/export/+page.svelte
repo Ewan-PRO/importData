@@ -236,10 +236,10 @@
 	}
 
 	// Couleur et contenu des badges selon la base de données - DYNAMIQUE
-	function getDatabaseBadgeInfo(database: string) {
+	function getDatabaseBadgeInfo(database: string): { variant: 'orange' | 'bleu' | 'noir', label: string } {
 		const isDev = database.includes('dev');
 		const emoji = isDev ? '⚙️' : '🚀';
-		const variant = isDev ? ('orange' as const) : ('bleu' as const);
+		const variant = isDev ? 'orange' as const : 'bleu' as const;
 		const label = `${emoji} ${database.toUpperCase()}`;
 		
 		return { variant, label };
@@ -865,15 +865,26 @@
 					<div class="mb-6 space-y-6">
 						{#each Object.entries(previewData) as [tableName, rows]}
 							{@const tableInfo = data.tables.find((t) => t.name === tableName)}
+							{@const dbInfo = tableInfo ? getDatabaseBadgeInfo(tableInfo.database) : { variant: 'noir' as const, label: 'Inconnue' }}
 							<div>
 								<div class="mb-3 flex items-center justify-between">
-									<h3 class="flex items-center gap-2 font-medium">
-										<svelte:component
-											this={getTableIcon(tableInfo?.category || 'tables')}
-											class="h-5 w-5"
-										/>
-										{tableInfo?.displayName || tableName}
-									</h3>
+									<div class="flex items-center gap-3">
+										<h3 class="flex items-center gap-2 font-medium">
+											<svelte:component
+												this={getTableIcon(tableInfo?.category || 'tables')}
+												class="h-5 w-5"
+											/>
+											{tableInfo?.displayName || tableName}
+										</h3>
+										{#if tableInfo}
+											<Badge variant={getBadgeVariant(tableInfo.category)}>
+												{tableInfo.category.replace('_', ' ')}
+											</Badge>
+											<Badge variant={dbInfo.variant}>
+												{dbInfo.label}
+											</Badge>
+										{/if}
+									</div>
 									<Badge variant="blanc">{rows.length} lignes (aperçu)</Badge>
 								</div>
 
