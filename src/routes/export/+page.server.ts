@@ -152,8 +152,13 @@ export const actions: Actions = {
 			const previewData: Record<string, unknown[]> = {};
 
 			// Récupérer un aperçu des données pour chaque table sélectionnée
-			for (const tableName of selectedTables) {
+			for (const tableId of selectedTables) {
 				const limit = 5;
+
+				// Parser l'ID de table pour extraire le vrai nom de table
+				// Format attendu: "database-tablename" => extraire "tablename"
+				const tableName = tableId.includes('-') ? tableId.split('-').slice(1).join('-') : tableId;
+				console.log(`🔍 [PREVIEW] Processing tableId: ${tableId} => tableName: ${tableName}`);
 
 				try {
 					// Déterminer quelle base de données utiliser pour cette table
@@ -161,7 +166,8 @@ export const actions: Actions = {
 					const tableInfo = allTables.find((t) => t.name === tableName);
 					
 					if (!tableInfo) {
-						console.error(`❌ [PREVIEW] Table non trouvée: ${tableName}`);
+						console.error(`❌ [PREVIEW] Table non trouvée: ${tableName} (from tableId: ${tableId})`);
+						console.log(`🔍 [PREVIEW] Tables disponibles:`, allTables.map(t => t.name));
 						continue; // Passer à la table suivante
 					}
 					
@@ -187,8 +193,10 @@ export const actions: Actions = {
 						...(Object.keys(orderBy).length > 0 && { orderBy })
 					});
 
+					// Utiliser le nom de table réel pour la clé de prévisualisation
 					previewData[tableName] = data;
-				} catch {
+				} catch (error) {
+					console.error(`❌ [PREVIEW] Erreur lors de la récupération des données pour ${tableName}:`, error);
 					previewData[tableName] = [];
 				}
 			}
