@@ -221,12 +221,25 @@ export const actions: Actions = {
 		}
 
 		try {
+			// Transformer les IDs de tables en noms de tables réels avant l'envoi à l'API
+			const transformedData = {
+				...form.data,
+				selectedTables: form.data.selectedTables.map(tableId => 
+					tableId.includes('-') ? tableId.split('-').slice(1).join('-') : tableId
+				)
+			};
+			
+			console.log('🔧 [EXPORT] Transformation des IDs:', {
+				original: form.data.selectedTables,
+				transformed: transformedData.selectedTables
+			});
+
 			const response = await fetch('/export/api', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(form.data)
+				body: JSON.stringify(transformedData)
 			});
 
 			const contentType = response.headers.get('content-type');
