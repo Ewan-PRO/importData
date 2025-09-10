@@ -113,8 +113,8 @@
 		console.log('📋 [CLIENT] Formulaire après sync:', { ...$form });
 	}
 
-	// Récupération dynamique des bases de données
-	const databases = getAllDatabaseNames();
+	// Récupération statique des bases de données (côté client)
+	const databases: DatabaseName[] = ['cenov', 'cenov_dev_ewan'];
 	
 	// Fonction pour obtenir l'icône d'une BDD
 	function getDatabaseIcon(database: string) {
@@ -126,7 +126,7 @@
 		{ value: 'all', label: 'Toutes les sources', icon: Funnel },
 		{ value: 'tables', label: 'Tables', icon: Database },
 		{ value: 'views', label: 'Vues', icon: Eye },
-		...databases.map(db => ({
+		...databases.map((db: DatabaseName) => ({
 			value: db,
 			label: db.replace('_', ' '),
 			icon: getDatabaseIcon(db)
@@ -184,11 +184,11 @@
 		views: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view').length,
 		// Compteurs par BDD (dynamique)
 		...Object.fromEntries(
-			databases.map(db => [db, (data?.tables || []).filter((t: ExportTableInfo) => t.database === db).length])
+			databases.map((db: DatabaseName) => [db, (data?.tables || []).filter((t: ExportTableInfo) => t.database === db).length])
 		),
 		// Compteurs croisés (dynamique)
 		...Object.fromEntries(
-			databases.flatMap(db => [
+			databases.flatMap((db: DatabaseName) => [
 				[`tables_${db}`, (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'table' && t.database === db).length],
 				[`views_${db}`, (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view' && t.database === db).length]
 			])

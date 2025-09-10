@@ -60,25 +60,29 @@ const exportSchema = z.object({
 });
 
 // Génération des informations d'export à partir des métadonnées Prisma
-function generateExportTables(): ExportTableInfo[] {
+async function generateExportTables(): Promise<ExportTableInfo[]> {
 	// Récupérer toutes les tables des deux bases de données
-	const tables = getAllDatabaseTables();
+	const tables = await getAllDatabaseTables();
 
-	return tables.map((table) => {
-		const metadata = getTableMetadata(table.database, table.name);
-		const columns: FieldInfo[] = metadata?.fields || [];
+	const tablesWithMetadata = await Promise.all(
+		tables.map(async (table) => {
+			const metadata = await getTableMetadata(table.database, table.name);
+			const columns: FieldInfo[] = metadata?.fields || [];
 
-		return {
-			...table,
-			columns,
-			relations: []
-		};
-	});
+			return {
+				...table,
+				columns,
+				relations: []
+			};
+		})
+	);
+
+	return tablesWithMetadata;
 }
 
 // Obtenir les informations sur les tables avec le compte de lignes
 async function getTablesInfo(): Promise<ExportTableInfo[]> {
-	const availableTables = generateExportTables();
+	const availableTables = await generateExportTables();
 
 	const tablesWithCounts = await Promise.all(
 		availableTables.map(async (table) => {
@@ -153,7 +157,7 @@ export const actions: Actions = {
 
 				try {
 					// Déterminer quelle base de données utiliser pour cette table
-					const allTables = getAllDatabaseTables();
+					const allTables = await getAllDatabaseTables();
 					const tableInfo = allTables.find((t) => t.name === tableName);
 					
 					if (!tableInfo) {
@@ -164,7 +168,7 @@ export const actions: Actions = {
 					const database = tableInfo.database;
 
 					// Utiliser l'accès dynamique aux modèles Prisma
-					const prisma = getClient(database);
+					const prisma = await getClient(database);
 
 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					const model = (prisma as Record<string, any>)[tableName];
@@ -173,7 +177,7 @@ export const actions: Actions = {
 					}
 
 					// Déterminer la colonne pour l'ordre (clé primaire)
-					const metadata = getTableMetadata(database, tableName);
+					const metadata = await getTableMetadata(database, tableName);
 					const primaryKey = metadata?.primaryKey;
 					const orderBy = primaryKey ? { [primaryKey]: 'asc' } : {};
 

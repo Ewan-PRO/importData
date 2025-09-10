@@ -14,9 +14,9 @@ interface ExportData {
 }
 
 // Fonction pour générer un nom de fichier intelligent et dynamique
-function generateFileName(selectedTables: string[], format: string): string {
+async function generateFileName(selectedTables: string[], format: string): Promise<string> {
 	// Calculer dynamiquement le nombre total de tables disponibles
-	const allTables = getAllDatabaseTables();
+	const allTables = await getAllDatabaseTables();
 	const totalAvailableTables = allTables.length;
 	
 	// Déterminer les bases de données utilisées
@@ -186,7 +186,7 @@ async function extractTableData(
 	let columns: string[] = [];
 
 	// Déterminer quelle base de données contient cette table
-	const allTables = getAllDatabaseTables();
+	const allTables = await getAllDatabaseTables();
 	const tableInfo = allTables.find((t) => t.name === tableName);
 
 	if (!tableInfo) {
@@ -197,10 +197,10 @@ async function extractTableData(
 	console.log(`📊 [EXPORT] Exportation de ${tableName} depuis ${database}`);
 
 	// Obtenir le client Prisma approprié
-	const prisma = getClient(database);
+	const prisma = await getClient(database);
 
 	// Récupérer les métadonnées de la table
-	const metadata = getTableMetadata(database, tableName);
+	const metadata = await getTableMetadata(database, tableName);
 	if (!metadata) {
 		throw new Error(`Métadonnées non trouvées pour ${tableName}`);
 	}
@@ -296,7 +296,7 @@ async function generateExcelFile(
 	// Génération du buffer
 	const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 
-	const fileName = generateFileName(
+	const fileName = await generateFileName(
 		exportDataList.map((d) => d.tableName),
 		'xlsx'
 	);
@@ -362,7 +362,7 @@ async function generateCSVFile(
 	}
 
 	const buffer = Buffer.from(csvContent, 'utf-8');
-	const fileName = generateFileName(
+	const fileName = await generateFileName(
 		exportDataList.map((d) => d.tableName),
 		'csv'
 	);
@@ -421,7 +421,7 @@ async function generateXMLFile(exportDataList: ExportData[]): Promise<ExportFile
 
 	const xmlContent = '<?xml version="1.0" encoding="UTF-8"?>\n' + builder.build(xmlData);
 	const buffer = Buffer.from(xmlContent, 'utf-8');
-	const fileName = generateFileName(
+	const fileName = await generateFileName(
 		exportDataList.map((d) => d.tableName),
 		'xml'
 	);
