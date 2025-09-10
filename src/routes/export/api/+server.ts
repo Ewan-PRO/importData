@@ -207,14 +207,12 @@ async function extractTableData(tableName: string, rowLimit?: number): Promise<E
 			throw new Error(`Modèle Prisma non trouvé pour ${tableName}`);
 		}
 
-		// Déterminer la colonne pour l'ordre (clé primaire)
-		const primaryKey = metadata.primaryKey;
-		const orderBy = primaryKey ? { [primaryKey]: 'asc' } : {};
+		// Pas d'ORDER BY - données dans l'ordre naturel de la base de données
+		console.log(`🔍 [EXPORT] ${tableName}: naturalOrder=true`);
 
 		// Récupérer les données
 		data = await model.findMany({
-			take: limit,
-			...(Object.keys(orderBy).length > 0 && { orderBy })
+			take: limit
 		});
 
 		console.log(`✅ [EXPORT] ${tableName}: ${data.length} lignes extraites depuis ${database}`);

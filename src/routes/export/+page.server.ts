@@ -184,21 +184,31 @@ export const actions: Actions = {
 					// Obtenir les métadonnées pour identifier les colonnes timestamp
 					const metadata = await getTableMetadata(database, tableName);
 					const primaryKey = metadata?.primaryKey || 'id';
-					const timestampColumns = metadata?.fields.filter((f) => f.isTimestamp) || [];
+					const timestampColumns = metadata?.fields.filter((f) => f.isTimestamp) ?? [];
 
 					// Utiliser $queryRaw sécurisé avec Prisma.sql pour préserver les microsecondes
 					let timestampSelects = '';
 					if (timestampColumns.length > 0) {
-						timestampSelects = ', ' + timestampColumns
-							.map((col) => `"${col.name.replace(/"/g, '""')}"::text as "${col.name.replace(/"/g, '""')}_str"`)
-							.join(', ');
+						timestampSelects =
+							', ' +
+							timestampColumns
+								.map(
+									(col) =>
+										`"${col.name.replace(/"/g, '""')}"::text as "${col.name.replace(/"/g, '""')}_str"`
+								)
+								.join(', ');
 					}
 
-					// Construire la requête sécurisée avec échappement des identifiants
-					const rawData = (await (prisma as { $queryRawUnsafe: (query: string) => Promise<unknown[]> }).$queryRawUnsafe(`
+					// Pas d'ORDER BY - affichage dans l'ordre naturel de la base de données
+					console.log(
+						`🔍 [PREVIEW] ${tableName}: primaryKey=${primaryKey}, isView=${tableInfo.category === 'view'}, naturalOrder=true`
+					);
+
+					const rawData = (await (
+						prisma as { $queryRawUnsafe: (query: string) => Promise<unknown[]> }
+					).$queryRawUnsafe(`
 						SELECT *${timestampSelects}
 						FROM "${tableName.replace(/"/g, '""')}"
-						ORDER BY "${primaryKey.replace(/"/g, '""')}"
 						LIMIT ${limit}
 					`)) as Record<string, unknown>[];
 

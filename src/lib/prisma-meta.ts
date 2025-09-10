@@ -140,6 +140,47 @@ export async function getDatabases(): Promise<DatabaseConfig> {
 }
 
 // Obtenir métadonnées d'une table spécifique (côté serveur uniquement)
+// Type pour les modèles DMMF réels
+type DMMFModelFromPrisma = PrismaModule['Prisma']['dmmf']['datamodel']['models'][number];
+
+// Détecter la clé primaire via DMMF Prisma
+function detectPrimaryKeyFromDMMF(model: DMMFModelFromPrisma): string | null {
+  console.log(`🔍 [PRISMA-META] Analyse de ${model.name}:`, {
+    idFields: model.fields.filter((f) => f.isId).map((f) => f.name)
+  });
+
+  // 1. Les clés primaires composites ne sont pas supportées dans le DMMF actuel
+  // On se concentre sur les clés simples
+
+  // 2. Clé primaire simple (@id)
+  const singlePK = model.fields.find((f) => f.isId);
+  if (singlePK) {
+    console.log(`🔧 [PRISMA-META] Clé simple détectée pour ${model.name}: ${singlePK.name}`);
+    return singlePK.name;
+  }
+
+  // 3. Pour les vues : chercher le premier champ "id-like"
+  const idLikeFields = model.fields.filter((f) => 
+    f.name.match(/^(.*_id|id|pro_id|cat_id|atr_id|kit_id|fam_id|frs_id|par_id|kat_id)$/)
+  );
+  
+  if (idLikeFields.length > 0) {
+    const fallbackKey = idLikeFields[0].name;
+    console.log(`🔧 [PRISMA-META] Clé fallback détectée pour ${model.name}: ${fallbackKey}`);
+    return fallbackKey;
+  }
+
+  // 4. Dernier recours : premier champ
+  if (model.fields.length > 0) {
+    const firstField = model.fields[0].name;
+    console.log(`⚠️ [PRISMA-META] Aucune clé trouvée pour ${model.name}, utilisation du premier champ: ${firstField}`);
+    return firstField;
+  }
+
+  console.warn(`❌ [PRISMA-META] Impossible de déterminer une clé pour ${model.name}`);
+  return null;
+}
+
 export async function getTableMetadata(database: DatabaseName, tableName: string) {
   if (browser) {
     throw new Error('[PRISMA-META] getTableMetadata ne peut être appelé côté client');
@@ -151,9 +192,12 @@ export async function getTableMetadata(database: DatabaseName, tableName: string
   );
   if (!model) return null;
 
+  // Détecter la clé primaire intelligemment
+  const primaryKey = detectPrimaryKeyFromDMMF(model) || 'id';
+
   return {
     name: model.name,
-    primaryKey: model.fields.find((f) => f.isId)?.name || 'id',
+    primaryKey,
     fields: model.fields
       .filter((f) => f.kind === 'scalar')
       .map((f) => ({
