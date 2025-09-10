@@ -140,9 +140,18 @@
 		}
 	];
 
-	// Tables filtrées selon la catégorie et la recherche
+	// Tables filtrées selon la catégorie et la recherche - CORRIGÉ
 	$: filteredTables = (data?.tables || []).filter((table: ExportTableInfo) => {
-		const matchesCategory = selectedCategory === 'all' || table.category === selectedCategory;
+		// Mapping correct pour les catégories
+		let matchesCategory = false;
+		if (selectedCategory === 'all') {
+			matchesCategory = true;
+		} else if (selectedCategory === 'tables' && table.category === 'table') {
+			matchesCategory = true;
+		} else if (selectedCategory === 'views' && table.category === 'view') {
+			matchesCategory = true;
+		}
+		
 		const matchesSearch =
 			searchTerm === '' ||
 			table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -150,11 +159,11 @@
 		return matchesCategory && matchesSearch;
 	});
 
-	// Nombre de tables par catégorie
+	// Nombre de tables par catégorie - CORRIGÉ
 	$: tableCounts = {
 		all: (data?.tables || []).length,
-		table: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'table').length,
-		view: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view').length
+		tables: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'table').length,
+		views: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view').length
 	};
 
 	// Variable pour tracking le changement de catégorie et éviter le toast au chargement initial
@@ -163,7 +172,17 @@
 	// Toast de succès lors du changement de catégorie
 	$: if (selectedCategory !== previousSelectedCategory && previousSelectedCategory !== undefined) {
 		const categoryInfo = categories.find((c) => c.value === selectedCategory);
-		const count = tableCounts[selectedCategory as keyof typeof tableCounts];
+		// Mapping correct pour les compteurs
+		let count: number;
+		if (selectedCategory === 'all') {
+			count = tableCounts.all;
+		} else if (selectedCategory === 'tables') {
+			count = tableCounts.tables;
+		} else if (selectedCategory === 'views') {
+			count = tableCounts.views;
+		} else {
+			count = 0;
+		}
 
 		if (categoryInfo) {
 			toast.success(`Filtre appliqué : ${categoryInfo.label}`, {
@@ -278,6 +297,30 @@
 			.filter((t: ExportTableInfo) => category === 'all' || t.category === category)
 			.map((t: ExportTableInfo) => t.name);
 		$form.selectedTables = tablesInCategory;
+	}
+
+	// Fonction pour basculer la sélection d'une catégorie
+	function toggleCategorySelection(category: 'table' | 'view') {
+		const tablesInCategory = data.tables
+			.filter((t: ExportTableInfo) => t.category === category)
+			.map((t: ExportTableInfo) => t.name);
+		
+		const isAllSelected = tablesInCategory.every((tableName) =>
+			$form.selectedTables.includes(tableName)
+		);
+		
+		if (isAllSelected) {
+			// Désélectionner toutes les tables de cette catégorie
+			$form.selectedTables = $form.selectedTables.filter(
+				(t) => !tablesInCategory.includes(t)
+			);
+		} else {
+			// Sélectionner toutes les tables de cette catégorie
+			const newSelection = [
+				...new Set([...$form.selectedTables, ...tablesInCategory])
+			];
+			$form.selectedTables = newSelection;
+		}
 	}
 
 	// Formatage des nombres
@@ -404,7 +447,7 @@
 			<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
 				<div class="flex items-center justify-between">
 					<div>
-						<div class="text-2xl font-bold text-purple-600">{$form.selectedTables.length}</div>
+						<div class="text-2xl font-bold text-purple-600">{filteredTables.filter((table) => $form.selectedTables.includes(table.name)).length}</div>
 						<div class="text-sm text-purple-800">Sources sélectionnées</div>
 					</div>
 					<CheckCircle class="h-8 w-8 text-purple-500" />
@@ -444,7 +487,11 @@
 									<Select.SelectItem value={category.value}>
 										<span class="flex items-center gap-2">
 											<svelte:component this={category.icon} class="h-4 w-4" />
-											{category.label} ({tableCounts[category.value as keyof typeof tableCounts]})
+											{category.label} ({
+												category.value === 'all' ? tableCounts.all :
+												category.value === 'tables' ? tableCounts.tables :
+												category.value === 'views' ? tableCounts.views : 0
+											})
 										</span>
 									</Select.SelectItem>
 								{/each}
@@ -457,8 +504,8 @@
 						<label class="flex cursor-pointer items-center space-x-2">
 							<input
 								type="checkbox"
-								checked={$form.selectedTables.length === filteredTables.length &&
-									filteredTables.length > 0}
+								checked={filteredTables.length > 0 && 
+									filteredTables.every((table: ExportTableInfo) => $form.selectedTables.includes(table.name))}
 								onchange={toggleAllTables}
 								class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 							/>
@@ -470,59 +517,25 @@
 							<label class="flex cursor-pointer items-center space-x-2">
 								<input
 									type="checkbox"
-									checked={$form.selectedTables.filter(
-										(t) => data.tables.find((table) => table.name === t)?.category === 'table'
-									).length === tableCounts.table && tableCounts.table > 0}
-									onchange={() => {
-										const tablesInCategory = data.tables
-											.filter((t) => t.category === 'table')
-											.map((t) => t.name);
-										const isAllSelected = tablesInCategory.every((tableName) =>
-											$form.selectedTables.includes(tableName)
-										);
-										if (isAllSelected) {
-											$form.selectedTables = $form.selectedTables.filter(
-												(t) => !tablesInCategory.includes(t)
-											);
-										} else {
-											const newSelection = [
-												...new Set([...$form.selectedTables, ...tablesInCategory])
-											];
-											$form.selectedTables = newSelection;
-										}
-									}}
+									checked={tableCounts.tables > 0 && 
+										data.tables.filter((t: ExportTableInfo) => t.category === 'table')
+											.every((table: ExportTableInfo) => $form.selectedTables.includes(table.name))}
+									onchange={() => toggleCategorySelection('table')}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
-								<span>Tables ({tableCounts.table})</span>
+								<span>Tables ({tableCounts.tables})</span>
 							</label>
 
 							<label class="flex cursor-pointer items-center space-x-2">
 								<input
 									type="checkbox"
-									checked={$form.selectedTables.filter(
-										(t) => data.tables.find((table) => table.name === t)?.category === 'view'
-									).length === tableCounts.view && tableCounts.view > 0}
-									onchange={() => {
-										const tablesInCategory = data.tables
-											.filter((t) => t.category === 'view')
-											.map((t) => t.name);
-										const isAllSelected = tablesInCategory.every((tableName) =>
-											$form.selectedTables.includes(tableName)
-										);
-										if (isAllSelected) {
-											$form.selectedTables = $form.selectedTables.filter(
-												(t) => !tablesInCategory.includes(t)
-											);
-										} else {
-											const newSelection = [
-												...new Set([...$form.selectedTables, ...tablesInCategory])
-											];
-											$form.selectedTables = newSelection;
-										}
-									}}
+									checked={tableCounts.views > 0 && 
+										data.tables.filter((t: ExportTableInfo) => t.category === 'view')
+											.every((table: ExportTableInfo) => $form.selectedTables.includes(table.name))}
+									onchange={() => toggleCategorySelection('view')}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
-								<span>Vues ({tableCounts.view})</span>
+								<span>Vues ({tableCounts.views})</span>
 							</label>
 						{/if}
 					</div>
