@@ -18,14 +18,14 @@ async function generateFileName(selectedTables: string[], format: string): Promi
 	// Calculer dynamiquement le nombre total de tables disponibles
 	const allTables = await getAllDatabaseTables();
 	const totalAvailableTables = allTables.length;
-	
+
 	// Déterminer les bases de données utilisées
 	const usedDatabases = new Set(
 		selectedTables
-			.map(tableName => allTables.find(t => t.name === tableName)?.database)
+			.map((tableName) => allTables.find((t) => t.name === tableName)?.database)
 			.filter(Boolean)
 	);
-	
+
 	// Préfixe selon les bases utilisées (vraiment dynamique)
 	let prefix: string;
 	if (usedDatabases.size === 0) {
@@ -86,11 +86,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			try {
 				console.log(`📊 [EXPORT] Extraction des données de ${tableName}`);
 
-				const tableData = await extractTableData(
-					tableName,
-					config.rowLimit
-					// config.filters et config.includeRelations - Supprimés pour simplifier
-				);
+				const tableData = await extractTableData(tableName, config.rowLimit);
 
 				exportDataList.push(tableData);
 				totalExportedRows += tableData.totalRows;
@@ -176,11 +172,7 @@ export const POST: RequestHandler = async ({ request }) => {
 };
 
 // Extraction des données d'une table avec logique dynamique
-async function extractTableData(
-	tableName: string,
-	rowLimit?: number
-	// filters et includeRelations supprimés - export simple des données brutes
-): Promise<ExportData> {
+async function extractTableData(tableName: string, rowLimit?: number): Promise<ExportData> {
 	const limit = rowLimit && rowLimit > 0 ? rowLimit : undefined;
 	let data: Record<string, unknown>[] = [];
 	let columns: string[] = [];
@@ -210,8 +202,7 @@ async function extractTableData(
 
 	try {
 		// Accès dynamique au modèle Prisma
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const model = (prisma as Record<string, any>)[tableName];
+		const model = (prisma as Record<string, { findMany: (options?: { take?: number; orderBy?: Record<string, string> }) => Promise<Record<string, unknown>[]> }>)[tableName];
 		if (!model) {
 			throw new Error(`Modèle Prisma non trouvé pour ${tableName}`);
 		}

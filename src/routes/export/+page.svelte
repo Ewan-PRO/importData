@@ -30,8 +30,7 @@
 	import { getAllDatabaseNames, type DatabaseName } from '$lib/prisma-meta.js';
 
 	export let data;
-	
-	// Debug basique
+
 	if (!data?.tables?.length) {
 		console.warn('⚠️ [CLIENT] Aucune table trouvée');
 	}
@@ -41,7 +40,6 @@
 		form,
 		enhance: superEnhance,
 		submitting,
-		// errors, // Non utilisé
 		reset
 	} = superForm(data.form, {
 		dataType: 'json',
@@ -115,12 +113,12 @@
 
 	// Récupération statique des bases de données (côté client)
 	const databases: DatabaseName[] = ['cenov', 'cenov_dev_ewan'];
-	
+
 	// Fonction pour obtenir l'icône d'une BDD
 	function getDatabaseIcon(database: string) {
 		return database.includes('dev') ? Settings : Rocket;
 	}
-	
+
 	// Génération dynamique des catégories
 	const categories = [
 		{ value: 'all', label: 'Toutes les sources', icon: Funnel },
@@ -166,10 +164,13 @@
 			matchesCategory = true;
 		} else if (selectedCategory === 'views' && table.category === 'view') {
 			matchesCategory = true;
-		} else if (databases.includes(selectedCategory as DatabaseName) && table.database === selectedCategory) {
+		} else if (
+			databases.includes(selectedCategory as DatabaseName) &&
+			table.database === selectedCategory
+		) {
 			matchesCategory = true;
 		}
-		
+
 		const matchesSearch =
 			searchTerm === '' ||
 			table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -184,13 +185,26 @@
 		views: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view').length,
 		// Compteurs par BDD (dynamique)
 		...Object.fromEntries(
-			databases.map((db: DatabaseName) => [db, (data?.tables || []).filter((t: ExportTableInfo) => t.database === db).length])
+			databases.map((db: DatabaseName) => [
+				db,
+				(data?.tables || []).filter((t: ExportTableInfo) => t.database === db).length
+			])
 		),
 		// Compteurs croisés (dynamique)
 		...Object.fromEntries(
 			databases.flatMap((db: DatabaseName) => [
-				[`tables_${db}`, (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'table' && t.database === db).length],
-				[`views_${db}`, (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view' && t.database === db).length]
+				[
+					`tables_${db}`,
+					(data?.tables || []).filter(
+						(t: ExportTableInfo) => t.category === 'table' && t.database === db
+					).length
+				],
+				[
+					`views_${db}`,
+					(data?.tables || []).filter(
+						(t: ExportTableInfo) => t.category === 'view' && t.database === db
+					).length
+				]
 			])
 		)
 	} as Record<string, number>;
@@ -236,12 +250,15 @@
 	}
 
 	// Couleur et contenu des badges selon la base de données - DYNAMIQUE
-	function getDatabaseBadgeInfo(database: string): { variant: 'orange' | 'bleu' | 'noir', label: string } {
+	function getDatabaseBadgeInfo(database: string): {
+		variant: 'orange' | 'bleu' | 'noir';
+		label: string;
+	} {
 		const isDev = database.includes('dev');
 		const emoji = isDev ? '⚙️' : '🚀';
-		const variant = isDev ? 'orange' as const : 'bleu' as const;
+		const variant = isDev ? ('orange' as const) : ('bleu' as const);
 		const label = `${emoji} ${database.toUpperCase()}`;
-		
+
 		return { variant, label };
 	}
 
@@ -276,9 +293,9 @@
 			// Transformer les IDs uniques en noms de tables simples pour l'API
 			const exportData = {
 				...$form,
-				selectedTables: $form.selectedTables.map(id => id.split('-').slice(1).join('-'))
+				selectedTables: $form.selectedTables.map((id) => id.split('-').slice(1).join('-'))
 			};
-			
+
 			const response = await fetch('/export/api', {
 				method: 'POST',
 				headers: {
@@ -319,11 +336,13 @@
 	// Sélection/désélection de toutes les tables visibles
 	function toggleAllTables() {
 		const filteredTableIds = filteredTables.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
-		const selectedFilteredCount = filteredTableIds.filter(id => $form.selectedTables.includes(id)).length;
-		
+		const selectedFilteredCount = filteredTableIds.filter((id) =>
+			$form.selectedTables.includes(id)
+		).length;
+
 		if (selectedFilteredCount === filteredTables.length) {
 			// Désélectionner toutes les tables filtrées
-			$form.selectedTables = $form.selectedTables.filter(id => !filteredTableIds.includes(id));
+			$form.selectedTables = $form.selectedTables.filter((id) => !filteredTableIds.includes(id));
 		} else {
 			// Sélectionner toutes les tables visibles
 			const newSelection = [...new Set([...$form.selectedTables, ...filteredTableIds])];
@@ -341,60 +360,50 @@
 
 	// Fonction pour basculer la sélection d'une catégorie (avec filtre BDD optionnel)
 	function toggleCategorySelection(category: 'table' | 'view', restrictToDatabase?: DatabaseName) {
-		let tablesInCategory = data.tables
-			.filter((t: ExportTableInfo) => t.category === category);
-		
+		let tablesInCategory = data.tables.filter((t: ExportTableInfo) => t.category === category);
+
 		// Si on est sur un filtre BDD spécifique, restreindre à cette BDD
 		if (restrictToDatabase) {
-			tablesInCategory = tablesInCategory.filter((t: ExportTableInfo) => t.database === restrictToDatabase);
+			tablesInCategory = tablesInCategory.filter(
+				(t: ExportTableInfo) => t.database === restrictToDatabase
+			);
 		}
-		
+
 		const tableIds = tablesInCategory.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
-		
-		const isAllSelected = tableIds.every((tableId) =>
-			$form.selectedTables.includes(tableId)
-		);
-		
+
+		const isAllSelected = tableIds.every((tableId) => $form.selectedTables.includes(tableId));
+
 		if (isAllSelected) {
 			// Désélectionner toutes les tables de cette catégorie
-			$form.selectedTables = $form.selectedTables.filter(
-				(id) => !tableIds.includes(id)
-			);
+			$form.selectedTables = $form.selectedTables.filter((id) => !tableIds.includes(id));
 		} else {
 			// Sélectionner toutes les tables de cette catégorie
-			const newSelection = [
-				...new Set([...$form.selectedTables, ...tableIds])
-			];
+			const newSelection = [...new Set([...$form.selectedTables, ...tableIds])];
 			$form.selectedTables = newSelection;
 		}
 	}
 
 	// Fonction pour basculer la sélection d'une base de données (avec filtre catégorie optionnel)
 	function toggleDatabaseSelection(database: DatabaseName, restrictToCategory?: 'table' | 'view') {
-		let tablesInDatabase = data.tables
-			.filter((t: ExportTableInfo) => t.database === database);
-		
+		let tablesInDatabase = data.tables.filter((t: ExportTableInfo) => t.database === database);
+
 		// Si on est sur un filtre catégorie spécifique, restreindre à cette catégorie
 		if (restrictToCategory) {
-			tablesInDatabase = tablesInDatabase.filter((t: ExportTableInfo) => t.category === restrictToCategory);
+			tablesInDatabase = tablesInDatabase.filter(
+				(t: ExportTableInfo) => t.category === restrictToCategory
+			);
 		}
-		
+
 		const tableIds = tablesInDatabase.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
-		
-		const isAllSelected = tableIds.every((tableId) =>
-			$form.selectedTables.includes(tableId)
-		);
-		
+
+		const isAllSelected = tableIds.every((tableId) => $form.selectedTables.includes(tableId));
+
 		if (isAllSelected) {
 			// Désélectionner toutes les tables de cette base
-			$form.selectedTables = $form.selectedTables.filter(
-				(id) => !tableIds.includes(id)
-			);
+			$form.selectedTables = $form.selectedTables.filter((id) => !tableIds.includes(id));
 		} else {
 			// Sélectionner toutes les tables de cette base
-			const newSelection = [
-				...new Set([...$form.selectedTables, ...tableIds])
-			];
+			const newSelection = [...new Set([...$form.selectedTables, ...tableIds])];
 			$form.selectedTables = newSelection;
 		}
 	}
@@ -414,6 +423,10 @@
 			unitIndex++;
 		}
 		return `${size.toFixed(1)} ${units[unitIndex]}`;
+	}
+
+	function formatPreviewValue(value: unknown): string {
+		return value === null || value === undefined ? '' : String(value);
 	}
 
 	// Réinitialiser l'export
@@ -523,7 +536,11 @@
 			<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
 				<div class="flex items-center justify-between">
 					<div>
-						<div class="text-2xl font-bold text-purple-600">{filteredTables.filter((table) => $form.selectedTables.includes(`${table.database}-${table.name}`)).length}</div>
+						<div class="text-2xl font-bold text-purple-600">
+							{filteredTables.filter((table) =>
+								$form.selectedTables.includes(`${table.database}-${table.name}`)
+							).length}
+						</div>
 						<div class="text-sm text-purple-800">Sources sélectionnées</div>
 					</div>
 					<CheckCircle class="h-8 w-8 text-purple-500" />
@@ -576,8 +593,10 @@
 						<label class="flex cursor-pointer items-center space-x-2">
 							<input
 								type="checkbox"
-								checked={filteredTables.length > 0 && 
-									filteredTables.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
+								checked={filteredTables.length > 0 &&
+									filteredTables.every((table: ExportTableInfo) =>
+										$form.selectedTables.includes(`${table.database}-${table.name}`)
+									)}
 								onchange={toggleAllTables}
 								class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 							/>
@@ -590,9 +609,12 @@
 							<label class="flex cursor-pointer items-center space-x-2">
 								<input
 									type="checkbox"
-									checked={tableCounts.tables > 0 && 
-										data.tables.filter((t: ExportTableInfo) => t.category === 'table')
-											.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
+									checked={tableCounts.tables > 0 &&
+										data.tables
+											.filter((t: ExportTableInfo) => t.category === 'table')
+											.every((table: ExportTableInfo) =>
+												$form.selectedTables.includes(`${table.database}-${table.name}`)
+											)}
 									onchange={() => toggleCategorySelection('table')}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
@@ -602,9 +624,12 @@
 							<label class="flex cursor-pointer items-center space-x-2">
 								<input
 									type="checkbox"
-									checked={tableCounts.views > 0 && 
-										data.tables.filter((t: ExportTableInfo) => t.category === 'view')
-											.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
+									checked={tableCounts.views > 0 &&
+										data.tables
+											.filter((t: ExportTableInfo) => t.category === 'view')
+											.every((table: ExportTableInfo) =>
+												$form.selectedTables.includes(`${table.database}-${table.name}`)
+											)}
 									onchange={() => toggleCategorySelection('view')}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
@@ -617,9 +642,12 @@
 								<label class="flex cursor-pointer items-center space-x-2">
 									<input
 										type="checkbox"
-										checked={tableCounts[database] > 0 && 
-											data.tables.filter((t: ExportTableInfo) => t.database === database)
-												.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
+										checked={tableCounts[database] > 0 &&
+											data.tables
+												.filter((t: ExportTableInfo) => t.database === database)
+												.every((table: ExportTableInfo) =>
+													$form.selectedTables.includes(`${table.database}-${table.name}`)
+												)}
 										onchange={() => toggleDatabaseSelection(database)}
 										class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
@@ -634,10 +662,21 @@
 								<label class="flex cursor-pointer items-center space-x-2">
 									<input
 										type="checkbox"
-										checked={tableCounts[crossCountKey] > 0 && 
-											data.tables.filter((t: ExportTableInfo) => t.database === database && t.category === (selectedCategory === 'tables' ? 'table' : 'view'))
-												.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
-										onchange={() => toggleDatabaseSelection(database, selectedCategory === 'tables' ? 'table' : 'view')}
+										checked={tableCounts[crossCountKey] > 0 &&
+											data.tables
+												.filter(
+													(t: ExportTableInfo) =>
+														t.database === database &&
+														t.category === (selectedCategory === 'tables' ? 'table' : 'view')
+												)
+												.every((table: ExportTableInfo) =>
+													$form.selectedTables.includes(`${table.database}-${table.name}`)
+												)}
+										onchange={() =>
+											toggleDatabaseSelection(
+												database,
+												selectedCategory === 'tables' ? 'table' : 'view'
+											)}
 										class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
 									<span>{dbInfo.label} ({tableCounts[crossCountKey]})</span>
@@ -649,9 +688,14 @@
 							<label class="flex cursor-pointer items-center space-x-2">
 								<input
 									type="checkbox"
-									checked={tableCounts[`tables_${currentDb}`] > 0 && 
-										data.tables.filter((t: ExportTableInfo) => t.category === 'table' && t.database === currentDb)
-											.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
+									checked={tableCounts[`tables_${currentDb}`] > 0 &&
+										data.tables
+											.filter(
+												(t: ExportTableInfo) => t.category === 'table' && t.database === currentDb
+											)
+											.every((table: ExportTableInfo) =>
+												$form.selectedTables.includes(`${table.database}-${table.name}`)
+											)}
 									onchange={() => toggleCategorySelection('table', currentDb)}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
@@ -661,9 +705,14 @@
 							<label class="flex cursor-pointer items-center space-x-2">
 								<input
 									type="checkbox"
-									checked={tableCounts[`views_${currentDb}`] > 0 && 
-										data.tables.filter((t: ExportTableInfo) => t.category === 'view' && t.database === currentDb)
-											.every((table: ExportTableInfo) => $form.selectedTables.includes(`${table.database}-${table.name}`))}
+									checked={tableCounts[`views_${currentDb}`] > 0 &&
+										data.tables
+											.filter(
+												(t: ExportTableInfo) => t.category === 'view' && t.database === currentDb
+											)
+											.every((table: ExportTableInfo) =>
+												$form.selectedTables.includes(`${table.database}-${table.name}`)
+											)}
 									onchange={() => toggleCategorySelection('view', currentDb)}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
@@ -690,15 +739,21 @@
 										const tableId = `${table.database}-${table.name}`;
 										const isSelected = $form.selectedTables.includes(tableId);
 										const tableType = table.category === 'view' ? 'vue' : 'table';
-										
+
 										if (isSelected) {
-											toast.info(`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} sélectionnée`, {
-												description: `${table.displayName} (${formatNumber(table.rowCount || 0)} lignes)`
-											});
+											toast.info(
+												`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} sélectionnée`,
+												{
+													description: `${table.displayName} (${formatNumber(table.rowCount || 0)} lignes)`
+												}
+											);
 										} else {
-											toast.info(`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} désélectionnée`, {
-												description: table.displayName
-											});
+											toast.info(
+												`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} désélectionnée`,
+												{
+													description: table.displayName
+												}
+											);
 										}
 									}}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -827,7 +882,13 @@
 					</div>
 
 					<!-- Champs cachés -->
-					<input type="hidden" name="selectedTables" value={JSON.stringify($form.selectedTables.map(id => id.split('-').slice(1).join('-')))} />
+					<input
+						type="hidden"
+						name="selectedTables"
+						value={JSON.stringify(
+							$form.selectedTables.map((id) => id.split('-').slice(1).join('-'))
+						)}
+					/>
 					<input type="hidden" name="format" value={$form.format} />
 					<input type="hidden" name="includeHeaders" value={$form.includeHeaders} />
 					<input type="hidden" name="rowLimit" value={$form.rowLimit} />
@@ -865,7 +926,9 @@
 					<div class="mb-6 space-y-6">
 						{#each Object.entries(previewData) as [tableName, rows]}
 							{@const tableInfo = data.tables.find((t) => t.name === tableName)}
-							{@const dbInfo = tableInfo ? getDatabaseBadgeInfo(tableInfo.database) : { variant: 'noir' as const, label: 'Inconnue' }}
+							{@const dbInfo = tableInfo
+								? getDatabaseBadgeInfo(tableInfo.database)
+								: { variant: 'noir' as const, label: 'Inconnue' }}
 							<div>
 								<div class="mb-3 flex items-center justify-between">
 									<div class="flex items-center gap-3">
@@ -904,9 +967,7 @@
 														{#each Object.keys(rows[0] as Record<string, unknown>) as column}
 															<Table.Cell variant="striped" {rowIndex}>
 																{@const typedRow = row as Record<string, unknown>}
-																{typedRow[column] !== null && typedRow[column] !== undefined
-																	? String(typedRow[column])
-																	: ''}
+																{formatPreviewValue(typedRow[column])}
 															</Table.Cell>
 														{/each}
 													</Table.Row>

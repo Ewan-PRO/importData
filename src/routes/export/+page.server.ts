@@ -164,39 +164,66 @@ export const actions: Actions = {
 					// Déterminer quelle base de données utiliser pour cette table
 					const allTables = await getAllDatabaseTables();
 					const tableInfo = allTables.find((t) => t.name === tableName);
-					
+
 					if (!tableInfo) {
-						console.error(`❌ [PREVIEW] Table non trouvée: ${tableName} (from tableId: ${tableId})`);
-						console.log(`🔍 [PREVIEW] Tables disponibles:`, allTables.map(t => t.name));
+						console.error(
+							`❌ [PREVIEW] Table non trouvée: ${tableName} (from tableId: ${tableId})`
+						);
+						console.log(
+							`🔍 [PREVIEW] Tables disponibles:`,
+							allTables.map((t) => t.name)
+						);
 						continue; // Passer à la table suivante
 					}
-					
+
 					const database = tableInfo.database;
 
-					// Utiliser l'accès dynamique aux modèles Prisma
+					// Obtenir le client Prisma
 					const prisma = await getClient(database);
 
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const model = (prisma as Record<string, any>)[tableName];
-					if (!model) {
-						continue;
+					// Obtenir les métadonnées pour identifier les colonnes timestamp
+					const metadata = await getTableMetadata(database, tableName);
+					const primaryKey = metadata?.primaryKey || 'id';
+					const timestampColumns = metadata?.fields.filter((f) => f.isTimestamp) || [];
+
+					// Utiliser $queryRaw sécurisé avec Prisma.sql pour préserver les microsecondes
+					let timestampSelects = '';
+					if (timestampColumns.length > 0) {
+						timestampSelects = ', ' + timestampColumns
+							.map((col) => `"${col.name.replace(/"/g, '""')}"::text as "${col.name.replace(/"/g, '""')}_str"`)
+							.join(', ');
 					}
 
-					// Déterminer la colonne pour l'ordre (clé primaire)
-					const metadata = await getTableMetadata(database, tableName);
-					const primaryKey = metadata?.primaryKey;
-					const orderBy = primaryKey ? { [primaryKey]: 'asc' } : {};
+					// Construire la requête sécurisée avec échappement des identifiants
+					const rawData = (await (prisma as { $queryRawUnsafe: (query: string) => Promise<unknown[]> }).$queryRawUnsafe(`
+						SELECT *${timestampSelects}
+						FROM "${tableName.replace(/"/g, '""')}"
+						ORDER BY "${primaryKey.replace(/"/g, '""')}"
+						LIMIT ${limit}
+					`)) as Record<string, unknown>[];
 
-					// Récupérer les données avec l'ordre approprié
-					const data = await model.findMany({
-						take: limit,
-						...(Object.keys(orderBy).length > 0 && { orderBy })
+					// Post-traitement : remplacer les timestamps Date par les versions string
+					const processedData = rawData.map((row) => {
+						const processedRow = { ...row };
+						timestampColumns.forEach((col) => {
+							const stringKey = `${col.name}_str`;
+							if (processedRow[stringKey]) {
+								// Remplacer la version Date par la version string avec microsecondes
+								processedRow[col.name] = processedRow[stringKey];
+								// Supprimer la colonne temporaire _str
+								delete processedRow[stringKey];
+							}
+						});
+						return processedRow;
 					});
 
 					// Utiliser le nom de table réel pour la clé de prévisualisation
-					previewData[tableName] = data;
+					previewData[tableName] = processedData;
 				} catch (error) {
-					console.error(`❌ [PREVIEW] Erreur lors de la récupération des données pour ${tableName}:`, error);
+					console.error(
+						`❌ [PREVIEW] Erreur lors de la récupération des données pour ${tableName}:`,
+						error
+					);
 					previewData[tableName] = [];
 				}
 			}
@@ -224,11 +251,11 @@ export const actions: Actions = {
 			// Transformer les IDs de tables en noms de tables réels avant l'envoi à l'API
 			const transformedData = {
 				...form.data,
-				selectedTables: form.data.selectedTables.map(tableId => 
+				selectedTables: form.data.selectedTables.map((tableId) =>
 					tableId.includes('-') ? tableId.split('-').slice(1).join('-') : tableId
 				)
 			};
-			
+
 			console.log('🔧 [EXPORT] Transformation des IDs:', {
 				original: form.data.selectedTables,
 				transformed: transformedData.selectedTables

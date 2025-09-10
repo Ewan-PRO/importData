@@ -83,6 +83,8 @@ export interface FieldInfo {
 	type: string;
 	isRequired: boolean;
 	isPrimaryKey: boolean;
+	isTimestamp?: boolean;
+	dbType?: string;
 }
 
 // Interface pour les bases de données
@@ -158,7 +160,11 @@ export async function getTableMetadata(database: DatabaseName, tableName: string
         name: f.name,
         type: f.type,
         isRequired: f.isRequired,
-        isPrimaryKey: f.isId || false
+        isPrimaryKey: f.isId || false,
+        // Détecter les timestamps (DateTime + noms courants)
+        isTimestamp: f.type === 'DateTime' && 
+          /^(created_at|updated_at|deleted_at|timestamp|date_|.*_at)$/i.test(f.name),
+        dbType: f.type
       }))
   };
 }
