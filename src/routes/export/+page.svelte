@@ -290,10 +290,9 @@
 			console.log('📋 [CLIENT] Configuration actuelle du formulaire:', $form);
 
 			// Utiliser les données du formulaire (qui sont synchronisées avec savedExportConfig)
-			// Transformer les IDs uniques en noms de tables simples pour l'API
+			// Les IDs sont déjà au bon format "database-tablename"
 			const exportData = {
-				...$form,
-				selectedTables: $form.selectedTables.map((id) => id.split('-').slice(1).join('-'))
+				...$form
 			};
 
 			const response = await fetch('/export/api', {
@@ -885,9 +884,7 @@
 					<input
 						type="hidden"
 						name="selectedTables"
-						value={JSON.stringify(
-							$form.selectedTables.map((id) => id.split('-').slice(1).join('-'))
-						)}
+						value={JSON.stringify($form.selectedTables)}
 					/>
 					<input type="hidden" name="format" value={$form.format} />
 					<input type="hidden" name="includeHeaders" value={$form.includeHeaders} />
@@ -925,23 +922,34 @@
 					<!-- Aperçu des données -->
 					<div class="mb-6 space-y-6">
 						{#each Object.entries(previewData) as [tableName, rows]}
-							{@const tableInfo = data.tables.find((t) => t.name === tableName)}
-							{@const dbInfo = tableInfo
-								? getDatabaseBadgeInfo(tableInfo.database)
+							{@const matchingTableInfo = (() => {
+								// Chercher la table correspondante selon la sélection originale
+								const selectedTable = $form.selectedTables.find(selected => {
+									const selectedName = selected.includes('-') ? selected.split('-').slice(1).join('-') : selected;
+									return selectedName === tableName;
+								});
+								if (selectedTable && selectedTable.includes('-')) {
+									const dbName = selectedTable.split('-')[0];
+									return data.tables.find((t) => t.name === tableName && t.database === dbName);
+								}
+								return data.tables.find((t) => t.name === tableName);
+							})()}
+							{@const dbInfo = matchingTableInfo
+								? getDatabaseBadgeInfo(matchingTableInfo.database)
 								: { variant: 'noir' as const, label: 'Inconnue' }}
 							<div>
 								<div class="mb-3 flex items-center justify-between">
 									<div class="flex items-center gap-3">
 										<h3 class="flex items-center gap-2 font-medium">
 											<svelte:component
-												this={getTableIcon(tableInfo?.category || 'tables')}
+												this={getTableIcon(matchingTableInfo?.category || 'tables')}
 												class="h-5 w-5"
 											/>
-											{tableInfo?.displayName || tableName}
+											{matchingTableInfo?.displayName || tableName}
 										</h3>
-										{#if tableInfo}
-											<Badge variant={getBadgeVariant(tableInfo.category)}>
-												{tableInfo.category.replace('_', ' ')}
+										{#if matchingTableInfo}
+											<Badge variant={getBadgeVariant(matchingTableInfo.category)}>
+												{matchingTableInfo.category.replace('_', ' ')}
 											</Badge>
 											<Badge variant={dbInfo.variant}>
 												{dbInfo.label}

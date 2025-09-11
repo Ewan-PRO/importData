@@ -145,41 +145,27 @@ type DMMFModelFromPrisma = PrismaModule['Prisma']['dmmf']['datamodel']['models']
 
 // Détecter la clé primaire via DMMF Prisma
 function detectPrimaryKeyFromDMMF(model: DMMFModelFromPrisma): string | null {
-	console.log(`🔍 [PRISMA-META] Analyse de ${model.name}:`, {
-		idFields: model.fields.filter((f) => f.isId).map((f) => f.name)
-	});
-
-	// 1. Les clés primaires composites ne sont pas supportées dans le DMMF actuel
-	// On se concentre sur les clés simples
-
-	// 2. Clé primaire simple (@id)
+	// 1. Clé primaire simple (@id)
 	const singlePK = model.fields.find((f) => f.isId);
 	if (singlePK) {
-		console.log(`🔧 [PRISMA-META] Clé simple détectée pour ${model.name}: ${singlePK.name}`);
 		return singlePK.name;
 	}
 
-	// 3. Pour les vues : chercher le premier champ "id-like"
+	// 2. Pour les vues : chercher le premier champ "id-like"
 	const idLikeFields = model.fields.filter((f) =>
 		f.name.match(/^(.*_id|id|pro_id|cat_id|atr_id|kit_id|fam_id|frs_id|par_id|kat_id)$/)
 	);
 
 	if (idLikeFields.length > 0) {
-		const fallbackKey = idLikeFields[0].name;
-		console.log(`🔧 [PRISMA-META] Clé fallback détectée pour ${model.name}: ${fallbackKey}`);
-		return fallbackKey;
+		return idLikeFields[0].name;
 	}
 
-	// 4. Dernier recours : premier champ
+	// 3. Dernier recours : premier champ
 	if (model.fields.length > 0) {
-		const firstField = model.fields[0].name;
-		console.log(
-			`⚠️ [PRISMA-META] Aucune clé trouvée pour ${model.name}, utilisation du premier champ: ${firstField}`
-		);
-		return firstField;
+		console.log(`⚠️ [DEBUG] Table ${model.name}: aucune clé trouvée, utilisation du premier champ: ${model.fields[0].name}`);
+		return model.fields[0].name;
 	}
 
-	console.warn(`❌ [PRISMA-META] Impossible de déterminer une clé pour ${model.name}`);
 	return null;
 }
 

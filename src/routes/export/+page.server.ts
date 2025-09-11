@@ -10,7 +10,8 @@ import {
 	countTableRows,
 	getClient,
 	type TableInfo as PrismaTableInfo,
-	type FieldInfo
+	type FieldInfo,
+	type DatabaseName
 } from '$lib/prisma-meta';
 
 // Types pour l'export
@@ -153,30 +154,35 @@ export const actions: Actions = {
 
 			// Récupérer un aperçu des données pour chaque table sélectionnée
 			for (const tableId of selectedTables) {
-				const limit = 5;
+				const limit = 6;
 
-				// Parser l'ID de table pour extraire le vrai nom de table
-				// Format attendu: "database-tablename" => extraire "tablename"
-				const tableName = tableId.includes('-') ? tableId.split('-').slice(1).join('-') : tableId;
-				console.log(`🔍 [PREVIEW] Processing tableId: ${tableId} => tableName: ${tableName}`);
+				// Parser l'ID pour extraire database et table name
+				let database: DatabaseName;
+				let tableName: string;
+
+				if (tableId.includes('-')) {
+					const parts = tableId.split('-');
+					const dbName = parts[0];
+					// Validation du nom de base de données
+					if (dbName !== 'cenov' && dbName !== 'cenov_dev_ewan') {
+						console.error(`❌ [PREVIEW] Base de données inconnue: ${dbName}`);
+						continue;
+					}
+					database = dbName as DatabaseName;
+					tableName = parts.slice(1).join('-');
+				} else {
+					// Fallback pour compatibilité
+					const allTables = await getAllDatabaseTables();
+					const tableInfo = allTables.find((t) => t.name === tableId);
+					if (!tableInfo) {
+						console.error(`❌ [PREVIEW] Table ${tableId} non trouvée`);
+						continue;
+					}
+					database = tableInfo.database;
+					tableName = tableInfo.name;
+				}
 
 				try {
-					// Déterminer quelle base de données utiliser pour cette table
-					const allTables = await getAllDatabaseTables();
-					const tableInfo = allTables.find((t) => t.name === tableName);
-
-					if (!tableInfo) {
-						console.error(
-							`❌ [PREVIEW] Table non trouvée: ${tableName} (from tableId: ${tableId})`
-						);
-						console.log(
-							`🔍 [PREVIEW] Tables disponibles:`,
-							allTables.map((t) => t.name)
-						);
-						continue; // Passer à la table suivante
-					}
-
-					const database = tableInfo.database;
 
 					// Obtenir le client Prisma
 					const prisma = await getClient(database);
@@ -203,10 +209,11 @@ export const actions: Actions = {
 					// Construire le nom qualifié de la table avec le schéma
 					const qualifiedTableName = `"${schema.replace(/"/g, '""')}"."${tableName.replace(/"/g, '""')}"`;
 
-					// Pas d'ORDER BY - affichage dans l'ordre naturel de la base de données
-					console.log(
-						`🔍 [PREVIEW] ${tableName}: primaryKey=${primaryKey}, schema=${schema}, isView=${tableInfo.category === 'view'}, naturalOrder=true`
-					);
+					// Log debug pour tables problematiques
+					const category = tableName.startsWith('v_') || tableName.includes('_v_') ? 'view' : 'table';
+					if (schema !== 'public' || tableName === 'kit' || tableName.includes('v_produit_categorie_attribut')) {
+						console.log(`🔍 [DEBUG] Preview ${tableName}: database=${database}, schema=${schema}, category=${category}`);
+					}
 
 					const rawData = (await (
 						prisma as { $queryRawUnsafe: (query: string) => Promise<unknown[]> }
@@ -262,25 +269,15 @@ export const actions: Actions = {
 		}
 
 		try {
-			// Transformer les IDs de tables en noms de tables réels avant l'envoi à l'API
-			const transformedData = {
-				...form.data,
-				selectedTables: form.data.selectedTables.map((tableId) =>
-					tableId.includes('-') ? tableId.split('-').slice(1).join('-') : tableId
-				)
-			};
-
-			console.log('🔧 [EXPORT] Transformation des IDs:', {
-				original: form.data.selectedTables,
-				transformed: transformedData.selectedTables
-			});
+			// Préserver les IDs complets avec database-tablename pour l'API
+			console.log('🔧 [EXPORT] Tables à exporter:', form.data.selectedTables);
 
 			const response = await fetch('/export/api', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(transformedData)
+				body: JSON.stringify(form.data)
 			});
 
 			const contentType = response.headers.get('content-type');

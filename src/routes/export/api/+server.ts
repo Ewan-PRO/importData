@@ -3,27 +3,26 @@ import type { RequestHandler } from './$types';
 import * as XLSX from 'xlsx';
 import { XMLBuilder } from 'fast-xml-parser';
 import type { ExportConfig, ExportResult } from '../+page.server.js';
-import { getAllDatabaseTables, getClient, getTableMetadata } from '$lib/prisma-meta.js';
+import { getAllDatabaseTables, getClient, getTableMetadata, type DatabaseName } from '$lib/prisma-meta.js';
 
 // Types pour l'export des données
 interface ExportData {
 	tableName: string;
+	database: DatabaseName;
 	data: Record<string, unknown>[];
 	columns: string[];
 	totalRows: number;
 }
 
 // Fonction pour générer un nom de fichier intelligent et dynamique
-async function generateFileName(selectedTables: string[], format: string): Promise<string> {
+async function generateFileName(exportDataList: ExportData[], format: string): Promise<string> {
 	// Calculer dynamiquement le nombre total de tables disponibles
 	const allTables = await getAllDatabaseTables();
 	const totalAvailableTables = allTables.length;
 
-	// Déterminer les bases de données utilisées
+	// Déterminer les bases de données utilisées à partir des données exportées
 	const usedDatabases = new Set(
-		selectedTables
-			.map((tableName) => allTables.find((t) => t.name === tableName)?.database)
-			.filter(Boolean)
+		exportDataList.map((data) => data.database)
 	);
 
 	// Préfixe selon les bases utilisées (vraiment dynamique)
@@ -39,14 +38,15 @@ async function generateFileName(selectedTables: string[], format: string): Promi
 	}
 
 	let tablePart: string;
-	if (selectedTables.length === totalAvailableTables) {
+	const tableNames = exportDataList.map(d => d.tableName);
+	if (tableNames.length === totalAvailableTables) {
 		tablePart = 'complet';
-	} else if (selectedTables.length === 1) {
-		tablePart = selectedTables[0];
-	} else if (selectedTables.length <= 3) {
-		tablePart = selectedTables.join('-');
+	} else if (tableNames.length === 1) {
+		tablePart = tableNames[0];
+	} else if (tableNames.length <= 3) {
+		tablePart = tableNames.join('-');
 	} else {
-		tablePart = `${selectedTables.length}tables`;
+		tablePart = `${tableNames.length}tables`;
 	}
 
 	return `${prefix}_${tablePart}.${format}`;
@@ -62,9 +62,12 @@ interface ExportFile {
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const config: ExportConfig = await request.json();
-		console.log('🚀 [EXPORT] Configuration reçue:', config);
-		console.log('📊 [EXPORT] Tables sélectionnées:', config.selectedTables);
-		console.log('📋 [EXPORT] Format:', config.format);
+		console.log('🚀 [EXPORT] Configuration reçue:', {
+			selectedTables: config.selectedTables,
+			format: config.format,
+			includeRelations: config.includeRelations,
+			includeHeaders: config.includeHeaders
+		});
 
 		// Validation des données
 		if (!config.selectedTables || config.selectedTables.length === 0) {
@@ -82,24 +85,19 @@ export const POST: RequestHandler = async ({ request }) => {
 		const errors: string[] = [];
 		let totalExportedRows = 0;
 
-		for (const tableName of config.selectedTables) {
+		for (const tableId of config.selectedTables) {
 			try {
-				console.log(`📊 [EXPORT] Extraction des données de ${tableName}`);
-
-				const tableData = await extractTableData(tableName, config.rowLimit);
-
+				const tableData = await extractTableData(tableId, config.rowLimit);
 				exportDataList.push(tableData);
 				totalExportedRows += tableData.totalRows;
 
-				console.log(`✅ [EXPORT] ${tableName}: ${tableData.totalRows} lignes extraites`);
-
 				if (config.rowLimit && tableData.totalRows >= config.rowLimit) {
-					warnings.push(`Table ${tableName}: limite de ${config.rowLimit} lignes appliquée`);
+					warnings.push(`Table ${tableData.tableName}: limite de ${config.rowLimit} lignes appliquée`);
 				}
 			} catch (err) {
-				console.error(`❌ [EXPORT] Erreur avec ${tableName}:`, err);
+				console.error(`❌ [EXPORT] Erreur avec ${tableId}:`, err);
 				errors.push(
-					`Erreur lors de l'extraction de ${tableName}: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+					`Erreur lors de l'extraction de ${tableId}: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
 				);
 			}
 		}
@@ -136,7 +134,13 @@ export const POST: RequestHandler = async ({ request }) => {
 			errors
 		};
 
-		console.log('✅ [EXPORT] Export terminé:', result);
+		console.log('✅ [EXPORT] Export terminé:', {
+			fileName: result.fileName,
+			fileSize: result.fileSize,
+			exportedRows: result.exportedRows,
+			warnings: result.warnings.length,
+			errors: result.errors.length
+		});
 
 		// Retourner le fichier avec les headers appropriés
 		return new Response(exportFile.buffer, {
@@ -172,52 +176,64 @@ export const POST: RequestHandler = async ({ request }) => {
 };
 
 // Extraction des données d'une table avec logique dynamique
-async function extractTableData(tableName: string, rowLimit?: number): Promise<ExportData> {
+async function extractTableData(tableId: string, rowLimit?: number): Promise<ExportData> {
 	const limit = rowLimit && rowLimit > 0 ? rowLimit : undefined;
 	let data: Record<string, unknown>[] = [];
 	let columns: string[] = [];
 
-	// Déterminer quelle base de données contient cette table
-	const allTables = await getAllDatabaseTables();
-	const tableInfo = allTables.find((t) => t.name === tableName);
+	// Parser l'ID pour extraire database et table name
+	// Format: "database-tablename" ou juste "tablename" pour compatibilité
+	let database: DatabaseName;
+	let tableName: string;
 
-	if (!tableInfo) {
-		throw new Error(`Table non trouvée: ${tableName}`);
+	if (tableId.includes('-')) {
+		const parts = tableId.split('-');
+		const dbName = parts[0];
+		// Validation du nom de base de données
+		if (dbName !== 'cenov' && dbName !== 'cenov_dev_ewan') {
+			throw new Error(`Base de données inconnue: ${dbName}`);
+		}
+		database = dbName as DatabaseName;
+		tableName = parts.slice(1).join('-');
+	} else {
+		// Fallback: chercher dans toutes les bases (comportement original)
+		const allTables = await getAllDatabaseTables();
+		const tableInfo = allTables.find((t) => t.name === tableId);
+		if (!tableInfo) {
+			throw new Error(`Table non trouvée: ${tableId}`);
+		}
+		database = tableInfo.database;
+		tableName = tableInfo.name;
 	}
 
-	const database = tableInfo.database;
-	console.log(`📊 [EXPORT] Exportation de ${tableName} depuis ${database}`);
+	console.log(`🔍 [DEBUG] Parsing tableId "${tableId}" -> database: ${database}, table: ${tableName}`);
 
-	// Obtenir le client Prisma approprié
-	const prisma = await getClient(database);
-
-	// Récupérer les métadonnées de la table
 	const metadata = await getTableMetadata(database, tableName);
 	if (!metadata) {
 		throw new Error(`Métadonnées non trouvées pour ${tableName}`);
 	}
 
-	// Définir les colonnes à partir des métadonnées
+	// Log debug pour les tables avec schema ou duplications
+	const category = tableName.startsWith('v_') || tableName.includes('_v_') ? 'view' : 'table';
+	if (metadata.schema !== 'public' || tableName === 'kit' || tableName.includes('v_produit_categorie_attribut')) {
+		console.log(`🔍 [DEBUG] Table ${tableName}: database=${database}, schema=${metadata.schema}, category=${category}`);
+	}
+
 	columns = metadata.fields.map((field) => field.name);
 
 	try {
-		// Accès dynamique au modèle Prisma
-		const model = (prisma as Record<string, { findMany: (options?: { take?: number; orderBy?: Record<string, string> }) => Promise<Record<string, unknown>[]> }>)[tableName];
+		const prisma = await getClient(database);
+		const model = (prisma as Record<string, { findMany: (options?: { take?: number }) => Promise<Record<string, unknown>[]> }>)[tableName];
 		if (!model) {
 			throw new Error(`Modèle Prisma non trouvé pour ${tableName}`);
 		}
 
-		// Pas d'ORDER BY - données dans l'ordre naturel de la base de données
-		console.log(`🔍 [EXPORT] ${tableName}: naturalOrder=true`);
-
-		// Récupérer les données
 		data = await model.findMany({
 			take: limit
 		});
 
-		console.log(`✅ [EXPORT] ${tableName}: ${data.length} lignes extraites depuis ${database}`);
 	} catch (err) {
-		console.error(`❌ [EXPORT] Erreur avec ${tableName} depuis ${database}:`, err);
+		console.error(`❌ [EXPORT] Erreur avec ${tableName} (${database}):`, err instanceof Error ? err.message : 'Erreur inconnue');
 		throw new Error(
 			`Erreur lors de l'extraction de ${tableName}: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
 		);
@@ -225,6 +241,7 @@ async function extractTableData(tableName: string, rowLimit?: number): Promise<E
 
 	return {
 		tableName,
+		database,
 		data,
 		columns,
 		totalRows: data.length
@@ -285,10 +302,7 @@ async function generateExcelFile(
 	// Génération du buffer
 	const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 
-	const fileName = await generateFileName(
-		exportDataList.map((d) => d.tableName),
-		'xlsx'
-	);
+	const fileName = await generateFileName(exportDataList, 'xlsx');
 
 	return {
 		buffer: Buffer.from(buffer),
@@ -351,10 +365,7 @@ async function generateCSVFile(
 	}
 
 	const buffer = Buffer.from(csvContent, 'utf-8');
-	const fileName = await generateFileName(
-		exportDataList.map((d) => d.tableName),
-		'csv'
-	);
+	const fileName = await generateFileName(exportDataList, 'csv');
 
 	return {
 		buffer,
@@ -410,10 +421,7 @@ async function generateXMLFile(exportDataList: ExportData[]): Promise<ExportFile
 
 	const xmlContent = '<?xml version="1.0" encoding="UTF-8"?>\n' + builder.build(xmlData);
 	const buffer = Buffer.from(xmlContent, 'utf-8');
-	const fileName = await generateFileName(
-		exportDataList.map((d) => d.tableName),
-		'xml'
-	);
+	const fileName = await generateFileName(exportDataList, 'xml');
 
 	return {
 		buffer,
