@@ -147,6 +147,12 @@
 			description: 'Classeur Excel avec plusieurs feuilles'
 		},
 		{
+			value: 'json',
+			label: 'JSON (.json)',
+			icon: FileText,
+			description: 'Structure de données avec métadonnées'
+		},
+		{
 			value: 'xml',
 			label: 'XML (.xml)',
 			icon: FileText,
@@ -289,8 +295,6 @@
 			console.log('🌐 [CLIENT] Lancement requête de téléchargement');
 			console.log('📋 [CLIENT] Configuration actuelle du formulaire:', $form);
 
-			// Utiliser les données du formulaire (qui sont synchronisées avec savedExportConfig)
-			// Les IDs sont déjà au bon format "database-tablename"
 			const exportData = {
 				...$form
 			};
@@ -881,11 +885,7 @@
 					</div>
 
 					<!-- Champs cachés -->
-					<input
-						type="hidden"
-						name="selectedTables"
-						value={JSON.stringify($form.selectedTables)}
-					/>
+					<input type="hidden" name="selectedTables" value={JSON.stringify($form.selectedTables)} />
 					<input type="hidden" name="format" value={$form.format} />
 					<input type="hidden" name="includeHeaders" value={$form.includeHeaders} />
 					<input type="hidden" name="rowLimit" value={$form.rowLimit} />
@@ -927,7 +927,9 @@
 								if (tableName.includes('-')) {
 									const [database, ...tableNameParts] = tableName.split('-');
 									const realTableName = tableNameParts.join('-');
-									return data.tables.find((t) => t.name === realTableName && t.database === database);
+									return data.tables.find(
+										(t) => t.name === realTableName && t.database === database
+									);
 								}
 								// Fallback pour compatibilité
 								return data.tables.find((t) => t.name === tableName);
@@ -943,7 +945,10 @@
 												this={getTableIcon(matchingTableInfo?.category || 'tables')}
 												class="h-5 w-5"
 											/>
-											{matchingTableInfo?.displayName || (tableName.includes('-') ? tableName.split('-').slice(1).join('-') : tableName)}
+											{matchingTableInfo?.displayName ||
+												(tableName.includes('-')
+													? tableName.split('-').slice(1).join('-')
+													: tableName)}
 										</h3>
 										{#if matchingTableInfo}
 											<Badge variant={getBadgeVariant(matchingTableInfo.category)}>

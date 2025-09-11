@@ -77,7 +77,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			throw error(400, "Aucune table sélectionnée pour l'export");
 		}
 
-		const supportedFormats = ['xlsx', 'csv', 'xml'];
+		const supportedFormats = ['xlsx', 'csv', 'xml', 'json'];
 		if (!supportedFormats.includes(config.format)) {
 			throw error(400, `Format non supporté: ${config.format}`);
 		}
@@ -123,6 +123,9 @@ export const POST: RequestHandler = async ({ request }) => {
 				break;
 			case 'xml':
 				exportFile = await generateXMLFile(exportDataList);
+				break;
+			case 'json':
+				exportFile = await generateJSONFile(exportDataList, config);
 				break;
 			default:
 				throw error(400, `Format non implémenté: ${config.format}`);
@@ -478,6 +481,54 @@ async function generateXMLFile(exportDataList: ExportData[]): Promise<ExportFile
 		buffer,
 		fileName,
 		mimeType: 'application/xml',
+		size: buffer.length
+	};
+}
+
+// Génération d'un fichier JSON
+async function generateJSONFile(
+	exportDataList: ExportData[],
+	config: ExportConfig
+): Promise<ExportFile> {
+	const jsonData = {
+		metadata: {
+			exportDate: new Date().toISOString(),
+			format: 'json',
+			includeHeaders: config.includeHeaders,
+			rowLimit: config.rowLimit || null,
+			totalTables: exportDataList.length,
+			totalRows: exportDataList.reduce((sum, t) => sum + t.totalRows, 0)
+		},
+		databases: exportDataList.reduce((acc, tableData) => {
+			if (!acc[tableData.database]) {
+				acc[tableData.database] = {
+					name: tableData.database,
+					tables: {}
+				};
+			}
+			
+			acc[tableData.database].tables[tableData.tableName] = {
+				metadata: {
+					tableName: tableData.tableName,
+					columns: tableData.columns,
+					totalRows: tableData.totalRows,
+					exportedRows: tableData.data.length
+				},
+				data: tableData.data
+			};
+			
+			return acc;
+		}, {} as Record<string, { name: string; tables: Record<string, unknown> }>)
+	};
+
+	const jsonContent = JSON.stringify(jsonData, null, 2);
+	const buffer = Buffer.from(jsonContent, 'utf-8');
+	const fileName = await generateFileName(exportDataList, 'json');
+
+	return {
+		buffer,
+		fileName,
+		mimeType: 'application/json',
 		size: buffer.length
 	};
 }
