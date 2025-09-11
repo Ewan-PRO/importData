@@ -230,7 +230,7 @@ export async function getAllTables(database: DatabaseName): Promise<TableInfo[]>
 			model.name.startsWith('v_') || model.name.includes('_v_') ? 'view' : 'table';
 		return {
 			name: model.name,
-			displayName: humanizeTableName(model.name),
+			displayName: model.name,
 			category,
 			database
 		};
@@ -285,12 +285,3 @@ export async function countTableRows(database: DatabaseName, tableName: string):
 	}
 }
 
-// Utilitaire : Humaniser nom de table
-function humanizeTableName(name: string): string {
-	return name
-		.replace(/_/g, ' ')
-		.replace(/\b\w/g, (l) => l.toUpperCase())
-		.replace(/^V /, 'Vue ')
-		.replace(/Dev$/, ' (Dev)')
-		.replace(/Produit V /, 'Vue ');
-}
