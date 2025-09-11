@@ -829,7 +829,7 @@
 					</div>
 				</div>
 
-				<div class="flex justify-between">
+				<div class="flex justify-center gap-4">
 					<Button variant="noir" onclick={resetExport}>
 						<RotateCcw class="mr-2 h-4 w-4" />
 						Réinitialiser
@@ -891,7 +891,7 @@
 					<input type="hidden" name="rowLimit" value={$form.rowLimit} />
 					<input type="hidden" name="filters" value={JSON.stringify($form.filters)} />
 
-					<div class="flex justify-between">
+					<div class="flex justify-center gap-4">
 						<Button variant="noir" onclick={() => goToStep(1)}>
 							<CircleArrowLeft class="mr-2 h-4 w-4" />
 							Retour
@@ -996,7 +996,7 @@
 
 				<!-- Export final -->
 				<form method="POST" action="?/export" use:superEnhance>
-					<div class="flex justify-between">
+					<div class="flex justify-center gap-4">
 						<Button variant="noir" onclick={() => goToStep(2)}>
 							<CircleArrowLeft class="mr-2 h-4 w-4" />
 							Configuration
@@ -1020,12 +1020,12 @@
 
 				{#if exportResult}
 					<div class="rounded-lg border border-green-200 bg-green-50 p-6">
-						<div class="mb-4 flex items-center gap-2">
+						<div class="mb-4 flex items-center justify-center gap-2">
 							<CheckCircle class="h-6 w-6 text-green-500" />
 							<h3 class="text-lg font-medium text-green-800">Export réussi</h3>
 						</div>
 
-						<div class="mb-4 space-y-2 text-sm text-black">
+						<div class="mb-4 space-y-2 text-center text-sm text-black">
 							<div><strong>Fichier:</strong> {exportResult.fileName}</div>
 							<div>
 								<strong>Taille:</strong>
@@ -1038,7 +1038,7 @@
 						</div>
 
 						{#if exportResult.warnings.length > 0}
-							<div class="mb-4">
+							<div class="mb-4 text-center">
 								<h4 class="mb-2 font-medium text-red-800">Avertissements:</h4>
 								<ul class="space-y-1 text-sm text-red-700">
 									{#each exportResult.warnings as warning}
@@ -1049,7 +1049,7 @@
 						{/if}
 
 						{#if exportResult.errors.length > 0}
-							<div class="mb-4">
+							<div class="mb-4 text-center">
 								<h4 class="mb-2 font-medium text-red-800">Erreurs:</h4>
 								<ul class="space-y-1 text-sm text-red-700">
 									{#each exportResult.errors as error}
@@ -1059,7 +1059,7 @@
 							</div>
 						{/if}
 
-						<div class="flex gap-2">
+						<div class="flex justify-center">
 							<Button variant="vert" onclick={resetExport}>
 								<CirclePlus class="mr-2 h-4 w-4" />
 								Nouvel export
