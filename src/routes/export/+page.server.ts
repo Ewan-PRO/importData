@@ -153,8 +153,10 @@ export const actions: Actions = {
 			const previewData: Record<string, unknown[]> = {};
 
 			// Récupérer un aperçu des données pour chaque table sélectionnée
+			console.log(`🚀 [DEBUG] Tables sélectionnées pour aperçu:`, selectedTables);
 			for (const tableId of selectedTables) {
 				const limit = 6;
+				console.log(`🔧 [DEBUG] Traitement table: tableId=${tableId}`);
 
 				// Parser l'ID pour extraire database et table name
 				let database: DatabaseName;
@@ -189,7 +191,6 @@ export const actions: Actions = {
 
 					// Obtenir les métadonnées pour identifier les colonnes timestamp
 					const metadata = await getTableMetadata(database, tableName);
-					const primaryKey = metadata?.primaryKey || 'id';
 					const timestampColumns = metadata?.fields.filter((f) => f.isTimestamp) ?? [];
 					const schema = metadata?.schema || 'public';
 
@@ -238,14 +239,17 @@ export const actions: Actions = {
 						return processedRow;
 					});
 
-					// Utiliser le nom de table réel pour la clé de prévisualisation
-					previewData[tableName] = processedData;
+					// CORRECTION: Utiliser l'ID complet (database-tablename) pour éviter les collisions
+					const previewKey = `${database}-${tableName}`;
+					console.log(`📝 [DEBUG] Clé de prévisualisation: ${previewKey} (${processedData.length} lignes)`);
+					previewData[previewKey] = processedData;
 				} catch (error) {
 					console.error(
 						`❌ [PREVIEW] Erreur lors de la récupération des données pour ${tableName}:`,
 						error
 					);
-					previewData[tableName] = [];
+					const previewKey = `${database}-${tableName}`;
+					previewData[previewKey] = [];
 				}
 			}
 

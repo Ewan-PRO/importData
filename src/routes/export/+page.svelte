@@ -923,15 +923,13 @@
 					<div class="mb-6 space-y-6">
 						{#each Object.entries(previewData) as [tableName, rows]}
 							{@const matchingTableInfo = (() => {
-								// Chercher la table correspondante selon la sélection originale
-								const selectedTable = $form.selectedTables.find(selected => {
-									const selectedName = selected.includes('-') ? selected.split('-').slice(1).join('-') : selected;
-									return selectedName === tableName;
-								});
-								if (selectedTable && selectedTable.includes('-')) {
-									const dbName = selectedTable.split('-')[0];
-									return data.tables.find((t) => t.name === tableName && t.database === dbName);
+								// tableName est maintenant au format "database-tablename"
+								if (tableName.includes('-')) {
+									const [database, ...tableNameParts] = tableName.split('-');
+									const realTableName = tableNameParts.join('-');
+									return data.tables.find((t) => t.name === realTableName && t.database === database);
 								}
+								// Fallback pour compatibilité
 								return data.tables.find((t) => t.name === tableName);
 							})()}
 							{@const dbInfo = matchingTableInfo
@@ -945,7 +943,7 @@
 												this={getTableIcon(matchingTableInfo?.category || 'tables')}
 												class="h-5 w-5"
 											/>
-											{matchingTableInfo?.displayName || tableName}
+											{matchingTableInfo?.displayName || (tableName.includes('-') ? tableName.split('-').slice(1).join('-') : tableName)}
 										</h3>
 										{#if matchingTableInfo}
 											<Badge variant={getBadgeVariant(matchingTableInfo.category)}>
