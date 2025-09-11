@@ -185,6 +185,7 @@ export const actions: Actions = {
 					const metadata = await getTableMetadata(database, tableName);
 					const primaryKey = metadata?.primaryKey || 'id';
 					const timestampColumns = metadata?.fields.filter((f) => f.isTimestamp) ?? [];
+					const schema = metadata?.schema || 'public';
 
 					// Utiliser $queryRaw sécurisé avec Prisma.sql pour préserver les microsecondes
 					let timestampSelects = '';
@@ -199,16 +200,19 @@ export const actions: Actions = {
 								.join(', ');
 					}
 
+					// Construire le nom qualifié de la table avec le schéma
+					const qualifiedTableName = `"${schema.replace(/"/g, '""')}"."${tableName.replace(/"/g, '""')}"`;
+
 					// Pas d'ORDER BY - affichage dans l'ordre naturel de la base de données
 					console.log(
-						`🔍 [PREVIEW] ${tableName}: primaryKey=${primaryKey}, isView=${tableInfo.category === 'view'}, naturalOrder=true`
+						`🔍 [PREVIEW] ${tableName}: primaryKey=${primaryKey}, schema=${schema}, isView=${tableInfo.category === 'view'}, naturalOrder=true`
 					);
 
 					const rawData = (await (
 						prisma as { $queryRawUnsafe: (query: string) => Promise<unknown[]> }
 					).$queryRawUnsafe(`
 						SELECT *${timestampSelects}
-						FROM "${tableName.replace(/"/g, '""')}"
+						FROM ${qualifiedTableName}
 						LIMIT ${limit}
 					`)) as Record<string, unknown>[];
 
