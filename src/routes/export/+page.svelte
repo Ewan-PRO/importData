@@ -965,13 +965,15 @@
 								{#if rows.length > 0}
 									<div class="overflow-x-auto">
 										<Table.Root variant="striped">
-											<Table.Header>
-												<Table.Row variant="striped">
-													{#each Object.keys(rows[0] as Record<string, unknown>) as column}
-														<Table.Head variant="striped">{column}</Table.Head>
-													{/each}
-												</Table.Row>
-											</Table.Header>
+											{#if $form.includeHeaders}
+												<Table.Header>
+													<Table.Row variant="striped">
+														{#each Object.keys(rows[0] as Record<string, unknown>) as column}
+															<Table.Head variant="striped">{column}</Table.Head>
+														{/each}
+													</Table.Row>
+												</Table.Header>
+											{/if}
 											<Table.Body>
 												{#each rows as row, rowIndex}
 													<Table.Row variant="striped">
