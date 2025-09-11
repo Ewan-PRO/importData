@@ -3,7 +3,12 @@ import type { RequestHandler } from './$types';
 import * as XLSX from 'xlsx';
 import { XMLBuilder } from 'fast-xml-parser';
 import type { ExportConfig, ExportResult } from '../+page.server.js';
-import { getAllDatabaseTables, getClient, getTableMetadata, type DatabaseName } from '$lib/prisma-meta.js';
+import {
+	getAllDatabaseTables,
+	getClient,
+	getTableMetadata,
+	type DatabaseName
+} from '$lib/prisma-meta.js';
 
 // Types pour l'export des données
 interface ExportData {
@@ -21,9 +26,7 @@ async function generateFileName(exportDataList: ExportData[], format: string): P
 	const totalAvailableTables = allTables.length;
 
 	// Déterminer les bases de données utilisées à partir des données exportées
-	const usedDatabases = new Set(
-		exportDataList.map((data) => data.database)
-	);
+	const usedDatabases = new Set(exportDataList.map((data) => data.database));
 
 	// Préfixe selon les bases utilisées (vraiment dynamique)
 	let prefix: string;
@@ -38,7 +41,7 @@ async function generateFileName(exportDataList: ExportData[], format: string): P
 	}
 
 	let tablePart: string;
-	const tableNames = exportDataList.map(d => d.tableName);
+	const tableNames = exportDataList.map((d) => d.tableName);
 	if (tableNames.length === totalAvailableTables) {
 		tablePart = 'complet';
 	} else if (tableNames.length === 1) {
@@ -92,7 +95,9 @@ export const POST: RequestHandler = async ({ request }) => {
 				totalExportedRows += tableData.totalRows;
 
 				if (config.rowLimit && tableData.totalRows >= config.rowLimit) {
-					warnings.push(`Table ${tableData.tableName}: limite de ${config.rowLimit} lignes appliquée`);
+					warnings.push(
+						`Table ${tableData.tableName}: limite de ${config.rowLimit} lignes appliquée`
+					);
 				}
 			} catch (err) {
 				console.error(`❌ [EXPORT] Erreur avec ${tableId}:`, err);
@@ -206,7 +211,9 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 		tableName = tableInfo.name;
 	}
 
-	console.log(`🔍 [DEBUG] Parsing tableId "${tableId}" -> database: ${database}, table: ${tableName}`);
+	console.log(
+		`🔍 [DEBUG] Parsing tableId "${tableId}" -> database: ${database}, table: ${tableName}`
+	);
 
 	const metadata = await getTableMetadata(database, tableName);
 	if (!metadata) {
@@ -215,25 +222,69 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 
 	// Log debug pour les tables avec schema ou duplications
 	const category = tableName.startsWith('v_') || tableName.includes('_v_') ? 'view' : 'table';
-	if (metadata.schema !== 'public' || tableName === 'kit' || tableName.includes('v_produit_categorie_attribut')) {
-		console.log(`🔍 [DEBUG] Table ${tableName}: database=${database}, schema=${metadata.schema}, category=${category}`);
+	if (
+		metadata.schema !== 'public' ||
+		tableName === 'kit' ||
+		tableName.includes('v_produit_categorie_attribut')
+	) {
+		console.log(
+			`🔍 [DEBUG] Table ${tableName}: database=${database}, schema=${metadata.schema}, category=${category}`
+		);
 	}
 
 	columns = metadata.fields.map((field) => field.name);
 
+	// Pour l'export, utiliser des requêtes SQL directes plutôt que les modèles Prisma
+	// car les noms de modèles peuvent avoir des préfixes de schéma
+	const schema = metadata.schema || 'public';
+
+	// Nettoyer le nom de table pour enlever le préfixe de schéma auto-généré par Prisma
+	let realTableName = tableName;
+	console.log(`🔍 [EXPORT-DEBUG] Original tableName: ${tableName}, Schema: ${schema}`);
+
+	if (tableName.startsWith(`${schema}_`)) {
+		realTableName = tableName.substring(schema.length + 1);
+		console.log(`🧹 [EXPORT] Nettoyage préfixe: ${tableName} → ${realTableName}`);
+	} else {
+		console.log(`ℹ️ [EXPORT] Pas de nettoyage nécessaire pour: ${tableName}`);
+	}
+
+	// Construire le nom qualifié de la table avec le schéma
+	const qualifiedTableName = `"${schema.replace(/"/g, '""')}"."${realTableName.replace(/"/g, '""')}"`;
+
+	console.log(
+		`🔍 [EXPORT] Export query - Table: ${tableName}, Schema: ${schema}, Real name: ${realTableName}, Qualified: ${qualifiedTableName}`
+	);
+
+	const query = limit
+		? `SELECT * FROM ${qualifiedTableName} LIMIT ${limit}`
+		: `SELECT * FROM ${qualifiedTableName}`;
+
+	console.log(`🚀 [EXPORT] Exécution de la requête: ${query}`);
+
 	try {
 		const prisma = await getClient(database);
-		const model = (prisma as Record<string, { findMany: (options?: { take?: number }) => Promise<Record<string, unknown>[]> }>)[tableName];
-		if (!model) {
-			throw new Error(`Modèle Prisma non trouvé pour ${tableName}`);
+
+		data = (await (
+			prisma as { $queryRawUnsafe: (query: string) => Promise<unknown[]> }
+		).$queryRawUnsafe(query)) as Record<string, unknown>[];
+
+		console.log(`✅ [EXPORT] Succès pour ${tableName}: ${data.length} lignes extraites`);
+	} catch (err) {
+		console.error(
+			`❌ [EXPORT] Erreur avec ${tableName} (${database}):`,
+			err instanceof Error ? err.message : 'Erreur inconnue'
+		);
+
+		// Détails supplémentaires pour le debug
+		if (err instanceof Error) {
+			console.error(`❌ [EXPORT] Message d'erreur: ${err.message}`);
+			console.error(`❌ [EXPORT] Stack: ${err.stack}`);
 		}
 
-		data = await model.findMany({
-			take: limit
-		});
+		console.error(`❌ [EXPORT] Requête qui a échoué: ${query}`);
+		console.error(`❌ [EXPORT] Table qualifiée: ${qualifiedTableName}`);
 
-	} catch (err) {
-		console.error(`❌ [EXPORT] Erreur avec ${tableName} (${database}):`, err instanceof Error ? err.message : 'Erreur inconnue');
 		throw new Error(
 			`Erreur lors de l'extraction de ${tableName}: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
 		);

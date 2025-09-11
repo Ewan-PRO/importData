@@ -162,7 +162,9 @@ function detectPrimaryKeyFromDMMF(model: DMMFModelFromPrisma): string | null {
 
 	// 3. Dernier recours : premier champ
 	if (model.fields.length > 0) {
-		console.log(`⚠️ [DEBUG] Table ${model.name}: aucune clé trouvée, utilisation du premier champ: ${model.fields[0].name}`);
+		console.log(
+			`⚠️ [DEBUG] Table ${model.name}: aucune clé trouvée, utilisation du premier champ: ${model.fields[0].name}`
+		);
 		return model.fields[0].name;
 	}
 
@@ -214,9 +216,23 @@ export async function getAllTables(database: DatabaseName): Promise<TableInfo[]>
 	const tables = databases[database].dmmf.datamodel.models.map((model) => {
 		const category: 'table' | 'view' =
 			model.name.startsWith('v_') || model.name.includes('_v_') ? 'view' : 'table';
+
+		// Détection et nettoyage des noms avec préfixe de schéma
+		let displayName = model.name;
+		const schema = (model as { schema?: string }).schema || 'public';
+
+		console.log(`🔍 [META] Model: ${model.name}, Schema: ${schema}`);
+
+		// Nettoyer les préfixes de schéma auto-générés par Prisma
+		if (model.name.startsWith(`${schema}_`)) {
+			const cleanName = model.name.substring(schema.length + 1);
+			displayName = cleanName; // Utiliser le nom original sans préfixe et sans indication de schéma
+			console.log(`🧹 [META] Nettoyage: ${model.name} → ${displayName}`);
+		}
+
 		return {
 			name: model.name,
-			displayName: model.name,
+			displayName,
 			category,
 			database
 		};
@@ -270,4 +286,3 @@ export async function countTableRows(database: DatabaseName, tableName: string):
 		return 0;
 	}
 }
-

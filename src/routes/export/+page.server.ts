@@ -153,10 +153,8 @@ export const actions: Actions = {
 			const previewData: Record<string, unknown[]> = {};
 
 			// Récupérer un aperçu des données pour chaque table sélectionnée
-			console.log(`🚀 [DEBUG] Tables sélectionnées pour aperçu:`, selectedTables);
 			for (const tableId of selectedTables) {
 				const limit = 6;
-				console.log(`🔧 [DEBUG] Traitement table: tableId=${tableId}`);
 
 				// Parser l'ID pour extraire database et table name
 				let database: DatabaseName;
@@ -185,7 +183,6 @@ export const actions: Actions = {
 				}
 
 				try {
-
 					// Obtenir le client Prisma
 					const prisma = await getClient(database);
 
@@ -207,14 +204,23 @@ export const actions: Actions = {
 								.join(', ');
 					}
 
-					// Construire le nom qualifié de la table avec le schéma
-					const qualifiedTableName = `"${schema.replace(/"/g, '""')}"."${tableName.replace(/"/g, '""')}"`;
+					// Nettoyer le nom de table pour enlever le préfixe de schéma auto-généré par Prisma
+					let realTableName = tableName;
+					console.log(`🔍 [PREVIEW-DEBUG] Original tableName: ${tableName}, Schema: ${schema}`);
 
-					// Log debug pour tables problematiques
-					const category = tableName.startsWith('v_') || tableName.includes('_v_') ? 'view' : 'table';
-					if (schema !== 'public' || tableName === 'kit' || tableName.includes('v_produit_categorie_attribut')) {
-						console.log(`🔍 [DEBUG] Preview ${tableName}: database=${database}, schema=${schema}, category=${category}`);
+					if (tableName.startsWith(`${schema}_`)) {
+						realTableName = tableName.substring(schema.length + 1);
+						console.log(`🧹 [PREVIEW] Nettoyage préfixe: ${tableName} → ${realTableName}`);
+					} else {
+						console.log(`ℹ️ [PREVIEW] Pas de nettoyage nécessaire pour: ${tableName}`);
 					}
+
+					// Construire le nom qualifié de la table avec le schéma
+					const qualifiedTableName = `"${schema.replace(/"/g, '""')}"."${realTableName.replace(/"/g, '""')}"`;
+
+					console.log(
+						`🔍 [PREVIEW] Table: ${tableName}, Schema: ${schema}, Real name: ${realTableName}, Qualified: ${qualifiedTableName}`
+					);
 
 					const rawData = (await (
 						prisma as { $queryRawUnsafe: (query: string) => Promise<unknown[]> }
@@ -239,17 +245,27 @@ export const actions: Actions = {
 						return processedRow;
 					});
 
-					// CORRECTION: Utiliser l'ID complet (database-tablename) pour éviter les collisions
+					// Utiliser l'ID complet (database-tablename) pour éviter les collisions
 					const previewKey = `${database}-${tableName}`;
-					console.log(`📝 [DEBUG] Clé de prévisualisation: ${previewKey} (${processedData.length} lignes)`);
 					previewData[previewKey] = processedData;
+					console.log(
+						`✅ [PREVIEW] Succès pour ${tableName}: ${processedData.length} lignes récupérées`
+					);
 				} catch (error) {
 					console.error(
 						`❌ [PREVIEW] Erreur lors de la récupération des données pour ${tableName}:`,
 						error
 					);
+
+					// Détails supplémentaires pour le debug
+					if (error instanceof Error) {
+						console.error(`❌ [PREVIEW] Message d'erreur: ${error.message}`);
+						console.error(`❌ [PREVIEW] Stack: ${error.stack}`);
+					}
+
 					const previewKey = `${database}-${tableName}`;
 					previewData[previewKey] = [];
+					console.log(`❌ [PREVIEW] Données vides ajoutées pour ${previewKey}`);
 				}
 			}
 
@@ -274,7 +290,6 @@ export const actions: Actions = {
 
 		try {
 			// Préserver les IDs complets avec database-tablename pour l'API
-			console.log('🔧 [EXPORT] Tables à exporter:', form.data.selectedTables);
 
 			const response = await fetch('/export/api', {
 				method: 'POST',
