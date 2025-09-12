@@ -616,7 +616,7 @@
 						<Select.Select type="single" bind:value={selectedCategory}>
 							<Select.SelectTrigger class="min-w-28 flex-1">
 								<span class="flex items-center gap-2">
-									<Funnel class="h-4 w-4" />
+									<svelte:component this={categories.find((c) => c.value === selectedCategory)?.icon || Funnel} class="h-4 w-4" />
 									{categories.find((c) => c.value === selectedCategory)?.label || 'Toutes'}
 								</span>
 							</Select.SelectTrigger>
