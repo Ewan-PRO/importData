@@ -25,7 +25,10 @@
 		Rocket,
 		Settings,
 		LockOpen,
-		Package
+		Package,
+		FileType,
+		Sheet,
+		Table as TableIcon
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
 	import { getAllDatabaseNames, getSchemaInfo, type DatabaseName } from '$lib/prisma-meta.js';
@@ -777,8 +780,8 @@
 						<!-- Card Type -->
 						<Card class="h-36 p-4 bg-blue-50 border-blue-200 shadow-none">
 							<div class="mb-2 flex items-center gap-2">
-								<span class="text-lg">🎯</span>
-								<h3 class="font-semibold text-blue-700">Type</h3>
+								<FileType class="h-5 w-5 text-blue-600" />
+								<h3 class="text-lg font-semibold text-blue-700">Type de données :</h3>
 							</div>
 							<div class="space-y-2">
 								<label class="flex cursor-pointer items-center space-x-2">
@@ -790,7 +793,7 @@
 										onchange={() => handleTypeChange('all')}
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
-									<span class="text-sm">Tout ({newGroupCounts.all})</span>
+									<span class="text-sm text-gray-900"><ChartColumn class="mr-1 inline h-4 w-4" />Tout ({newGroupCounts.all})</span>
 								</label>
 								<label class="flex cursor-pointer items-center space-x-2">
 									<input
@@ -801,7 +804,7 @@
 										onchange={() => handleTypeChange('tables')}
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
-									<span class="text-sm">Tables ({newGroupCounts.tables})</span>
+									<span class="text-sm text-gray-900"><TableIcon class="mr-1 inline h-4 w-4" />Tables ({newGroupCounts.tables})</span>
 								</label>
 								<label class="flex cursor-pointer items-center space-x-2">
 									<input
@@ -812,7 +815,7 @@
 										onchange={() => handleTypeChange('views')}
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
-									<span class="text-sm">Vues ({newGroupCounts.views})</span>
+									<span class="text-sm text-gray-900"><Eye class="mr-1 inline h-4 w-4" />Vues ({newGroupCounts.views})</span>
 								</label>
 							</div>
 						</Card>
@@ -820,8 +823,8 @@
 						<!-- Card Base de données -->
 						<Card class="h-36 p-4 bg-emerald-50 border-emerald-200 shadow-none">
 							<div class="mb-2 flex items-center gap-2">
-								<span class="text-lg">🏢</span>
-								<h3 class="font-semibold text-emerald-700">Base de données</h3>
+								<Database class="h-5 w-5 text-emerald-600" />
+								<h3 class="text-lg font-semibold text-emerald-700">Base de données :</h3>
 							</div>
 							<div class="space-y-2">
 								{#each databases as database}
@@ -833,8 +836,13 @@
 											onchange={() => handleDatabaseToggle(database)}
 											class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 										/>
-										<span class="text-sm"
-											>{dbInfo.label.split(' ')[1]} ({newGroupCounts[database]})</span
+										<span class="text-sm text-gray-900">
+											{#if database.includes('dev')}
+												<Settings class="mr-1 inline h-4 w-4" />
+											{:else}
+												<Rocket class="mr-1 inline h-4 w-4" />
+											{/if}
+											{dbInfo.label.split(' ')[1]} ({newGroupCounts[database]})</span
 										>
 									</label>
 								{/each}
@@ -844,8 +852,8 @@
 						<!-- Card Schéma -->
 						<Card class="h-36 p-4 bg-purple-50 border-purple-200 shadow-none">
 							<div class="mb-2 flex items-center gap-2">
-								<span class="text-lg">🔗</span>
-								<h3 class="font-semibold text-purple-700">Schéma</h3>
+								<Sheet class="h-5 w-5 text-purple-600" />
+								<h3 class="text-lg font-semibold text-purple-700">Schéma :</h3>
 							</div>
 							<div class="space-y-2">
 								{#each uniqueSchemas as schema}
@@ -859,8 +867,12 @@
 											onchange={() => handleSchemaToggle(schema)}
 											class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
 										/>
-										<span class="text-sm {!isAvailable ? 'text-gray-400' : ''}">
-											{schemaInfo.emoji}
+										<span class="text-sm {!isAvailable ? 'text-gray-400' : 'text-gray-900'}">
+											{#if schema === 'produit'}
+												<Package class="mr-1 inline h-4 w-4" />
+											{:else}
+												<LockOpen class="mr-1 inline h-4 w-4" />
+											{/if}
 											{schemaInfo.label} ({newGroupCounts[`schema_${schema}`]})
 										</span>
 									</label>
@@ -875,8 +887,9 @@
 						<div
 							class="flex min-h-[42px] items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-6 py-3 text-center"
 						>
-							<div class="text-sm text-blue-800">
-								📊 <span class="font-semibold">{newFilteredTables.length}</span> sources sélectionnées
+							<div class="text-sm text-blue-800 flex items-center justify-center gap-1">
+								<FileType class="h-4 w-4" />
+								<span class="font-semibold">{newFilteredTables.length}</span> sources sélectionnées
 							</div>
 						</div>
 
