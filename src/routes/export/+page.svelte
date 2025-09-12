@@ -24,10 +24,12 @@
 		CircleArrowLeft,
 		CirclePlus,
 		Rocket,
-		Settings
+		Settings,
+		LockOpen,
+		Package
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
-	import { getAllDatabaseNames, type DatabaseName } from '$lib/prisma-meta.js';
+	import { getAllDatabaseNames, getSchemaInfo, type DatabaseName } from '$lib/prisma-meta.js';
 
 	export let data;
 
@@ -119,8 +121,16 @@
 		return database.includes('dev') ? Settings : Rocket;
 	}
 
-	// Génération dynamique des catégories
-	const categories = [
+	// Obtenir les schémas uniques
+	$: uniqueSchemas = [...new Set((data?.tables || []).map((t: ExportTableInfo) => t.schema))];
+
+	// Fonction pour obtenir l'icône d'un schéma
+	function getSchemaIcon(schema: string) {
+		return schema === 'produit' ? Package : LockOpen;
+	}
+
+	// Génération dynamique des catégories avec schémas
+	$: categories = [
 		{ value: 'all', label: 'Toutes les sources', icon: Funnel },
 		{ value: 'tables', label: 'Tables', icon: Database },
 		{ value: 'views', label: 'Vues', icon: Eye },
@@ -128,6 +138,11 @@
 			value: db,
 			label: db.replace('_', ' '),
 			icon: getDatabaseIcon(db)
+		})),
+		...uniqueSchemas.map((schema: string) => ({
+			value: `schema_${schema}`,
+			label: getSchemaInfo(schema).label,
+			icon: getSchemaIcon(schema)
 		}))
 	];
 
@@ -162,7 +177,7 @@
 
 	// Tables filtrées selon la catégorie et la recherche - DYNAMIQUE
 	$: filteredTables = (data?.tables || []).filter((table: ExportTableInfo) => {
-		// Logique dynamique pour les catégories et bases de données
+		// Logique dynamique pour les catégories, bases de données et schémas
 		let matchesCategory = false;
 		if (selectedCategory === 'all') {
 			matchesCategory = true;
@@ -175,6 +190,9 @@
 			table.database === selectedCategory
 		) {
 			matchesCategory = true;
+		} else if (selectedCategory.startsWith('schema_')) {
+			const schema = selectedCategory.replace('schema_', '');
+			matchesCategory = table.schema === schema;
 		}
 
 		const matchesSearch =
@@ -194,6 +212,13 @@
 			databases.map((db: DatabaseName) => [
 				db,
 				(data?.tables || []).filter((t: ExportTableInfo) => t.database === db).length
+			])
+		),
+		// Compteurs par schéma (dynamique)
+		...Object.fromEntries(
+			uniqueSchemas.map((schema: string) => [
+				`schema_${schema}`,
+				(data?.tables || []).filter((t: ExportTableInfo) => t.schema === schema).length
 			])
 		),
 		// Compteurs croisés (dynamique)
@@ -406,6 +431,23 @@
 			$form.selectedTables = $form.selectedTables.filter((id) => !tableIds.includes(id));
 		} else {
 			// Sélectionner toutes les tables de cette base
+			const newSelection = [...new Set([...$form.selectedTables, ...tableIds])];
+			$form.selectedTables = newSelection;
+		}
+	}
+
+	// Fonction pour basculer la sélection d'un schéma
+	function toggleSchemaSelection(schema: string) {
+		const tablesInSchema = data.tables.filter((t: ExportTableInfo) => t.schema === schema);
+		const tableIds = tablesInSchema.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
+
+		const isAllSelected = tableIds.every((tableId) => $form.selectedTables.includes(tableId));
+
+		if (isAllSelected) {
+			// Désélectionner toutes les tables de ce schéma
+			$form.selectedTables = $form.selectedTables.filter((id) => !tableIds.includes(id));
+		} else {
+			// Sélectionner toutes les tables de ce schéma
 			const newSelection = [...new Set([...$form.selectedTables, ...tableIds])];
 			$form.selectedTables = newSelection;
 		}
@@ -657,6 +699,25 @@
 									<span>{dbInfo.label} ({tableCounts[database]})</span>
 								</label>
 							{/each}
+
+							<!-- Checkboxes dynamiques pour chaque schéma -->
+							{#each uniqueSchemas as schema}
+								{@const schemaInfo = getSchemaInfo(schema)}
+								<label class="flex cursor-pointer items-center space-x-2">
+									<input
+										type="checkbox"
+										checked={tableCounts[`schema_${schema}`] > 0 &&
+											data.tables
+												.filter((t: ExportTableInfo) => t.schema === schema)
+												.every((table: ExportTableInfo) =>
+													$form.selectedTables.includes(`${table.database}-${table.name}`)
+												)}
+										onchange={() => toggleSchemaSelection(schema)}
+										class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
+									<span>{schemaInfo.emoji} {schemaInfo.label} ({tableCounts[`schema_${schema}`]})</span>
+								</label>
+							{/each}
 						{:else if selectedCategory === 'tables' || selectedCategory === 'views'}
 							<!-- Quand 'Tables' ou 'Vues' est sélectionné : afficher toutes les BDD -->
 							{#each databases as database}
@@ -730,6 +791,7 @@
 					<div class="grid gap-3">
 						{#each filteredTables as table (`${table.database}-${table.name}`)}
 							{@const dbInfo = getDatabaseBadgeInfo(table.database)}
+							{@const schemaInfo = getSchemaInfo(table.schema)}
 							<label
 								class="flex cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100"
 							>
@@ -776,6 +838,9 @@
 												</Badge>
 												<Badge variant={dbInfo.variant}>
 													{dbInfo.label}
+												</Badge>
+												<Badge variant={schemaInfo.variant}>
+													{schemaInfo.emoji} {schemaInfo.label}
 												</Badge>
 											</div>
 											<div class="text-sm text-gray-500">
@@ -937,6 +1002,9 @@
 							{@const dbInfo = matchingTableInfo
 								? getDatabaseBadgeInfo(matchingTableInfo.database)
 								: { variant: 'noir' as const, label: 'Inconnue' }}
+							{@const schemaInfo = matchingTableInfo
+								? getSchemaInfo(matchingTableInfo.schema)
+								: { variant: 'cyan' as const, emoji: '🔓', label: 'Public' }}
 							<div>
 								<div class="mb-3 flex items-center justify-between">
 									<div class="flex items-center gap-3">
@@ -956,6 +1024,9 @@
 											</Badge>
 											<Badge variant={dbInfo.variant}>
 												{dbInfo.label}
+											</Badge>
+											<Badge variant={schemaInfo.variant}>
+												{schemaInfo.emoji} {schemaInfo.label}
 											</Badge>
 										{/if}
 									</div>

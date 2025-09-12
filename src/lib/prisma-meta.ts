@@ -75,6 +75,7 @@ export interface TableInfo {
 	displayName: string;
 	category: 'table' | 'view';
 	database: DatabaseName;
+	schema: string;
 	rowCount?: number;
 }
 
@@ -234,7 +235,8 @@ export async function getAllTables(database: DatabaseName): Promise<TableInfo[]>
 			name: model.name,
 			displayName,
 			category,
-			database
+			database,
+			schema
 		};
 	});
 	return tables;
@@ -249,6 +251,32 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 	const cenovTables = await getAllTables('cenov');
 	const cenovDevTables = await getAllTables('cenov_dev_ewan');
 	return [...cenovTables, ...cenovDevTables];
+}
+
+// Interface pour les informations de schéma
+export interface SchemaInfo {
+	variant: 'cyan' | 'purple';
+	emoji: string;
+	label: string;
+}
+
+// Fonction centralisée de détection des informations de schéma
+export function getSchemaInfo(schema: string): SchemaInfo {
+	switch (schema.toLowerCase()) {
+		case 'produit':
+			return {
+				variant: 'purple',
+				emoji: '📦',
+				label: 'Produit'
+			};
+		case 'public':
+		default:
+			return {
+				variant: 'cyan',
+				emoji: '🔓',
+				label: 'Public'
+			};
+	}
 }
 
 // Obtenir tous les noms de bases de données
