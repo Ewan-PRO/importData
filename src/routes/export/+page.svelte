@@ -871,9 +871,11 @@
 					</div>
 
 					<!-- Recherche et actions -->
-					<div class="grid grid-cols-1 items-center gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					<div class="grid grid-cols-1 items-center gap-6 sm:grid-cols-2 lg:grid-cols-3">
 						<!-- Résumé de sélection -->
-						<div class="flex min-h-[42px] items-center rounded-lg bg-blue-50 px-6 py-3 text-center">
+						<div
+							class="flex min-h-[42px] items-center justify-center rounded-lg bg-blue-50 px-6 py-3 text-center"
+						>
 							<div class="text-sm text-blue-800">
 								📊 <span class="font-semibold">{newFilteredTables.length}</span> sources sélectionnées
 							</div>
@@ -889,7 +891,7 @@
 						</div>
 
 						<!-- Actions -->
-						<div class="flex items-center justify-end gap-4">
+						<div class="flex items-center justify-center gap-4">
 							<label class="flex min-h-[42px] cursor-pointer items-center space-x-2">
 								<input
 									type="checkbox"
