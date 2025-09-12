@@ -237,6 +237,34 @@
 					).length
 				]
 			])
+		),
+		// Compteurs croisés schéma-catégorie
+		...Object.fromEntries(
+			uniqueSchemas.flatMap((schema: string) => [
+				[
+					`schema_${schema}_tables`,
+					(data?.tables || []).filter(
+						(t: ExportTableInfo) => t.schema === schema && t.category === 'table'
+					).length
+				],
+				[
+					`schema_${schema}_views`,
+					(data?.tables || []).filter(
+						(t: ExportTableInfo) => t.schema === schema && t.category === 'view'
+					).length
+				]
+			])
+		),
+		// Compteurs croisés schéma-base
+		...Object.fromEntries(
+			uniqueSchemas.flatMap((schema: string) => 
+				databases.map((db: DatabaseName) => [
+					`schema_${schema}_${db}`,
+					(data?.tables || []).filter(
+						(t: ExportTableInfo) => t.schema === schema && t.database === db
+					).length
+				])
+			)
 		)
 	} as Record<string, number>;
 
@@ -448,6 +476,36 @@
 			$form.selectedTables = $form.selectedTables.filter((id) => !tableIds.includes(id));
 		} else {
 			// Sélectionner toutes les tables de ce schéma
+			const newSelection = [...new Set([...$form.selectedTables, ...tableIds])];
+			$form.selectedTables = newSelection;
+		}
+	}
+
+	// Fonction pour basculer la sélection d'un schéma avec restriction de catégorie
+	function toggleSchemaSelectionWithCategory(schema: string, restrictToCategory: 'table' | 'view') {
+		let tablesInSchema = data.tables.filter((t: ExportTableInfo) => t.schema === schema && t.category === restrictToCategory);
+		const tableIds = tablesInSchema.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
+
+		const isAllSelected = tableIds.every((tableId) => $form.selectedTables.includes(tableId));
+
+		if (isAllSelected) {
+			$form.selectedTables = $form.selectedTables.filter((id) => !tableIds.includes(id));
+		} else {
+			const newSelection = [...new Set([...$form.selectedTables, ...tableIds])];
+			$form.selectedTables = newSelection;
+		}
+	}
+
+	// Fonction pour basculer la sélection d'un schéma avec restriction de base de données
+	function toggleSchemaSelectionWithDatabase(schema: string, restrictToDatabase: DatabaseName) {
+		let tablesInSchema = data.tables.filter((t: ExportTableInfo) => t.schema === schema && t.database === restrictToDatabase);
+		const tableIds = tablesInSchema.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
+
+		const isAllSelected = tableIds.every((tableId) => $form.selectedTables.includes(tableId));
+
+		if (isAllSelected) {
+			$form.selectedTables = $form.selectedTables.filter((id) => !tableIds.includes(id));
+		} else {
 			const newSelection = [...new Set([...$form.selectedTables, ...tableIds])];
 			$form.selectedTables = newSelection;
 		}
@@ -746,6 +804,34 @@
 									<span>{dbInfo.label} ({tableCounts[crossCountKey]})</span>
 								</label>
 							{/each}
+
+							<!-- Checkboxes pour les schémas quand Tables/Vues sélectionné -->
+							{#each uniqueSchemas as schema}
+								{@const schemaInfo = getSchemaInfo(schema)}
+								{@const schemaCountKey = `schema_${schema}_${selectedCategory}`}
+								<label class="flex cursor-pointer items-center space-x-2">
+									<input
+										type="checkbox"
+										checked={tableCounts[schemaCountKey] > 0 &&
+											data.tables
+												.filter(
+													(t: ExportTableInfo) =>
+														t.schema === schema &&
+														t.category === (selectedCategory === 'tables' ? 'table' : 'view')
+												)
+												.every((table: ExportTableInfo) =>
+													$form.selectedTables.includes(`${table.database}-${table.name}`)
+												)}
+										onchange={() =>
+											toggleSchemaSelectionWithCategory(
+												schema,
+												selectedCategory === 'tables' ? 'table' : 'view'
+											)}
+										class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
+									<span>{schemaInfo.emoji} {schemaInfo.label} ({tableCounts[schemaCountKey]})</span>
+								</label>
+							{/each}
 						{:else if databases.includes(selectedCategory as DatabaseName)}
 							<!-- Quand une BDD spécifique est sélectionnée : afficher Tables, Vues -->
 							{@const currentDb = selectedCategory as DatabaseName}
@@ -782,6 +868,115 @@
 								/>
 								<span>Vues ({tableCounts[`views_${currentDb}`]})</span>
 							</label>
+
+							<!-- Checkboxes pour les schémas seulement pour cenov_dev_ewan -->
+							{#if currentDb === 'cenov_dev_ewan'}
+								{#each uniqueSchemas as schema}
+									{@const schemaInfo = getSchemaInfo(schema)}
+									{@const schemaDbCountKey = `schema_${schema}_${currentDb}`}
+									<label class="flex cursor-pointer items-center space-x-2">
+										<input
+											type="checkbox"
+											checked={tableCounts[schemaDbCountKey] > 0 &&
+												data.tables
+													.filter(
+														(t: ExportTableInfo) => t.schema === schema && t.database === currentDb
+													)
+													.every((table: ExportTableInfo) =>
+														$form.selectedTables.includes(`${table.database}-${table.name}`)
+													)}
+											onchange={() => toggleSchemaSelectionWithDatabase(schema, currentDb)}
+											class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+										/>
+										<span>{schemaInfo.emoji} {schemaInfo.label} ({tableCounts[schemaDbCountKey]})</span>
+									</label>
+								{/each}
+							{/if}
+						{:else if selectedCategory.startsWith('schema_')}
+							<!-- Quand un schéma spécifique est sélectionné -->
+							{@const currentSchema = selectedCategory.replace('schema_', '')}
+							{@const schemaInfo = getSchemaInfo(currentSchema)}
+							
+							<!-- Cases pour Tables et Vues -->
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="checkbox"
+									checked={tableCounts[`schema_${currentSchema}_tables`] > 0 &&
+										data.tables
+											.filter(
+												(t: ExportTableInfo) => t.schema === currentSchema && t.category === 'table'
+											)
+											.every((table: ExportTableInfo) =>
+												$form.selectedTables.includes(`${table.database}-${table.name}`)
+											)}
+									onchange={() => toggleSchemaSelectionWithCategory(currentSchema, 'table')}
+									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span>Tables ({tableCounts[`schema_${currentSchema}_tables`]})</span>
+							</label>
+
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="checkbox"
+									checked={tableCounts[`schema_${currentSchema}_views`] > 0 &&
+										data.tables
+											.filter(
+												(t: ExportTableInfo) => t.schema === currentSchema && t.category === 'view'
+											)
+											.every((table: ExportTableInfo) =>
+												$form.selectedTables.includes(`${table.database}-${table.name}`)
+											)}
+									onchange={() => toggleSchemaSelectionWithCategory(currentSchema, 'view')}
+									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span>Vues ({tableCounts[`schema_${currentSchema}_views`]})</span>
+							</label>
+
+							<!-- Cases pour les bases de données selon le schéma -->
+							{#if currentSchema === 'public'}
+								<!-- Pour Public : cenov + cenov_dev_ewan -->
+								{#each databases as database}
+									{@const dbInfo = getDatabaseBadgeInfo(database)}
+									{@const schemaDbCountKey = `schema_${currentSchema}_${database}`}
+									<label class="flex cursor-pointer items-center space-x-2">
+										<input
+											type="checkbox"
+											checked={tableCounts[schemaDbCountKey] > 0 &&
+												data.tables
+													.filter(
+														(t: ExportTableInfo) => t.schema === currentSchema && t.database === database
+													)
+													.every((table: ExportTableInfo) =>
+														$form.selectedTables.includes(`${table.database}-${table.name}`)
+													)}
+											onchange={() => toggleSchemaSelectionWithDatabase(currentSchema, database)}
+											class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+										/>
+										<span>{dbInfo.label} ({tableCounts[schemaDbCountKey]})</span>
+									</label>
+								{/each}
+							{:else if currentSchema === 'produit'}
+								<!-- Pour Produit : seulement cenov_dev_ewan -->
+								{@const database = 'cenov_dev_ewan'}
+								{@const dbInfo = getDatabaseBadgeInfo(database)}
+								{@const schemaDbCountKey = `schema_${currentSchema}_${database}`}
+								<label class="flex cursor-pointer items-center space-x-2">
+									<input
+										type="checkbox"
+										checked={tableCounts[schemaDbCountKey] > 0 &&
+											data.tables
+												.filter(
+													(t: ExportTableInfo) => t.schema === currentSchema && t.database === database
+												)
+												.every((table: ExportTableInfo) =>
+													$form.selectedTables.includes(`${table.database}-${table.name}`)
+												)}
+										onchange={() => toggleSchemaSelectionWithDatabase(currentSchema, database)}
+										class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
+									<span>{dbInfo.label} ({tableCounts[schemaDbCountKey]})</span>
+								</label>
+							{/if}
 						{/if}
 					</div>
 				</div>
