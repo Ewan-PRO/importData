@@ -19,7 +19,7 @@
 		Funnel,
 		ChartColumn,
 		FileDown,
-		RotateCcw,
+		RefreshCcw,
 		CircleArrowRight,
 		CircleArrowLeft,
 		CirclePlus,
@@ -773,17 +773,6 @@
 
 				<!-- Filtres avec Cards Flowbite -->
 				<div class="mb-6 space-y-4">
-					<!-- Recherche -->
-					<div class="flex justify-center">
-						<div class="w-full max-w-md">
-							<Input
-								type="text"
-								bind:value={searchTerm}
-								placeholder="Rechercher une table, une vue..."
-							/>
-						</div>
-					</div>
-
 					<!-- Cards de filtres horizontales -->
 					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 						<!-- Card Type -->
@@ -881,59 +870,72 @@
 						</Card>
 					</div>
 
-					<!-- Résumé de sélection -->
-					<div class="rounded-lg bg-blue-50 p-3 text-center">
-						<div class="text-sm text-blue-800">
-							📊 <span class="font-semibold">{newFilteredTables.length}</span> sources sélectionnées
+					<!-- Recherche et actions -->
+					<div class="flex items-center justify-between gap-4">
+						<!-- Résumé de sélection -->
+						<div class="rounded-lg bg-blue-50 px-4 py-2 text-center">
+							<div class="text-sm text-blue-800">
+								📊 <span class="font-semibold">{newFilteredTables.length}</span> sources sélectionnées
+							</div>
 						</div>
-					</div>
 
-					<!-- Actions rapides -->
-					<div class="flex justify-center gap-4">
-						<label class="flex cursor-pointer items-center space-x-2">
-							<input
-								type="checkbox"
-								checked={newFilteredTables.length > 0 &&
-									newFilteredTables.every((table: ExportTableInfo) =>
-										$form.selectedTables.includes(`${table.database}-${table.name}`)
-									)}
-								onchange={() => {
-									const filteredTableIds = newFilteredTables.map(
-										(t: ExportTableInfo) => `${t.database}-${t.name}`
-									);
-									const selectedFilteredCount = filteredTableIds.filter((id) =>
-										$form.selectedTables.includes(id)
-									).length;
-
-									if (selectedFilteredCount === newFilteredTables.length) {
-										// Désélectionner toutes les tables filtrées
-										$form.selectedTables = $form.selectedTables.filter(
-											(id) => !filteredTableIds.includes(id)
-										);
-									} else {
-										// Sélectionner toutes les tables visibles
-										const newSelection = [
-											...new Set([...$form.selectedTables, ...filteredTableIds])
-										];
-										$form.selectedTables = newSelection;
-									}
-								}}
-								class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+						<!-- Barre de recherche -->
+						<div class="max-w-md flex-1">
+							<Input
+								type="text"
+								bind:value={searchTerm}
+								placeholder="Rechercher une table, une vue..."
 							/>
-							<span>Sélectionner tout ({newFilteredTables.length})</span>
-						</label>
+						</div>
 
-						<Button
-							variant="blanc"
-							size="sm"
-							onclick={() => {
-								selectedType = 'all';
-								selectedDatabases = [];
-								selectedSchemas = [];
-							}}
-						>
-							🔄 Réinitialiser filtres
-						</Button>
+						<!-- Actions -->
+						<div class="flex items-center gap-4">
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="checkbox"
+									checked={newFilteredTables.length > 0 &&
+										newFilteredTables.every((table: ExportTableInfo) =>
+											$form.selectedTables.includes(`${table.database}-${table.name}`)
+										)}
+									onchange={() => {
+										const filteredTableIds = newFilteredTables.map(
+											(t: ExportTableInfo) => `${t.database}-${t.name}`
+										);
+										const selectedFilteredCount = filteredTableIds.filter((id) =>
+											$form.selectedTables.includes(id)
+										).length;
+
+										if (selectedFilteredCount === newFilteredTables.length) {
+											// Désélectionner toutes les tables filtrées
+											$form.selectedTables = $form.selectedTables.filter(
+												(id) => !filteredTableIds.includes(id)
+											);
+										} else {
+											// Sélectionner toutes les tables visibles
+											const newSelection = [
+												...new Set([...$form.selectedTables, ...filteredTableIds])
+											];
+											$form.selectedTables = newSelection;
+										}
+									}}
+									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span class="text-sm">Sélectionner tout ({newFilteredTables.length})</span>
+							</label>
+
+							<Button
+								variant="noir"
+								size="sm"
+								onclick={() => {
+									selectedType = 'all';
+									selectedDatabases = [];
+									selectedSchemas = [];
+								}}
+							>
+								<RefreshCcw class="mr-2 h-4 w-4" />
+								Réinitialiser
+							</Button>
+						</div>
 					</div>
 				</div>
 
@@ -1047,10 +1049,6 @@
 				</div>
 
 				<div class="flex justify-center gap-4">
-					<Button variant="noir" onclick={resetExport}>
-						<RotateCcw class="mr-2 h-4 w-4" />
-						Réinitialiser
-					</Button>
 					<Button variant="bleu" onclick={validateAndNext}>
 						Continuer
 						<CircleArrowRight class="ml-2 h-4 w-4" />
