@@ -130,19 +130,19 @@
 	$: uniqueSchemas = [...new Set((data?.tables || []).map((t: ExportTableInfo) => t.schema))];
 
 	// Logique dynamique pour validation des schémas (sans hardcoding)
-	$: availableSchemas = uniqueSchemas.filter(schema => {
+	$: availableSchemas = uniqueSchemas.filter((schema) => {
 		// Si aucune base sélectionnée, tous les schémas sont disponibles
 		if (selectedDatabases.length === 0) return true;
-		
+
 		// Un schéma est disponible si au moins une base sélectionnée le contient
-		return selectedDatabases.some(db => 
-			(data?.tables || []).some(t => t.database === db && t.schema === schema)
+		return selectedDatabases.some((db) =>
+			(data?.tables || []).some((t) => t.database === db && t.schema === schema)
 		);
 	});
 
 	// Auto-nettoyage des schémas non disponibles
 	$: if (selectedSchemas.length > 0) {
-		const validSchemas = selectedSchemas.filter(schema => availableSchemas.includes(schema));
+		const validSchemas = selectedSchemas.filter((schema) => availableSchemas.includes(schema));
 		if (validSchemas.length !== selectedSchemas.length) {
 			selectedSchemas = validSchemas;
 		}
@@ -151,17 +151,17 @@
 	// Compteurs pour les nouveaux groupes
 	$: newGroupCounts = {
 		// Type counts
-		all: (data?.tables || []).filter(t => {
+		all: (data?.tables || []).filter((t) => {
 			const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
 			const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(t.schema);
 			return matchesDB && matchesSchema;
 		}).length,
-		tables: (data?.tables || []).filter(t => {
+		tables: (data?.tables || []).filter((t) => {
 			const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
 			const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(t.schema);
 			return t.category === 'table' && matchesDB && matchesSchema;
 		}).length,
-		views: (data?.tables || []).filter(t => {
+		views: (data?.tables || []).filter((t) => {
 			const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
 			const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(t.schema);
 			return t.category === 'view' && matchesDB && matchesSchema;
@@ -170,9 +170,10 @@
 		...Object.fromEntries(
 			databases.map((db: DatabaseName) => [
 				db,
-				(data?.tables || []).filter(t => {
-					const matchesType = selectedType === 'all' || 
-						(selectedType === 'tables' && t.category === 'table') || 
+				(data?.tables || []).filter((t) => {
+					const matchesType =
+						selectedType === 'all' ||
+						(selectedType === 'tables' && t.category === 'table') ||
 						(selectedType === 'views' && t.category === 'view');
 					const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(t.schema);
 					return t.database === db && matchesType && matchesSchema;
@@ -183,11 +184,13 @@
 		...Object.fromEntries(
 			uniqueSchemas.map((schema: string) => [
 				`schema_${schema}`,
-				(data?.tables || []).filter(t => {
-					const matchesType = selectedType === 'all' || 
-						(selectedType === 'tables' && t.category === 'table') || 
+				(data?.tables || []).filter((t) => {
+					const matchesType =
+						selectedType === 'all' ||
+						(selectedType === 'tables' && t.category === 'table') ||
 						(selectedType === 'views' && t.category === 'view');
-					const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
+					const matchesDB =
+						selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
 					return t.schema === schema && matchesType && matchesDB;
 				}).length
 			])
@@ -327,7 +330,7 @@
 		),
 		// Compteurs croisés schéma-base
 		...Object.fromEntries(
-			uniqueSchemas.flatMap((schema: string) => 
+			uniqueSchemas.flatMap((schema: string) =>
 				databases.map((db: DatabaseName) => [
 					`schema_${schema}_${db}`,
 					(data?.tables || []).filter(
@@ -553,7 +556,9 @@
 
 	// Fonction pour basculer la sélection d'un schéma avec restriction de catégorie
 	function toggleSchemaSelectionWithCategory(schema: string, restrictToCategory: 'table' | 'view') {
-		let tablesInSchema = data.tables.filter((t: ExportTableInfo) => t.schema === schema && t.category === restrictToCategory);
+		let tablesInSchema = data.tables.filter(
+			(t: ExportTableInfo) => t.schema === schema && t.category === restrictToCategory
+		);
 		const tableIds = tablesInSchema.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
 
 		const isAllSelected = tableIds.every((tableId) => $form.selectedTables.includes(tableId));
@@ -568,7 +573,9 @@
 
 	// Fonction pour basculer la sélection d'un schéma avec restriction de base de données
 	function toggleSchemaSelectionWithDatabase(schema: string, restrictToDatabase: DatabaseName) {
-		let tablesInSchema = data.tables.filter((t: ExportTableInfo) => t.schema === schema && t.database === restrictToDatabase);
+		let tablesInSchema = data.tables.filter(
+			(t: ExportTableInfo) => t.schema === schema && t.database === restrictToDatabase
+		);
 		const tableIds = tablesInSchema.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
 
 		const isAllSelected = tableIds.every((tableId) => $form.selectedTables.includes(tableId));
@@ -588,7 +595,7 @@
 
 	function handleDatabaseToggle(database: DatabaseName) {
 		if (selectedDatabases.includes(database)) {
-			selectedDatabases = selectedDatabases.filter(db => db !== database);
+			selectedDatabases = selectedDatabases.filter((db) => db !== database);
 		} else {
 			selectedDatabases = [...selectedDatabases, database];
 		}
@@ -596,7 +603,7 @@
 
 	function handleSchemaToggle(schema: string) {
 		if (selectedSchemas.includes(schema)) {
-			selectedSchemas = selectedSchemas.filter(s => s !== schema);
+			selectedSchemas = selectedSchemas.filter((s) => s !== schema);
 		} else {
 			selectedSchemas = [...selectedSchemas, schema];
 		}
@@ -604,12 +611,14 @@
 
 	// Fonction pour obtenir les tables filtrées selon les nouveaux groupes
 	$: newFilteredTables = (data?.tables || []).filter((table: ExportTableInfo) => {
-		const matchesType = selectedType === 'all' || 
-			(selectedType === 'tables' && table.category === 'table') || 
+		const matchesType =
+			selectedType === 'all' ||
+			(selectedType === 'tables' && table.category === 'table') ||
 			(selectedType === 'views' && table.category === 'view');
 		const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(table.database);
 		const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(table.schema);
-		const matchesSearch = searchTerm === '' || 
+		const matchesSearch =
+			searchTerm === '' ||
 			table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			table.displayName.toLowerCase().includes(searchTerm.toLowerCase());
 		return matchesType && matchesDB && matchesSchema && matchesSearch;
@@ -776,9 +785,9 @@
 					</div>
 
 					<!-- Cards de filtres horizontales -->
-					<div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 						<!-- Card Type -->
-						<Card class="p-4 h-36">
+						<Card class="h-36 p-4">
 							<div class="mb-2 flex items-center gap-2">
 								<span class="text-lg">🎯</span>
 								<h3 class="font-semibold text-gray-900">Type</h3>
@@ -821,7 +830,7 @@
 						</Card>
 
 						<!-- Card Base de données -->
-						<Card class="p-4 h-36">
+						<Card class="h-36 p-4">
 							<div class="mb-2 flex items-center gap-2">
 								<span class="text-lg">🏢</span>
 								<h3 class="font-semibold text-gray-900">Base de données</h3>
@@ -836,14 +845,16 @@
 											onchange={() => handleDatabaseToggle(database)}
 											class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 										/>
-										<span class="text-sm">{dbInfo.label.split(' ')[1]} ({newGroupCounts[database]})</span>
+										<span class="text-sm"
+											>{dbInfo.label.split(' ')[1]} ({newGroupCounts[database]})</span
+										>
 									</label>
 								{/each}
 							</div>
 						</Card>
 
 						<!-- Card Schéma -->
-						<Card class="p-4 h-36">
+						<Card class="h-36 p-4">
 							<div class="mb-2 flex items-center gap-2">
 								<span class="text-lg">🔗</span>
 								<h3 class="font-semibold text-gray-900">Schéma</h3>
@@ -861,7 +872,8 @@
 											class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
 										/>
 										<span class="text-sm {!isAvailable ? 'text-gray-400' : ''}">
-											{schemaInfo.emoji} {schemaInfo.label} ({newGroupCounts[`schema_${schema}`]})
+											{schemaInfo.emoji}
+											{schemaInfo.label} ({newGroupCounts[`schema_${schema}`]})
 										</span>
 									</label>
 								{/each}
@@ -873,15 +885,6 @@
 					<div class="rounded-lg bg-blue-50 p-3 text-center">
 						<div class="text-sm text-blue-800">
 							📊 <span class="font-semibold">{newFilteredTables.length}</span> sources sélectionnées
-							{#if selectedType !== 'all'}
-								- {selectedType === 'tables' ? 'Tables' : 'Vues'} uniquement
-							{/if}
-							{#if selectedDatabases.length > 0}
-								- {selectedDatabases.map(db => db.toUpperCase()).join(' + ')}
-							{/if}
-							{#if selectedSchemas.length > 0}
-								- Schéma {selectedSchemas.map(s => getSchemaInfo(s).label).join(' + ')}
-							{/if}
 						</div>
 					</div>
 
@@ -895,17 +898,23 @@
 										$form.selectedTables.includes(`${table.database}-${table.name}`)
 									)}
 								onchange={() => {
-									const filteredTableIds = newFilteredTables.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
+									const filteredTableIds = newFilteredTables.map(
+										(t: ExportTableInfo) => `${t.database}-${t.name}`
+									);
 									const selectedFilteredCount = filteredTableIds.filter((id) =>
 										$form.selectedTables.includes(id)
 									).length;
 
 									if (selectedFilteredCount === newFilteredTables.length) {
 										// Désélectionner toutes les tables filtrées
-										$form.selectedTables = $form.selectedTables.filter((id) => !filteredTableIds.includes(id));
+										$form.selectedTables = $form.selectedTables.filter(
+											(id) => !filteredTableIds.includes(id)
+										);
 									} else {
 										// Sélectionner toutes les tables visibles
-										const newSelection = [...new Set([...$form.selectedTables, ...filteredTableIds])];
+										const newSelection = [
+											...new Set([...$form.selectedTables, ...filteredTableIds])
+										];
 										$form.selectedTables = newSelection;
 									}
 								}}
@@ -913,9 +922,9 @@
 							/>
 							<span>Sélectionner tout ({newFilteredTables.length})</span>
 						</label>
-						
-						<Button 
-							variant="blanc" 
+
+						<Button
+							variant="blanc"
 							size="sm"
 							onclick={() => {
 								selectedType = 'all';
@@ -982,7 +991,8 @@
 													{dbInfo.label}
 												</Badge>
 												<Badge variant={schemaInfo.variant}>
-													{schemaInfo.emoji} {schemaInfo.label}
+													{schemaInfo.emoji}
+													{schemaInfo.label}
 												</Badge>
 											</div>
 											<div class="text-sm text-gray-500">
@@ -1168,7 +1178,8 @@
 												{dbInfo.label}
 											</Badge>
 											<Badge variant={schemaInfo.variant}>
-												{schemaInfo.emoji} {schemaInfo.label}
+												{schemaInfo.emoji}
+												{schemaInfo.label}
 											</Badge>
 										{/if}
 									</div>

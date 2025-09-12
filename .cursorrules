@@ -9,17 +9,47 @@
 
 ## Commandes essentielles
 
+**Développement :**
+
 ```bash
 pnpm dev                  # Serveur de développement
 pnpm build && pnpm preview  # Build et aperçu
 pnpm lint && pnpm format  # Qualité du code
 pnpm check                # Vérification TypeScript
 pnpm test:unit            # Tests unitaires
-pnpm prisma:generate      # Génération client Prisma
+```
 
-# Scripts BDD-IA (Export base de données)
+**Prisma - CENOV (Production) :**
+
+```bash
+pnpm prisma:generate      # Génération client Prisma
+pnpm prisma:migrate       # Migrations base de données
+pnpm prisma:studio        # Interface Prisma Studio
+pnpm prisma:push          # Push schéma vers BDD
+pnpm prisma:pull          # Pull schéma depuis BDD
+```
+
+**Prisma - CENOV_DEV_EWAN (Développement) :**
+
+```bash
+pnpm prisma:generate-dev  # Génération client dev
+pnpm prisma:migrate-dev   # Migrations dev
+pnpm prisma:studio-dev    # Studio dev
+pnpm prisma:push-dev      # Push schéma dev
+pnpm prisma:pull-dev      # Pull schéma dev
+```
+
+**Clients Prisma :**
+
+```bash
+pnpm prisma:generate-all  # Génération des deux clients
+```
+
+**Scripts BDD-IA (Export base de données) :**
+
+```bash
 node scripts/BDD-IA/fetch-all-tables.mjs    # Export toutes les tables
-node scripts/BDD-IA/fetch-all-views.mjs     # Export toutes les vues  
+node scripts/BDD-IA/fetch-all-views.mjs     # Export toutes les vues
 node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 ```
 
@@ -38,6 +68,29 @@ node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 
 ## Base de données
 
+**Architecture double base :**
+
+- **CENOV Database** (`DATABASE_URL`) - Base principale production
+- **CENOV_DEV_EWAN Database** (`CENOV_DEV_DATABASE_URL`) - Base développement étendue
+
+**Clients Prisma :**
+
+```typescript
+// Base CENOV (principale) :
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+// Base CENOV_DEV_EWAN :
+import { PrismaClient as CenovDevPrismaClient } from '../../prisma/cenov_dev_ewan/generated';
+const cenovDevPrisma = new CenovDevPrismaClient();
+```
+
+**Métadonnées Prisma :**
+
+- Utiliser `src/lib/prisma-meta.ts` pour métadonnées centralisées
+- Éviter valeurs hardcodées, utiliser Prisma DMMF
+- Fonctions : `getDatabases()`, `getTableMetadata()`, `getAllTables()`
+
 - Système hiérarchique kits/pièces
 - Tables : kits, attributes, parts, documents
 - Vues matérialisées : v_categories, v_kit_carac (+ variantes \_dev)
@@ -47,7 +100,7 @@ node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 ## Conventions de code
 
 - camelCase pour fonctions et variables
-- Typage strict TypeScript
+- Typage strict TypeScript - **ÉVITER `any`, utiliser `unknown`**
 - Programmation fonctionnelle privilégiée
 - async/await plutôt que callbacks
 - Early returns pour éviter imbrication
@@ -56,6 +109,18 @@ node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 - Gestion erreurs explicite avec try/catch
 - Fonctions pures sans effets de bord
 - Principes DRY, KISS, YAGNI
+
+**TypeScript - Remplacements recommandés :**
+
+```typescript
+// ❌ Éviter
+const data: any[] = [];
+const previewData: Record<string, any[]> = {};
+
+// ✅ Utiliser
+const data: unknown[] = [];
+const previewData: Record<string, unknown[]> = {};
+```
 
 ## Authentification
 
@@ -81,9 +146,10 @@ node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 - Structure dans `src/lib/components/ui/`
 
 **Button variants :**
+
 - `bleu` (default) - Primary blue button
 - `vert` - Success/confirmation actions
-- `rouge` - Danger/delete actions  
+- `rouge` - Danger/delete actions
 - `jaune` - Warning actions
 - `noir` - Secondary dark actions
 - `blanc` - Alternative/outline style
@@ -92,12 +158,14 @@ node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 **Note:** `outline` variant n'existe pas - utiliser `blanc` pour style outline.
 
 **Badge variants :**
+
 - `default` (default) - Primary badge style
 - `bleu` - Blue informational badge
 - `vert` - Success/positive badge
 - `rouge` - Error/danger badge
 - `noir` - Secondary/neutral badge
 - `blanc` - Alternative/outline style badge
+- `orange` - Modification badge
 
 **Note:** `outline` variant n'existe pas pour badges - utiliser `blanc` pour style outline.
 
@@ -106,24 +174,27 @@ node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 **Setup :** svelte-sonner installé, Toaster configuré dans +layout.svelte
 
 **Usage correct :**
+
 ```typescript
 // ✅ Import correct
 import { toast } from 'svelte-sonner';
 import { Toaster } from 'svelte-sonner';
 
 // ✅ Usage
-toast.error('Message d\'erreur');
+toast.error("Message d'erreur");
 toast.success('Opération réussie');
 toast('Message info');
 ```
 
 **Erreurs à éviter :**
+
 ```typescript
 // ❌ N'JAMAIS importer depuis les composants UI
 import { toast } from '$lib/components/ui/sonner';
 ```
 
 **Timing :**
+
 - Toasts au chargement : `setTimeout(() => toast.error('msg'), 100)` dans `onMount`
 - Handlers événements : appel direct sans délai
 - Après navigation : fonctionne immédiatement
