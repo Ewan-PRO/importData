@@ -5,7 +5,6 @@
 	import { Card, Spinner } from 'flowbite-svelte';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
-	import * as Select from '$lib/components/ui/select';
 	import * as Table from '$lib/components/ui/table';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
@@ -776,10 +775,10 @@
 					<!-- Cards de filtres horizontales -->
 					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 						<!-- Card Type -->
-						<Card class="h-36 p-4">
+						<Card class="h-36 p-4 bg-blue-50 border-blue-200 shadow-none">
 							<div class="mb-2 flex items-center gap-2">
 								<span class="text-lg">🎯</span>
-								<h3 class="font-semibold text-gray-900">Type</h3>
+								<h3 class="font-semibold text-blue-700">Type</h3>
 							</div>
 							<div class="space-y-2">
 								<label class="flex cursor-pointer items-center space-x-2">
@@ -819,10 +818,10 @@
 						</Card>
 
 						<!-- Card Base de données -->
-						<Card class="h-36 p-4">
+						<Card class="h-36 p-4 bg-emerald-50 border-emerald-200 shadow-none">
 							<div class="mb-2 flex items-center gap-2">
 								<span class="text-lg">🏢</span>
-								<h3 class="font-semibold text-gray-900">Base de données</h3>
+								<h3 class="font-semibold text-emerald-700">Base de données</h3>
 							</div>
 							<div class="space-y-2">
 								{#each databases as database}
@@ -843,10 +842,10 @@
 						</Card>
 
 						<!-- Card Schéma -->
-						<Card class="h-36 p-4">
+						<Card class="h-36 p-4 bg-purple-50 border-purple-200 shadow-none">
 							<div class="mb-2 flex items-center gap-2">
 								<span class="text-lg">🔗</span>
-								<h3 class="font-semibold text-gray-900">Schéma</h3>
+								<h3 class="font-semibold text-purple-700">Schéma</h3>
 							</div>
 							<div class="space-y-2">
 								{#each uniqueSchemas as schema}
@@ -874,7 +873,7 @@
 					<div class="grid grid-cols-1 items-center gap-6 sm:grid-cols-2 lg:grid-cols-3">
 						<!-- Résumé de sélection -->
 						<div
-							class="flex min-h-[42px] items-center justify-center rounded-lg bg-blue-50 px-6 py-3 text-center"
+							class="flex min-h-[42px] items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-6 py-3 text-center"
 						>
 							<div class="text-sm text-blue-800">
 								📊 <span class="font-semibold">{newFilteredTables.length}</span> sources sélectionnées
@@ -887,6 +886,7 @@
 								type="text"
 								bind:value={searchTerm}
 								placeholder="Rechercher une table, une vue..."
+								class="min-h-[42px]"
 							/>
 						</div>
 
