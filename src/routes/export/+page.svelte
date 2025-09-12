@@ -89,6 +89,11 @@
 	let previewData: Record<string, unknown[]> = {};
 	let exportResult: ExportResult | null = null;
 
+	// Nouveaux états pour groupes exclusifs
+	let selectedType: 'all' | 'tables' | 'views' = 'all';
+	let selectedDatabases: DatabaseName[] = [];
+	let selectedSchemas: string[] = [];
+
 	// Configuration d'export sauvegardée pour persistance entre aperçu et export
 	let savedExportConfig: any = null;
 
@@ -123,6 +128,71 @@
 
 	// Obtenir les schémas uniques
 	$: uniqueSchemas = [...new Set((data?.tables || []).map((t: ExportTableInfo) => t.schema))];
+
+	// Logique dynamique pour validation des schémas (sans hardcoding)
+	$: availableSchemas = uniqueSchemas.filter(schema => {
+		// Si aucune base sélectionnée, tous les schémas sont disponibles
+		if (selectedDatabases.length === 0) return true;
+		
+		// Un schéma est disponible si au moins une base sélectionnée le contient
+		return selectedDatabases.some(db => 
+			(data?.tables || []).some(t => t.database === db && t.schema === schema)
+		);
+	});
+
+	// Auto-nettoyage des schémas non disponibles
+	$: if (selectedSchemas.length > 0) {
+		const validSchemas = selectedSchemas.filter(schema => availableSchemas.includes(schema));
+		if (validSchemas.length !== selectedSchemas.length) {
+			selectedSchemas = validSchemas;
+		}
+	}
+
+	// Compteurs pour les nouveaux groupes
+	$: newGroupCounts = {
+		// Type counts
+		all: (data?.tables || []).filter(t => {
+			const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
+			const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(t.schema);
+			return matchesDB && matchesSchema;
+		}).length,
+		tables: (data?.tables || []).filter(t => {
+			const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
+			const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(t.schema);
+			return t.category === 'table' && matchesDB && matchesSchema;
+		}).length,
+		views: (data?.tables || []).filter(t => {
+			const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
+			const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(t.schema);
+			return t.category === 'view' && matchesDB && matchesSchema;
+		}).length,
+		// Database counts
+		...Object.fromEntries(
+			databases.map((db: DatabaseName) => [
+				db,
+				(data?.tables || []).filter(t => {
+					const matchesType = selectedType === 'all' || 
+						(selectedType === 'tables' && t.category === 'table') || 
+						(selectedType === 'views' && t.category === 'view');
+					const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(t.schema);
+					return t.database === db && matchesType && matchesSchema;
+				}).length
+			])
+		),
+		// Schema counts
+		...Object.fromEntries(
+			uniqueSchemas.map((schema: string) => [
+				`schema_${schema}`,
+				(data?.tables || []).filter(t => {
+					const matchesType = selectedType === 'all' || 
+						(selectedType === 'tables' && t.category === 'table') || 
+						(selectedType === 'views' && t.category === 'view');
+					const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
+					return t.schema === schema && matchesType && matchesDB;
+				}).length
+			])
+		)
+	} as Record<string, number>;
 
 	// Fonction pour obtenir l'icône d'un schéma
 	function getSchemaIcon(schema: string) {
@@ -511,6 +581,40 @@
 		}
 	}
 
+	// Nouvelles fonctions pour les groupes
+	function handleTypeChange(type: 'all' | 'tables' | 'views') {
+		selectedType = type;
+	}
+
+	function handleDatabaseToggle(database: DatabaseName) {
+		if (selectedDatabases.includes(database)) {
+			selectedDatabases = selectedDatabases.filter(db => db !== database);
+		} else {
+			selectedDatabases = [...selectedDatabases, database];
+		}
+	}
+
+	function handleSchemaToggle(schema: string) {
+		if (selectedSchemas.includes(schema)) {
+			selectedSchemas = selectedSchemas.filter(s => s !== schema);
+		} else {
+			selectedSchemas = [...selectedSchemas, schema];
+		}
+	}
+
+	// Fonction pour obtenir les tables filtrées selon les nouveaux groupes
+	$: newFilteredTables = (data?.tables || []).filter((table: ExportTableInfo) => {
+		const matchesType = selectedType === 'all' || 
+			(selectedType === 'tables' && table.category === 'table') || 
+			(selectedType === 'views' && table.category === 'view');
+		const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(table.database);
+		const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(table.schema);
+		const matchesSearch = searchTerm === '' || 
+			table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			table.displayName.toLowerCase().includes(searchTerm.toLowerCase());
+		return matchesType && matchesDB && matchesSchema && matchesSearch;
+	});
+
 	// Formatage des nombres
 	function formatNumber(num: number): string {
 		return new Intl.NumberFormat('fr-FR').format(num);
@@ -640,7 +744,7 @@
 				<div class="flex items-center justify-between">
 					<div>
 						<div class="text-2xl font-bold text-purple-600">
-							{filteredTables.filter((table) =>
+							{newFilteredTables.filter((table) =>
 								$form.selectedTables.includes(`${table.database}-${table.name}`)
 							).length}
 						</div>
@@ -658,333 +762,176 @@
 			<div class="mb-6">
 				<h2 class="mb-4 text-xl font-bold text-black">Sélection des sources à exporter :</h2>
 
-				<!-- Filtres -->
+				<!-- Filtres avec Cards Flowbite -->
 				<div class="mb-6 space-y-4">
-					<div class="flex flex-wrap gap-4">
-						<!-- Recherche -->
-						<div class="min-w-72 flex-[4]">
+					<!-- Recherche -->
+					<div class="flex justify-center">
+						<div class="w-full max-w-md">
 							<Input
 								type="text"
 								bind:value={searchTerm}
 								placeholder="Rechercher une table, une vue..."
 							/>
 						</div>
+					</div>
 
-						<!-- Sélection par catégorie -->
-						<Select.Select type="single" bind:value={selectedCategory}>
-							<Select.SelectTrigger class="min-w-28 flex-1">
-								<span class="flex items-center gap-2">
-									<svelte:component this={categories.find((c) => c.value === selectedCategory)?.icon || Funnel} class="h-4 w-4" />
-									{categories.find((c) => c.value === selectedCategory)?.label || 'Toutes'}
-								</span>
-							</Select.SelectTrigger>
-							<Select.SelectContent>
-								{#each categories as category (category.value)}
-									<Select.SelectItem value={category.value}>
-										<span class="flex items-center gap-2">
-											<svelte:component this={category.icon} class="h-4 w-4" />
-											{category.label} ({tableCounts[category.value] || 0})
-										</span>
-									</Select.SelectItem>
+					<!-- Cards de filtres horizontales -->
+					<div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+						<!-- Card Type -->
+						<Card class="p-4 h-36">
+							<div class="mb-2 flex items-center gap-2">
+								<span class="text-lg">🎯</span>
+								<h3 class="font-semibold text-gray-900">Type</h3>
+							</div>
+							<div class="space-y-2">
+								<label class="flex cursor-pointer items-center space-x-2">
+									<input
+										type="radio"
+										name="type"
+										value="all"
+										bind:group={selectedType}
+										onchange={() => handleTypeChange('all')}
+										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
+									<span class="text-sm">Tout ({newGroupCounts.all})</span>
+								</label>
+								<label class="flex cursor-pointer items-center space-x-2">
+									<input
+										type="radio"
+										name="type"
+										value="tables"
+										bind:group={selectedType}
+										onchange={() => handleTypeChange('tables')}
+										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
+									<span class="text-sm">Tables ({newGroupCounts.tables})</span>
+								</label>
+								<label class="flex cursor-pointer items-center space-x-2">
+									<input
+										type="radio"
+										name="type"
+										value="views"
+										bind:group={selectedType}
+										onchange={() => handleTypeChange('views')}
+										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
+									<span class="text-sm">Vues ({newGroupCounts.views})</span>
+								</label>
+							</div>
+						</Card>
+
+						<!-- Card Base de données -->
+						<Card class="p-4 h-36">
+							<div class="mb-2 flex items-center gap-2">
+								<span class="text-lg">🏢</span>
+								<h3 class="font-semibold text-gray-900">Base de données</h3>
+							</div>
+							<div class="space-y-2">
+								{#each databases as database}
+									{@const dbInfo = getDatabaseBadgeInfo(database)}
+									<label class="flex cursor-pointer items-center space-x-2">
+										<input
+											type="checkbox"
+											checked={selectedDatabases.includes(database)}
+											onchange={() => handleDatabaseToggle(database)}
+											class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+										/>
+										<span class="text-sm">{dbInfo.label.split(' ')[1]} ({newGroupCounts[database]})</span>
+									</label>
 								{/each}
-							</Select.SelectContent>
-						</Select.Select>
+							</div>
+						</Card>
+
+						<!-- Card Schéma -->
+						<Card class="p-4 h-36">
+							<div class="mb-2 flex items-center gap-2">
+								<span class="text-lg">🔗</span>
+								<h3 class="font-semibold text-gray-900">Schéma</h3>
+							</div>
+							<div class="space-y-2">
+								{#each uniqueSchemas as schema}
+									{@const schemaInfo = getSchemaInfo(schema)}
+									{@const isAvailable = availableSchemas.includes(schema)}
+									<label class="flex cursor-pointer items-center space-x-2">
+										<input
+											type="checkbox"
+											checked={selectedSchemas.includes(schema)}
+											disabled={!isAvailable}
+											onchange={() => handleSchemaToggle(schema)}
+											class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+										/>
+										<span class="text-sm {!isAvailable ? 'text-gray-400' : ''}">
+											{schemaInfo.emoji} {schemaInfo.label} ({newGroupCounts[`schema_${schema}`]})
+										</span>
+									</label>
+								{/each}
+							</div>
+						</Card>
+					</div>
+
+					<!-- Résumé de sélection -->
+					<div class="rounded-lg bg-blue-50 p-3 text-center">
+						<div class="text-sm text-blue-800">
+							📊 <span class="font-semibold">{newFilteredTables.length}</span> sources sélectionnées
+							{#if selectedType !== 'all'}
+								- {selectedType === 'tables' ? 'Tables' : 'Vues'} uniquement
+							{/if}
+							{#if selectedDatabases.length > 0}
+								- {selectedDatabases.map(db => db.toUpperCase()).join(' + ')}
+							{/if}
+							{#if selectedSchemas.length > 0}
+								- Schéma {selectedSchemas.map(s => getSchemaInfo(s).label).join(' + ')}
+							{/if}
+						</div>
 					</div>
 
 					<!-- Actions rapides -->
-					<div class="flex flex-wrap gap-4">
+					<div class="flex justify-center gap-4">
 						<label class="flex cursor-pointer items-center space-x-2">
 							<input
 								type="checkbox"
-								checked={filteredTables.length > 0 &&
-									filteredTables.every((table: ExportTableInfo) =>
+								checked={newFilteredTables.length > 0 &&
+									newFilteredTables.every((table: ExportTableInfo) =>
 										$form.selectedTables.includes(`${table.database}-${table.name}`)
 									)}
-								onchange={toggleAllTables}
+								onchange={() => {
+									const filteredTableIds = newFilteredTables.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
+									const selectedFilteredCount = filteredTableIds.filter((id) =>
+										$form.selectedTables.includes(id)
+									).length;
+
+									if (selectedFilteredCount === newFilteredTables.length) {
+										// Désélectionner toutes les tables filtrées
+										$form.selectedTables = $form.selectedTables.filter((id) => !filteredTableIds.includes(id));
+									} else {
+										// Sélectionner toutes les tables visibles
+										const newSelection = [...new Set([...$form.selectedTables, ...filteredTableIds])];
+										$form.selectedTables = newSelection;
+									}
+								}}
 								class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 							/>
-							<span>Sélectionner tout ({filteredTables.length})</span>
+							<span>Sélectionner tout ({newFilteredTables.length})</span>
 						</label>
-
-						<!-- Cases spécifiques selon le filtre sélectionné -->
-						{#if selectedCategory === 'all'}
-							<!-- Quand 'Toutes' est sélectionné : afficher Tables, Vues, Cenov, Cenov_dev_ewan -->
-							<label class="flex cursor-pointer items-center space-x-2">
-								<input
-									type="checkbox"
-									checked={tableCounts.tables > 0 &&
-										data.tables
-											.filter((t: ExportTableInfo) => t.category === 'table')
-											.every((table: ExportTableInfo) =>
-												$form.selectedTables.includes(`${table.database}-${table.name}`)
-											)}
-									onchange={() => toggleCategorySelection('table')}
-									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-								/>
-								<span>Tables ({tableCounts.tables})</span>
-							</label>
-
-							<label class="flex cursor-pointer items-center space-x-2">
-								<input
-									type="checkbox"
-									checked={tableCounts.views > 0 &&
-										data.tables
-											.filter((t: ExportTableInfo) => t.category === 'view')
-											.every((table: ExportTableInfo) =>
-												$form.selectedTables.includes(`${table.database}-${table.name}`)
-											)}
-									onchange={() => toggleCategorySelection('view')}
-									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-								/>
-								<span>Vues ({tableCounts.views})</span>
-							</label>
-
-							<!-- Checkboxes dynamiques pour chaque BDD -->
-							{#each databases as database}
-								{@const dbInfo = getDatabaseBadgeInfo(database)}
-								<label class="flex cursor-pointer items-center space-x-2">
-									<input
-										type="checkbox"
-										checked={tableCounts[database] > 0 &&
-											data.tables
-												.filter((t: ExportTableInfo) => t.database === database)
-												.every((table: ExportTableInfo) =>
-													$form.selectedTables.includes(`${table.database}-${table.name}`)
-												)}
-										onchange={() => toggleDatabaseSelection(database)}
-										class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-									/>
-									<span>{dbInfo.label} ({tableCounts[database]})</span>
-								</label>
-							{/each}
-
-							<!-- Checkboxes dynamiques pour chaque schéma -->
-							{#each uniqueSchemas as schema}
-								{@const schemaInfo = getSchemaInfo(schema)}
-								<label class="flex cursor-pointer items-center space-x-2">
-									<input
-										type="checkbox"
-										checked={tableCounts[`schema_${schema}`] > 0 &&
-											data.tables
-												.filter((t: ExportTableInfo) => t.schema === schema)
-												.every((table: ExportTableInfo) =>
-													$form.selectedTables.includes(`${table.database}-${table.name}`)
-												)}
-										onchange={() => toggleSchemaSelection(schema)}
-										class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-									/>
-									<span>{schemaInfo.emoji} {schemaInfo.label} ({tableCounts[`schema_${schema}`]})</span>
-								</label>
-							{/each}
-						{:else if selectedCategory === 'tables' || selectedCategory === 'views'}
-							<!-- Quand 'Tables' ou 'Vues' est sélectionné : afficher toutes les BDD -->
-							{#each databases as database}
-								{@const dbInfo = getDatabaseBadgeInfo(database)}
-								{@const crossCountKey = `${selectedCategory}_${database}`}
-								<label class="flex cursor-pointer items-center space-x-2">
-									<input
-										type="checkbox"
-										checked={tableCounts[crossCountKey] > 0 &&
-											data.tables
-												.filter(
-													(t: ExportTableInfo) =>
-														t.database === database &&
-														t.category === (selectedCategory === 'tables' ? 'table' : 'view')
-												)
-												.every((table: ExportTableInfo) =>
-													$form.selectedTables.includes(`${table.database}-${table.name}`)
-												)}
-										onchange={() =>
-											toggleDatabaseSelection(
-												database,
-												selectedCategory === 'tables' ? 'table' : 'view'
-											)}
-										class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-									/>
-									<span>{dbInfo.label} ({tableCounts[crossCountKey]})</span>
-								</label>
-							{/each}
-
-							<!-- Checkboxes pour les schémas quand Tables/Vues sélectionné -->
-							{#each uniqueSchemas as schema}
-								{@const schemaInfo = getSchemaInfo(schema)}
-								{@const schemaCountKey = `schema_${schema}_${selectedCategory}`}
-								<label class="flex cursor-pointer items-center space-x-2">
-									<input
-										type="checkbox"
-										checked={tableCounts[schemaCountKey] > 0 &&
-											data.tables
-												.filter(
-													(t: ExportTableInfo) =>
-														t.schema === schema &&
-														t.category === (selectedCategory === 'tables' ? 'table' : 'view')
-												)
-												.every((table: ExportTableInfo) =>
-													$form.selectedTables.includes(`${table.database}-${table.name}`)
-												)}
-										onchange={() =>
-											toggleSchemaSelectionWithCategory(
-												schema,
-												selectedCategory === 'tables' ? 'table' : 'view'
-											)}
-										class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-									/>
-									<span>{schemaInfo.emoji} {schemaInfo.label} ({tableCounts[schemaCountKey]})</span>
-								</label>
-							{/each}
-						{:else if databases.includes(selectedCategory as DatabaseName)}
-							<!-- Quand une BDD spécifique est sélectionnée : afficher Tables, Vues -->
-							{@const currentDb = selectedCategory as DatabaseName}
-							<label class="flex cursor-pointer items-center space-x-2">
-								<input
-									type="checkbox"
-									checked={tableCounts[`tables_${currentDb}`] > 0 &&
-										data.tables
-											.filter(
-												(t: ExportTableInfo) => t.category === 'table' && t.database === currentDb
-											)
-											.every((table: ExportTableInfo) =>
-												$form.selectedTables.includes(`${table.database}-${table.name}`)
-											)}
-									onchange={() => toggleCategorySelection('table', currentDb)}
-									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-								/>
-								<span>Tables ({tableCounts[`tables_${currentDb}`]})</span>
-							</label>
-
-							<label class="flex cursor-pointer items-center space-x-2">
-								<input
-									type="checkbox"
-									checked={tableCounts[`views_${currentDb}`] > 0 &&
-										data.tables
-											.filter(
-												(t: ExportTableInfo) => t.category === 'view' && t.database === currentDb
-											)
-											.every((table: ExportTableInfo) =>
-												$form.selectedTables.includes(`${table.database}-${table.name}`)
-											)}
-									onchange={() => toggleCategorySelection('view', currentDb)}
-									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-								/>
-								<span>Vues ({tableCounts[`views_${currentDb}`]})</span>
-							</label>
-
-							<!-- Checkboxes pour les schémas seulement pour cenov_dev_ewan -->
-							{#if currentDb === 'cenov_dev_ewan'}
-								{#each uniqueSchemas as schema}
-									{@const schemaInfo = getSchemaInfo(schema)}
-									{@const schemaDbCountKey = `schema_${schema}_${currentDb}`}
-									<label class="flex cursor-pointer items-center space-x-2">
-										<input
-											type="checkbox"
-											checked={tableCounts[schemaDbCountKey] > 0 &&
-												data.tables
-													.filter(
-														(t: ExportTableInfo) => t.schema === schema && t.database === currentDb
-													)
-													.every((table: ExportTableInfo) =>
-														$form.selectedTables.includes(`${table.database}-${table.name}`)
-													)}
-											onchange={() => toggleSchemaSelectionWithDatabase(schema, currentDb)}
-											class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-										/>
-										<span>{schemaInfo.emoji} {schemaInfo.label} ({tableCounts[schemaDbCountKey]})</span>
-									</label>
-								{/each}
-							{/if}
-						{:else if selectedCategory.startsWith('schema_')}
-							<!-- Quand un schéma spécifique est sélectionné -->
-							{@const currentSchema = selectedCategory.replace('schema_', '')}
-							{@const schemaInfo = getSchemaInfo(currentSchema)}
-							
-							<!-- Cases pour Tables et Vues -->
-							<label class="flex cursor-pointer items-center space-x-2">
-								<input
-									type="checkbox"
-									checked={tableCounts[`schema_${currentSchema}_tables`] > 0 &&
-										data.tables
-											.filter(
-												(t: ExportTableInfo) => t.schema === currentSchema && t.category === 'table'
-											)
-											.every((table: ExportTableInfo) =>
-												$form.selectedTables.includes(`${table.database}-${table.name}`)
-											)}
-									onchange={() => toggleSchemaSelectionWithCategory(currentSchema, 'table')}
-									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-								/>
-								<span>Tables ({tableCounts[`schema_${currentSchema}_tables`]})</span>
-							</label>
-
-							<label class="flex cursor-pointer items-center space-x-2">
-								<input
-									type="checkbox"
-									checked={tableCounts[`schema_${currentSchema}_views`] > 0 &&
-										data.tables
-											.filter(
-												(t: ExportTableInfo) => t.schema === currentSchema && t.category === 'view'
-											)
-											.every((table: ExportTableInfo) =>
-												$form.selectedTables.includes(`${table.database}-${table.name}`)
-											)}
-									onchange={() => toggleSchemaSelectionWithCategory(currentSchema, 'view')}
-									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-								/>
-								<span>Vues ({tableCounts[`schema_${currentSchema}_views`]})</span>
-							</label>
-
-							<!-- Cases pour les bases de données selon le schéma -->
-							{#if currentSchema === 'public'}
-								<!-- Pour Public : cenov + cenov_dev_ewan -->
-								{#each databases as database}
-									{@const dbInfo = getDatabaseBadgeInfo(database)}
-									{@const schemaDbCountKey = `schema_${currentSchema}_${database}`}
-									<label class="flex cursor-pointer items-center space-x-2">
-										<input
-											type="checkbox"
-											checked={tableCounts[schemaDbCountKey] > 0 &&
-												data.tables
-													.filter(
-														(t: ExportTableInfo) => t.schema === currentSchema && t.database === database
-													)
-													.every((table: ExportTableInfo) =>
-														$form.selectedTables.includes(`${table.database}-${table.name}`)
-													)}
-											onchange={() => toggleSchemaSelectionWithDatabase(currentSchema, database)}
-											class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-										/>
-										<span>{dbInfo.label} ({tableCounts[schemaDbCountKey]})</span>
-									</label>
-								{/each}
-							{:else if currentSchema === 'produit'}
-								<!-- Pour Produit : seulement cenov_dev_ewan -->
-								{@const database = 'cenov_dev_ewan'}
-								{@const dbInfo = getDatabaseBadgeInfo(database)}
-								{@const schemaDbCountKey = `schema_${currentSchema}_${database}`}
-								<label class="flex cursor-pointer items-center space-x-2">
-									<input
-										type="checkbox"
-										checked={tableCounts[schemaDbCountKey] > 0 &&
-											data.tables
-												.filter(
-													(t: ExportTableInfo) => t.schema === currentSchema && t.database === database
-												)
-												.every((table: ExportTableInfo) =>
-													$form.selectedTables.includes(`${table.database}-${table.name}`)
-												)}
-										onchange={() => toggleSchemaSelectionWithDatabase(currentSchema, database)}
-										class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-									/>
-									<span>{dbInfo.label} ({tableCounts[schemaDbCountKey]})</span>
-								</label>
-							{/if}
-						{/if}
+						
+						<Button 
+							variant="blanc" 
+							size="sm"
+							onclick={() => {
+								selectedType = 'all';
+								selectedDatabases = [];
+								selectedSchemas = [];
+							}}
+						>
+							🔄 Réinitialiser filtres
+						</Button>
 					</div>
 				</div>
 
 				<!-- Liste des tables -->
 				<div class="mb-6 max-h-96 overflow-y-auto">
 					<div class="grid gap-3">
-						{#each filteredTables as table (`${table.database}-${table.name}`)}
+						{#each newFilteredTables as table (`${table.database}-${table.name}`)}
 							{@const dbInfo = getDatabaseBadgeInfo(table.database)}
 							{@const schemaInfo = getSchemaInfo(table.schema)}
 							<label
