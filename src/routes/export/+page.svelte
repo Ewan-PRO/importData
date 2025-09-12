@@ -871,16 +871,16 @@
 					</div>
 
 					<!-- Recherche et actions -->
-					<div class="flex items-center justify-between gap-4">
+					<div class="grid grid-cols-1 items-center gap-4 sm:grid-cols-2 lg:grid-cols-3">
 						<!-- Résumé de sélection -->
-						<div class="rounded-lg bg-blue-50 px-4 py-2 text-center">
+						<div class="flex min-h-[42px] items-center rounded-lg bg-blue-50 px-6 py-3 text-center">
 							<div class="text-sm text-blue-800">
 								📊 <span class="font-semibold">{newFilteredTables.length}</span> sources sélectionnées
 							</div>
 						</div>
 
-						<!-- Barre de recherche -->
-						<div class="max-w-md flex-1">
+						<!-- Barre de recherche (alignée sous card du milieu) -->
+						<div>
 							<Input
 								type="text"
 								bind:value={searchTerm}
@@ -889,8 +889,8 @@
 						</div>
 
 						<!-- Actions -->
-						<div class="flex items-center gap-4">
-							<label class="flex cursor-pointer items-center space-x-2">
+						<div class="flex items-center justify-end gap-4">
+							<label class="flex min-h-[42px] cursor-pointer items-center space-x-2">
 								<input
 									type="checkbox"
 									checked={newFilteredTables.length > 0 &&
@@ -925,7 +925,6 @@
 
 							<Button
 								variant="noir"
-								size="sm"
 								onclick={() => {
 									selectedType = 'all';
 									selectedDatabases = [];
