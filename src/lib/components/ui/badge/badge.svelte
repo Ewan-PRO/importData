@@ -13,7 +13,10 @@
 				blanc:
 					'bg-white text-gray-800 border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600',
 				orange:
-					'bg-orange-100 text-orange-800 border-orange-400 dark:bg-gray-700 dark:text-orange-400'
+					'bg-orange-100 text-orange-800 border-orange-400 dark:bg-gray-700 dark:text-orange-400',
+				cyan: 'bg-cyan-100 text-cyan-800 border-cyan-400 dark:bg-gray-700 dark:text-cyan-400',
+				purple:
+					'bg-purple-100 text-purple-800 border-purple-400 dark:bg-gray-700 dark:text-purple-400'
 			}
 		},
 		defaultVariants: {

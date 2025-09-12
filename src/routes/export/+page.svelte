@@ -257,7 +257,7 @@
 
 	// Couleur et contenu des badges selon la base de données - DYNAMIQUE
 	function getDatabaseBadgeInfo(database: string): {
-		variant: 'orange' | 'bleu' | 'noir';
+		variant: 'bleu' | 'noir' | 'orange';
 		label: string;
 	} {
 		const isDev = database.includes('dev');

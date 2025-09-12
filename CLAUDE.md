@@ -159,7 +159,25 @@ const products = await cenovDevPrisma.produit.findMany(); // CENOV_DEV_EWAN data
 - `src/routes/` - SvelteKit pages (categories, kits, import, products)
 - `src/lib/components/` - Reusable Svelte components including UI library
 - `src/lib/schemas/dbSchema.ts` - Zod validation schemas for all database entities
+- `src/lib/prisma-meta.ts` - Centralized Prisma metadata utilities
 - `prisma/cenov/schema.prisma` - Main database schema
+
+### Prisma Meta Utilities
+
+**`src/lib/prisma-meta.ts`** provides centralized database metadata functions using Prisma DMMF (Data Model Meta Format):
+
+**Core Functions:**
+- `getDatabases()` - Access to both database clients and metadata
+- `getTableMetadata(database, tableName)` - Schema detection via DMMF
+- `getAllTables(database)` - Tables with automatic schema detection
+- `getAllDatabaseTables()` - Combined tables from both databases
+
+**Best Practices:**
+- **Avoid hardcoding** - Use Prisma DMMF metadata instead of hardcoded values
+- Schema detection: Use `metadata.schema` from `getTableMetadata()` 
+- Table lists: Use `getAllTables()` instead of hardcoded table names
+- Database info: Use DMMF properties instead of string matching
+- Dynamic detection preferred over static lists for maintainability
 
 ### Prisma Workflow
 

@@ -27,7 +27,7 @@ let Prisma: PrismaModule['Prisma'] | undefined;
 let PrismaClient: PrismaModule['PrismaClient'] | undefined;
 let prismaModule: PrismaModule | undefined;
 
-// Import côté serveur uniquement (sans top-level await)
+// Import côté serveur uniquement
 async function initializePrisma() {
 	if (!browser && !prismaModule) {
 		const imported = (await import('@prisma/client')) as unknown as PrismaModule;
@@ -251,10 +251,9 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 	return [...cenovTables, ...cenovDevTables];
 }
 
-// Obtenir tous les noms de bases de données (côté client: version statique)
+// Obtenir tous les noms de bases de données
 export async function getAllDatabaseNames(): Promise<DatabaseName[]> {
 	if (browser) {
-		// Côté client: retourner la liste statique des bases de données
 		return ['cenov', 'cenov_dev_ewan'];
 	}
 
