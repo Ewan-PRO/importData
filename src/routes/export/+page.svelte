@@ -746,27 +746,6 @@
 
 					<!-- Recherche et actions -->
 					<div class="grid grid-cols-1 items-center gap-6 sm:grid-cols-2 lg:grid-cols-3">
-						<!-- Résumé de sélection -->
-						<div
-							class="flex min-h-[42px] items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-6 py-3 text-center"
-						>
-							<div class="flex items-center justify-center gap-1 text-sm text-blue-800">
-								<FileType class="h-4 w-4" />
-								<span class="font-semibold">{filteredTables.length}</span> sources filtrées
-							</div>
-						</div>
-
-						<!-- Barre de recherche (alignée sous card du milieu) -->
-						<div class="relative">
-							<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-							<Input
-								type="text"
-								bind:value={searchTerm}
-								placeholder="Rechercher une table, une vue..."
-								class="min-h-[42px] pl-9"
-							/>
-						</div>
-
 						<!-- Actions -->
 						<div class="flex items-center justify-center gap-4">
 							<label class="flex min-h-[42px] cursor-pointer items-center space-x-2">
@@ -813,6 +792,27 @@
 								<RefreshCcw class="mr-2 h-4 w-4" />
 								Réinitialiser
 							</Button>
+						</div>
+
+						<!-- Barre de recherche (alignée sous card du milieu) -->
+						<div class="relative">
+							<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+							<Input
+								type="text"
+								bind:value={searchTerm}
+								placeholder="Rechercher une table, une vue..."
+								class="min-h-[42px] pl-9"
+							/>
+						</div>
+
+						<!-- Résumé de sélection -->
+						<div
+							class="flex min-h-[42px] items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-6 py-3 text-center"
+						>
+							<div class="flex items-center justify-center gap-1 text-sm text-purple-800">
+								<FileType class="h-4 w-4" />
+								<span class="font-semibold">{filteredTables.length}</span> sources filtrées
+							</div>
 						</div>
 					</div>
 				</div>
