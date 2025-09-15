@@ -59,6 +59,7 @@
 				if ('preview' in form.data) {
 					console.log("👀 [CLIENT] Données d'aperçu reçues");
 					previewData = form.data.preview as Record<string, unknown[]>;
+					previewConfig = (form.data as any).previewConfig as { includeHeaders: boolean } | null;
 					step = 3; // Étape d'aperçu
 				}
 			}
@@ -75,6 +76,7 @@
 				if ('preview' in result.data) {
 					console.log('👀 [CLIENT] Aperçu dans onResult');
 					previewData = result.data.preview as Record<string, unknown[]>;
+					previewConfig = (result.data as any).previewConfig as { includeHeaders: boolean } | null;
 					step = 3;
 				}
 			}
@@ -89,6 +91,7 @@
 	let step = 1; // 1: Configuration, 2: Paramètres, 3: Aperçu, 4: Export
 	let searchTerm = '';
 	let previewData: Record<string, unknown[]> = {};
+	let previewConfig: { includeHeaders: boolean } | null = null;
 	let exportResult: ExportResult | null = null;
 
 	// États pour les filtres (source unique de vérité)
@@ -250,7 +253,8 @@
 			console.log('📋 [CLIENT] Configuration actuelle du formulaire:', $form);
 
 			const exportData = {
-				...$form
+				...$form,
+				...(previewConfig && { includeHeaders: previewConfig.includeHeaders })
 			};
 
 			const response = await fetch('/export/api', {
@@ -479,6 +483,7 @@
 	function resetExport() {
 		step = 1;
 		previewData = {};
+		previewConfig = null;
 		exportResult = null;
 		savedExportConfig = null;
 		reset();
@@ -1088,7 +1093,7 @@
 								{#if rows.length > 0}
 									<div class="overflow-x-auto">
 										<Table.Root variant="striped">
-											{#if $form.includeHeaders}
+											{#if previewConfig?.includeHeaders ?? $form.includeHeaders}
 												<Table.Header>
 													<Table.Row variant="striped">
 														{#each Object.keys(rows[0] as Record<string, unknown>) as column}

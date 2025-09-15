@@ -288,7 +288,7 @@ export const actions: Actions = {
 				}
 			}
 
-			return { form, success: true, preview: previewData };
+			return { form, success: true, preview: previewData, previewConfig: { includeHeaders: form.data.includeHeaders } };
 		} catch {
 			return fail(500, {
 				form,
