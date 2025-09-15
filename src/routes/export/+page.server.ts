@@ -222,10 +222,29 @@ export const actions: Actions = {
 						`🔍 [PREVIEW] Table: ${tableName}, Schema: ${schema}, Real name: ${realTableName}, Qualified: ${qualifiedTableName}`
 					);
 
+					// Détection des colonnes binaires et construction de la requête SELECT
+					const columns = metadata?.fields || [];
+					const binaryColumns = columns
+						.filter(col => col.type.toLowerCase().includes('byte') || col.name.includes('binary') || col.name.includes('blob'))
+						.map(col => col.name);
+
+					// Construction des sélections avec traitement spécial pour les colonnes binaires
+					let selectColumns = '*';
+					if (binaryColumns.length > 0) {
+						const columnSelects = columns.map(col => {
+							if (binaryColumns.includes(col.name)) {
+								// Convertir les colonnes binaires en hex limité à 50 caractères
+								return `CASE WHEN "${col.name}" IS NOT NULL THEN LEFT(encode("${col.name}", 'hex'), 50) ELSE NULL END as "${col.name}"`;
+							}
+							return `"${col.name}"`;
+						}).join(', ');
+						selectColumns = columnSelects;
+					}
+
 					const rawData = (await (
 						prisma as { $queryRawUnsafe: (query: string) => Promise<unknown[]> }
 					).$queryRawUnsafe(`
-						SELECT *${timestampSelects}
+						SELECT ${selectColumns}${timestampSelects}
 						FROM ${qualifiedTableName}
 						LIMIT ${limit}
 					`)) as Record<string, unknown>[];

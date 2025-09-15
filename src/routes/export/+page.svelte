@@ -462,7 +462,17 @@
 	}
 
 	function formatPreviewValue(value: unknown): string {
-		return value === null || value === undefined ? '' : String(value);
+		if (value === null || value === undefined) return '';
+
+		const str = String(value);
+
+		// Si c'est de l'hex (détection pour données binaires converties côté serveur)
+		if (/^[0-9A-F]+$/i.test(str) && str.length > 10) {
+			return '0x' + str.toUpperCase(); // Format DataGrip : 0xFFD8FF...
+		}
+
+		// Autres données - troncature à 50 caractères max
+		return str.length > 50 ? str.substring(0, 47) + '...' : str;
 	}
 
 	// Réinitialiser l'export
