@@ -755,12 +755,8 @@
 			<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
 				<div class="flex items-center justify-between">
 					<div>
-						<div class="text-2xl font-bold text-purple-600">
-							{newFilteredTables.filter((table) =>
-								$form.selectedTables.includes(`${table.database}-${table.name}`)
-							).length}
-						</div>
-						<div class="text-sm text-purple-800">Sources sélectionnées</div>
+						<div class="text-2xl font-bold text-purple-600">{newFilteredTables.length}</div>
+						<div class="text-sm text-purple-800">Sources filtrées</div>
 					</div>
 					<CheckCircle class="h-8 w-8 text-purple-500" />
 				</div>
@@ -845,9 +841,9 @@
 										/>
 										<span class="text-sm text-gray-900">
 											{#if database.includes('dev')}
-												<Settings class="mr-1 inline h-4 w-4" />
+												<Settings class="mr-0.5 inline h-4 w-4" />
 											{:else}
-												<Rocket class="mr-1 inline h-4 w-4" />
+												<Rocket class="mr-0.5 inline h-4 w-4" />
 											{/if}
 											{dbInfo.label.split(' ')[1]} ({newGroupCounts[database]})</span
 										>
@@ -876,9 +872,9 @@
 										/>
 										<span class="text-sm {!isAvailable ? 'text-gray-400' : 'text-gray-900'}">
 											{#if schema === 'produit'}
-												<Package class="mr-1 inline h-4 w-4" />
+												<Package class="mr-0.5 inline h-4 w-4" />
 											{:else}
-												<LockOpen class="mr-1 inline h-4 w-4" />
+												<LockOpen class="mr-0.5 inline h-4 w-4" />
 											{/if}
 											{schemaInfo.label} ({newGroupCounts[`schema_${schema}`]})
 										</span>
@@ -896,7 +892,7 @@
 						>
 							<div class="flex items-center justify-center gap-1 text-sm text-blue-800">
 								<FileType class="h-4 w-4" />
-								<span class="font-semibold">{newFilteredTables.length}</span> sources sélectionnées
+								<span class="font-semibold">{newFilteredTables.length}</span> sources filtrées
 							</div>
 						</div>
 
