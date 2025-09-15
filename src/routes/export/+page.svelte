@@ -93,8 +93,8 @@
 
 	// États pour les filtres (source unique de vérité)
 	let selectedType: 'all' | 'tables' | 'views' = 'all';
-	let selectedDatabases: DatabaseName[] = [];
-	let selectedSchemas: string[] = [];
+	let selectedDatabase: 'all' | DatabaseName = 'all';
+	let selectedSchema: 'all' | string = 'all';
 
 	// Configuration d'export sauvegardée pour persistance entre aperçu et export
 	let savedExportConfig: any = null;
@@ -131,24 +131,6 @@
 	// Obtenir les schémas uniques
 	$: uniqueSchemas = [...new Set((data?.tables || []).map((t: ExportTableInfo) => t.schema))];
 
-	// Logique dynamique pour validation des schémas (sans hardcoding)
-	$: availableSchemas = uniqueSchemas.filter((schema) => {
-		// Si aucune base sélectionnée, tous les schémas sont disponibles
-		if (selectedDatabases.length === 0) return true;
-
-		// Un schéma est disponible si au moins une base sélectionnée le contient
-		return selectedDatabases.some((db) =>
-			(data?.tables || []).some((t) => t.database === db && t.schema === schema)
-		);
-	});
-
-	// Auto-nettoyage des schémas non disponibles
-	$: if (selectedSchemas.length > 0) {
-		const validSchemas = selectedSchemas.filter((schema) => availableSchemas.includes(schema));
-		if (validSchemas.length !== selectedSchemas.length) {
-			selectedSchemas = validSchemas;
-		}
-	}
 
 
 	// Fonction pour obtenir l'icône d'un schéma
@@ -439,20 +421,12 @@
 		selectedType = type;
 	}
 
-	function handleDatabaseToggle(database: DatabaseName) {
-		if (selectedDatabases.includes(database)) {
-			selectedDatabases = selectedDatabases.filter((db) => db !== database);
-		} else {
-			selectedDatabases = [...selectedDatabases, database];
-		}
+	function handleDatabaseChange(database: 'all' | DatabaseName) {
+		selectedDatabase = database;
 	}
 
-	function handleSchemaToggle(schema: string) {
-		if (selectedSchemas.includes(schema)) {
-			selectedSchemas = selectedSchemas.filter((s) => s !== schema);
-		} else {
-			selectedSchemas = [...selectedSchemas, schema];
-		}
+	function handleSchemaChange(schema: 'all' | string) {
+		selectedSchema = schema;
 	}
 
 	// Tables filtrées - SOURCE UNIQUE DE VÉRITÉ pour tous les compteurs et affichages
@@ -461,8 +435,8 @@
 			selectedType === 'all' ||
 			(selectedType === 'tables' && table.category === 'table') ||
 			(selectedType === 'views' && table.category === 'view');
-		const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(table.database);
-		const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(table.schema);
+		const matchesDB = selectedDatabase === 'all' || table.database === selectedDatabase;
+		const matchesSchema = selectedSchema === 'all' || table.schema === selectedSchema;
 		const matchesSearch =
 			searchTerm === '' ||
 			table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -634,7 +608,7 @@
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
 									<span class="text-sm text-gray-900"
-										><ChartColumn class="mr-1 inline h-4 w-4" />Tout ({filteredTables.length})</span
+										><FileType class="mr-1 inline h-4 w-4" />Tous les types de données ({filteredTables.length})</span
 									>
 								</label>
 								<label class="flex cursor-pointer items-center space-x-2">
@@ -673,14 +647,29 @@
 								<h3 class="text-lg font-semibold text-emerald-700">Base de données :</h3>
 							</div>
 							<div class="space-y-2">
+								<label class="flex cursor-pointer items-center space-x-2">
+									<input
+										type="radio"
+										name="database"
+										value="all"
+										bind:group={selectedDatabase}
+										onchange={() => handleDatabaseChange('all')}
+										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
+									<span class="text-sm text-gray-900"
+										><Database class="mr-1 inline h-4 w-4" />Toutes les bases ({filteredTables.length})</span
+									>
+								</label>
 								{#each databases as database}
 									{@const dbInfo = getDatabaseBadgeInfo(database)}
 									<label class="flex cursor-pointer items-center space-x-2">
 										<input
-											type="checkbox"
-											checked={selectedDatabases.includes(database)}
-											onchange={() => handleDatabaseToggle(database)}
-											class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+											type="radio"
+											name="database"
+											value={database}
+											bind:group={selectedDatabase}
+											onchange={() => handleDatabaseChange(database)}
+											class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 										/>
 										<span class="text-sm text-gray-900">
 											{#if database.includes('dev')}
@@ -702,18 +691,31 @@
 								<h3 class="text-lg font-semibold text-purple-700">Schéma :</h3>
 							</div>
 							<div class="space-y-2">
+								<label class="flex cursor-pointer items-center space-x-2">
+									<input
+										type="radio"
+										name="schema"
+										value="all"
+										bind:group={selectedSchema}
+										onchange={() => handleSchemaChange('all')}
+										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
+									<span class="text-sm text-gray-900"
+										><Sheet class="mr-1 inline h-4 w-4" />Tous les schémas ({filteredTables.length})</span
+									>
+								</label>
 								{#each uniqueSchemas as schema}
 									{@const schemaInfo = getSchemaInfo(schema)}
-									{@const isAvailable = availableSchemas.includes(schema)}
 									<label class="flex cursor-pointer items-center space-x-2">
 										<input
-											type="checkbox"
-											checked={selectedSchemas.includes(schema)}
-											disabled={!isAvailable}
-											onchange={() => handleSchemaToggle(schema)}
-											class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+											type="radio"
+											name="schema"
+											value={schema}
+											bind:group={selectedSchema}
+											onchange={() => handleSchemaChange(schema)}
+											class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 										/>
-										<span class="text-sm {!isAvailable ? 'text-gray-400' : 'text-gray-900'}">
+										<span class="text-sm text-gray-900">
 											{#if schema === 'produit'}
 												<Package class="mr-0.5 inline h-4 w-4" />
 											{:else}
@@ -789,8 +791,8 @@
 								variant="noir"
 								onclick={() => {
 									selectedType = 'all';
-									selectedDatabases = [];
-									selectedSchemas = [];
+									selectedDatabase = 'all';
+									selectedSchema = 'all';
 								}}
 							>
 								<RefreshCcw class="mr-2 h-4 w-4" />
