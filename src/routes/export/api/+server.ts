@@ -259,9 +259,29 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 		`🔍 [EXPORT] Export query - Table: ${tableName}, Schema: ${schema}, Real name: ${realTableName}, Qualified: ${qualifiedTableName}`
 	);
 
+	// Pour l'export complet, on garde les données binaires complètes mais en hex
+	// (pas de limite à 50 caractères comme pour l'aperçu)
+	const tableFields = metadata?.fields || [];
+	const binaryColumns = tableFields
+		.filter(field => field.type.toLowerCase().includes('byte') || field.name.includes('binary') || field.name.includes('blob'))
+		.map(field => field.name);
+
+	// Construction des sélections avec traitement spécial pour les colonnes binaires
+	let selectColumns = '*';
+	if (binaryColumns.length > 0) {
+		const columnSelects = tableFields.map(field => {
+			if (binaryColumns.includes(field.name)) {
+				// Convertir les colonnes binaires en hex avec limite Excel (32767 chars max)
+				return `CASE WHEN "${field.name}" IS NOT NULL THEN LEFT(encode("${field.name}", 'hex'), 32767) ELSE NULL END as "${field.name}"`;
+			}
+			return `"${field.name}"`;
+		}).join(', ');
+		selectColumns = columnSelects;
+	}
+
 	const query = limit
-		? `SELECT * FROM ${qualifiedTableName} LIMIT ${limit}`
-		: `SELECT * FROM ${qualifiedTableName}`;
+		? `SELECT ${selectColumns} FROM ${qualifiedTableName} LIMIT ${limit}`
+		: `SELECT ${selectColumns} FROM ${qualifiedTableName}`;
 
 	console.log(`🚀 [EXPORT] Exécution de la requête: ${query}`);
 
