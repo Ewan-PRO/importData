@@ -134,8 +134,6 @@
 	// Obtenir les schémas uniques
 	$: uniqueSchemas = [...new Set((data?.tables || []).map((t: ExportTableInfo) => t.schema))];
 
-
-
 	// Fonction pour obtenir l'icône d'un schéma
 	function getSchemaIcon(schema: string) {
 		return schema === 'produit' ? Package : LockOpen;
@@ -186,9 +184,6 @@
 			description: 'Données structurées en XML'
 		}
 	];
-
-
-
 
 	// Icones pour les types de tables
 	function getTableIcon(category: string) {
@@ -636,7 +631,9 @@
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
 									<span class="text-sm text-gray-900"
-										><TableIcon class="mr-1 inline h-4 w-4" />Tables ({filteredTables.filter(t => t.category === 'table').length})</span
+										><TableIcon class="mr-1 inline h-4 w-4" />Tables ({filteredTables.filter(
+											(t) => t.category === 'table'
+										).length})</span
 									>
 								</label>
 								<label class="flex cursor-pointer items-center space-x-2">
@@ -649,7 +646,9 @@
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
 									<span class="text-sm text-gray-900"
-										><Eye class="mr-1 inline h-4 w-4" />Vues ({filteredTables.filter(t => t.category === 'view').length})</span
+										><Eye class="mr-1 inline h-4 w-4" />Vues ({filteredTables.filter(
+											(t) => t.category === 'view'
+										).length})</span
 									>
 								</label>
 							</div>
@@ -692,7 +691,9 @@
 											{:else}
 												<Rocket class="mr-0.5 inline h-4 w-4" />
 											{/if}
-											{dbInfo.label.split(' ')[1]} ({filteredTables.filter(t => t.database === database).length})</span
+											{dbInfo.label.split(' ')[1]} ({filteredTables.filter(
+												(t) => t.database === database
+											).length})</span
 										>
 									</label>
 								{/each}
@@ -736,7 +737,8 @@
 											{:else}
 												<LockOpen class="mr-0.5 inline h-4 w-4" />
 											{/if}
-											{schemaInfo.label} ({filteredTables.filter(t => t.schema === schema).length})
+											{schemaInfo.label} ({filteredTables.filter((t) => t.schema === schema)
+												.length})
 										</span>
 									</label>
 								{/each}
@@ -824,7 +826,7 @@
 							{@const dbInfo = getDatabaseBadgeInfo(table.database)}
 							{@const schemaInfo = getSchemaInfo(table.schema)}
 							<label
-								class="flex cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100"
+								class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100 sm:max-w-none"
 							>
 								<input
 									type="checkbox"
@@ -861,42 +863,83 @@
 											this={getTableIcon(table.category)}
 											class="h-5 w-5 text-gray-500"
 										/>
-										<div>
-											<div class="flex items-center gap-2">
-												<span class="font-medium">{table.displayName}</span>
-												<Badge variant={getBadgeVariant(table.category)}>
-													{#if table.category === 'view'}
-														<Eye />
-													{:else}
-														<TableIcon />
-													{/if}
-													{table.category.replace('_', ' ')}
-												</Badge>
-												<Badge variant={dbInfo.variant}>
-													{#if table.database.includes('dev')}
-														<Settings />
-													{:else}
-														<Rocket />
-													{/if}
-													{table.database.toUpperCase()}
-												</Badge>
-												<Badge variant={schemaInfo.variant}>
-													{#if table.schema === 'produit'}
-														<Package />
-													{:else}
-														<LockOpen />
-													{/if}
-													{schemaInfo.label}
-												</Badge>
+										<div class="min-w-0 flex-1">
+											<!-- Desktop: layout horizontal -->
+											<div class="hidden sm:block">
+												<div class="flex items-center gap-2">
+													<span class="font-medium">{table.displayName}</span>
+													<Badge variant={getBadgeVariant(table.category)}>
+														{#if table.category === 'view'}
+															<Eye />
+														{:else}
+															<TableIcon />
+														{/if}
+														{table.category.replace('_', ' ')}
+													</Badge>
+													<Badge variant={dbInfo.variant}>
+														{#if table.database.includes('dev')}
+															<Settings />
+														{:else}
+															<Rocket />
+														{/if}
+														{table.database.toUpperCase()}
+													</Badge>
+													<Badge variant={schemaInfo.variant}>
+														{#if table.schema === 'produit'}
+															<Package />
+														{:else}
+															<LockOpen />
+														{/if}
+														{schemaInfo.label}
+													</Badge>
+												</div>
+												<div class="text-sm text-gray-500">
+													{table.name} • {formatNumber(table.rowCount || 0)} lignes
+												</div>
 											</div>
-											<div class="text-sm text-gray-500">
-												{table.name} • {formatNumber(table.rowCount || 0)} lignes
+
+											<!-- Mobile: layout vertical compact -->
+											<div class="sm:hidden">
+												<div class="font-medium">{table.displayName}</div>
+												<div class="mt-1 text-sm text-gray-500">
+													<span class="inline">{table.name} • {formatNumber(table.rowCount || 0)} lignes • </span>
+													<span class="inline-block">{table.columns.length} colonnes</span>
+												</div>
+												<div class="mt-2 flex flex-wrap gap-1">
+													<Badge variant={getBadgeVariant(table.category)}>
+														{#if table.category === 'view'}
+															<Eye />
+															Vue
+														{:else}
+															<TableIcon />
+															Table
+														{/if}
+													</Badge>
+													<Badge variant={dbInfo.variant}>
+														{#if table.database.includes('dev')}
+															<Settings />
+															{table.database.toUpperCase()}
+														{:else}
+															<Rocket />
+															{table.database.toUpperCase()}
+														{/if}
+													</Badge>
+													<Badge variant={schemaInfo.variant}>
+														{#if table.schema === 'produit'}
+															<Package />
+														{:else}
+															<LockOpen />
+														{/if}
+														{schemaInfo.label}
+													</Badge>
+												</div>
 											</div>
 										</div>
 									</div>
 								</div>
 
-								<div class="text-right text-sm text-gray-500">
+								<!-- Desktop: infos colonnes à droite -->
+								<div class="hidden text-right text-sm text-gray-500 sm:block">
 									<div>{table.columns.length} colonnes</div>
 									{#if table.relations && table.relations.length > 0}
 										<div class="text-xs">{table.relations.length} relation(s)</div>
@@ -1048,46 +1091,96 @@
 								? getSchemaInfo(matchingTableInfo.schema)
 								: { variant: 'cyan' as const, emoji: '🔓', label: 'Public' }}
 							<div>
-								<div class="mb-3 flex items-center justify-between">
-									<div class="flex items-center gap-3">
-										<h3 class="flex items-center gap-2 font-medium">
-											<svelte:component
-												this={getTableIcon(matchingTableInfo?.category || 'tables')}
-												class="h-5 w-5"
-											/>
-											{matchingTableInfo?.displayName ||
-												(tableName.includes('-')
-													? tableName.split('-').slice(1).join('-')
-													: tableName)}
-										</h3>
+								<div class="mb-3">
+									<!-- Desktop: layout horizontal -->
+									<div class="hidden items-center justify-between sm:flex">
+										<div class="flex items-center gap-3">
+											<h3 class="flex items-center gap-2 font-medium">
+												<svelte:component
+													this={getTableIcon(matchingTableInfo?.category || 'tables')}
+													class="h-5 w-5"
+												/>
+												{matchingTableInfo?.displayName ||
+													(tableName.includes('-')
+														? tableName.split('-').slice(1).join('-')
+														: tableName)}
+											</h3>
+											{#if matchingTableInfo}
+												<Badge variant={getBadgeVariant(matchingTableInfo.category)}>
+													{#if matchingTableInfo.category === 'view'}
+														<Eye />
+													{:else}
+														<TableIcon />
+													{/if}
+													{matchingTableInfo.category.replace('_', ' ')}
+												</Badge>
+												<Badge variant={dbInfo.variant}>
+													{#if matchingTableInfo?.database.includes('dev')}
+														<Settings />
+													{:else}
+														<Rocket />
+													{/if}
+													{matchingTableInfo?.database.toUpperCase()}
+												</Badge>
+												<Badge variant={schemaInfo.variant}>
+													{#if matchingTableInfo?.schema === 'produit'}
+														<Package />
+													{:else}
+														<LockOpen />
+													{/if}
+													{schemaInfo.label}
+												</Badge>
+											{/if}
+										</div>
+										<Badge variant="blanc">{rows.length} lignes (aperçu)</Badge>
+									</div>
+
+									<!-- Mobile: layout vertical compact -->
+									<div class="sm:hidden">
+										<div class="mb-2 flex items-center justify-between">
+											<h3 class="flex items-center gap-2 font-medium">
+												<svelte:component
+													this={getTableIcon(matchingTableInfo?.category || 'tables')}
+													class="h-5 w-5"
+												/>
+												{matchingTableInfo?.displayName ||
+													(tableName.includes('-')
+														? tableName.split('-').slice(1).join('-')
+														: tableName)}
+											</h3>
+											<Badge variant="blanc">{rows.length} lignes</Badge>
+										</div>
 										{#if matchingTableInfo}
-											<Badge variant={getBadgeVariant(matchingTableInfo.category)}>
-												{#if matchingTableInfo.category === 'view'}
-													<Eye />
-												{:else}
-													<TableIcon />
-												{/if}
-												{matchingTableInfo.category.replace('_', ' ')}
-											</Badge>
-											<Badge variant={dbInfo.variant}>
-												{#if matchingTableInfo?.database.includes('dev')}
-													<Settings />
-												{:else}
-													<Rocket />
-												{/if}
-												{matchingTableInfo?.database.toUpperCase()}
-											</Badge>
-											<Badge variant={schemaInfo.variant}>
-												{#if matchingTableInfo?.schema === 'produit'}
-													<Package />
-												{:else}
-													<LockOpen />
-												{/if}
-												{schemaInfo.label}
-											</Badge>
+											<div class="flex flex-wrap gap-1">
+												<Badge variant={getBadgeVariant(matchingTableInfo.category)}>
+													{#if matchingTableInfo.category === 'view'}
+														<Eye />
+														Vue
+													{:else}
+														<TableIcon />
+														Table
+													{/if}
+												</Badge>
+												<Badge variant={dbInfo.variant}>
+													{#if matchingTableInfo?.database.includes('dev')}
+														<Settings />
+														{matchingTableInfo.database.toUpperCase()}
+													{:else}
+														<Rocket />
+														{matchingTableInfo.database.toUpperCase()}
+													{/if}
+												</Badge>
+												<Badge variant={schemaInfo.variant}>
+													{#if matchingTableInfo?.schema === 'produit'}
+														<Package />
+													{:else}
+														<LockOpen />
+													{/if}
+													{schemaInfo.label}
+												</Badge>
+											</div>
 										{/if}
 									</div>
-									<Badge variant="blanc">{rows.length} lignes (aperçu)</Badge>
 								</div>
 
 								{#if rows.length > 0}
