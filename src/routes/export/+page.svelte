@@ -894,7 +894,7 @@
 													</Badge>
 												</div>
 												<div class="text-sm text-gray-500">
-													{table.name} • {formatNumber(table.rowCount || 0)} lignes
+													{table.displayName} • {formatNumber(table.rowCount || 0)} lignes
 												</div>
 											</div>
 
@@ -902,7 +902,7 @@
 											<div class="sm:hidden">
 												<div class="font-medium">{table.displayName}</div>
 												<div class="mt-1 text-sm text-gray-500">
-													<span class="inline">{table.name} • {formatNumber(table.rowCount || 0)} lignes • </span>
+													<span class="inline">{table.displayName} • {formatNumber(table.rowCount || 0)} lignes • </span>
 													<span class="inline-block">{table.columns.length} colonnes</span>
 												</div>
 												<div class="mt-2 flex flex-wrap gap-1">
