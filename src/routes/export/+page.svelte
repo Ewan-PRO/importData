@@ -1005,13 +1005,27 @@
 											<div class="flex items-center gap-2">
 												<span class="font-medium">{table.displayName}</span>
 												<Badge variant={getBadgeVariant(table.category)}>
+													{#if table.category === 'view'}
+														<Eye />
+													{:else}
+														<TableIcon />
+													{/if}
 													{table.category.replace('_', ' ')}
 												</Badge>
 												<Badge variant={dbInfo.variant}>
-													{dbInfo.label}
+													{#if table.database.includes('dev')}
+														<Settings />
+													{:else}
+														<Rocket />
+													{/if}
+													{table.database.toUpperCase()}
 												</Badge>
 												<Badge variant={schemaInfo.variant}>
-													{schemaInfo.emoji}
+													{#if table.schema === 'produit'}
+														<Package />
+													{:else}
+														<LockOpen />
+													{/if}
 													{schemaInfo.label}
 												</Badge>
 											</div>
@@ -1188,13 +1202,27 @@
 										</h3>
 										{#if matchingTableInfo}
 											<Badge variant={getBadgeVariant(matchingTableInfo.category)}>
+												{#if matchingTableInfo.category === 'view'}
+													<Eye />
+												{:else}
+													<TableIcon />
+												{/if}
 												{matchingTableInfo.category.replace('_', ' ')}
 											</Badge>
 											<Badge variant={dbInfo.variant}>
-												{dbInfo.label}
+												{#if matchingTableInfo?.database.includes('dev')}
+													<Settings />
+												{:else}
+													<Rocket />
+												{/if}
+												{matchingTableInfo?.database.toUpperCase()}
 											</Badge>
 											<Badge variant={schemaInfo.variant}>
-												{schemaInfo.emoji}
+												{#if matchingTableInfo?.schema === 'produit'}
+													<Package />
+												{:else}
+													<LockOpen />
+												{/if}
 												{schemaInfo.label}
 											</Badge>
 										{/if}

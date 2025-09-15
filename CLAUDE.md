@@ -303,6 +303,32 @@ const data: TableData[] = [];
 
 **Note:** `outline` variant does not exist for badges - use `blanc` instead for outline-style badges.
 
+### Badge Icon Integration
+
+**IMPORTANT:** The Badge component automatically handles SVG icons with built-in styling:
+
+```typescript
+// ✅ CORRECT - Let the component handle icon sizing and spacing
+<Badge variant="vert">
+  <Eye />
+  Vues
+</Badge>
+
+// ❌ WRONG - Don't manually add size or spacing classes
+<Badge variant="vert">
+  <Eye class="mr-1 h-3 w-3" />
+  Vues
+</Badge>
+```
+
+**Built-in Badge Icon Styling:**
+- `[&>svg]:size-3` - All SVG icons automatically get `size-3` (12x12px)
+- `[&>svg]:pointer-events-none` - Icons don't interfere with click events
+- `gap-1` - Automatic spacing between icon and text
+- `items-center justify-center` - Perfect alignment
+
+**Best Practice:** Always read the component's CSS classes before adding manual styling. Most UI components have built-in icon handling.
+
 ## Toast Notifications (Sonner)
 
 This project uses **svelte-sonner** for toast notifications.
