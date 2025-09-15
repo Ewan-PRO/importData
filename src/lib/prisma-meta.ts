@@ -250,7 +250,33 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 
 	const cenovTables = await getAllTables('cenov');
 	const cenovDevTables = await getAllTables('cenov_dev_ewan');
-	return [...cenovTables, ...cenovDevTables];
+	const allTables = [...cenovTables, ...cenovDevTables];
+
+	// Tri ciblé : regrouper les vues par nom de base (normale puis _dev)
+	const sortedTables = allTables.sort((a, b) => {
+		// Seulement pour les vues
+		if (a.category === 'view' && b.category === 'view') {
+			const aBaseName = a.displayName.replace(/_dev$/, '');
+			const bBaseName = b.displayName.replace(/_dev$/, '');
+
+			// Si même nom de base, version normale avant _dev
+			if (aBaseName === bBaseName) {
+				const aIsDev = a.displayName.endsWith('_dev');
+				const bIsDev = b.displayName.endsWith('_dev');
+				return aIsDev ? 1 : bIsDev ? -1 : 0;
+			}
+
+			// Sinon tri alphabétique par nom de base
+			return aBaseName.localeCompare(bBaseName);
+		}
+
+		// Pour tout le reste, garder l'ordre d'origine (pas de tri)
+		return 0;
+	});
+
+	console.log('📋 [ORDER] Ordre après tri des vues:', sortedTables.map(t => `${t.displayName} (${t.category})`));
+
+	return sortedTables;
 }
 
 // Interface pour les informations de schéma
