@@ -87,12 +87,11 @@
 
 	// État de l'interface
 	let step = 1; // 1: Configuration, 2: Paramètres, 3: Aperçu, 4: Export
-	let selectedCategory = 'all';
 	let searchTerm = '';
 	let previewData: Record<string, unknown[]> = {};
 	let exportResult: ExportResult | null = null;
 
-	// Nouveaux états pour groupes exclusifs
+	// États pour les filtres (source unique de vérité)
 	let selectedType: 'all' | 'tables' | 'views' = 'all';
 	let selectedDatabases: DatabaseName[] = [];
 	let selectedSchemas: string[] = [];
@@ -151,54 +150,6 @@
 		}
 	}
 
-	// Compteurs pour les nouveaux groupes
-	$: newGroupCounts = {
-		// Type counts
-		all: (data?.tables || []).filter((t) => {
-			const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
-			const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(t.schema);
-			return matchesDB && matchesSchema;
-		}).length,
-		tables: (data?.tables || []).filter((t) => {
-			const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
-			const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(t.schema);
-			return t.category === 'table' && matchesDB && matchesSchema;
-		}).length,
-		views: (data?.tables || []).filter((t) => {
-			const matchesDB = selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
-			const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(t.schema);
-			return t.category === 'view' && matchesDB && matchesSchema;
-		}).length,
-		// Database counts
-		...Object.fromEntries(
-			databases.map((db: DatabaseName) => [
-				db,
-				(data?.tables || []).filter((t) => {
-					const matchesType =
-						selectedType === 'all' ||
-						(selectedType === 'tables' && t.category === 'table') ||
-						(selectedType === 'views' && t.category === 'view');
-					const matchesSchema = selectedSchemas.length === 0 || selectedSchemas.includes(t.schema);
-					return t.database === db && matchesType && matchesSchema;
-				}).length
-			])
-		),
-		// Schema counts
-		...Object.fromEntries(
-			uniqueSchemas.map((schema: string) => [
-				`schema_${schema}`,
-				(data?.tables || []).filter((t) => {
-					const matchesType =
-						selectedType === 'all' ||
-						(selectedType === 'tables' && t.category === 'table') ||
-						(selectedType === 'views' && t.category === 'view');
-					const matchesDB =
-						selectedDatabases.length === 0 || selectedDatabases.includes(t.database);
-					return t.schema === schema && matchesType && matchesDB;
-				}).length
-			])
-		)
-	} as Record<string, number>;
 
 	// Fonction pour obtenir l'icône d'un schéma
 	function getSchemaIcon(schema: string) {
@@ -251,116 +202,8 @@
 		}
 	];
 
-	// Tables filtrées selon la catégorie et la recherche - DYNAMIQUE
-	$: filteredTables = (data?.tables || []).filter((table: ExportTableInfo) => {
-		// Logique dynamique pour les catégories, bases de données et schémas
-		let matchesCategory = false;
-		if (selectedCategory === 'all') {
-			matchesCategory = true;
-		} else if (selectedCategory === 'tables' && table.category === 'table') {
-			matchesCategory = true;
-		} else if (selectedCategory === 'views' && table.category === 'view') {
-			matchesCategory = true;
-		} else if (
-			databases.includes(selectedCategory as DatabaseName) &&
-			table.database === selectedCategory
-		) {
-			matchesCategory = true;
-		} else if (selectedCategory.startsWith('schema_')) {
-			const schema = selectedCategory.replace('schema_', '');
-			matchesCategory = table.schema === schema;
-		}
 
-		const matchesSearch =
-			searchTerm === '' ||
-			table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			table.displayName.toLowerCase().includes(searchTerm.toLowerCase());
-		return matchesCategory && matchesSearch;
-	});
 
-	// Nombre de tables par catégorie - DYNAMIQUE avec compteurs croisés
-	$: tableCounts = {
-		all: (data?.tables || []).length,
-		tables: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'table').length,
-		views: (data?.tables || []).filter((t: ExportTableInfo) => t.category === 'view').length,
-		// Compteurs par BDD (dynamique)
-		...Object.fromEntries(
-			databases.map((db: DatabaseName) => [
-				db,
-				(data?.tables || []).filter((t: ExportTableInfo) => t.database === db).length
-			])
-		),
-		// Compteurs par schéma (dynamique)
-		...Object.fromEntries(
-			uniqueSchemas.map((schema: string) => [
-				`schema_${schema}`,
-				(data?.tables || []).filter((t: ExportTableInfo) => t.schema === schema).length
-			])
-		),
-		// Compteurs croisés (dynamique)
-		...Object.fromEntries(
-			databases.flatMap((db: DatabaseName) => [
-				[
-					`tables_${db}`,
-					(data?.tables || []).filter(
-						(t: ExportTableInfo) => t.category === 'table' && t.database === db
-					).length
-				],
-				[
-					`views_${db}`,
-					(data?.tables || []).filter(
-						(t: ExportTableInfo) => t.category === 'view' && t.database === db
-					).length
-				]
-			])
-		),
-		// Compteurs croisés schéma-catégorie
-		...Object.fromEntries(
-			uniqueSchemas.flatMap((schema: string) => [
-				[
-					`schema_${schema}_tables`,
-					(data?.tables || []).filter(
-						(t: ExportTableInfo) => t.schema === schema && t.category === 'table'
-					).length
-				],
-				[
-					`schema_${schema}_views`,
-					(data?.tables || []).filter(
-						(t: ExportTableInfo) => t.schema === schema && t.category === 'view'
-					).length
-				]
-			])
-		),
-		// Compteurs croisés schéma-base
-		...Object.fromEntries(
-			uniqueSchemas.flatMap((schema: string) =>
-				databases.map((db: DatabaseName) => [
-					`schema_${schema}_${db}`,
-					(data?.tables || []).filter(
-						(t: ExportTableInfo) => t.schema === schema && t.database === db
-					).length
-				])
-			)
-		)
-	} as Record<string, number>;
-
-	// Variable pour tracking le changement de catégorie et éviter le toast au chargement initial
-	let previousSelectedCategory = selectedCategory;
-
-	// Toast de succès lors du changement de catégorie - DYNAMIQUE
-	$: if (selectedCategory !== previousSelectedCategory && previousSelectedCategory !== undefined) {
-		const categoryInfo = categories.find((c) => c.value === selectedCategory);
-		// Mapping dynamique pour les compteurs
-		const count = tableCounts[selectedCategory] || 0;
-
-		if (categoryInfo) {
-			toast.success(`Filtre appliqué : ${categoryInfo.label}`, {
-				description: `${count} source${count > 1 ? 's' : ''} disponible${count > 1 ? 's' : ''}`
-			});
-		}
-
-		previousSelectedCategory = selectedCategory;
-	}
 
 	// Icones pour les types de tables
 	function getTableIcon(category: string) {
@@ -612,8 +455,8 @@
 		}
 	}
 
-	// Fonction pour obtenir les tables filtrées selon les nouveaux groupes
-	$: newFilteredTables = (data?.tables || []).filter((table: ExportTableInfo) => {
+	// Tables filtrées - SOURCE UNIQUE DE VÉRITÉ pour tous les compteurs et affichages
+	$: filteredTables = (data?.tables || []).filter((table: ExportTableInfo) => {
 		const matchesType =
 			selectedType === 'all' ||
 			(selectedType === 'tables' && table.category === 'table') ||
@@ -755,7 +598,7 @@
 			<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
 				<div class="flex items-center justify-between">
 					<div>
-						<div class="text-2xl font-bold text-purple-600">{newFilteredTables.length}</div>
+						<div class="text-2xl font-bold text-purple-600">{filteredTables.length}</div>
 						<div class="text-sm text-purple-800">Sources filtrées</div>
 					</div>
 					<CheckCircle class="h-8 w-8 text-purple-500" />
@@ -791,7 +634,7 @@
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
 									<span class="text-sm text-gray-900"
-										><ChartColumn class="mr-1 inline h-4 w-4" />Tout ({newGroupCounts.all})</span
+										><ChartColumn class="mr-1 inline h-4 w-4" />Tout ({filteredTables.length})</span
 									>
 								</label>
 								<label class="flex cursor-pointer items-center space-x-2">
@@ -804,7 +647,7 @@
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
 									<span class="text-sm text-gray-900"
-										><TableIcon class="mr-1 inline h-4 w-4" />Tables ({newGroupCounts.tables})</span
+										><TableIcon class="mr-1 inline h-4 w-4" />Tables ({filteredTables.filter(t => t.category === 'table').length})</span
 									>
 								</label>
 								<label class="flex cursor-pointer items-center space-x-2">
@@ -817,7 +660,7 @@
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
 									<span class="text-sm text-gray-900"
-										><Eye class="mr-1 inline h-4 w-4" />Vues ({newGroupCounts.views})</span
+										><Eye class="mr-1 inline h-4 w-4" />Vues ({filteredTables.filter(t => t.category === 'view').length})</span
 									>
 								</label>
 							</div>
@@ -845,7 +688,7 @@
 											{:else}
 												<Rocket class="mr-0.5 inline h-4 w-4" />
 											{/if}
-											{dbInfo.label.split(' ')[1]} ({newGroupCounts[database]})</span
+											{dbInfo.label.split(' ')[1]} ({filteredTables.filter(t => t.database === database).length})</span
 										>
 									</label>
 								{/each}
@@ -876,7 +719,7 @@
 											{:else}
 												<LockOpen class="mr-0.5 inline h-4 w-4" />
 											{/if}
-											{schemaInfo.label} ({newGroupCounts[`schema_${schema}`]})
+											{schemaInfo.label} ({filteredTables.filter(t => t.schema === schema).length})
 										</span>
 									</label>
 								{/each}
@@ -892,7 +735,7 @@
 						>
 							<div class="flex items-center justify-center gap-1 text-sm text-blue-800">
 								<FileType class="h-4 w-4" />
-								<span class="font-semibold">{newFilteredTables.length}</span> sources filtrées
+								<span class="font-semibold">{filteredTables.length}</span> sources filtrées
 							</div>
 						</div>
 
@@ -912,19 +755,19 @@
 							<label class="flex min-h-[42px] cursor-pointer items-center space-x-2">
 								<input
 									type="checkbox"
-									checked={newFilteredTables.length > 0 &&
-										newFilteredTables.every((table: ExportTableInfo) =>
+									checked={filteredTables.length > 0 &&
+										filteredTables.every((table: ExportTableInfo) =>
 											$form.selectedTables.includes(`${table.database}-${table.name}`)
 										)}
 									onchange={() => {
-										const filteredTableIds = newFilteredTables.map(
+										const filteredTableIds = filteredTables.map(
 											(t: ExportTableInfo) => `${t.database}-${t.name}`
 										);
 										const selectedFilteredCount = filteredTableIds.filter((id) =>
 											$form.selectedTables.includes(id)
 										).length;
 
-										if (selectedFilteredCount === newFilteredTables.length) {
+										if (selectedFilteredCount === filteredTables.length) {
 											// Désélectionner toutes les tables filtrées
 											$form.selectedTables = $form.selectedTables.filter(
 												(id) => !filteredTableIds.includes(id)
@@ -939,7 +782,7 @@
 									}}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
-								<span class="text-sm">Sélectionner tout ({newFilteredTables.length})</span>
+								<span class="text-sm">Sélectionner tout ({filteredTables.length})</span>
 							</label>
 
 							<Button
@@ -960,7 +803,7 @@
 				<!-- Liste des tables -->
 				<div class="mb-6 max-h-96 overflow-y-auto">
 					<div class="grid gap-3">
-						{#each newFilteredTables as table (`${table.database}-${table.name}`)}
+						{#each filteredTables as table (`${table.database}-${table.name}`)}
 							{@const dbInfo = getDatabaseBadgeInfo(table.database)}
 							{@const schemaInfo = getSchemaInfo(table.schema)}
 							<label
