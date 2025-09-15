@@ -29,7 +29,8 @@
 		FileType,
 		Sheet,
 		Table as TableIcon,
-		Search
+		Search,
+		AlertCircle
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
 	import { getAllDatabaseNames, getSchemaInfo, type DatabaseName } from '$lib/prisma-meta.js';
@@ -1210,7 +1211,24 @@
 										</Table.Root>
 									</div>
 								{:else}
-									<p class="text-gray-500">Aucune donnée disponible</p>
+									<!-- Distinguer table vide vs erreur -->
+									{#if matchingTableInfo?.columns && matchingTableInfo.columns.length > 0}
+										<div class="text-center py-8">
+											<div class="text-gray-400 mb-2">
+												<Database class="h-12 w-12 mx-auto" />
+											</div>
+											<p class="text-gray-600 font-medium">Aucune donnée disponible dans la base de données</p>
+											<p class="text-sm text-gray-500">La table existe mais ne contient aucune ligne</p>
+										</div>
+									{:else}
+										<div class="text-center py-8">
+											<div class="text-red-400 mb-2">
+												<AlertCircle class="h-12 w-12 mx-auto" />
+											</div>
+											<p class="text-red-600 font-medium">Erreur de lecture des données</p>
+											<p class="text-sm text-gray-500">Impossible d'accéder à cette table</p>
+										</div>
+									{/if}
 								{/if}
 							</div>
 						{/each}
@@ -1219,7 +1237,7 @@
 
 				<!-- Export final -->
 				<form method="POST" action="?/export" use:superEnhance>
-					<div class="flex justify-center gap-4">
+					<div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
 						<Button variant="noir" onclick={() => goToStep(2)}>
 							<CircleArrowLeft class="mr-2 h-4 w-4" />
 							Configuration
