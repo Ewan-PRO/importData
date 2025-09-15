@@ -28,7 +28,8 @@
 		Package,
 		FileType,
 		Sheet,
-		Table as TableIcon
+		Table as TableIcon,
+		Search
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
 	import { getAllDatabaseNames, getSchemaInfo, type DatabaseName } from '$lib/prisma-meta.js';
@@ -778,7 +779,7 @@
 					<!-- Cards de filtres horizontales -->
 					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 						<!-- Card Type -->
-						<Card class="h-36 p-4 bg-blue-50 border-blue-200 shadow-none">
+						<Card class="h-36 border-blue-200 bg-blue-50 p-4 shadow-none">
 							<div class="mb-2 flex items-center gap-2">
 								<FileType class="h-5 w-5 text-blue-600" />
 								<h3 class="text-lg font-semibold text-blue-700">Type de données :</h3>
@@ -793,7 +794,9 @@
 										onchange={() => handleTypeChange('all')}
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
-									<span class="text-sm text-gray-900"><ChartColumn class="mr-1 inline h-4 w-4" />Tout ({newGroupCounts.all})</span>
+									<span class="text-sm text-gray-900"
+										><ChartColumn class="mr-1 inline h-4 w-4" />Tout ({newGroupCounts.all})</span
+									>
 								</label>
 								<label class="flex cursor-pointer items-center space-x-2">
 									<input
@@ -804,7 +807,9 @@
 										onchange={() => handleTypeChange('tables')}
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
-									<span class="text-sm text-gray-900"><TableIcon class="mr-1 inline h-4 w-4" />Tables ({newGroupCounts.tables})</span>
+									<span class="text-sm text-gray-900"
+										><TableIcon class="mr-1 inline h-4 w-4" />Tables ({newGroupCounts.tables})</span
+									>
 								</label>
 								<label class="flex cursor-pointer items-center space-x-2">
 									<input
@@ -815,13 +820,15 @@
 										onchange={() => handleTypeChange('views')}
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
-									<span class="text-sm text-gray-900"><Eye class="mr-1 inline h-4 w-4" />Vues ({newGroupCounts.views})</span>
+									<span class="text-sm text-gray-900"
+										><Eye class="mr-1 inline h-4 w-4" />Vues ({newGroupCounts.views})</span
+									>
 								</label>
 							</div>
 						</Card>
 
 						<!-- Card Base de données -->
-						<Card class="h-36 p-4 bg-emerald-50 border-emerald-200 shadow-none">
+						<Card class="h-36 border-emerald-200 bg-emerald-50 p-4 shadow-none">
 							<div class="mb-2 flex items-center gap-2">
 								<Database class="h-5 w-5 text-emerald-600" />
 								<h3 class="text-lg font-semibold text-emerald-700">Base de données :</h3>
@@ -850,7 +857,7 @@
 						</Card>
 
 						<!-- Card Schéma -->
-						<Card class="h-36 p-4 bg-purple-50 border-purple-200 shadow-none">
+						<Card class="h-36 border-purple-200 bg-purple-50 p-4 shadow-none">
 							<div class="mb-2 flex items-center gap-2">
 								<Sheet class="h-5 w-5 text-purple-600" />
 								<h3 class="text-lg font-semibold text-purple-700">Schéma :</h3>
@@ -887,19 +894,20 @@
 						<div
 							class="flex min-h-[42px] items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-6 py-3 text-center"
 						>
-							<div class="text-sm text-blue-800 flex items-center justify-center gap-1">
+							<div class="flex items-center justify-center gap-1 text-sm text-blue-800">
 								<FileType class="h-4 w-4" />
 								<span class="font-semibold">{newFilteredTables.length}</span> sources sélectionnées
 							</div>
 						</div>
 
 						<!-- Barre de recherche (alignée sous card du milieu) -->
-						<div>
+						<div class="relative">
+							<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
 							<Input
 								type="text"
 								bind:value={searchTerm}
 								placeholder="Rechercher une table, une vue..."
-								class="min-h-[42px]"
+								class="min-h-[42px] pl-9"
 							/>
 						</div>
 

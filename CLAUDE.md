@@ -351,3 +351,30 @@ The project has built-in auth error toasts:
 
 - Protected routes automatically show toast on unauthorized access
 - Handled via URL params and `onMount` in homepage
+
+## File Editing Conflict Resolution
+
+**When encountering "File has been unexpectedly modified" errors:**
+
+This typically occurs when files are automatically formatted by linters/formatters (Prettier, ESLint) after reading them.
+
+**Solution steps:**
+
+1. **Git restore:** If editing conflicts occur, restore the file to its original state:
+   ```bash
+   git restore path/to/file.svelte
+   ```
+
+2. **Re-read before editing:** Always use the Read tool to get the latest file state before making edits
+
+3. **Expected behavior:** Linters may automatically format files, this is intentional and should be preserved
+
+**Common scenarios:**
+- Prettier reformats spacing and line breaks
+- ESLint auto-fixes code style issues
+- These changes are intentional and improve code quality
+
+**Best practices:**
+- Don't revert linter changes unless explicitly requested
+- Use git restore only when edit conflicts prevent progress
+- Re-read files after any formatting to get current state
