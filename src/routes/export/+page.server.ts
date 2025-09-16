@@ -8,12 +8,10 @@ import {
 	getAllDatabaseTables,
 	getTableMetadata,
 	countTableRows,
-	getClient,
-	getDatabases,
 	type TableInfo as PrismaTableInfo,
-	type FieldInfo,
-	type DatabaseName
+	type FieldInfo
 } from '$lib/prisma-meta';
+import { extractTableData, type SharedExportData } from './shared.js';
 
 // Types pour l'export
 export interface ExportConfig {
@@ -155,216 +153,34 @@ export const actions: Actions = {
 
 			// Récupérer un aperçu des données pour chaque table sélectionnée
 			for (const tableId of selectedTables) {
-				const limit = 6;
-
-				// Parser l'ID pour extraire database et table name
-				let database: DatabaseName;
-				let tableName: string;
-
-				if (tableId.includes('-')) {
-					const parts = tableId.split('-');
-					const dbName = parts[0];
-					// Validation du nom de base de données
-					if (dbName !== 'cenov' && dbName !== 'cenov_dev_ewan') {
-						console.error(`❌ [PREVIEW] Base de données inconnue: ${dbName}`);
-						continue;
-					}
-					database = dbName as DatabaseName;
-					tableName = parts.slice(1).join('-');
-				} else {
-					// Fallback pour compatibilité
-					const allTables = await getAllDatabaseTables();
-					const tableInfo = allTables.find((t) => t.name === tableId);
-					if (!tableInfo) {
-						console.error(`❌ [PREVIEW] Table ${tableId} non trouvée`);
-						continue;
-					}
-					database = tableInfo.database;
-					tableName = tableInfo.name;
-				}
-
 				try {
-					// Obtenir le client Prisma
-					const prisma = await getClient(database);
-
-					// Obtenir les métadonnées pour identifier les colonnes timestamp
-					const metadata = await getTableMetadata(database, tableName);
-					const timestampColumns = metadata?.fields.filter((f) => f.isTimestamp) ?? [];
-					const schema = metadata?.schema || 'public';
-
-					// Utiliser $queryRaw sécurisé avec Prisma.sql pour préserver les microsecondes
-					let timestampSelects = '';
-					if (timestampColumns.length > 0) {
-						timestampSelects =
-							', ' +
-							timestampColumns
-								.map(
-									(col) =>
-										`"${col.name.replace(/"/g, '""')}"::text as "${col.name.replace(/"/g, '""')}_str"`
-								)
-								.join(', ');
-					}
-
-					// Utiliser le nom @@map si disponible, sinon le nom de table Prisma (comme export API)
-					let realTableName = tableName;
-
-					// Récupérer les métadonnées complètes pour accéder au nom @@map
-					const databases = await getDatabases();
-					const model = databases[database].dmmf.datamodel.models.find((m) => m.name === tableName);
-
-					if (model) {
-						const modelWithMeta = model as { dbName?: string };
-						// Si un nom @@map existe, l'utiliser (comme export API)
-						if (modelWithMeta.dbName) {
-							realTableName = modelWithMeta.dbName;
-							if (
-								tableName === 'produit_categorie' ||
-								tableName === 'categorie' ||
-								tableName.includes('v_produit_categorie_attribut')
-							) {
-								console.log(`🚨 [PREVIEW-MAP] ${tableName} @@map → ${realTableName}`);
-							}
-						} else {
-							// Seulement nettoyer les préfixes évidents comme "public_"
-							if (tableName.startsWith('public_') && schema === 'public') {
-								realTableName = tableName.substring(7); // 'public_'.length = 7
-								console.log(
-									`🧹 [PREVIEW] Nettoyage préfixe public: ${tableName} → ${realTableName}`
-								);
-							}
-						}
-					}
-
-					// Debug spécifique pour les tables/vues problématiques
-					if (
-						tableName === 'produit_categorie' ||
-						tableName === 'categorie' ||
-						tableName.includes('v_produit_categorie_attribut')
-					) {
-						console.log(
-							`🚨 [PREVIEW-DEBUG] ${tableName}: Schema: ${schema}, RealName: ${realTableName}`
-						);
-					}
-
-					// Construire le nom qualifié de la table avec le schéma
-					const qualifiedTableName = `"${schema.replace(/"/g, '""')}"."${realTableName.replace(/"/g, '""')}"`;
-
-					// Debug spécifique pour les tables/vues problématiques
-					if (
-						tableName === 'produit_categorie' ||
-						tableName === 'categorie' ||
-						tableName.includes('v_produit_categorie_attribut')
-					) {
-						console.log(
-							`🚨 [PREVIEW-QUERY] ${tableName}: Schema: ${schema} → RealName: ${realTableName} → Qualified: ${qualifiedTableName}`
-						);
-					}
-
-					// Détection des colonnes binaires et construction de la requête SELECT
-					const columns = metadata?.fields || [];
-					const binaryColumns = columns
-						.filter(
-							(col) =>
-								col.type.toLowerCase().includes('byte') ||
-								col.name.includes('binary') ||
-								col.name.includes('blob')
-						)
-						.map((col) => col.name);
-
-					// Construction des sélections avec traitement spécial pour les colonnes binaires
-					let selectColumns = '*';
-					if (binaryColumns.length > 0) {
-						const columnSelects = columns
-							.map((col) => {
-								if (binaryColumns.includes(col.name)) {
-									// Convertir les colonnes binaires en hex limité à 50 caractères
-									return `CASE WHEN "${col.name}" IS NOT NULL THEN LEFT(encode("${col.name}", 'hex'), 50) ELSE NULL END as "${col.name}"`;
-								}
-								return `"${col.name}"`;
-							})
-							.join(', ');
-						selectColumns = columnSelects;
-					}
-
-					const query = `SELECT ${selectColumns}${timestampSelects} FROM ${qualifiedTableName} LIMIT ${limit}`;
-
-					// Debug spécifique pour les tables/vues problématiques
-					if (
-						tableName === 'produit_categorie' ||
-						tableName === 'categorie' ||
-						tableName.includes('v_produit_categorie_attribut')
-					) {
-						console.log(`🚨 [PREVIEW-SQL] ${tableName} requête: ${query}`);
-					}
-
-					let rawData: Record<string, unknown>[];
-					try {
-						rawData = (await (
-							prisma as { $queryRawUnsafe: (query: string) => Promise<unknown[]> }
-						).$queryRawUnsafe(query)) as Record<string, unknown>[];
-					} catch (queryError) {
-						// Debug spécifique pour les tables/vues problématiques
-						if (
-							tableName === 'produit_categorie' ||
-							tableName === 'categorie' ||
-							tableName.includes('v_produit_categorie_attribut')
-						) {
-							console.error(
-								`🚨 [PREVIEW-ERROR] ${tableName} erreur:`,
-								queryError instanceof Error ? queryError.message : 'Erreur inconnue'
-							);
-							console.error(`🚨 [PREVIEW-ERROR] ${tableName} requête échouée: ${query}`);
-						}
-						throw queryError;
-					}
-
-					// Post-traitement : remplacer les timestamps Date par les versions string
-					const processedData = rawData.map((row) => {
-						const processedRow = { ...row };
-						timestampColumns.forEach((col) => {
-							const stringKey = `${col.name}_str`;
-							if (processedRow[stringKey]) {
-								// Remplacer la version Date par la version string avec microsecondes
-								processedRow[col.name] = processedRow[stringKey];
-								// Supprimer la colonne temporaire _str
-								delete processedRow[stringKey];
-							}
-						});
-						return processedRow;
+					const tableData: SharedExportData = await extractTableData(tableId, {
+						limit: 6,
+						maxBinaryLength: 50 // Limite pour preview
 					});
 
 					// Utiliser l'ID complet (database-tablename) pour éviter les collisions
-					const previewKey = `${database}-${tableName}`;
-					previewData[previewKey] = processedData;
+					const tableName = tableId.includes('-') ? tableId.split('-').slice(1).join('-') : tableId;
+					const previewKey = `${tableData.database}-${tableName}`;
+					previewData[previewKey] = tableData.data;
 
-					// Debug spécifique pour les tables/vues problématiques
-					if (
-						tableName === 'produit_categorie' ||
-						tableName === 'categorie' ||
-						tableName.includes('v_produit_categorie_attribut')
-					) {
-						console.log(
-							`🚨 [PREVIEW-RESULT] ${tableName}: ${processedData.length} lignes récupérées`
-						);
-						if (processedData.length > 0) {
-							console.log(
-								`🚨 [PREVIEW-COLUMNS] ${tableName} colonnes:`,
-								Object.keys(processedData[0])
-							);
-							console.log(`🚨 [PREVIEW-SAMPLE] ${tableName} première ligne:`, processedData[0]);
-						}
-					} else {
-						console.log(
-							`✅ [PREVIEW] Succès pour ${tableName}: ${processedData.length} lignes récupérées`
-						);
-					}
+					console.log(`✅ [PREVIEW] Succès pour ${tableData.tableName}: ${tableData.data.length} lignes récupérées`);
 				} catch (error) {
 					console.error(
-						`❌ [PREVIEW] Erreur lors de la récupération des données pour ${tableName}:`,
+						`❌ [PREVIEW] Erreur lors de la récupération des données pour ${tableId}:`,
 						error instanceof Error ? error.message : 'Erreur inconnue'
 					);
 
-					const previewKey = `${database}-${tableName}`;
+					// Parser tableId pour créer la clé de preview même en cas d'erreur
+					let previewKey: string;
+					if (tableId.includes('-')) {
+						previewKey = tableId;
+					} else {
+						// Fallback pour compatibilité
+						const allTables = await getAllDatabaseTables();
+						const tableInfo = allTables.find((t) => t.name === tableId);
+						previewKey = tableInfo ? `${tableInfo.database}-${tableInfo.name}` : tableId;
+					}
 					previewData[previewKey] = [];
 				}
 			}

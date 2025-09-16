@@ -3,13 +3,8 @@ import type { RequestHandler } from './$types';
 import * as XLSX from 'xlsx';
 import { XMLBuilder } from 'fast-xml-parser';
 import type { ExportConfig, ExportResult } from '../+page.server.js';
-import {
-	getAllDatabaseTables,
-	getClient,
-	getTableMetadata,
-	getDatabases,
-	type DatabaseName
-} from '$lib/prisma-meta.js';
+import { getAllDatabaseTables, type DatabaseName } from '$lib/prisma-meta.js';
+import { extractTableData as sharedExtractTableData } from '../shared.js';
 
 // Types pour l'export des données
 interface ExportData {
@@ -86,7 +81,20 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		for (const tableId of config.selectedTables) {
 			try {
-				const tableData = await extractTableData(tableId, config.rowLimit);
+				const sharedTableData = await sharedExtractTableData(tableId, {
+					limit: config.rowLimit,
+					maxBinaryLength: undefined // Pas de limite pour export complet
+				});
+
+				// Adapter le format pour l'export
+				const tableData: ExportData = {
+					tableName: sharedTableData.tableName,
+					database: sharedTableData.database,
+					data: sharedTableData.data,
+					columns: sharedTableData.columns,
+					totalRows: sharedTableData.totalRows
+				};
+
 				exportDataList.push(tableData);
 				totalExportedRows += tableData.totalRows;
 				console.log(`✅ [EXPORT] ${tableData.tableName} [${tableData.database}]: ${tableData.totalRows} lignes`);
@@ -183,159 +191,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 };
 
-// Extraction des données d'une table avec logique dynamique
-async function extractTableData(tableId: string, rowLimit?: number): Promise<ExportData> {
-	const limit = rowLimit && rowLimit > 0 ? rowLimit : undefined;
-	let data: Record<string, unknown>[] = [];
-	let columns: string[] = [];
-
-	// Parser l'ID pour extraire database et table name
-	// Format: "database-tablename" ou juste "tablename" pour compatibilité
-	let database: DatabaseName;
-	let tableName: string;
-
-	if (tableId.includes('-')) {
-		const parts = tableId.split('-');
-		const dbName = parts[0];
-		// Validation du nom de base de données
-		if (dbName !== 'cenov' && dbName !== 'cenov_dev_ewan') {
-			throw new Error(`Base de données inconnue: ${dbName}`);
-		}
-		database = dbName as DatabaseName;
-		tableName = parts.slice(1).join('-');
-	} else {
-		// Fallback: chercher dans toutes les bases (comportement original)
-		const allTables = await getAllDatabaseTables();
-		const tableInfo = allTables.find((t) => t.name === tableId);
-		if (!tableInfo) {
-			throw new Error(`Table non trouvée: ${tableId}`);
-		}
-		database = tableInfo.database;
-		tableName = tableInfo.name;
-	}
-
-
-	const metadata = await getTableMetadata(database, tableName);
-	if (!metadata) {
-		throw new Error(`Métadonnées non trouvées pour ${tableName}`);
-	}
-
-
-	columns = metadata.fields.map((field) => field.name);
-
-	// Pour l'export, utiliser des requêtes SQL directes plutôt que les modèles Prisma
-	// car les noms de modèles peuvent avoir des préfixes de schéma
-	const schema = metadata.schema || 'public';
-
-	// Utiliser le nom @@map si disponible, sinon le nom de table Prisma
-	let realTableName = tableName;
-
-	// Récupérer les métadonnées complètes pour accéder au nom @@map
-	const databases = await getDatabases();
-	const model = databases[database].dmmf.datamodel.models.find((m) => m.name === tableName);
-
-	if (model) {
-		const modelWithMeta = model as { dbName?: string };
-		// Si un nom @@map existe, l'utiliser
-		if (modelWithMeta.dbName) {
-			realTableName = modelWithMeta.dbName;
-		} else {
-			// Seulement nettoyer les préfixes évidents comme "public_"
-			if (tableName.startsWith('public_') && schema === 'public') {
-				realTableName = tableName.substring(7); // 'public_'.length = 7
-			}
-		}
-	}
-
-	// Construire le nom qualifié de la table avec le schéma
-	const qualifiedTableName = `"${schema.replace(/"/g, '""')}"."${realTableName.replace(/"/g, '""')}"`;
-
-
-	// Identifier les colonnes timestamp pour formatage spécial
-	const timestampColumns = metadata?.fields.filter((f) => f.isTimestamp) ?? [];
-
-	// Pour l'export complet, on garde les données binaires complètes mais en hex
-	// (pas de limite à 50 caractères comme pour l'aperçu)
-	const tableFields = metadata?.fields || [];
-	const binaryColumns = tableFields
-		.filter(
-			(field) =>
-				field.type.toLowerCase().includes('byte') ||
-				field.name.includes('binary') ||
-				field.name.includes('blob')
-		)
-		.map((field) => field.name);
-
-	// Construction des sélections avec traitement spécial pour les colonnes binaires et timestamps
-	let selectColumns = '*';
-	let timestampSelects = '';
-
-	if (timestampColumns.length > 0) {
-		timestampSelects =
-			', ' +
-			timestampColumns
-				.map(
-					(col) =>
-						`"${col.name.replace(/"/g, '""')}"::text as "${col.name.replace(/"/g, '""')}_str"`
-				)
-				.join(', ');
-	}
-
-	if (binaryColumns.length > 0 || timestampColumns.length > 0) {
-		const columnSelects = tableFields
-			.map((field) => {
-				if (binaryColumns.includes(field.name)) {
-					// Convertir les colonnes binaires en hex avec limite Excel (32767 chars max)
-					return `CASE WHEN "${field.name}" IS NOT NULL THEN LEFT(encode("${field.name}", 'hex'), 32767) ELSE NULL END as "${field.name}"`;
-				}
-				return `"${field.name}"`;
-			})
-			.join(', ');
-		selectColumns = columnSelects;
-	}
-
-	const query = limit
-		? `SELECT ${selectColumns}${timestampSelects} FROM ${qualifiedTableName} LIMIT ${limit}`
-		: `SELECT ${selectColumns}${timestampSelects} FROM ${qualifiedTableName}`;
-
-
-	try {
-		const prisma = await getClient(database);
-
-		const rawData = (await (
-			prisma as { $queryRawUnsafe: (query: string) => Promise<unknown[]> }
-		).$queryRawUnsafe(query)) as Record<string, unknown>[];
-
-		// Post-traitement : remplacer les timestamps Date par les versions string avec microsecondes
-		data = rawData.map((row) => {
-			const processedRow = { ...row };
-			timestampColumns.forEach((col) => {
-				const stringKey = `${col.name}_str`;
-				if (processedRow[stringKey]) {
-					// Remplacer la version Date par la version string avec microsecondes
-					processedRow[col.name] = processedRow[stringKey];
-					// Supprimer la colonne temporaire _str
-					delete processedRow[stringKey];
-				}
-			});
-			return processedRow;
-		});
-
-	} catch (err) {
-
-		throw new Error(
-			`Erreur lors de l'extraction de ${tableName}: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
-		);
-	}
-
-	return {
-		tableName: realTableName, // Utiliser le nom @@map en priorité
-		database,
-		data,
-		columns,
-		totalRows: data.length
-	};
-}
+// Ancienne fonction extractTableData supprimée - logique déplacée vers shared.ts
 
 // Génération d'un fichier Excel
 async function generateExcelFile(
