@@ -66,12 +66,7 @@ interface ExportFile {
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const config: ExportConfig = await request.json();
-		console.log('🚀 [EXPORT] Configuration reçue:', {
-			selectedTables: config.selectedTables,
-			format: config.format,
-			includeRelations: config.includeRelations,
-			includeHeaders: config.includeHeaders
-		});
+		console.log(`🚀 [EXPORT] Export demandé: ${config.selectedTables.length} tables en ${config.format.toUpperCase()}`);
 
 		// Validation des données
 		if (!config.selectedTables || config.selectedTables.length === 0) {
@@ -94,6 +89,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				const tableData = await extractTableData(tableId, config.rowLimit);
 				exportDataList.push(tableData);
 				totalExportedRows += tableData.totalRows;
+				console.log(`✅ [EXPORT] ${tableData.tableName} [${tableData.database}]: ${tableData.totalRows} lignes`);
 
 				if (config.rowLimit && tableData.totalRows >= config.rowLimit) {
 					warnings.push(
@@ -110,6 +106,15 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		if (exportDataList.length === 0) {
 			throw error(500, "Aucune donnée n'a pu être extraite");
+		}
+
+		// Détection préventive des doublons potentiels pour Excel
+		if (config.format === 'xlsx') {
+			const tableNames = exportDataList.map(t => t.tableName);
+			const duplicates = tableNames.filter((name, index) => tableNames.indexOf(name) !== index);
+			if (duplicates.length > 0) {
+				console.log('⚠️ [EXPORT] Doublons détectés:', [...new Set(duplicates)]);
+			}
 		}
 
 		// Génération du fichier selon le format
@@ -143,13 +148,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			errors
 		};
 
-		console.log('✅ [EXPORT] Export terminé:', {
-			fileName: result.fileName,
-			fileSize: result.fileSize,
-			exportedRows: result.exportedRows,
-			warnings: result.warnings.length,
-			errors: result.errors.length
-		});
+		console.log(`✅ [EXPORT] Export terminé: ${result.fileName} (${result.fileSize} bytes, ${result.exportedRows} lignes)`);
 
 		// Retourner le fichier avec les headers appropriés
 		return new Response(new Uint8Array(exportFile.buffer).buffer, {
@@ -215,34 +214,12 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 		tableName = tableInfo.name;
 	}
 
-	// Debug spécifique pour les tables/vues problématiques
-	if (
-		tableName === 'produit_categorie' ||
-		tableName === 'categorie' ||
-		tableName.includes('v_produit_categorie_attribut')
-	) {
-		console.log(
-			`🚨 [DEBUG-PARSE] tableId "${tableId}" → database: ${database}, table: ${tableName}`
-		);
-	}
 
 	const metadata = await getTableMetadata(database, tableName);
 	if (!metadata) {
 		throw new Error(`Métadonnées non trouvées pour ${tableName}`);
 	}
 
-	// Debug spécifique pour les tables/vues problématiques
-	if (
-		tableName === 'produit_categorie' ||
-		tableName === 'categorie' ||
-		tableName.includes('v_produit_categorie_attribut')
-	) {
-		console.log(`🚨 [DEBUG-TABLE] ${tableName}: database=${database}, schema=${metadata.schema}`);
-		console.log(
-			`🚨 [DEBUG-FIELDS] ${tableName} champs:`,
-			metadata.fields.map((f) => f.name)
-		);
-	}
 
 	columns = metadata.fields.map((field) => field.name);
 
@@ -262,13 +239,6 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 		// Si un nom @@map existe, l'utiliser
 		if (modelWithMeta.dbName) {
 			realTableName = modelWithMeta.dbName;
-			if (
-				tableName === 'produit_categorie' ||
-				tableName === 'categorie' ||
-				tableName.includes('v_produit_categorie_attribut')
-			) {
-				console.log(`🚨 [DEBUG-MAP] ${tableName} @@map → ${realTableName}`);
-			}
 		} else {
 			// Seulement nettoyer les préfixes évidents comme "public_"
 			if (tableName.startsWith('public_') && schema === 'public') {
@@ -280,16 +250,6 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 	// Construire le nom qualifié de la table avec le schéma
 	const qualifiedTableName = `"${schema.replace(/"/g, '""')}"."${realTableName.replace(/"/g, '""')}"`;
 
-	// Debug spécifique pour les tables/vues problématiques
-	if (
-		tableName === 'produit_categorie' ||
-		tableName === 'categorie' ||
-		tableName.includes('v_produit_categorie_attribut')
-	) {
-		console.log(
-			`🚨 [DEBUG-QUERY] Table: ${tableName} → Schema: ${schema} → RealName: ${realTableName} → Qualified: ${qualifiedTableName}`
-		);
-	}
 
 	// Identifier les colonnes timestamp pour formatage spécial
 	const timestampColumns = metadata?.fields.filter((f) => f.isTimestamp) ?? [];
@@ -338,14 +298,6 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 		? `SELECT ${selectColumns}${timestampSelects} FROM ${qualifiedTableName} LIMIT ${limit}`
 		: `SELECT ${selectColumns}${timestampSelects} FROM ${qualifiedTableName}`;
 
-	// Debug spécifique pour les tables/vues problématiques
-	if (
-		tableName === 'produit_categorie' ||
-		tableName === 'categorie' ||
-		tableName.includes('v_produit_categorie_attribut')
-	) {
-		console.log(`🚨 [DEBUG-SQL] ${tableName} requête: ${query}`);
-	}
 
 	try {
 		const prisma = await getClient(database);
@@ -369,31 +321,7 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 			return processedRow;
 		});
 
-		// Debug spécifique pour les tables/vues problématiques
-		if (
-			tableName === 'produit_categorie' ||
-			tableName === 'categorie' ||
-			tableName.includes('v_produit_categorie_attribut')
-		) {
-			console.log(`🚨 [DEBUG-RESULT] ${tableName}: ${data.length} lignes extraites`);
-			if (data.length > 0) {
-				console.log(`🚨 [DEBUG-COLUMNS] ${tableName} colonnes:`, Object.keys(data[0]));
-				console.log(`🚨 [DEBUG-SAMPLE] ${tableName} première ligne:`, data[0]);
-			}
-		}
 	} catch (err) {
-		// Debug spécifique pour les tables/vues problématiques
-		if (
-			tableName === 'produit_categorie' ||
-			tableName === 'categorie' ||
-			tableName.includes('v_produit_categorie_attribut')
-		) {
-			console.error(
-				`🚨 [DEBUG-ERROR] ${tableName} erreur:`,
-				err instanceof Error ? err.message : 'Erreur inconnue'
-			);
-			console.error(`🚨 [DEBUG-ERROR] ${tableName} requête échouée: ${query}`);
-		}
 
 		throw new Error(
 			`Erreur lors de l'extraction de ${tableName}: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
@@ -415,6 +343,10 @@ async function generateExcelFile(
 	config: ExportConfig
 ): Promise<ExportFile> {
 	const workbook = XLSX.utils.book_new();
+	const usedSheetNames = new Set<string>();
+
+	console.log('📊 [EXCEL] Génération du fichier XLSX...');
+	console.log('📊 [EXCEL] Tables à traiter:', exportDataList.map(t => `${t.tableName} [${t.database}]`));
 
 	for (const tableData of exportDataList) {
 		// Préparation des données pour Excel
@@ -454,11 +386,25 @@ async function generateExcelFile(
 		const colWidths = tableData.columns.map((col) => ({ wch: Math.max(col.length, 15) }));
 		worksheet['!cols'] = colWidths;
 
-		// Ajout de la feuille au classeur (utilise désormais le nom @@map en priorité)
-		let sheetName = tableData.tableName;
-		if (sheetName.length > 31) {
-			sheetName = sheetName.substring(0, 31);
+		// Génération simple d'un nom de feuille : nom original + (1), (2) si doublon
+		let baseSheetName = tableData.tableName;
+
+		// Limiter à 31 caractères (limite Excel) en gardant de la place pour (X)
+		if (baseSheetName.length > 27) {
+			baseSheetName = baseSheetName.substring(0, 27);
 		}
+
+		// S'assurer de l'unicité avec (1), (2), etc.
+		let sheetName = baseSheetName;
+		let counter = 1;
+		while (usedSheetNames.has(sheetName)) {
+			sheetName = `${baseSheetName}(${counter})`;
+			counter++;
+		}
+
+		usedSheetNames.add(sheetName);
+		console.log(`📊 [EXCEL] Table ${tableData.tableName} [${tableData.database}] → Feuille: ${sheetName}`);
+
 		XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
 	}
 
