@@ -474,13 +474,15 @@ async function generateCSVFile(
 		}
 	}
 
-	const buffer = Buffer.from(csvContent, 'utf-8');
+	// Ajouter BOM UTF-8 pour une meilleure compatibilité
+	const csvWithBOM = '\uFEFF' + csvContent;
+	const buffer = Buffer.from(csvWithBOM, 'utf-8');
 	const fileName = await generateFileName(exportDataList, 'csv');
 
 	return {
 		buffer,
 		fileName,
-		mimeType: 'text/csv',
+		mimeType: 'text/csv; charset=utf-8',
 		size: buffer.length
 	};
 }
