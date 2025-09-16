@@ -33,7 +33,7 @@
 		AlertCircle
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
-	import { getAllDatabaseNames, getSchemaInfo, type DatabaseName } from '$lib/prisma-meta.js';
+	import { getAllDatabaseNames, type DatabaseName } from '$lib/prisma-meta.js';
 
 	export let data;
 
@@ -152,7 +152,7 @@
 		})),
 		...uniqueSchemas.map((schema: string) => ({
 			value: `schema_${schema}`,
-			label: getSchemaInfo(schema).label,
+			label: schema === 'produit' ? 'Produit' : 'Public',
 			icon: getSchemaIcon(schema)
 		}))
 	];
@@ -722,7 +722,6 @@
 									>
 								</label>
 								{#each uniqueSchemas as schema}
-									{@const schemaInfo = getSchemaInfo(schema)}
 									<label class="flex cursor-pointer items-center space-x-2">
 										<input
 											type="radio"
@@ -738,7 +737,7 @@
 											{:else}
 												<LockOpen class="mr-0.5 inline h-4 w-4" />
 											{/if}
-											{schemaInfo.label} ({filteredTables.filter((t) => t.schema === schema)
+											{schema === 'produit' ? 'Produit' : 'Public'} ({filteredTables.filter((t) => t.schema === schema)
 												.length})
 										</span>
 									</label>
@@ -825,7 +824,8 @@
 					<div class="grid gap-3">
 						{#each filteredTables as table (`${table.database}-${table.name}`)}
 							{@const dbInfo = getDatabaseBadgeInfo(table.database)}
-							{@const schemaInfo = getSchemaInfo(table.schema)}
+							{@const schemaVariant = table.schema === 'produit' ? 'purple' : 'cyan'}
+							{@const schemaLabel = table.schema === 'produit' ? 'Produit' : 'Public'}
 							<label
 								class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100 sm:max-w-none"
 							>
@@ -885,13 +885,13 @@
 														{/if}
 														{table.database.toUpperCase()}
 													</Badge>
-													<Badge variant={schemaInfo.variant}>
+													<Badge variant={schemaVariant}>
 														{#if table.schema === 'produit'}
 															<Package />
 														{:else}
 															<LockOpen />
 														{/if}
-														{schemaInfo.label}
+														{schemaLabel}
 													</Badge>
 												</div>
 												<div class="text-sm text-gray-500">
@@ -925,13 +925,13 @@
 															{table.database.toUpperCase()}
 														{/if}
 													</Badge>
-													<Badge variant={schemaInfo.variant}>
+													<Badge variant={schemaVariant}>
 														{#if table.schema === 'produit'}
 															<Package />
 														{:else}
 															<LockOpen />
 														{/if}
-														{schemaInfo.label}
+														{schemaLabel}
 													</Badge>
 												</div>
 											</div>
@@ -1088,9 +1088,8 @@
 							{@const dbInfo = matchingTableInfo
 								? getDatabaseBadgeInfo(matchingTableInfo.database)
 								: { variant: 'noir' as const, label: 'Inconnue' }}
-							{@const schemaInfo = matchingTableInfo
-								? getSchemaInfo(matchingTableInfo.schema)
-								: { variant: 'cyan' as const, emoji: '🔓', label: 'Public' }}
+							{@const schemaVariant = matchingTableInfo?.schema === 'produit' ? 'purple' : 'cyan'}
+							{@const schemaLabel = matchingTableInfo?.schema === 'produit' ? 'Produit' : 'Public'}
 							<div>
 								<div class="mb-3">
 									<!-- Desktop: layout horizontal -->
@@ -1123,13 +1122,13 @@
 													{/if}
 													{matchingTableInfo?.database.toUpperCase()}
 												</Badge>
-												<Badge variant={schemaInfo.variant}>
+												<Badge variant={schemaVariant}>
 													{#if matchingTableInfo?.schema === 'produit'}
 														<Package />
 													{:else}
 														<LockOpen />
 													{/if}
-													{schemaInfo.label}
+													{schemaLabel}
 												</Badge>
 											{/if}
 										</div>
@@ -1171,13 +1170,13 @@
 														{matchingTableInfo.database.toUpperCase()}
 													{/if}
 												</Badge>
-												<Badge variant={schemaInfo.variant}>
+												<Badge variant={schemaVariant}>
 													{#if matchingTableInfo?.schema === 'produit'}
 														<Package />
 													{:else}
 														<LockOpen />
 													{/if}
-													{schemaInfo.label}
+													{schemaLabel}
 												</Badge>
 											</div>
 										{/if}

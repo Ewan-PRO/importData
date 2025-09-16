@@ -61,7 +61,6 @@ interface ExportFile {
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const config: ExportConfig = await request.json();
-		console.log(`🚀 [EXPORT] Export demandé: ${config.selectedTables.length} tables en ${config.format.toUpperCase()}`);
 
 		// Validation des données
 		if (!config.selectedTables || config.selectedTables.length === 0) {
@@ -97,7 +96,6 @@ export const POST: RequestHandler = async ({ request }) => {
 
 				exportDataList.push(tableData);
 				totalExportedRows += tableData.totalRows;
-				console.log(`✅ [EXPORT] ${tableData.tableName} [${tableData.database}]: ${tableData.totalRows} lignes`);
 
 				if (config.rowLimit && tableData.totalRows >= config.rowLimit) {
 					warnings.push(
@@ -116,14 +114,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			throw error(500, "Aucune donnée n'a pu être extraite");
 		}
 
-		// Détection préventive des doublons potentiels pour Excel
-		if (config.format === 'xlsx') {
-			const tableNames = exportDataList.map(t => t.tableName);
-			const duplicates = tableNames.filter((name, index) => tableNames.indexOf(name) !== index);
-			if (duplicates.length > 0) {
-				console.log('⚠️ [EXPORT] Doublons détectés:', [...new Set(duplicates)]);
-			}
-		}
 
 		// Génération du fichier selon le format
 		let exportFile: ExportFile;
@@ -156,7 +146,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			errors
 		};
 
-		console.log(`✅ [EXPORT] Export terminé: ${result.fileName} (${result.fileSize} bytes, ${result.exportedRows} lignes)`);
 
 		// Retourner le fichier avec les headers appropriés
 		return new Response(new Uint8Array(exportFile.buffer).buffer, {
@@ -201,8 +190,6 @@ async function generateExcelFile(
 	const workbook = XLSX.utils.book_new();
 	const usedSheetNames = new Set<string>();
 
-	console.log('📊 [EXCEL] Génération du fichier XLSX...');
-	console.log('📊 [EXCEL] Tables à traiter:', exportDataList.map(t => `${t.tableName} [${t.database}]`));
 
 	for (const tableData of exportDataList) {
 		// Préparation des données pour Excel
@@ -259,7 +246,6 @@ async function generateExcelFile(
 		}
 
 		usedSheetNames.add(sheetName);
-		console.log(`📊 [EXCEL] Table ${tableData.tableName} [${tableData.database}] → Feuille: ${sheetName}`);
 
 		XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
 	}

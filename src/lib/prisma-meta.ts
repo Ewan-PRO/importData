@@ -166,16 +166,10 @@ function detectPrimaryKeyFromDMMF(model: DMMFModelFromPrisma): string | null {
 
 	// 3. Dernier recours : premier champ
 	if (model.fields.length > 0) {
-		// Debug spécifique pour les tables/vues problématiques
-		if (
-			model.name === 'produit_categorie' ||
-			model.name === 'categorie' ||
-			model.name.includes('v_produit_categorie_attribut')
-		) {
-			console.log(
-				`🚨 [DEBUG-PK] ${model.name}: aucune clé trouvée, utilisation du premier champ: ${model.fields[0].name}`
-			);
-		}
+		// Debug : clé primaire non trouvée pour cette table
+		console.log(
+			`⚠️ [PRISMA-META] ${model.name}: aucune clé trouvée, utilisation du premier champ: ${model.fields[0].name}`
+		);
 		return model.fields[0].name;
 	}
 
@@ -237,14 +231,6 @@ export async function getAllTables(database: DatabaseName): Promise<TableInfo[]>
 		let displayName = realTableName;
 		const schema = modelWithMeta.schema || 'public';
 
-		// Debug spécifique pour les tables/vues problématiques
-		if (
-			model.name === 'produit_categorie' ||
-			model.name === 'categorie' ||
-			model.name.includes('v_produit_categorie_attribut')
-		) {
-			console.log(`🚨 [META] Model: ${model.name}, RealName: ${realTableName}, Schema: ${schema}`);
-		}
 
 		// Nettoyer uniquement les préfixes automatiques évidents (comme public_)
 		// MAIS GARDER les vrais noms de tables qui contiennent le nom du schéma
@@ -322,39 +308,10 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 		return 0;
 	});
 
-	console.log(
-		'📋 [ORDER] Ordre après tri par schéma/type:',
-		sortedTables.map((t) => `${t.displayName} (${t.category}) [${t.database}/${t.schema}]`)
-	);
 
 	return sortedTables;
 }
 
-// Interface pour les informations de schéma
-export interface SchemaInfo {
-	variant: 'cyan' | 'purple';
-	emoji: string;
-	label: string;
-}
-
-// Fonction centralisée de détection des informations de schéma
-export function getSchemaInfo(schema: string): SchemaInfo {
-	switch (schema.toLowerCase()) {
-		case 'produit':
-			return {
-				variant: 'purple',
-				emoji: '📦',
-				label: 'Produit'
-			};
-		case 'public':
-		default:
-			return {
-				variant: 'cyan',
-				emoji: '🔓',
-				label: 'Public'
-			};
-	}
-}
 
 // Obtenir tous les noms de bases de données
 export async function getAllDatabaseNames(): Promise<DatabaseName[]> {

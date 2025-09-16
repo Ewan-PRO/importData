@@ -164,7 +164,6 @@ export const actions: Actions = {
 					const previewKey = `${tableData.database}-${tableName}`;
 					previewData[previewKey] = tableData.data;
 
-					console.log(`✅ [PREVIEW] Succès pour ${tableData.tableName}: ${tableData.data.length} lignes récupérées`);
 				} catch (error) {
 					console.error(
 						`❌ [PREVIEW] Erreur lors de la récupération des données pour ${tableId}:`,
