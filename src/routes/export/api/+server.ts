@@ -401,7 +401,7 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 	}
 
 	return {
-		tableName,
+		tableName: realTableName, // Utiliser le nom @@map en priorité
 		database,
 		data,
 		columns,
@@ -454,7 +454,7 @@ async function generateExcelFile(
 		const colWidths = tableData.columns.map((col) => ({ wch: Math.max(col.length, 15) }));
 		worksheet['!cols'] = colWidths;
 
-		// Ajout de la feuille au classeur
+		// Ajout de la feuille au classeur (utilise désormais le nom @@map en priorité)
 		let sheetName = tableData.tableName;
 		if (sheetName.length > 31) {
 			sheetName = sheetName.substring(0, 31);
@@ -490,7 +490,7 @@ async function generateCSVFile(
 			csvContent += '\n\n';
 		}
 
-		// Nom de la table
+		// Nom de la table (utilise désormais le nom @@map en priorité)
 		csvContent += `# Table: ${tableData.tableName}\n`;
 
 		// En-têtes
