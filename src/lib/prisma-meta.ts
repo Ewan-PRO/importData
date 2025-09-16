@@ -261,9 +261,35 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 	const cenovDevTables = await getAllTables('cenov_dev_ewan');
 	const allTables = [...cenovTables, ...cenovDevTables];
 
-	// Tri ciblé : regrouper les vues par nom de base (normale puis _dev)
+	// Tri par schéma puis par type (table/vue) : tables schema → vues schema → tables schema suivant
 	const sortedTables = allTables.sort((a, b) => {
-		// Seulement pour les vues
+		// Définir la priorité des schémas et databases
+		const getSchemaOrder = (item: TableInfo) => {
+			if (item.database === 'cenov') return 1;
+			if (item.database === 'cenov_dev_ewan' && item.schema === 'produit') return 2;
+			if (item.database === 'cenov_dev_ewan' && item.schema === 'public') return 3;
+			return 4;
+		};
+
+		// Définir la priorité du type (table avant vue dans chaque schéma)
+		const getTypeOrder = (category: 'table' | 'view') => (category === 'table' ? 1 : 2);
+
+		const aSchemaOrder = getSchemaOrder(a);
+		const bSchemaOrder = getSchemaOrder(b);
+		const aTypeOrder = getTypeOrder(a.category);
+		const bTypeOrder = getTypeOrder(b.category);
+
+		// Comparer d'abord par schéma/database
+		if (aSchemaOrder !== bSchemaOrder) {
+			return aSchemaOrder - bSchemaOrder;
+		}
+
+		// Puis par type (table/vue) dans le même schéma
+		if (aTypeOrder !== bTypeOrder) {
+			return aTypeOrder - bTypeOrder;
+		}
+
+		// Enfin, tri spécial pour les vues avec suffixe _dev
 		if (a.category === 'view' && b.category === 'view') {
 			const aBaseName = a.displayName.replace(/_dev$/, '');
 			const bBaseName = b.displayName.replace(/_dev$/, '');
@@ -279,13 +305,13 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 			return aBaseName.localeCompare(bBaseName);
 		}
 
-		// Pour tout le reste, garder l'ordre d'origine (pas de tri)
+		// Pour les tables, garder l'ordre d'origine
 		return 0;
 	});
 
 	console.log(
-		'📋 [ORDER] Ordre après tri des vues:',
-		sortedTables.map((t) => `${t.displayName} (${t.category})`)
+		'📋 [ORDER] Ordre après tri par schéma/type:',
+		sortedTables.map((t) => `${t.displayName} (${t.category}) [${t.database}/${t.schema}]`)
 	);
 
 	return sortedTables;
