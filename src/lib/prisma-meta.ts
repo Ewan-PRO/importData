@@ -141,8 +141,11 @@ export async function getDatabases(): Promise<DatabaseConfig> {
 }
 
 // Obtenir métadonnées d'une table spécifique (côté serveur uniquement)
-// Type pour les modèles DMMF réels
-type DMMFModelFromPrisma = PrismaModule['Prisma']['dmmf']['datamodel']['models'][number];
+// Type pour les modèles DMMF réels (avec support @@map)
+type DMMFModelFromPrisma = PrismaModule['Prisma']['dmmf']['datamodel']['models'][number] & {
+	dbName?: string; // Nom de la table/vue réelle (@@map)
+	schema?: string; // Schéma (@@schema)
+};
 
 // Détecter la clé primaire via DMMF Prisma
 function detectPrimaryKeyFromDMMF(model: DMMFModelFromPrisma): string | null {
@@ -215,25 +218,31 @@ export async function getAllTables(database: DatabaseName): Promise<TableInfo[]>
 
 	const databases = await getDatabases();
 	const tables = databases[database].dmmf.datamodel.models.map((model) => {
+		const modelWithMeta = model as DMMFModelFromPrisma;
+
+		// Utiliser le nom @@map si disponible, sinon le nom du modèle
+		const realTableName = modelWithMeta.dbName || model.name;
+
 		const category: 'table' | 'view' =
-			model.name.startsWith('v_') || model.name.includes('_v_') ? 'view' : 'table';
+			realTableName.startsWith('v_') || realTableName.includes('_v_') ? 'view' : 'table';
 
-		// Détection et nettoyage des noms avec préfixe de schéma
-		let displayName = model.name;
-		const schema = (model as { schema?: string }).schema || 'public';
+		// Utiliser le nom mappé (@@map) comme displayName par défaut
+		let displayName = realTableName;
+		const schema = modelWithMeta.schema || 'public';
 
-		console.log(`🔍 [META] Model: ${model.name}, Schema: ${schema}`);
+		console.log(`🔍 [META] Model: ${model.name}, RealName: ${realTableName}, Schema: ${schema}`);
 
-		// Nettoyer les préfixes de schéma auto-générés par Prisma
-		if (model.name.startsWith(`${schema}_`)) {
-			const cleanName = model.name.substring(schema.length + 1);
-			displayName = cleanName; // Utiliser le nom original sans préfixe et sans indication de schéma
-			console.log(`🧹 [META] Nettoyage: ${model.name} → ${displayName}`);
+		// Nettoyer uniquement les préfixes automatiques évidents (comme public_)
+		// MAIS GARDER les vrais noms de tables qui contiennent le nom du schéma
+		if (realTableName.startsWith('public_') && schema === 'public') {
+			const cleanName = realTableName.substring(7); // 'public_'.length = 7
+			displayName = cleanName;
+			console.log(`🧹 [META] Nettoyage préfixe public: ${realTableName} → ${displayName}`);
 		}
 
 		return {
-			name: model.name,
-			displayName,
+			name: model.name, // Garder le nom de modèle Prisma pour l'accès programmatique
+			displayName, // Utiliser le nom @@map pour l'affichage
 			category,
 			database,
 			schema
@@ -274,7 +283,10 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 		return 0;
 	});
 
-	console.log('📋 [ORDER] Ordre après tri des vues:', sortedTables.map(t => `${t.displayName} (${t.category})`));
+	console.log(
+		'📋 [ORDER] Ordre après tri des vues:',
+		sortedTables.map((t) => `${t.displayName} (${t.category})`)
+	);
 
 	return sortedTables;
 }
