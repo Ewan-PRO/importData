@@ -291,6 +291,9 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 		);
 	}
 
+	// Identifier les colonnes timestamp pour formatage spécial
+	const timestampColumns = metadata?.fields.filter((f) => f.isTimestamp) ?? [];
+
 	// Pour l'export complet, on garde les données binaires complètes mais en hex
 	// (pas de limite à 50 caractères comme pour l'aperçu)
 	const tableFields = metadata?.fields || [];
@@ -303,9 +306,22 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 		)
 		.map((field) => field.name);
 
-	// Construction des sélections avec traitement spécial pour les colonnes binaires
+	// Construction des sélections avec traitement spécial pour les colonnes binaires et timestamps
 	let selectColumns = '*';
-	if (binaryColumns.length > 0) {
+	let timestampSelects = '';
+
+	if (timestampColumns.length > 0) {
+		timestampSelects =
+			', ' +
+			timestampColumns
+				.map(
+					(col) =>
+						`"${col.name.replace(/"/g, '""')}"::text as "${col.name.replace(/"/g, '""')}_str"`
+				)
+				.join(', ');
+	}
+
+	if (binaryColumns.length > 0 || timestampColumns.length > 0) {
 		const columnSelects = tableFields
 			.map((field) => {
 				if (binaryColumns.includes(field.name)) {
@@ -319,8 +335,8 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 	}
 
 	const query = limit
-		? `SELECT ${selectColumns} FROM ${qualifiedTableName} LIMIT ${limit}`
-		: `SELECT ${selectColumns} FROM ${qualifiedTableName}`;
+		? `SELECT ${selectColumns}${timestampSelects} FROM ${qualifiedTableName} LIMIT ${limit}`
+		: `SELECT ${selectColumns}${timestampSelects} FROM ${qualifiedTableName}`;
 
 	// Debug spécifique pour les tables/vues problématiques
 	if (
@@ -334,9 +350,24 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 	try {
 		const prisma = await getClient(database);
 
-		data = (await (
+		const rawData = (await (
 			prisma as { $queryRawUnsafe: (query: string) => Promise<unknown[]> }
 		).$queryRawUnsafe(query)) as Record<string, unknown>[];
+
+		// Post-traitement : remplacer les timestamps Date par les versions string avec microsecondes
+		data = rawData.map((row) => {
+			const processedRow = { ...row };
+			timestampColumns.forEach((col) => {
+				const stringKey = `${col.name}_str`;
+				if (processedRow[stringKey]) {
+					// Remplacer la version Date par la version string avec microsecondes
+					processedRow[col.name] = processedRow[stringKey];
+					// Supprimer la colonne temporaire _str
+					delete processedRow[stringKey];
+				}
+			});
+			return processedRow;
+		});
 
 		// Debug spécifique pour les tables/vues problématiques
 		if (
@@ -402,12 +433,14 @@ async function generateExcelFile(
 
 				// Formatage des valeurs pour Excel
 				if (value instanceof Date) {
+					// Ne pas reformater si c'est déjà un timestamp formaté
 					value = value.toISOString();
 				} else if (value === null || value === undefined) {
 					value = '';
 				} else if (typeof value === 'object') {
 					value = JSON.stringify(value);
 				}
+				// Les timestamps sont maintenant des strings formatés, on les garde tels quels
 
 				excelRow.push(value);
 			}
@@ -479,6 +512,7 @@ async function generateCSVFile(
 				} else {
 					value = String(value);
 				}
+				// Les timestamps sont maintenant des strings formatés, on les garde tels quels
 
 				// Échappement des guillemets et des virgules
 				if (
@@ -533,6 +567,7 @@ async function generateXMLFile(exportDataList: ExportData[]): Promise<ExportFile
 								} else {
 									value = String(value);
 								}
+								// Les timestamps sont maintenant des strings formatés, on les garde tels quels
 								xmlRow[column] = value;
 							}
 							return xmlRow;
