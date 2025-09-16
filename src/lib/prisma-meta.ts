@@ -166,9 +166,16 @@ function detectPrimaryKeyFromDMMF(model: DMMFModelFromPrisma): string | null {
 
 	// 3. Dernier recours : premier champ
 	if (model.fields.length > 0) {
-		console.log(
-			`⚠️ [DEBUG] Table ${model.name}: aucune clé trouvée, utilisation du premier champ: ${model.fields[0].name}`
-		);
+		// Debug spécifique pour les tables/vues problématiques
+		if (
+			model.name === 'produit_categorie' ||
+			model.name === 'categorie' ||
+			model.name.includes('v_produit_categorie_attribut')
+		) {
+			console.log(
+				`🚨 [DEBUG-PK] ${model.name}: aucune clé trouvée, utilisation du premier champ: ${model.fields[0].name}`
+			);
+		}
 		return model.fields[0].name;
 	}
 
@@ -230,14 +237,20 @@ export async function getAllTables(database: DatabaseName): Promise<TableInfo[]>
 		let displayName = realTableName;
 		const schema = modelWithMeta.schema || 'public';
 
-		console.log(`🔍 [META] Model: ${model.name}, RealName: ${realTableName}, Schema: ${schema}`);
+		// Debug spécifique pour les tables/vues problématiques
+		if (
+			model.name === 'produit_categorie' ||
+			model.name === 'categorie' ||
+			model.name.includes('v_produit_categorie_attribut')
+		) {
+			console.log(`🚨 [META] Model: ${model.name}, RealName: ${realTableName}, Schema: ${schema}`);
+		}
 
 		// Nettoyer uniquement les préfixes automatiques évidents (comme public_)
 		// MAIS GARDER les vrais noms de tables qui contiennent le nom du schéma
 		if (realTableName.startsWith('public_') && schema === 'public') {
 			const cleanName = realTableName.substring(7); // 'public_'.length = 7
 			displayName = cleanName;
-			console.log(`🧹 [META] Nettoyage préfixe public: ${realTableName} → ${displayName}`);
 		}
 
 		return {

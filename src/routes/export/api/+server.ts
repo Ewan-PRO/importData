@@ -7,6 +7,7 @@ import {
 	getAllDatabaseTables,
 	getClient,
 	getTableMetadata,
+	getDatabases,
 	type DatabaseName
 } from '$lib/prisma-meta.js';
 
@@ -214,24 +215,32 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 		tableName = tableInfo.name;
 	}
 
-	console.log(
-		`🔍 [DEBUG] Parsing tableId "${tableId}" -> database: ${database}, table: ${tableName}`
-	);
+	// Debug spécifique pour les tables/vues problématiques
+	if (
+		tableName === 'produit_categorie' ||
+		tableName === 'categorie' ||
+		tableName.includes('v_produit_categorie_attribut')
+	) {
+		console.log(
+			`🚨 [DEBUG-PARSE] tableId "${tableId}" → database: ${database}, table: ${tableName}`
+		);
+	}
 
 	const metadata = await getTableMetadata(database, tableName);
 	if (!metadata) {
 		throw new Error(`Métadonnées non trouvées pour ${tableName}`);
 	}
 
-	// Log debug pour les tables avec schema ou duplications
-	const category = tableName.startsWith('v_') || tableName.includes('_v_') ? 'view' : 'table';
+	// Debug spécifique pour les tables/vues problématiques
 	if (
-		metadata.schema !== 'public' ||
-		tableName === 'kit' ||
+		tableName === 'produit_categorie' ||
+		tableName === 'categorie' ||
 		tableName.includes('v_produit_categorie_attribut')
 	) {
+		console.log(`🚨 [DEBUG-TABLE] ${tableName}: database=${database}, schema=${metadata.schema}`);
 		console.log(
-			`🔍 [DEBUG] Table ${tableName}: database=${database}, schema=${metadata.schema}, category=${category}`
+			`🚨 [DEBUG-FIELDS] ${tableName} champs:`,
+			metadata.fields.map((f) => f.name)
 		);
 	}
 
@@ -241,23 +250,46 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 	// car les noms de modèles peuvent avoir des préfixes de schéma
 	const schema = metadata.schema || 'public';
 
-	// Nettoyer le nom de table pour enlever le préfixe de schéma auto-généré par Prisma
+	// Utiliser le nom @@map si disponible, sinon le nom de table Prisma
 	let realTableName = tableName;
-	console.log(`🔍 [EXPORT-DEBUG] Original tableName: ${tableName}, Schema: ${schema}`);
 
-	if (tableName.startsWith(`${schema}_`)) {
-		realTableName = tableName.substring(schema.length + 1);
-		console.log(`🧹 [EXPORT] Nettoyage préfixe: ${tableName} → ${realTableName}`);
-	} else {
-		console.log(`ℹ️ [EXPORT] Pas de nettoyage nécessaire pour: ${tableName}`);
+	// Récupérer les métadonnées complètes pour accéder au nom @@map
+	const databases = await getDatabases();
+	const model = databases[database].dmmf.datamodel.models.find((m) => m.name === tableName);
+
+	if (model) {
+		const modelWithMeta = model as { dbName?: string };
+		// Si un nom @@map existe, l'utiliser
+		if (modelWithMeta.dbName) {
+			realTableName = modelWithMeta.dbName;
+			if (
+				tableName === 'produit_categorie' ||
+				tableName === 'categorie' ||
+				tableName.includes('v_produit_categorie_attribut')
+			) {
+				console.log(`🚨 [DEBUG-MAP] ${tableName} @@map → ${realTableName}`);
+			}
+		} else {
+			// Seulement nettoyer les préfixes évidents comme "public_"
+			if (tableName.startsWith('public_') && schema === 'public') {
+				realTableName = tableName.substring(7); // 'public_'.length = 7
+			}
+		}
 	}
 
 	// Construire le nom qualifié de la table avec le schéma
 	const qualifiedTableName = `"${schema.replace(/"/g, '""')}"."${realTableName.replace(/"/g, '""')}"`;
 
-	console.log(
-		`🔍 [EXPORT] Export query - Table: ${tableName}, Schema: ${schema}, Real name: ${realTableName}, Qualified: ${qualifiedTableName}`
-	);
+	// Debug spécifique pour les tables/vues problématiques
+	if (
+		tableName === 'produit_categorie' ||
+		tableName === 'categorie' ||
+		tableName.includes('v_produit_categorie_attribut')
+	) {
+		console.log(
+			`🚨 [DEBUG-QUERY] Table: ${tableName} → Schema: ${schema} → RealName: ${realTableName} → Qualified: ${qualifiedTableName}`
+		);
+	}
 
 	// Pour l'export complet, on garde les données binaires complètes mais en hex
 	// (pas de limite à 50 caractères comme pour l'aperçu)
@@ -290,7 +322,14 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 		? `SELECT ${selectColumns} FROM ${qualifiedTableName} LIMIT ${limit}`
 		: `SELECT ${selectColumns} FROM ${qualifiedTableName}`;
 
-	console.log(`🚀 [EXPORT] Exécution de la requête: ${query}`);
+	// Debug spécifique pour les tables/vues problématiques
+	if (
+		tableName === 'produit_categorie' ||
+		tableName === 'categorie' ||
+		tableName.includes('v_produit_categorie_attribut')
+	) {
+		console.log(`🚨 [DEBUG-SQL] ${tableName} requête: ${query}`);
+	}
 
 	try {
 		const prisma = await getClient(database);
@@ -299,21 +338,31 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 			prisma as { $queryRawUnsafe: (query: string) => Promise<unknown[]> }
 		).$queryRawUnsafe(query)) as Record<string, unknown>[];
 
-		console.log(`✅ [EXPORT] Succès pour ${tableName}: ${data.length} lignes extraites`);
-	} catch (err) {
-		console.error(
-			`❌ [EXPORT] Erreur avec ${tableName} (${database}):`,
-			err instanceof Error ? err.message : 'Erreur inconnue'
-		);
-
-		// Détails supplémentaires pour le debug
-		if (err instanceof Error) {
-			console.error(`❌ [EXPORT] Message d'erreur: ${err.message}`);
-			console.error(`❌ [EXPORT] Stack: ${err.stack}`);
+		// Debug spécifique pour les tables/vues problématiques
+		if (
+			tableName === 'produit_categorie' ||
+			tableName === 'categorie' ||
+			tableName.includes('v_produit_categorie_attribut')
+		) {
+			console.log(`🚨 [DEBUG-RESULT] ${tableName}: ${data.length} lignes extraites`);
+			if (data.length > 0) {
+				console.log(`🚨 [DEBUG-COLUMNS] ${tableName} colonnes:`, Object.keys(data[0]));
+				console.log(`🚨 [DEBUG-SAMPLE] ${tableName} première ligne:`, data[0]);
+			}
 		}
-
-		console.error(`❌ [EXPORT] Requête qui a échoué: ${query}`);
-		console.error(`❌ [EXPORT] Table qualifiée: ${qualifiedTableName}`);
+	} catch (err) {
+		// Debug spécifique pour les tables/vues problématiques
+		if (
+			tableName === 'produit_categorie' ||
+			tableName === 'categorie' ||
+			tableName.includes('v_produit_categorie_attribut')
+		) {
+			console.error(
+				`🚨 [DEBUG-ERROR] ${tableName} erreur:`,
+				err instanceof Error ? err.message : 'Erreur inconnue'
+			);
+			console.error(`🚨 [DEBUG-ERROR] ${tableName} requête échouée: ${query}`);
+		}
 
 		throw new Error(
 			`Erreur lors de l'extraction de ${tableName}: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
