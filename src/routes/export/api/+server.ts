@@ -151,7 +151,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		});
 
 		// Retourner le fichier avec les headers appropriés
-		return new Response(exportFile.buffer, {
+		return new Response(new Uint8Array(exportFile.buffer).buffer, {
 			status: 200,
 			headers: {
 				'Content-Type': exportFile.mimeType,
@@ -263,19 +263,26 @@ async function extractTableData(tableId: string, rowLimit?: number): Promise<Exp
 	// (pas de limite à 50 caractères comme pour l'aperçu)
 	const tableFields = metadata?.fields || [];
 	const binaryColumns = tableFields
-		.filter(field => field.type.toLowerCase().includes('byte') || field.name.includes('binary') || field.name.includes('blob'))
-		.map(field => field.name);
+		.filter(
+			(field) =>
+				field.type.toLowerCase().includes('byte') ||
+				field.name.includes('binary') ||
+				field.name.includes('blob')
+		)
+		.map((field) => field.name);
 
 	// Construction des sélections avec traitement spécial pour les colonnes binaires
 	let selectColumns = '*';
 	if (binaryColumns.length > 0) {
-		const columnSelects = tableFields.map(field => {
-			if (binaryColumns.includes(field.name)) {
-				// Convertir les colonnes binaires en hex avec limite Excel (32767 chars max)
-				return `CASE WHEN "${field.name}" IS NOT NULL THEN LEFT(encode("${field.name}", 'hex'), 32767) ELSE NULL END as "${field.name}"`;
-			}
-			return `"${field.name}"`;
-		}).join(', ');
+		const columnSelects = tableFields
+			.map((field) => {
+				if (binaryColumns.includes(field.name)) {
+					// Convertir les colonnes binaires en hex avec limite Excel (32767 chars max)
+					return `CASE WHEN "${field.name}" IS NOT NULL THEN LEFT(encode("${field.name}", 'hex'), 32767) ELSE NULL END as "${field.name}"`;
+				}
+				return `"${field.name}"`;
+			})
+			.join(', ');
 		selectColumns = columnSelects;
 	}
 
@@ -519,26 +526,29 @@ async function generateJSONFile(
 			totalTables: exportDataList.length,
 			totalRows: exportDataList.reduce((sum, t) => sum + t.totalRows, 0)
 		},
-		databases: exportDataList.reduce((acc, tableData) => {
-			if (!acc[tableData.database]) {
-				acc[tableData.database] = {
-					name: tableData.database,
-					tables: {}
+		databases: exportDataList.reduce(
+			(acc, tableData) => {
+				if (!acc[tableData.database]) {
+					acc[tableData.database] = {
+						name: tableData.database,
+						tables: {}
+					};
+				}
+
+				acc[tableData.database].tables[tableData.tableName] = {
+					metadata: {
+						tableName: tableData.tableName,
+						columns: tableData.columns,
+						totalRows: tableData.totalRows,
+						exportedRows: tableData.data.length
+					},
+					data: tableData.data
 				};
-			}
-			
-			acc[tableData.database].tables[tableData.tableName] = {
-				metadata: {
-					tableName: tableData.tableName,
-					columns: tableData.columns,
-					totalRows: tableData.totalRows,
-					exportedRows: tableData.data.length
-				},
-				data: tableData.data
-			};
-			
-			return acc;
-		}, {} as Record<string, { name: string; tables: Record<string, unknown> }>)
+
+				return acc;
+			},
+			{} as Record<string, { name: string; tables: Record<string, unknown> }>
+		)
 	};
 
 	const jsonContent = JSON.stringify(jsonData, null, 2);
