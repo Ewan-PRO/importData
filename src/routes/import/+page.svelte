@@ -18,8 +18,15 @@
 		CircleArrowLeft,
 		CircleCheck
 	} from 'lucide-svelte';
+	import type { UserInfoResponse } from '@logto/node';
+	import type { SuperValidated } from 'sveltekit-superforms';
 
-	export let data;
+	export let data: {
+		user: UserInfoResponse | undefined;
+		form: SuperValidated<{ data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[]; }, any, { data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[]; }>;
+		availableTables: { value: string; name: string; category: string; }[];
+		tableFields: Record<string, string[]>;
+	};
 
 	// Définition du type de résultat attendu
 	type ValidationResult = {
@@ -99,9 +106,9 @@
 	let step = 1;
 	let file: File | null = null;
 	let fileName = '';
-	let rawData: any[] = [];
+	let rawData: unknown[][] = [];
 	let headers: string[] = [];
-	let previewData: any[] = [];
+	let previewData: unknown[][] = [];
 	let selectedTables: string[] = ['supplier_dev']; // Tables sélectionnées par défaut
 	let mappedFields: Record<string, string> = {};
 	let hasHeaders = true; // Détection automatique
@@ -252,7 +259,7 @@
 				.toLowerCase()
 				.replace(/[^a-z0-9]/g, '');
 
-			return allKnownFields.some((field) => {
+			return allKnownFields.some((field: string) => {
 				const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
 				return normalizedCell.includes(normalizedField) || normalizedField.includes(normalizedCell);
 			});
@@ -278,7 +285,7 @@
 		// Obtenir tous les champs possibles des tables sélectionnées
 		const allFields = selectedTables.reduce((acc, table) => {
 			const fields = tableFields[table] || [];
-			fields.forEach((field) => {
+			fields.forEach((field: string) => {
 				if (!acc.includes(field)) {
 					acc.push(field);
 				}
@@ -298,7 +305,7 @@
 				let bestMatch = '';
 				let bestScore = 0;
 
-				allFields.forEach((field) => {
+				allFields.forEach((field: string) => {
 					const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 					if (
@@ -340,7 +347,7 @@
 			const fields = tableFields[table] || [];
 			// Heuristique simple : les champs requis sont généralement les premiers champs (pas les labels)
 			// et suivent certains patterns
-			fields.forEach((field) => {
+			fields.forEach((field: string) => {
 				const isRequired =
 					// Patterns spécifiques pour les champs requis
 					(field.includes('_nat') && field.includes('atr_')) ||
@@ -550,7 +557,7 @@
 							<div class="rounded-lg border p-4">
 								<h3 class="mb-2 font-medium text-gray-600">Fournisseurs</h3>
 								<div class="space-y-2">
-									{#each availableTables.filter((t) => t.category === 'supplier') as table}
+									{#each availableTables.filter((t: { value: string; name: string; category: string; }) => t.category === 'supplier') as table}
 										<label class="flex items-center space-x-2">
 											<input
 												type="checkbox"
@@ -568,7 +575,7 @@
 							<div class="rounded-lg border p-4">
 								<h3 class="mb-2 font-medium text-gray-600">Attributs</h3>
 								<div class="space-y-2">
-									{#each availableTables.filter((t) => t.category === 'attribute') as table}
+									{#each availableTables.filter((t: { value: string; name: string; category: string; }) => t.category === 'attribute') as table}
 										<label class="flex items-center space-x-2">
 											<input
 												type="checkbox"
@@ -586,7 +593,7 @@
 							<div class="rounded-lg border p-4">
 								<h3 class="mb-2 font-medium text-gray-600">Catégories</h3>
 								<div class="space-y-2">
-									{#each availableTables.filter((t) => t.category === 'category') as table}
+									{#each availableTables.filter((t: { value: string; name: string; category: string; }) => t.category === 'category') as table}
 										<label class="flex items-center space-x-2">
 											<input
 												type="checkbox"
@@ -609,7 +616,7 @@
 						{:else}
 							<p class="mt-2 text-sm text-gray-600">
 								{selectedTables.length} table(s) sélectionnée(s): {selectedTables
-									.map((t) => availableTables.find((at) => at.value === t)?.name)
+									.map((t: string) => availableTables.find((at: { value: string; name: string; category: string; }) => at.value === t)?.name)
 									.join(', ')}
 							</p>
 						{/if}
@@ -746,7 +753,7 @@
 							<div class="space-y-2">
 								{#each selectedTables as table}
 									{@const tableResult = validationResults.resultsByTable[table]}
-									{@const tableName = availableTables.find((t) => t.value === table)?.name || table}
+									{@const tableName = availableTables.find((t: { value: string; name: string; category: string; }) => t.value === table)?.name || table}
 									{#if tableResult}
 										<div class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
 											<span class="font-medium">{tableName}</span>
@@ -848,7 +855,7 @@
 							<div class="mb-4 space-y-3">
 								{#each selectedTables as table}
 									{@const tableResult = validationResults.resultsByTable[table]}
-									{@const tableName = availableTables.find((t) => t.value === table)?.name || table}
+									{@const tableName = availableTables.find((t: { value: string; name: string; category: string; }) => t.value === table)?.name || table}
 									{#if tableResult && tableResult.inserted > 0}
 										<div
 											class="flex items-center justify-between rounded-lg border border-green-200 bg-white p-3"
@@ -866,7 +873,7 @@
 							<p class="mb-4 text-center">
 								{validationResults.inserted || validationResults.validRows} lignes ont été importées
 								dans la table : {selectedTables
-									.map((t) => availableTables.find((at) => at.value === t)?.name)
+									.map((t: string) => availableTables.find((at: { value: string; name: string; category: string; }) => at.value === t)?.name)
 									.join(', ')}.
 								{#if validationResults.inserted && validationResults.updated}
 									({validationResults.inserted} insertions et {validationResults.updated} mises à jour)
