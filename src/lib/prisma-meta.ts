@@ -49,20 +49,19 @@ async function initializeCenovDevPrisma() {
 
 	try {
 		const { createRequire } = await import('node:module');
-		const { fileURLToPath } = await import('node:url');
 		const path = await import('node:path');
 
-		const __filename = fileURLToPath(import.meta.url);
-		const __dirname = path.dirname(__filename);
 		const require = createRequire(import.meta.url);
 
-		const devPrismaPath = path.resolve(__dirname, '../../prisma/cenov_dev_ewan/generated');
+		// Utiliser process.cwd() qui fonctionne partout grâce à vite.config.ts noExternal
+		const devPrismaPath = path.resolve(process.cwd(), 'prisma/cenov_dev_ewan/generated');
+
 		const devPrismaModule = require(devPrismaPath) as unknown as PrismaModule;
 		CenovDevPrisma = devPrismaModule.Prisma;
 		CenovDevPrismaClient = devPrismaModule.PrismaClient;
 	} catch (error) {
-		console.error('❌ [PRISMA-META] Erreur lors du chargement du client CENOV_DEV_EWAN:', error);
-		// Fallback au client principal si le client dev n'est pas disponible
+		console.error('❌ [PRISMA-META] Impossible de charger le client CENOV_DEV_EWAN, utilisation du client principal:', error instanceof Error ? error.message : String(error));
+		// Fallback au client principal
 		CenovDevPrisma = Prisma;
 		CenovDevPrismaClient = PrismaClient;
 	}

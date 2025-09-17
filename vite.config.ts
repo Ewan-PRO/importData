@@ -11,7 +11,9 @@ export default defineConfig({
 	},
 	ssr: {
 		// Forcer Prisma à rester externe
-		external: ['@prisma/client', '.prisma/client']
+		external: ['@prisma/client', '.prisma/client'],
+		// NOUVEAU: Forcer l'inclusion du 2ème client cenov_dev_ewan dans le bundle
+		noExternal: ['../../prisma/cenov_dev_ewan/generated']
 	},
 	optimizeDeps: {
 		// Exclure Prisma de l'optimisation des dépendances
