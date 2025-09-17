@@ -107,24 +107,24 @@
 	<div class="flex flex-wrap gap-3 sm:flex-nowrap sm:items-start">
 		{#if showSortFilter}
 			<div class="w-full sm:w-40">
-				<Select.Root 
-					type="single" 
-					bind:value={sortOrder} 
+				<Select.Root
+					type="single"
+					bind:value={sortOrder}
 					onValueChange={(value) => {
 						sortOrder = value || 'asc';
 						handleSortChange();
 					}}
 				>
 					<Select.Trigger class="w-full" hasValue={!!sortOrder}>
-						{sortOrder === 'asc' ? '🔤 Ordre par défaut' : sortOrder === 'desc' ? '🔄 Ordre inversé' : '🆔 Tri par ID décroissant'}
+						{sortOrder === 'asc'
+							? '🔤 Ordre par défaut'
+							: sortOrder === 'desc'
+								? '🔄 Ordre inversé'
+								: '🆔 Tri par ID décroissant'}
 					</Select.Trigger>
 					<Select.Content>
-						<Select.Item value="asc" label="🔤 Ordre par défaut">
-							🔤 Ordre par défaut
-						</Select.Item>
-						<Select.Item value="desc" label="🔄 Ordre inversé">
-							🔄 Ordre inversé
-						</Select.Item>
+						<Select.Item value="asc" label="🔤 Ordre par défaut">🔤 Ordre par défaut</Select.Item>
+						<Select.Item value="desc" label="🔄 Ordre inversé">🔄 Ordre inversé</Select.Item>
 						{#if !hideIdDesc}
 							<Select.Item value="id_desc" label="🆔 Tri par ID décroissant">
 								🆔 Tri par ID décroissant
@@ -134,7 +134,7 @@
 				</Select.Root>
 			</div>
 		{/if}
-		
+
 		<Button variant="noir" class="flex-1 sm:flex-initial" onclick={handleReset}>
 			<RefreshCcw class="mr-2 h-4 w-4" />
 			Réinitialiser

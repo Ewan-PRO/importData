@@ -131,10 +131,5 @@
 		<slot />
 	</main>
 
-	<Toaster 
-		position="top-center" 
-		richColors={true}
-		closeButton={true}
-		duration={5000}
-	/>
+	<Toaster position="top-center" richColors={true} closeButton={true} duration={5000} />
 </div>

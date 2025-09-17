@@ -75,17 +75,17 @@
 
 	function updateFormData(key: string, value: any) {
 		formData = { ...formData, [key]: value };
-		
+
 		// Vérifier si la valeur a été modifiée par rapport à l'original
 		const originalValue = originalData[key] || '';
 		const currentValue = value || '';
-		
+
 		// Marquer le champ comme modifié si les valeurs diffèrent
-		modifiedFields = { 
-			...modifiedFields, 
-			[key]: isEdit && originalValue.toString() !== currentValue.toString() 
+		modifiedFields = {
+			...modifiedFields,
+			[key]: isEdit && originalValue.toString() !== currentValue.toString()
 		};
-		
+
 		console.log('FormData mis à jour:', formData);
 		console.log('Champs modifiés:', modifiedFields);
 	}
@@ -169,7 +169,7 @@
 				data: finalData,
 				isEdit
 			});
-			
+
 			// Réinitialiser les champs modifiés après soumission réussie
 			modifiedFields = {};
 			isOpen = false;
@@ -243,7 +243,11 @@
 							placeholder={field.placeholder || ''}
 							required={field.required}
 							bind:value={formData[field.key]}
-							class={errors[field.key] ? 'border-red-500' : modifiedFields[field.key] ? 'bg-orange-100' : ''}
+							class={errors[field.key]
+								? 'border-red-500'
+								: modifiedFields[field.key]
+									? 'bg-orange-100'
+									: ''}
 						/>
 					{:else if field.type === 'select'}
 						<div class="relative">
@@ -257,7 +261,11 @@
 								}}
 							>
 								<Select.SelectTrigger
-									class={errors[field.key] ? 'border-red-500' : modifiedFields[field.key] ? 'bg-orange-100' : ''}
+									class={errors[field.key]
+										? 'border-red-500'
+										: modifiedFields[field.key]
+											? 'bg-orange-100'
+											: ''}
 									hasValue={!!(formData[field.key] && formData[field.key] !== '')}
 								>
 									{formData[field.key]
@@ -322,7 +330,11 @@
 								const target = e.target as HTMLInputElement;
 								updateFormData(field.key, target.value);
 							}}
-							class={errors[field.key] ? 'border-red-500' : modifiedFields[field.key] ? 'bg-orange-100' : ''}
+							class={errors[field.key]
+								? 'border-red-500'
+								: modifiedFields[field.key]
+									? 'bg-orange-100'
+									: ''}
 						/>
 					{/if}
 

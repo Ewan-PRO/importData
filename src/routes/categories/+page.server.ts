@@ -83,7 +83,7 @@ const categorySchema = z
 export const load = (async (event) => {
 	// Protection de la route - redirection vers / si non connecté
 	await protect(event);
-	
+
 	const { fetch, depends } = event;
 	depends('app:categories'); // Pour permettre l'invalidation avec invalidateAll()
 
@@ -118,7 +118,7 @@ export const actions: Actions = {
 	create: async (event) => {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
-		
+
 		const { request, fetch } = event;
 		const formData = await request.formData();
 
@@ -162,7 +162,7 @@ export const actions: Actions = {
 	update: async (event) => {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
-		
+
 		const { request, fetch } = event;
 		const formData = await request.formData();
 		const id = safeFormDataToString(formData.get('id'));
@@ -203,7 +203,7 @@ export const actions: Actions = {
 	delete: async (event) => {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
-		
+
 		const { request, fetch } = event;
 		const formData = await request.formData();
 		const id = safeFormDataToString(formData.get('id'));

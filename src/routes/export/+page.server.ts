@@ -163,7 +163,6 @@ export const actions: Actions = {
 					const tableName = tableId.includes('-') ? tableId.split('-').slice(1).join('-') : tableId;
 					const previewKey = `${tableData.database}-${tableName}`;
 					previewData[previewKey] = tableData.data;
-
 				} catch (error) {
 					console.error(
 						`❌ [PREVIEW] Erreur lors de la récupération des données pour ${tableId}:`,

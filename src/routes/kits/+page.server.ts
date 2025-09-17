@@ -41,7 +41,7 @@ const kitSchema = z.object({
 export const load = (async (event) => {
 	// Protection de la route - redirection vers / si non connecté
 	await protect(event);
-	
+
 	const { fetch, depends } = event;
 	depends('app:kits'); // Pour permettre l'invalidation avec invalidateAll()
 
@@ -74,7 +74,7 @@ export const actions: Actions = {
 	create: async (event) => {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
-		
+
 		const { request, fetch } = event;
 		const formData = await request.formData();
 		const form = await superValidate(formData, zod(kitSchema));
@@ -114,7 +114,7 @@ export const actions: Actions = {
 	update: async (event) => {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
-		
+
 		const { request, fetch } = event;
 		const formData = await request.formData();
 		const id = safeFormDataToString(formData.get('id'));
@@ -124,7 +124,7 @@ export const actions: Actions = {
 		console.log('ID extrait:', id);
 
 		if (!id) {
-			console.log('❌ ID manquant - Échec de l\'action update');
+			console.log("❌ ID manquant - Échec de l'action update");
 			return fail(400, { error: 'ID de kit manquant' });
 		}
 
@@ -170,7 +170,7 @@ export const actions: Actions = {
 	delete: async (event) => {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
-		
+
 		const { request, fetch } = event;
 		const formData = await request.formData();
 		const id = safeFormDataToString(formData.get('id'));

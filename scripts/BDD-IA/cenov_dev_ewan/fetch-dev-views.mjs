@@ -115,7 +115,10 @@ async function getViewColumns(schemaName, viewName) {
     `;
 		return convertBigIntToNumber(result);
 	} catch (error) {
-		console.error(`Erreur lors de la récupération des colonnes de ${schemaName}.${viewName}:`, error.message);
+		console.error(
+			`Erreur lors de la récupération des colonnes de ${schemaName}.${viewName}:`,
+			error.message
+		);
 		return [];
 	}
 }
@@ -137,7 +140,7 @@ async function fetchDevViews() {
 		// Traitement de chaque schéma
 		for (const schema of SCHEMAS) {
 			console.log(`\n🔍 Traitement du schéma: ${schema}`);
-			
+
 			const [views, materializedViews] = await Promise.all([
 				getViewsForSchema(schema),
 				getMaterializedViewsForSchema(schema)
@@ -176,13 +179,16 @@ async function fetchDevViews() {
 			// Calcul des totaux par schéma
 			const schemaData = results.schemas[schema];
 			schemaData.totalRows = Object.values(schemaData.views).reduce(
-				(sum, view) => sum + view.rowCount, 0
+				(sum, view) => sum + view.rowCount,
+				0
 			);
 			schemaData.viewsWithErrors = Object.values(schemaData.views).filter(
-				view => view.error
+				(view) => view.error
 			).length;
 
-			console.log(`   📈 Total ${schema}: ${schemaData.totalViews} vues, ${schemaData.totalRows} lignes`);
+			console.log(
+				`   📈 Total ${schema}: ${schemaData.totalViews} vues, ${schemaData.totalRows} lignes`
+			);
 			if (schemaData.viewsWithErrors > 0) {
 				console.log(`   ⚠️  Erreurs ${schema}: ${schemaData.viewsWithErrors} vues`);
 			}
@@ -202,9 +208,15 @@ async function fetchDevViews() {
 
 		// Affichage du résumé global
 		const globalSummary = {
-			totalViews: Object.values(results.schemas).reduce((sum, schema) => sum + schema.totalViews, 0),
+			totalViews: Object.values(results.schemas).reduce(
+				(sum, schema) => sum + schema.totalViews,
+				0
+			),
 			totalRows: Object.values(results.schemas).reduce((sum, schema) => sum + schema.totalRows, 0),
-			totalErrors: Object.values(results.schemas).reduce((sum, schema) => sum + schema.viewsWithErrors, 0)
+			totalErrors: Object.values(results.schemas).reduce(
+				(sum, schema) => sum + schema.viewsWithErrors,
+				0
+			)
 		};
 
 		console.log('\n📈 Résumé global:');
@@ -229,7 +241,11 @@ async function fetchDevViews() {
 }
 
 // Exécution si le script est lancé directement
-if (import.meta.url === `file://${process.cwd().replace(/\\/g, '/')}/scripts/BDD-IA/cenov_dev_ewan/fetch-dev-views.mjs` || process.argv[1]?.endsWith('fetch-dev-views.mjs')) {
+if (
+	import.meta.url ===
+		`file://${process.cwd().replace(/\\/g, '/')}/scripts/BDD-IA/cenov_dev_ewan/fetch-dev-views.mjs` ||
+	process.argv[1]?.endsWith('fetch-dev-views.mjs')
+) {
 	console.log('🚀 Démarrage du script de récupération des vues cenov_dev_ewan...');
 	fetchDevViews()
 		.then(() => {
@@ -243,11 +259,11 @@ if (import.meta.url === `file://${process.cwd().replace(/\\/g, '/')}/scripts/BDD
 		});
 }
 
-export { 
-	fetchDevViews, 
-	getViewsForSchema, 
-	getMaterializedViewsForSchema, 
-	getViewData, 
-	getViewColumns, 
-	SCHEMAS 
+export {
+	fetchDevViews,
+	getViewsForSchema,
+	getMaterializedViewsForSchema,
+	getViewData,
+	getViewColumns,
+	SCHEMAS
 };

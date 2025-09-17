@@ -244,12 +244,12 @@
 			const response = await fetch('/kits/api');
 			if (response.ok) {
 				let sortedKits = await response.json();
-				
+
 				// Si ordre inversé demandé, inverser le tableau
 				if (event.detail.order === 'desc') {
 					sortedKits = [...sortedKits].reverse();
 				}
-				
+
 				data.kits = sortedKits;
 				filteredKits = [...sortedKits];
 				toast.success(

@@ -13,7 +13,12 @@ import { PrismaClient } from '@prisma/client';
 import fs from 'fs/promises';
 import path from 'path';
 import { getAllTables, getTableData } from './fetch-all-tables.mjs';
-import { getAllViews, getAllMaterializedViews, getViewData, getViewColumns } from './fetch-all-views.mjs';
+import {
+	getAllViews,
+	getAllMaterializedViews,
+	getViewData,
+	getViewColumns
+} from './fetch-all-views.mjs';
 
 const prisma = new PrismaClient({
 	datasources: {
@@ -74,7 +79,9 @@ async function getDatabaseInfo() {
 
 		return {
 			database: convertBigIntToNumber(dbInfo[0]),
-			schema: convertBigIntToNumber(schemaInfo[0] || { schemaname: 'public', table_count: 0, view_count: 0 })
+			schema: convertBigIntToNumber(
+				schemaInfo[0] || { schemaname: 'public', table_count: 0, view_count: 0 }
+			)
 		};
 	} catch (error) {
 		console.error('Erreur lors de la récupération des infos DB:', error);

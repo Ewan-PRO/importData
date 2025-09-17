@@ -13,7 +13,11 @@ import { PrismaClient } from '@prisma/client';
 import fs from 'fs/promises';
 import path from 'path';
 import { getTablesForSchema, getTableData, SCHEMAS } from './fetch-dev-tables.mjs';
-import { getViewsForSchema, getMaterializedViewsForSchema, getViewData } from './fetch-dev-views.mjs';
+import {
+	getViewsForSchema,
+	getMaterializedViewsForSchema,
+	getViewData
+} from './fetch-dev-views.mjs';
 
 const prisma = new PrismaClient({
 	datasources: {
@@ -100,12 +104,14 @@ async function fetchDevData() {
 		if (dbInfo) {
 			console.log(`   Base de données: ${dbInfo.database.database_name}`);
 			console.log(`   Version PostgreSQL: ${dbInfo.database.postgres_version.split(' ')[0]}`);
-			
+
 			if (dbInfo.schemas.length > 0) {
 				console.log('   Schémas détectés:');
 				for (const schema of dbInfo.schemas) {
 					const totalViews = (schema.view_count || 0) + (schema.materialized_view_count || 0);
-					console.log(`     - ${schema.schemaname}: ${schema.table_count} tables, ${totalViews} vues`);
+					console.log(
+						`     - ${schema.schemaname}: ${schema.table_count} tables, ${totalViews} vues`
+					);
 				}
 			}
 			console.log();
@@ -113,20 +119,20 @@ async function fetchDevData() {
 
 		// Récupération des tables et vues en parallèle
 		console.log('📊 Récupération des données...\n');
-		
+
 		const compiledSchemas = {};
-		
+
 		for (const schema of SCHEMAS) {
 			console.log(`🔍 Traitement du schéma: ${schema}`);
-			
+
 			// Récupération des tables
 			const tables = await getTablesForSchema(schema);
 			console.log(`   📊 ${tables.length} tables trouvées dans ${schema}`);
-			
+
 			const schemaTables = {};
 			let totalTablesRows = 0;
 			let tablesWithErrors = 0;
-			
+
 			for (const table of tables) {
 				try {
 					const tableData = await getTableData(schema, table.table_name);
@@ -138,28 +144,28 @@ async function fetchDevData() {
 					tablesWithErrors++;
 				}
 			}
-			
+
 			// Récupération des vues (normales + matérialisées)
 			const [normalViews, materializedViews] = await Promise.all([
 				getViewsForSchema(schema),
 				getMaterializedViewsForSchema(schema)
 			]);
-			
+
 			const allViews = [
-				...normalViews.map(v => ({ ...v, type: 'VIEW' })),
-				...materializedViews.map(v => ({ ...v, type: 'MATERIALIZED VIEW' }))
+				...normalViews.map((v) => ({ ...v, type: 'VIEW' })),
+				...materializedViews.map((v) => ({ ...v, type: 'MATERIALIZED VIEW' }))
 			];
-			
+
 			console.log(`   📊 ${allViews.length} vues trouvées dans ${schema}`);
 			if (normalViews.length > 0 || materializedViews.length > 0) {
 				console.log(`      - ${normalViews.length} vues normales`);
 				console.log(`      - ${materializedViews.length} vues matérialisées`);
 			}
-			
+
 			const schemaViews = {};
 			let totalViewsRows = 0;
 			let viewsWithErrors = 0;
-			
+
 			for (const view of allViews) {
 				try {
 					const viewData = await getViewData(schema, view.view_name);
@@ -175,7 +181,7 @@ async function fetchDevData() {
 					viewsWithErrors++;
 				}
 			}
-			
+
 			compiledSchemas[schema] = {
 				name: schema,
 				tables: schemaTables,
@@ -193,8 +199,10 @@ async function fetchDevData() {
 					}
 				}
 			};
-			
-			console.log(`   📈 Total ${schema}: ${tables.length} tables (${totalTablesRows} lignes), ${allViews.length} vues (${totalViewsRows} lignes)`);
+
+			console.log(
+				`   📈 Total ${schema}: ${tables.length} tables (${totalTablesRows} lignes), ${allViews.length} vues (${totalViewsRows} lignes)`
+			);
 		}
 
 		const endTime = new Date();
@@ -203,14 +211,32 @@ async function fetchDevData() {
 		// Calcul des totaux globaux
 		const globalSummary = {
 			tables: {
-				count: Object.values(compiledSchemas).reduce((sum, schema) => sum + schema.summary.tables.count, 0),
-				totalRows: Object.values(compiledSchemas).reduce((sum, schema) => sum + schema.summary.tables.totalRows, 0),
-				errors: Object.values(compiledSchemas).reduce((sum, schema) => sum + schema.summary.tables.errors, 0)
+				count: Object.values(compiledSchemas).reduce(
+					(sum, schema) => sum + schema.summary.tables.count,
+					0
+				),
+				totalRows: Object.values(compiledSchemas).reduce(
+					(sum, schema) => sum + schema.summary.tables.totalRows,
+					0
+				),
+				errors: Object.values(compiledSchemas).reduce(
+					(sum, schema) => sum + schema.summary.tables.errors,
+					0
+				)
 			},
 			views: {
-				count: Object.values(compiledSchemas).reduce((sum, schema) => sum + schema.summary.views.count, 0),
-				totalRows: Object.values(compiledSchemas).reduce((sum, schema) => sum + schema.summary.views.totalRows, 0),
-				errors: Object.values(compiledSchemas).reduce((sum, schema) => sum + schema.summary.views.errors, 0)
+				count: Object.values(compiledSchemas).reduce(
+					(sum, schema) => sum + schema.summary.views.count,
+					0
+				),
+				totalRows: Object.values(compiledSchemas).reduce(
+					(sum, schema) => sum + schema.summary.views.totalRows,
+					0
+				),
+				errors: Object.values(compiledSchemas).reduce(
+					(sum, schema) => sum + schema.summary.views.errors,
+					0
+				)
 			}
 		};
 
@@ -251,7 +277,7 @@ async function fetchDevData() {
 			globalSummary: results.summary,
 			schemasSummary: Object.fromEntries(
 				Object.entries(results.schemas).map(([name, data]) => [
-					name, 
+					name,
 					{
 						tables: { count: data.summary.tables.count, rows: data.summary.tables.totalRows },
 						views: { count: data.summary.views.count, rows: data.summary.views.totalRows },
@@ -268,16 +294,24 @@ async function fetchDevData() {
 		console.log('✅ RÉCUPÉRATION CENOV_DEV_EWAN TERMINÉE AVEC SUCCÈS');
 		console.log('='.repeat(60));
 		console.log(`⏱️  Durée totale: ${Math.round(duration / 1000)}s`);
-		console.log(`📊 Tables récupérées: ${globalSummary.tables.count} (${globalSummary.tables.totalRows} lignes)`);
-		console.log(`👁️  Vues récupérées: ${globalSummary.views.count} (${globalSummary.views.totalRows} lignes)`);
+		console.log(
+			`📊 Tables récupérées: ${globalSummary.tables.count} (${globalSummary.tables.totalRows} lignes)`
+		);
+		console.log(
+			`👁️  Vues récupérées: ${globalSummary.views.count} (${globalSummary.views.totalRows} lignes)`
+		);
 
 		if (globalSummary.tables.errors > 0 || globalSummary.views.errors > 0) {
-			console.log(`⚠️  Erreurs: ${globalSummary.tables.errors} tables, ${globalSummary.views.errors} vues`);
+			console.log(
+				`⚠️  Erreurs: ${globalSummary.tables.errors} tables, ${globalSummary.views.errors} vues`
+			);
 		}
 
 		console.log('\n📋 Détail par schéma:');
 		for (const [schemaName, schemaData] of Object.entries(results.schemas)) {
-			console.log(`   ${schemaName}: ${schemaData.summary.tables.count} tables, ${schemaData.summary.views.count} vues`);
+			console.log(
+				`   ${schemaName}: ${schemaData.summary.tables.count} tables, ${schemaData.summary.views.count} vues`
+			);
 		}
 
 		console.log(`\n📁 Fichiers générés:`);

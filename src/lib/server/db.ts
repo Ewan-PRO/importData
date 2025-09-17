@@ -53,7 +53,10 @@ interface AttributeCreateInput {
 }
 
 // Fonction pour récupérer les catégories selon l'environnement
-export async function getCategories(sortOrder: 'asc' | 'desc' = 'asc', sortBy: 'row_key' | 'atr_id' = 'row_key') {
+export async function getCategories(
+	sortOrder: 'asc' | 'desc' = 'asc',
+	sortBy: 'row_key' | 'atr_id' = 'row_key'
+) {
 	const useDevViews = env.USE_DEV_VIEWS === 'true' || dev;
 	if (useDevViews) {
 		return await prisma.v_categories_dev.findMany({
@@ -66,7 +69,7 @@ export async function getCategories(sortOrder: 'asc' | 'desc' = 'asc', sortBy: '
 	}
 }
 
-// Fonction pour récupérer les kits selon l'environnement  
+// Fonction pour récupérer les kits selon l'environnement
 export async function getKits() {
 	const useDevViews = env.USE_DEV_VIEWS === 'true' || dev;
 	if (useDevViews) {

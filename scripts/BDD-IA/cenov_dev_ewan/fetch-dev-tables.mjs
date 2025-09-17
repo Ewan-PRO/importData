@@ -98,7 +98,7 @@ async function fetchDevTables() {
 		// Traitement de chaque schéma
 		for (const schema of SCHEMAS) {
 			console.log(`\n🔍 Traitement du schéma: ${schema}`);
-			
+
 			const tables = await getTablesForSchema(schema);
 			console.log(`   📊 ${tables.length} tables trouvées dans ${schema}`);
 
@@ -119,13 +119,16 @@ async function fetchDevTables() {
 			// Calcul des totaux par schéma
 			const schemaData = results.schemas[schema];
 			schemaData.totalRows = Object.values(schemaData.tables).reduce(
-				(sum, table) => sum + table.rowCount, 0
+				(sum, table) => sum + table.rowCount,
+				0
 			);
 			schemaData.tablesWithErrors = Object.values(schemaData.tables).filter(
-				table => table.error
+				(table) => table.error
 			).length;
 
-			console.log(`   📈 Total ${schema}: ${schemaData.totalTables} tables, ${schemaData.totalRows} lignes`);
+			console.log(
+				`   📈 Total ${schema}: ${schemaData.totalTables} tables, ${schemaData.totalRows} lignes`
+			);
 			if (schemaData.tablesWithErrors > 0) {
 				console.log(`   ⚠️  Erreurs ${schema}: ${schemaData.tablesWithErrors} tables`);
 			}
@@ -145,9 +148,15 @@ async function fetchDevTables() {
 
 		// Affichage du résumé global
 		const globalSummary = {
-			totalTables: Object.values(results.schemas).reduce((sum, schema) => sum + schema.totalTables, 0),
+			totalTables: Object.values(results.schemas).reduce(
+				(sum, schema) => sum + schema.totalTables,
+				0
+			),
 			totalRows: Object.values(results.schemas).reduce((sum, schema) => sum + schema.totalRows, 0),
-			totalErrors: Object.values(results.schemas).reduce((sum, schema) => sum + schema.tablesWithErrors, 0)
+			totalErrors: Object.values(results.schemas).reduce(
+				(sum, schema) => sum + schema.tablesWithErrors,
+				0
+			)
 		};
 
 		console.log('\n📈 Résumé global:');
@@ -159,7 +168,9 @@ async function fetchDevTables() {
 
 		console.log('\n📋 Détail par schéma:');
 		for (const [schemaName, schemaData] of Object.entries(results.schemas)) {
-			console.log(`- ${schemaName}: ${schemaData.totalTables} tables, ${schemaData.totalRows} lignes`);
+			console.log(
+				`- ${schemaName}: ${schemaData.totalTables} tables, ${schemaData.totalRows} lignes`
+			);
 		}
 
 		return results;
@@ -172,7 +183,11 @@ async function fetchDevTables() {
 }
 
 // Exécution si le script est lancé directement
-if (import.meta.url === `file://${process.cwd().replace(/\\/g, '/')}/scripts/BDD-IA/cenov_dev_ewan/fetch-dev-tables.mjs` || process.argv[1]?.endsWith('fetch-dev-tables.mjs')) {
+if (
+	import.meta.url ===
+		`file://${process.cwd().replace(/\\/g, '/')}/scripts/BDD-IA/cenov_dev_ewan/fetch-dev-tables.mjs` ||
+	process.argv[1]?.endsWith('fetch-dev-tables.mjs')
+) {
 	console.log('🚀 Démarrage du script de récupération des tables cenov_dev_ewan...');
 	fetchDevTables()
 		.then(() => {

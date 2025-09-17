@@ -194,7 +194,11 @@ async function fetchAllViews() {
 }
 
 // Exécution si le script est lancé directement
-if (import.meta.url.includes('fetch-all-views.mjs') && process.argv[1] && process.argv[1].includes('fetch-all-views.mjs')) {
+if (
+	import.meta.url.includes('fetch-all-views.mjs') &&
+	process.argv[1] &&
+	process.argv[1].includes('fetch-all-views.mjs')
+) {
 	fetchAllViews()
 		.then(() => {
 			console.log('✅ Script terminé avec succès');

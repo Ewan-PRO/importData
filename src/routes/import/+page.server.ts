@@ -5,6 +5,16 @@ import { superValidate } from 'sveltekit-superforms/server';
 import { z } from 'zod';
 import { zod } from 'sveltekit-superforms/adapters';
 import { protect } from '$lib/auth/protect';
+import {
+	getTableValidationRules,
+	getImportableTables,
+	getImportableTableFields,
+	createRecord as createRecordGeneric,
+	updateRecord,
+	findRecord,
+	type ValidationRules,
+	type DatabaseName
+} from '$lib/prisma-meta';
 
 const prisma = new PrismaClient();
 
@@ -38,11 +48,7 @@ interface ImportResult extends ValidationResult {
 	errors: string[];
 }
 
-interface ValidationRules {
-	requiredFields: string[];
-	uniqueFields: string[];
-	validators: Record<string, (value: unknown) => boolean>;
-}
+// ValidationRules est maintenant importé de prisma-meta.ts
 
 // Type pour la transaction Prisma
 type PrismaTransactionClient = Omit<
@@ -57,11 +63,6 @@ const importSchema = z.object({
 	selectedTables: z.array(z.string())
 });
 
-type AttributeData = {
-	atr_nat: string;
-	atr_val: string;
-	atr_label?: string;
-};
 
 // Nouvelle fonction pour valider le format CSV
 function validateCSVFormat(
@@ -157,7 +158,7 @@ export const actions: Actions = {
 	validate: async (event) => {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
-		
+
 		const { request } = event;
 		try {
 			console.log('Début de la validation côté serveur');
@@ -231,11 +232,16 @@ export const actions: Actions = {
 				}
 			}
 
-			// Obtenir les règles de validation pour toutes les tables sélectionnées
-			const allValidationRules = selectedTables.map((table) => ({
-				table,
-				rules: getValidationRules(table)
-			}));
+			// Obtenir les règles de validation pour toutes les tables sélectionnées via DMMF
+			const allValidationRules = await Promise.all(
+				selectedTables.map(async (table) => ({
+					table,
+					rules: await getTableValidationRules(
+						table.includes('_dev') || table.startsWith('v_') ? 'cenov_dev_ewan' : 'cenov',
+						table
+					)
+				}))
+			);
 
 			// Préparation pour le traitement
 			const columnMap = prepareColumnMap(mappedFields);
@@ -315,7 +321,7 @@ export const actions: Actions = {
 	process: async (event) => {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
-		
+
 		const { request } = event;
 		try {
 			// Validation du formulaire avec SuperForms
@@ -396,10 +402,15 @@ export const actions: Actions = {
 
 			// Préparation pour le traitement
 			const columnMap = prepareColumnMap(mappedFields);
-			const allValidationRules = selectedTables.map((table) => ({
-				table,
-				rules: getValidationRules(table)
-			}));
+			const allValidationRules = await Promise.all(
+				selectedTables.map(async (table) => ({
+					table,
+					rules: await getTableValidationRules(
+						table.includes('_dev') || table.startsWith('v_') ? 'cenov_dev_ewan' : 'cenov',
+						table
+					)
+				}))
+			);
 
 			// Pré-validation pour identifier les lignes valides pour chaque table
 			const validRowsByTable: Record<string, { index: number; row: unknown[] }[]> = {};
@@ -617,7 +628,10 @@ async function processRow(
 	try {
 		// Préparation des données pour l'importation
 		const recordData: Record<string, unknown> = {};
-		const validationRules = getValidationRules(targetTable);
+		const database: DatabaseName = targetTable.includes('_dev') || targetTable.startsWith('v_')
+			? 'cenov_dev_ewan'
+			: 'cenov';
+		const validationRules = await getTableValidationRules(database, targetTable);
 
 		Object.entries(columnMap).forEach(([field, colIndex]) => {
 			const value = row[colIndex];
@@ -633,13 +647,12 @@ async function processRow(
 		const existingRecord = await checkExistingRecord(
 			targetTable,
 			Object.fromEntries(Object.entries(columnMap).map(([k, v]) => [v.toString(), k])),
-			row,
-			tx
+			row
 		);
 
 		if (existingRecord) {
 			// Mise à jour d'un enregistrement existant
-			await updateRecord(tx, targetTable, recordData);
+			await updateRecordGeneric(targetTable, recordData);
 			result.updated++;
 			if (result.resultsByTable && result.resultsByTable[targetTable]) {
 				result.resultsByTable[targetTable].updated++;
@@ -662,41 +675,17 @@ async function processRow(
 	}
 }
 
-// Fonction pour mettre à jour un enregistrement existant
-async function updateRecord(
-	tx: PrismaTransactionClient,
+// Fonction pour mettre à jour un enregistrement existant via DMMF
+async function updateRecordGeneric(
 	targetTable: string,
 	recordData: Record<string, unknown>
 ): Promise<void> {
-	const uniqueConstraint = getUniqueConstraint(targetTable, recordData);
+	const uniqueConstraint = await getUniqueConstraint(targetTable, recordData);
+	const database: DatabaseName = targetTable.includes('_dev') || targetTable.startsWith('v_')
+		? 'cenov_dev_ewan'
+		: 'cenov';
 
-	switch (targetTable) {
-		case 'attribute':
-			await tx.attribute.updateMany({
-				where: uniqueConstraint,
-				data: recordData
-			});
-			break;
-		case 'attribute_dev':
-			await tx.attribute_dev.updateMany({
-				where: uniqueConstraint,
-				data: recordData
-			});
-			break;
-		case 'supplier':
-			await tx.supplier.updateMany({
-				where: uniqueConstraint,
-				data: recordData
-			});
-			break;
-		case 'supplier_dev':
-			await tx.supplier_dev.updateMany({
-				where: uniqueConstraint,
-				data: recordData
-			});
-			break;
-		// Les vues ne peuvent pas être mises à jour directement
-	}
+	await updateRecord(database, targetTable, uniqueConstraint, recordData);
 }
 
 // Fonction pour créer un nouvel enregistrement
@@ -705,46 +694,11 @@ async function createRecord(
 	targetTable: string,
 	recordData: Record<string, unknown>
 ): Promise<void> {
-	switch (targetTable) {
-		case 'attribute':
-			await tx.attribute.create({
-				data: recordData as AttributeData
-			});
-			break;
-		case 'attribute_dev':
-			await tx.attribute_dev.create({
-				data: recordData as AttributeData
-			});
-			break;
-		case 'supplier':
-			// Vérifier que sup_code est défini pour supplier
-			if (!recordData.sup_code || recordData.sup_code === null) {
-				throw new Error('Le champ sup_code est obligatoire pour les fournisseurs');
-			}
-			await tx.supplier.create({
-				data: {
-					sup_code: recordData.sup_code as string,
-					sup_label: recordData.sup_label as string | null
-				}
-			});
-			break;
-		case 'supplier_dev':
-			// Vérifier que sup_code est défini pour supplier_dev
-			if (!recordData.sup_code || recordData.sup_code === null) {
-				throw new Error('Le champ sup_code est obligatoire pour les fournisseurs');
-			}
-			await tx.supplier_dev.create({
-				data: {
-					sup_code: recordData.sup_code as string,
-					sup_label: recordData.sup_label as string | null
-				}
-			});
-			break;
-		case 'v_categories_dev':
-			// Pour les vues, on doit insérer dans les tables sous-jacentes
-			await handleCategoryInsert(tx, recordData);
-			break;
-	}
+	const database: DatabaseName = targetTable.includes('_dev') || targetTable.startsWith('v_')
+		? 'cenov_dev_ewan'
+		: 'cenov';
+
+	await createRecordGeneric(database, targetTable, recordData);
 }
 
 // Fonction sécurisée pour convertir en string pour affichage
@@ -767,12 +721,15 @@ function formatDisplayValue(value: unknown): string {
 async function checkExistingRecord(
 	tableName: string,
 	mappedFields: Record<string, string>,
-	row: unknown[],
-	tx: PrismaTransactionClient = prisma
+	row: unknown[]
 ): Promise<string | null> {
 	// Préparation de la condition de recherche
 	const whereCondition: Record<string, unknown> = {};
-	const uniqueFields = getValidationRules(tableName).uniqueFields;
+	const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
+		? 'cenov_dev_ewan'
+		: 'cenov';
+	const validationRules = await getTableValidationRules(database, tableName);
+	const uniqueFields = validationRules.uniqueFields;
 
 	// Construction de la condition avec les champs uniques
 	uniqueFields.forEach((field) => {
@@ -788,36 +745,12 @@ async function checkExistingRecord(
 	}
 
 	try {
-		// Recherche dans la table appropriée
-		let existingRecord: Record<string, unknown> | null = null;
+		// Recherche dans la table appropriée via DMMF générique
+		const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
+			? 'cenov_dev_ewan'
+			: 'cenov';
 
-		switch (tableName) {
-			case 'attribute':
-				existingRecord = await tx.attribute.findFirst({
-					where: whereCondition
-				});
-				break;
-			case 'attribute_dev':
-				existingRecord = await tx.attribute_dev.findFirst({
-					where: whereCondition
-				});
-				break;
-			case 'supplier':
-				existingRecord = await tx.supplier.findFirst({
-					where: whereCondition
-				});
-				break;
-			case 'supplier_dev':
-				existingRecord = await tx.supplier_dev.findFirst({
-					where: whereCondition
-				});
-				break;
-			case 'v_categories_dev':
-				existingRecord = await tx.v_categories_dev.findFirst({
-					where: whereCondition
-				});
-				break;
-		}
+		const existingRecord = await findRecord(database, tableName, whereCondition);
 
 		// Retourner une représentation textuelle de l'enregistrement trouvé
 		if (existingRecord) {
@@ -853,11 +786,15 @@ function formatValueForDatabase(field: string, value: unknown): unknown {
 	return String(value);
 }
 
-function getUniqueConstraint(
+async function getUniqueConstraint(
 	tableName: string,
 	data: Record<string, unknown>
-): Record<string, unknown> {
-	const uniqueFields = getValidationRules(tableName).uniqueFields;
+): Promise<Record<string, unknown>> {
+	const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
+		? 'cenov_dev_ewan'
+		: 'cenov';
+	const validationRules = await getTableValidationRules(database, tableName);
+	const uniqueFields = validationRules.uniqueFields;
 	const constraint: Record<string, unknown> = {};
 
 	uniqueFields.forEach((field) => {
@@ -869,118 +806,26 @@ function getUniqueConstraint(
 	return constraint;
 }
 
-async function handleCategoryInsert(
-	tx: PrismaTransactionClient,
-	data: Record<string, unknown>
-): Promise<void> {
-	// Insertion dans la table attribute pour chaque niveau de catégorie
-	// Pour v_categories_dev, on doit insérer dans les tables sous-jacentes
 
-	// Niveau 0 (catégorie principale)
-	if (data.atr_0_label) {
-		await tx.attribute.upsert({
-			where: {
-				atr_nat_atr_val: {
-					atr_nat: 'Catégorie des produits',
-					atr_val: formatDisplayValue(data.atr_0_label)
-				}
-			},
-			update: {
-				atr_label: formatDisplayValue(data.atr_0_label)
-			},
-			create: {
-				atr_nat: 'Catégorie des produits',
-				atr_val: formatDisplayValue(data.atr_0_label),
-				atr_label: formatDisplayValue(data.atr_0_label)
-			}
-		});
-	}
 
-	// Niveau 1-7 (sous-catégories)
-	for (let i = 1; i <= 7; i++) {
-		const labelField = `atr_${i}_label`;
-		const prevLabelField = `atr_${i - 1}_label`;
-
-		if (data[labelField] && data[prevLabelField]) {
-			await tx.attribute.upsert({
-				where: {
-					atr_nat_atr_val: {
-						atr_nat: 'Catégorie des produits',
-						atr_val: formatDisplayValue(data[labelField])
-					}
-				},
-				update: {
-					atr_label: formatDisplayValue(data[labelField])
-				},
-				create: {
-					atr_nat: 'Catégorie des produits',
-					atr_val: formatDisplayValue(data[labelField]),
-					atr_label: formatDisplayValue(data[labelField])
-				}
-			});
-		}
-	}
-}
-
-function getValidationRules(tableName: string): ValidationRules {
-	switch (tableName) {
-		case 'attribute':
-		case 'attribute_dev':
-			return {
-				requiredFields: ['atr_nat', 'atr_val'],
-				uniqueFields: ['atr_nat', 'atr_val'],
-				validators: {
-					atr_nat: (value: unknown) => typeof value === 'string' && value.length <= 60,
-					atr_val: (value: unknown) => typeof value === 'string' && value.length <= 60,
-					atr_label: (value: unknown) => typeof value === 'string' && value.length <= 150
-				}
-			};
-		case 'supplier':
-		case 'supplier_dev':
-			return {
-				requiredFields: ['sup_code'],
-				uniqueFields: ['sup_code'],
-				validators: {
-					sup_code: (value: unknown) => typeof value === 'string' && value.length <= 30,
-					sup_label: (value: unknown) => typeof value === 'string' && value.length <= 50
-				}
-			};
-		case 'v_categories_dev':
-			return {
-				requiredFields: ['atr_0_label'],
-				uniqueFields: ['atr_0_label'],
-				validators: {
-					atr_0_label: (value: unknown) => typeof value === 'string' && value.length <= 100,
-					atr_1_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 150),
-					atr_2_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 150),
-					atr_3_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 150),
-					atr_4_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 150),
-					atr_5_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 150),
-					atr_6_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 150),
-					atr_7_label: (value: unknown) =>
-						!value || (typeof value === 'string' && value.length <= 150)
-				}
-			};
-		default:
-			return {
-				requiredFields: [],
-				uniqueFields: [],
-				validators: {}
-			};
-	}
+// Fonction helper pour déterminer la catégorie d'une table
+function getCategoryFromTable(table: {
+	name: string;
+	displayName: string;
+	category: string;
+}): string {
+	if (table.name.includes('supplier')) return 'supplier';
+	if (table.name.includes('attribute')) return 'attribute';
+	if (table.name.includes('categories') || table.displayName.includes('Catégories'))
+		return 'category';
+	return 'other';
 }
 
 // Pour SuperForms, nous devons également fournir la fonction de chargement
 export const load: ServerLoad = async (event) => {
 	// Protection de la route - redirection vers / si non connecté
 	await protect(event);
-	
+
 	const { url } = event;
 	console.log('🚀 [IMPORT] Début du chargement de la page import');
 	console.log('🔍 [IMPORT] URL:', url.pathname);
@@ -991,13 +836,31 @@ export const load: ServerLoad = async (event) => {
 		// Initialisation d'un formulaire vide
 		const form = await superValidate(zod(importSchema));
 
+		// Récupérer les tables et champs importables via DMMF
+		console.log('📊 [IMPORT] Récupération des tables importables via DMMF');
+		const availableTables = await getImportableTables();
+		const tableFields = await getImportableTableFields();
+
+		// Transformer les données pour le frontend
+		const formattedTables = availableTables.map((table) => ({
+			value: table.name,
+			name: `${table.displayName} (${table.database === 'cenov' ? 'Production' : 'Dev'})`,
+			category: getCategoryFromTable(table)
+		}));
+
 		console.log('📝 [IMPORT] Formulaire créé:', {
 			valid: form.valid,
-			hasErrors: Object.keys(form.errors || {}).length > 0
+			hasErrors: Object.keys(form.errors || {}).length > 0,
+			tablesCount: formattedTables.length,
+			fieldsCount: Object.keys(tableFields).length
 		});
 
 		console.log('✅ [IMPORT] Chargement terminé avec succès');
-		return { form };
+		return {
+			form,
+			availableTables: formattedTables,
+			tableFields
+		};
 	} catch (err) {
 		console.error('❌ [IMPORT] Erreur dans le chargement de la page import:', err);
 		console.error('❌ [IMPORT] Stack trace:', err instanceof Error ? err.stack : 'N/A');

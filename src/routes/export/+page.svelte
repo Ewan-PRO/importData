@@ -737,8 +737,9 @@
 											{:else}
 												<LockOpen class="mr-0.5 inline h-4 w-4" />
 											{/if}
-											{schema === 'produit' ? 'Produit' : 'Public'} ({filteredTables.filter((t) => t.schema === schema)
-												.length})
+											{schema === 'produit' ? 'Produit' : 'Public'} ({filteredTables.filter(
+												(t) => t.schema === schema
+											).length})
 										</span>
 									</label>
 								{/each}
@@ -903,7 +904,9 @@
 											<div class="sm:hidden">
 												<div class="font-medium">{table.displayName}</div>
 												<div class="mt-1 text-sm text-gray-500">
-													<span class="inline">{table.displayName} • {formatNumber(table.rowCount || 0)} lignes • </span>
+													<span class="inline"
+														>{table.displayName} • {formatNumber(table.rowCount || 0)} lignes •
+													</span>
 													<span class="inline-block">{table.columns.length} colonnes</span>
 												</div>
 												<div class="mt-2 flex flex-wrap gap-1">
@@ -1212,19 +1215,23 @@
 								{:else}
 									<!-- Distinguer table vide vs erreur -->
 									{#if matchingTableInfo?.columns && matchingTableInfo.columns.length > 0}
-										<div class="text-center py-8">
-											<div class="text-gray-400 mb-2">
-												<Database class="h-12 w-12 mx-auto" />
+										<div class="py-8 text-center">
+											<div class="mb-2 text-gray-400">
+												<Database class="mx-auto h-12 w-12" />
 											</div>
-											<p class="text-gray-600 font-medium">Aucune donnée disponible dans la base de données</p>
-											<p class="text-sm text-gray-500">La table existe mais ne contient aucune ligne</p>
+											<p class="font-medium text-gray-600">
+												Aucune donnée disponible dans la base de données
+											</p>
+											<p class="text-sm text-gray-500">
+												La table existe mais ne contient aucune ligne
+											</p>
 										</div>
 									{:else}
-										<div class="text-center py-8">
-											<div class="text-red-400 mb-2">
-												<AlertCircle class="h-12 w-12 mx-auto" />
+										<div class="py-8 text-center">
+											<div class="mb-2 text-red-400">
+												<AlertCircle class="mx-auto h-12 w-12" />
 											</div>
-											<p class="text-red-600 font-medium">Erreur de lecture des données</p>
+											<p class="font-medium text-red-600">Erreur de lecture des données</p>
 											<p class="text-sm text-gray-500">Impossible d'accéder à cette table</p>
 										</div>
 									{/if}

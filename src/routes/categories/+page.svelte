@@ -339,12 +339,14 @@
 		}
 	}
 
-	async function handleSort(event: CustomEvent<{ order: 'asc' | 'desc' | 'id_desc' }>): Promise<void> {
+	async function handleSort(
+		event: CustomEvent<{ order: 'asc' | 'desc' | 'id_desc' }>
+	): Promise<void> {
 		console.log('Tri demandé:', event.detail.order);
 		try {
 			let apiUrl = '';
 			let toastMessage = '';
-			
+
 			if (event.detail.order === 'id_desc') {
 				// Tri par atr_id DESC
 				apiUrl = `/categories/api?sortOrder=desc&sortBy=atr_id`;
@@ -352,9 +354,10 @@
 			} else {
 				// Tri alphabétique (par row_key)
 				apiUrl = `/categories/api?sortOrder=${event.detail.order}&sortBy=row_key`;
-				toastMessage = event.detail.order === 'asc' ? 'Ordre par défaut appliqué' : 'Ordre inversé appliqué';
+				toastMessage =
+					event.detail.order === 'asc' ? 'Ordre par défaut appliqué' : 'Ordre inversé appliqué';
 			}
-			
+
 			const response = await fetch(apiUrl);
 			if (response.ok) {
 				const sortedCategories = await response.json();

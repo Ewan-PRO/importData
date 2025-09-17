@@ -106,30 +106,10 @@
 	let mappedFields: Record<string, string> = {};
 	let hasHeaders = true; // Détection automatique
 	let showNoHeaderAlert = false; // Nouvelle variable pour l'alerte
-	let availableTables = [
-		{ value: 'attribute', name: 'Attributs (Production)', category: 'attribute' },
-		{ value: 'attribute_dev', name: 'Attributs (Dev)', category: 'attribute' },
-		{ value: 'supplier', name: 'Fournisseurs (Production)', category: 'supplier' },
-		{ value: 'supplier_dev', name: 'Fournisseurs (Dev)', category: 'supplier' },
-		{ value: 'v_categories_dev', name: 'Catégories (Dev)', category: 'category' }
-	];
 
-	let tableFields: Record<string, string[]> = {
-		attribute: ['atr_nat', 'atr_val', 'atr_label'],
-		attribute_dev: ['atr_nat', 'atr_val', 'atr_label'],
-		supplier: ['sup_code', 'sup_label'],
-		supplier_dev: ['sup_code', 'sup_label'],
-		v_categories_dev: [
-			'atr_0_label',
-			'atr_1_label',
-			'atr_2_label',
-			'atr_3_label',
-			'atr_4_label',
-			'atr_5_label',
-			'atr_6_label',
-			'atr_7_label'
-		]
-	};
+	// Données provenant du serveur via DMMF (remplace le hardcodage)
+	$: availableTables = data.availableTables || [];
+	$: tableFields = data.tableFields || {};
 
 	// Utilisons le type défini précédemment
 	let validationResults: ValidationResult = {
@@ -352,19 +332,26 @@
 		} as any;
 	}
 
-	// Fonction pour calculer les champs requis
+	// Fonction pour calculer les champs requis basée sur les patterns DMMF
 	function getRequiredFieldsForTables(tables: string[]): string[] {
 		let result: string[] = [];
 
 		tables.forEach((table) => {
-			if (table === 'attribute' || table === 'attribute_dev') {
-				if (!result.includes('atr_nat')) result.push('atr_nat');
-				if (!result.includes('atr_val')) result.push('atr_val');
-			} else if (table === 'supplier' || table === 'supplier_dev') {
-				if (!result.includes('sup_code')) result.push('sup_code');
-			} else if (table === 'v_categories_dev') {
-				if (!result.includes('atr_0_label')) result.push('atr_0_label');
-			}
+			const fields = tableFields[table] || [];
+			// Heuristique simple : les champs requis sont généralement les premiers champs (pas les labels)
+			// et suivent certains patterns
+			fields.forEach((field) => {
+				const isRequired =
+					// Patterns spécifiques pour les champs requis
+					(field.includes('_nat') && field.includes('atr_')) ||
+					(field.includes('_val') && field.includes('atr_')) ||
+					(field.includes('_code') && field.includes('sup_')) ||
+					field === 'atr_0_label'; // Exception pour les catégories
+
+				if (isRequired && !result.includes(field)) {
+					result.push(field);
+				}
+			});
 		});
 
 		return result;

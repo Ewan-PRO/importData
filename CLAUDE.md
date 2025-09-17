@@ -167,14 +167,16 @@ const products = await cenovDevPrisma.produit.findMany(); // CENOV_DEV_EWAN data
 **`src/lib/prisma-meta.ts`** provides centralized database metadata functions using Prisma DMMF (Data Model Meta Format):
 
 **Core Functions:**
+
 - `getDatabases()` - Access to both database clients and metadata
 - `getTableMetadata(database, tableName)` - Schema detection via DMMF
 - `getAllTables(database)` - Tables with automatic schema detection
 - `getAllDatabaseTables()` - Combined tables from both databases
 
 **Best Practices:**
+
 - **Avoid hardcoding** - Use Prisma DMMF metadata instead of hardcoded values
-- Schema detection: Use `metadata.schema` from `getTableMetadata()` 
+- Schema detection: Use `metadata.schema` from `getTableMetadata()`
 - Table lists: Use `getAllTables()` instead of hardcoded table names
 - Database info: Use DMMF properties instead of string matching
 - Dynamic detection preferred over static lists for maintainability
@@ -322,6 +324,7 @@ const data: TableData[] = [];
 ```
 
 **Built-in Badge Icon Styling:**
+
 - `[&>svg]:size-3` - All SVG icons automatically get `size-3` (12x12px)
 - `[&>svg]:pointer-events-none` - Icons don't interfere with click events
 - `gap-1` - Automatic spacing between icon and text
@@ -387,6 +390,7 @@ This typically occurs when files are automatically formatted by linters/formatte
 **Solution steps:**
 
 1. **Git restore:** If editing conflicts occur, restore the file to its original state:
+
    ```bash
    git restore path/to/file.svelte
    ```
@@ -396,11 +400,13 @@ This typically occurs when files are automatically formatted by linters/formatte
 3. **Expected behavior:** Linters may automatically format files, this is intentional and should be preserved
 
 **Common scenarios:**
+
 - Prettier reformats spacing and line breaks
 - ESLint auto-fixes code style issues
 - These changes are intentional and improve code quality
 
 **Best practices:**
+
 - Don't revert linter changes unless explicitly requested
 - Use git restore only when edit conflicts prevent progress
 - Re-read files after any formatting to get current state

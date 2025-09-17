@@ -114,7 +114,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			throw error(500, "Aucune donnée n'a pu être extraite");
 		}
 
-
 		// Génération du fichier selon le format
 		let exportFile: ExportFile;
 
@@ -145,7 +144,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			warnings,
 			errors
 		};
-
 
 		// Retourner le fichier avec les headers appropriés
 		return new Response(new Uint8Array(exportFile.buffer).buffer, {
@@ -189,7 +187,6 @@ async function generateExcelFile(
 ): Promise<ExportFile> {
 	const workbook = XLSX.utils.book_new();
 	const usedSheetNames = new Set<string>();
-
 
 	for (const tableData of exportDataList) {
 		// Préparation des données pour Excel

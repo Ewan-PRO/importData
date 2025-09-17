@@ -27,7 +27,12 @@ export default ts.config(
 	},
 	{
 		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
-		ignores: ['eslint.config.js', 'svelte.config.js', 'prisma/generated/**/*', 'prisma/cenov_dev_ewan/generated/**/*'],
+		ignores: [
+			'eslint.config.js',
+			'svelte.config.js',
+			'prisma/generated/**/*',
+			'prisma/cenov_dev_ewan/generated/**/*'
+		],
 		languageOptions: {
 			parserOptions: {
 				projectService: true,
