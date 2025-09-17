@@ -225,7 +225,7 @@ async function checkExistingRecord(
 ): Promise<string | null> {
 	const whereCondition: Record<string, unknown> = {};
 	const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
-		? 'cenov_dev_ewan'
+		? 'cenov_dev'
 		: 'cenov';
 	const validationRules = await getTableValidationRules(database, tableName);
 	const uniqueFields = validationRules.uniqueFields;
@@ -245,7 +245,7 @@ async function checkExistingRecord(
 
 	try {
 		const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
-			? 'cenov_dev_ewan'
+			? 'cenov_dev'
 			: 'cenov';
 
 		const existingRecord = await findRecord(database, tableName, whereCondition);
@@ -342,7 +342,7 @@ async function insertValidData(
 
 				// Insérer dans la table appropriée en utilisant la fonction générique
 				const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
-					? 'cenov_dev_ewan'
+					? 'cenov_dev'
 					: 'cenov';
 
 				await createRecord(database, tableName, insertData);
@@ -396,7 +396,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		// Obtenir la structure de la table cible via DMMF
 		const database: DatabaseName = targetTable.includes('_dev') || targetTable.startsWith('v_')
-			? 'cenov_dev_ewan'
+			? 'cenov_dev'
 			: 'cenov';
 		const validationRules = await getTableValidationRules(database, targetTable);
 

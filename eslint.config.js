@@ -17,7 +17,7 @@ export default ts.config(
 	prettier,
 	...svelte.configs.prettier,
 	{
-		ignores: ['prisma/generated/**/*', 'prisma/cenov_dev_ewan/generated/**/*']
+		ignores: ['prisma/generated/**/*', 'prisma/cenov_dev/generated/**/*']
 	},
 	{
 		languageOptions: {
@@ -31,7 +31,7 @@ export default ts.config(
 			'eslint.config.js',
 			'svelte.config.js',
 			'prisma/generated/**/*',
-			'prisma/cenov_dev_ewan/generated/**/*'
+			'prisma/cenov_dev/generated/**/*'
 		],
 		languageOptions: {
 			parserOptions: {

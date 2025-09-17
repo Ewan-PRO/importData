@@ -6,168 +6,220 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["produit", "public"]
 }
 
-model attribute {
-  atr_id                                                    Int             @id @default(autoincrement())
-  atr_nat                                                   String?         @db.VarChar(60)
-  atr_val                                                   String?         @db.VarChar(60)
-  atr_label                                                 String?         @db.VarChar(100)
-  created_at                                                DateTime?       @default(now()) @db.Timestamp(6)
-  updated_at                                                DateTime?       @default(now()) @db.Timestamp(6)
-  kit_attribute_kit_attribute_fk_attribute_caracToattribute kit_attribute[] @relation("kit_attribute_fk_attribute_caracToattribute")
-  kit_attribute_kit_attribute_fk_attributeToattribute       kit_attribute[] @relation("kit_attribute_fk_attributeToattribute")
+model categorie {
+  cat_id             Int                  @id @default(autoincrement())
+  fk_parent          Int?
+  cat_code           String?              @db.VarChar(60)
+  cat_label          String?              @db.VarChar(100)
+  categorie          categorie?           @relation("categorieTocategorie", fields: [fk_parent], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_categorie_fk_parent_fkey")
+  other_categorie    categorie[]          @relation("categorieTocategorie")
+  categorie_attribut categorie_attribut[]
+  produit_categorie  produit_categorie[]
+
+  @@unique([fk_parent, cat_code], map: "produit_categorie_prc_code_index")
+  @@schema("produit")
+}
+
+model categorie_attribut {
+  fk_categorie Int
+  fk_attribute Int
+  attribut     attribut  @relation(fields: [fk_attribute], references: [atr_id], onDelete: NoAction, onUpdate: NoAction, map: "categorie_attribute_fk_attribute_fkey")
+  categorie    categorie @relation(fields: [fk_categorie], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "categorie_attribute_fk_categorie_fkey")
+
+  @@id([fk_categorie, fk_attribute])
+  @@schema("produit")
+}
+
+model cross_ref {
+  crf_id     Int
+  fk_produit Int
+  produit    produit @relation(fields: [fk_produit], references: [pro_id], onDelete: NoAction, onUpdate: NoAction, map: "cross_ref_produit_pro_id_fk")
+
+  @@id([crf_id, fk_produit])
+  @@schema("produit")
+}
+
+model famille {
+  fam_id        Int         @id(map: "produit_famille_pkey") @default(autoincrement())
+  fk_parent     Int?
+  fam_code      String?     @db.VarChar(60)
+  fam_label     String?     @db.VarChar(100)
+  fk_supplier   Int
+  fournisseur   fournisseur @relation(fields: [fk_supplier], references: [frs_id], onDelete: NoAction, onUpdate: NoAction, map: "famille_supplier_sup_id_fk")
+  famille       famille?    @relation("familleTofamille", fields: [fk_parent], references: [fam_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_famille_fk_parent_fkey")
+  other_famille famille[]   @relation("familleTofamille")
+
+  @@unique([fk_parent, fam_code], map: "produit_famille_prf_code_index")
+  @@schema("produit")
+}
+
+model produit {
+  pro_id            Int                 @id @default(autoincrement())
+  pro_code          String?             @db.VarChar(20)
+  fk_supplier       Int?
+  fk_kit            Int?
+  fk_famille        Int?
+  fk_sfamille       Int?
+  fk_ssfamille      Int?
+  created_at        DateTime?           @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamp(6)
+  cross_ref         cross_ref[]
+  kit               kit?                @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
+  fournisseur       fournisseur?        @relation(fields: [fk_supplier], references: [frs_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_supplier_sup_id_fk")
+  produit_categorie produit_categorie[]
+  tarif_achat       tarif_achat[]
+
+  @@schema("produit")
+}
+
+model produit_categorie {
+  fk_produit   Int
+  fk_categorie Int
+  categorie    categorie @relation(fields: [fk_categorie], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_categorie_categorie_prc_id_fk")
+  produit      produit   @relation(fields: [fk_produit], references: [pro_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_categorie_produit_pro_id_fk")
+
+  @@id([fk_produit, fk_categorie])
+  @@schema("produit")
+}
+
+model tarif_achat {
+  fk_produit      Int
+  taa_date        DateTime @db.Date
+  taa_montant     Float?
+  taa_remise      Float?
+  taa_montant_net Float?   @default(dbgenerated("(taa_montant * ((1)::double precision - (taa_remise / (100)::double precision)))"))
+  produit         produit  @relation(fields: [fk_produit], references: [pro_id], onDelete: NoAction, onUpdate: NoAction, map: "cross_ref_produit_pro_id_fk")
+
+  @@id([fk_produit, taa_date])
+  @@index([fk_produit, taa_date], map: "tarif_achat_taa_date_fk_produit_index")
+  @@schema("produit")
+}
+
+model attribut {
+  atr_id                                                   Int                  @id(map: "attribute_pkey") @default(autoincrement())
+  atr_nat                                                  String?              @db.VarChar(60)
+  atr_val                                                  String?              @db.VarChar(60)
+  atr_label                                                String?              @db.VarChar(100)
+  created_at                                               DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at                                               DateTime?            @default(now()) @db.Timestamp(6)
+  categorie_attribut                                       categorie_attribut[]
+  kit_attribute_kit_attribute_fk_attribute_caracToattribut kit_attribute[]      @relation("kit_attribute_fk_attribute_caracToattribut")
+  kit_attribute_kit_attribute_fk_attribute_unitToattribut  kit_attribute[]      @relation("kit_attribute_fk_attribute_unitToattribut")
 
   @@unique([atr_nat, atr_val], map: "idx_attribute")
+  @@schema("public")
 }
 
-model attribute_dev {
-  atr_id     Int       @id @default(autoincrement())
-  atr_nat    String?   @db.VarChar(60)
-  atr_val    String?   @db.VarChar(60)
-  atr_label  String?   @db.VarChar(100)
-  created_at DateTime? @db.Timestamp(6)
-  updated_at DateTime? @db.Timestamp(6)
+model fournisseur {
+  frs_id    Int       @id(map: "supplier_pk") @default(autoincrement())
+  frs_code  String    @db.VarChar(10)
+  frs_label String?   @db.VarChar(70)
+  famille   famille[]
+  produit   produit[]
 
-  @@unique([atr_nat, atr_val], map: "idx_attribute_dev")
-}
-
-model document {
-  doc_id        Int            @id @default(autoincrement())
-  doc_name      String?        @db.VarChar(100)
-  doc_extension String?        @db.VarChar(5)
-  doc_type      String?        @db.VarChar(10)
-  doc_binary    Bytes?
-  kit_document  kit_document[]
+  @@index([frs_code], map: "supplier_sup_code_index")
+  @@schema("public")
 }
 
 model kit {
-  kit_id                             Int             @id @default(autoincrement())
-  kit_label                          String?         @db.VarChar(100)
-  created_at                         DateTime?       @default(now()) @db.Timestamp(6)
-  updated_at                         DateTime?       @default(now()) @db.Timestamp(6)
-  kit_attribute                      kit_attribute[]
-  kit_document                       kit_document[]
-  kit_kit_kit_kit_fk_kit_childTokit  kit_kit[]       @relation("kit_kit_fk_kit_childTokit")
-  kit_kit_kit_kit_fk_kit_parentTokit kit_kit[]       @relation("kit_kit_fk_kit_parentTokit")
-  part                               part[]
+  kit_id        Int             @id @default(autoincrement())
+  kit_label     String?         @db.VarChar(100)
+  created_at    DateTime?       @default(now()) @db.Timestamp(6)
+  updated_at    DateTime?       @default(now()) @db.Timestamp(6)
+  produit       produit[]
+  kit_attribute kit_attribute[]
+  part_nc       part_nc[]
+
+  @@schema("public")
 }
 
 model kit_attribute {
-  fk_kit                                                Int?
-  fk_attribute_carac                                    Int?
-  fk_attribute                                          Int?
-  kat_valeur                                            Float?
-  created_at                                            DateTime?  @default(now()) @db.Timestamp(6)
-  updated_at                                            DateTime?  @default(now()) @db.Timestamp(6)
-  kat_id                                                Int        @id @default(autoincrement())
-  attribute_kit_attribute_fk_attribute_caracToattribute attribute? @relation("kit_attribute_fk_attribute_caracToattribute", fields: [fk_attribute_carac], references: [atr_id], onDelete: NoAction, onUpdate: NoAction)
-  attribute_kit_attribute_fk_attributeToattribute       attribute? @relation("kit_attribute_fk_attributeToattribute", fields: [fk_attribute], references: [atr_id], onDelete: NoAction, onUpdate: NoAction)
-  kit                                                   kit?       @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
+  fk_kit                                              Int?
+  fk_attribute_carac                                  Int?
+  fk_attribute_unit                                   Int?
+  kat_valeur                                          String?   @db.VarChar(50)
+  created_at                                          DateTime? @default(now()) @db.Timestamp(6)
+  updated_at                                          DateTime? @default(now()) @db.Timestamp(6)
+  kat_id                                              Int       @id @default(autoincrement())
+  attribut_kit_attribute_fk_attribute_caracToattribut attribut? @relation("kit_attribute_fk_attribute_caracToattribut", fields: [fk_attribute_carac], references: [atr_id], onDelete: NoAction, onUpdate: NoAction)
+  attribut_kit_attribute_fk_attribute_unitToattribut  attribut? @relation("kit_attribute_fk_attribute_unitToattribut", fields: [fk_attribute_unit], references: [atr_id], onDelete: Cascade, onUpdate: NoAction, map: "kit_attribute_fk_attribute_fkey")
+  kit                                                 kit?      @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
 }
 
-model kit_attribute_dev {
-  fk_kit             Int?
-  fk_attribute_carac Int?
-  fk_attribute       Int?
-  kat_valeur         Float?
-  created_at         DateTime? @default(now()) @db.Timestamp(6)
-  updated_at         DateTime? @default(now()) @db.Timestamp(6)
-  kat_id             Int       @id @default(autoincrement())
-}
-
-model kit_dev {
-  kit_id     Int       @id @default(autoincrement())
-  kit_label  String?   @unique(map: "idx_kit_dev") @db.VarChar(100)
-  created_at DateTime? @db.Timestamp(6)
-  updated_at DateTime? @db.Timestamp(6)
-}
-
-model kit_document {
-  fk_kit          Int?
-  fk_document     Int?
-  kid_description String?   @db.VarChar(255)
-  created_at      DateTime? @default(now()) @db.Timestamp(6)
-  updated_at      DateTime? @default(now()) @db.Timestamp(6)
-  kid_id          Int       @id @default(autoincrement())
-  document        document? @relation(fields: [fk_document], references: [doc_id], onDelete: NoAction, onUpdate: NoAction, map: "kit_document_kit_doc_id_fk")
-  kit             kit?      @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction, map: "kit_document_kit_kit_id_fk")
-}
-
-model kit_kit {
-  kik_id                         Int       @id @default(autoincrement())
-  fk_kit_parent                  Int?
-  fk_kit_child                   Int?
-  kik_qty                        Int?
-  created_at                     DateTime? @default(now()) @db.Timestamp(6)
-  updated_at                     DateTime? @default(now()) @db.Timestamp(6)
-  kik_index                      Int?
-  kit_kit_kit_fk_kit_childTokit  kit?      @relation("kit_kit_fk_kit_childTokit", fields: [fk_kit_child], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
-  kit_kit_kit_fk_kit_parentTokit kit?      @relation("kit_kit_fk_kit_parentTokit", fields: [fk_kit_parent], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model part {
-  par_id     Int       @id @default(autoincrement())
+model part_nc {
+  par_id     Int       @id(map: "part_pkey") @default(autoincrement())
   fk_kit     Int?
   par_label  String?   @db.VarChar(100)
   created_at DateTime? @default(now()) @db.Timestamp(6)
   updated_at DateTime? @default(now()) @db.Timestamp(6)
-  kit        kit?      @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
+  kit        kit?      @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction, map: "part_fk_kit_fkey")
+
+  @@schema("public")
 }
 
-model supplier {
-  sup_id    Int     @id(map: "supplier_pk") @default(autoincrement())
-  sup_code  String  @db.VarChar(10)
-  sup_label String? @db.VarChar(50)
+view v_tarif_achat {
+  fk_produit      Int?
+  taa_date        DateTime? @db.Date
+  taa_montant     Float?
+  taa_remise      Float?
+  taa_montant_net Float?
 
-  @@index([sup_code], map: "supplier_sup_code_index")
+  @@schema("produit")
 }
 
-model supplier_dev {
-  sup_id    Int     @id @default(autoincrement())
-  sup_code  String? @db.VarChar(10)
-  sup_label String? @db.VarChar(50)
+view produit_v_produit_categorie_attribut {
+  pro_id    Int?
+  kit_label String? @db.VarChar(100)
+  atr_id    Int?
+  atr_label String? @db.VarChar(100)
+  cat_label String? @db.VarChar(100)
 
-  @@index([sup_code], map: "supplier_dev_sup_code_index")
+  @@map("v_produit_categorie_attribut")
+  @@schema("produit")
 }
 
-view v_categories {
-  atr_id      Int?
+view public_v_produit_categorie_attribut {
+  pro_id    Int?
+  kit_label String? @db.VarChar(100)
+  atr_id    Int?
+  atr_label String? @db.VarChar(100)
+  cat_label String? @db.VarChar(100)
+
+  @@map("v_produit_categorie_attribut")
+  @@schema("public")
+}
+
+view v_categorie {
+  atr_0_id    Int?
   atr_0_label String? @db.VarChar(100)
+  atr_1_id    Int?
   atr_1_label String? @db.VarChar(100)
+  atr_2_id    Int?
   atr_2_label String? @db.VarChar(100)
+  atr_3_id    Int?
   atr_3_label String? @db.VarChar(100)
+  atr_4_id    Int?
   atr_4_label String? @db.VarChar(100)
+  atr_5_id    Int?
   atr_5_label String? @db.VarChar(100)
+  atr_6_id    Int?
   atr_6_label String? @db.VarChar(100)
+  atr_7_id    Int?
   atr_7_label String? @db.VarChar(100)
+
+  @@schema("public")
 }
 
-view v_kit_carac {
-  id         Int?
-  kit_label  String? @db.VarChar(100)
-  atr_label  String? @db.VarChar(100)
-  atr_val    String? @db.VarChar(60)
-  kat_valeur Float?
-}
+view v_kit_caracteristique {
+  kit_label String? @db.VarChar(100)
+  atr_label String? @db.VarChar(100)
+  valeur    String? @db.VarChar(50)
+  unit      String? @db.VarChar(60)
 
-view v_categories_dev {
-  row_key     Int?
-  atr_id      Int?
-  atr_0_label String? @db.VarChar(100)
-  atr_1_label String? @db.VarChar(100)
-  atr_2_label String? @db.VarChar(100)
-  atr_3_label String? @db.VarChar(100)
-  atr_4_label String? @db.VarChar(100)
-  atr_5_label String? @db.VarChar(100)
-  atr_6_label String? @db.VarChar(100)
-  atr_7_label String? @db.VarChar(100)
-}
-
-view v_kit_carac_dev {
-  id         Int?
-  kit_label  String? @db.VarChar(100)
-  atr_label  String? @db.VarChar(100)
-  atr_val    String? @db.VarChar(60)
-  kat_valeur Float?
+  @@schema("public")
 }

@@ -86,7 +86,7 @@ async function initializeCenovDevPrisma() {
 				const __dirname = path.dirname(__filename);
 				const require = createRequire(import.meta.url);
 
-				const devPrismaPath = path.resolve(__dirname, '../../prisma/cenov_dev_ewan/generated');
+				const devPrismaPath = path.resolve(__dirname, '../../prisma/cenov_dev/generated');
 				devPrismaModule = require(devPrismaPath) as unknown as PrismaModule;
 				console.log('✅ [PRISMA-META] createRequire réussi');
 			} catch (createRequireError) {
@@ -101,7 +101,7 @@ async function initializeCenovDevPrisma() {
 				const { pathToFileURL } = await import('node:url');
 				const absolutePath = path.resolve(
 					process.cwd(),
-					'prisma/cenov_dev_ewan/generated/index.js'
+					'prisma/cenov_dev/generated/index.js'
 				);
 				const fileUrl = pathToFileURL(absolutePath).href;
 
@@ -109,7 +109,7 @@ async function initializeCenovDevPrisma() {
 			} catch {
 				// Fallback import relatif
 				devPrismaModule = (await import(
-					/* @vite-ignore */ '../../prisma/cenov_dev_ewan/generated/index.js'
+					/* @vite-ignore */ '../../prisma/cenov_dev/generated/index.js'
 				)) as unknown as PrismaModule;
 			}
 			console.log('✅ [PRISMA-META] import() réussi');
@@ -131,7 +131,7 @@ async function initializeCenovDevPrisma() {
 	}
 }
 
-export type DatabaseName = 'cenov' | 'cenov_dev_ewan';
+export type DatabaseName = 'cenov' | 'cenov_dev';
 
 export interface TableInfo {
 	name: string;
@@ -157,7 +157,7 @@ interface DatabaseConfig {
 		dmmf: PrismaModule['Prisma']['dmmf'];
 		client: Record<string, unknown>;
 	};
-	cenov_dev_ewan: {
+	cenov_dev: {
 		dmmf: PrismaModule['Prisma']['dmmf'];
 		client: Record<string, unknown>;
 	};
@@ -184,7 +184,7 @@ async function createDatabases(): Promise<DatabaseConfig> {
 			dmmf: Prisma.dmmf,
 			client: new PrismaClient()
 		},
-		cenov_dev_ewan: {
+		cenov_dev: {
 			dmmf: CenovDevPrisma.dmmf,
 			client: new CenovDevPrismaClient()
 		}
@@ -316,7 +316,7 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 	}
 
 	const cenovTables = await getAllTables('cenov');
-	const cenovDevTables = await getAllTables('cenov_dev_ewan');
+	const cenovDevTables = await getAllTables('cenov_dev');
 	const allTables = [...cenovTables, ...cenovDevTables];
 
 	// Tri par schéma puis par type (table/vue) : tables schema → vues schema → tables schema suivant
@@ -324,8 +324,8 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 		// Définir la priorité des schémas et databases
 		const getSchemaOrder = (item: TableInfo) => {
 			if (item.database === 'cenov') return 1;
-			if (item.database === 'cenov_dev_ewan' && item.schema === 'produit') return 2;
-			if (item.database === 'cenov_dev_ewan' && item.schema === 'public') return 3;
+			if (item.database === 'cenov_dev' && item.schema === 'produit') return 2;
+			if (item.database === 'cenov_dev' && item.schema === 'public') return 3;
 			return 4;
 		};
 
@@ -373,7 +373,7 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 // Obtenir tous les noms de bases de données
 export async function getAllDatabaseNames(): Promise<DatabaseName[]> {
 	if (browser) {
-		return ['cenov', 'cenov_dev_ewan'];
+		return ['cenov', 'cenov_dev'];
 	}
 
 	const databases = await getDatabases();

@@ -125,7 +125,7 @@
 	}
 
 	// Récupération statique des bases de données (côté client)
-	const databases: DatabaseName[] = ['cenov', 'cenov_dev_ewan'];
+	const databases: DatabaseName[] = ['cenov', 'cenov_dev'];
 
 	// Fonction pour obtenir l'icône d'une BDD
 	function getDatabaseIcon(database: string) {

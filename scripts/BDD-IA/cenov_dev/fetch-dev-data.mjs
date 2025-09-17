@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Script principal pour récupérer toutes les données de la base cenov_dev_ewan
+ * Script principal pour récupérer toutes les données de la base cenov_dev
  * Récupère toutes les tables et vues des schémas public et produit en mode lecture seule
  *
  * Commandes pour lancer les scripts :
- * - Tables seulement : node scripts/BDD-IA/cenov_dev_ewan/fetch-dev-tables.mjs
- * - Vues seulement : node scripts/BDD-IA/cenov_dev_ewan/fetch-dev-views.mjs
- * - Tout (recommandé) : node scripts/BDD-IA/cenov_dev_ewan/fetch-dev-data.mjs
+ * - Tables seulement : node scripts/BDD-IA/cenov_dev/fetch-dev-tables.mjs
+ * - Vues seulement : node scripts/BDD-IA/cenov_dev/fetch-dev-views.mjs
+ * - Tout (recommandé) : node scripts/BDD-IA/cenov_dev/fetch-dev-data.mjs
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -47,7 +47,7 @@ function convertBigIntToNumber(obj) {
 }
 
 /**
- * Récupère les informations générales sur la base de données cenov_dev_ewan
+ * Récupère les informations générales sur la base de données cenov_dev
  */
 async function getDevDatabaseInfo() {
 	try {
@@ -89,11 +89,11 @@ async function getDevDatabaseInfo() {
 }
 
 /**
- * Fonction principale pour récupérer toutes les données cenov_dev_ewan
+ * Fonction principale pour récupérer toutes les données cenov_dev
  */
 async function fetchDevData() {
 	const startTime = new Date();
-	console.log('🚀 Démarrage de la récupération complète des données cenov_dev_ewan');
+	console.log('🚀 Démarrage de la récupération complète des données cenov_dev');
 	console.log(`📊 Schémas ciblés: ${SCHEMAS.join(', ')}`);
 	console.log(`⏰ Début: ${startTime.toISOString()}\n`);
 
@@ -258,7 +258,7 @@ async function fetchDevData() {
 		};
 
 		// Sauvegarde des résultats complets
-		const outputDir = path.join(process.cwd(), 'scripts', 'BDD-IA', 'cenov_dev_ewan', 'output');
+		const outputDir = path.join(process.cwd(), 'scripts', 'BDD-IA', 'cenov_dev', 'output');
 		await fs.mkdir(outputDir, { recursive: true });
 
 		const outputFile = path.join(
@@ -291,7 +291,7 @@ async function fetchDevData() {
 		await fs.writeFile(summaryFile, JSON.stringify(summary, null, 2));
 
 		console.log('\n' + '='.repeat(60));
-		console.log('✅ RÉCUPÉRATION CENOV_DEV_EWAN TERMINÉE AVEC SUCCÈS');
+		console.log('✅ RÉCUPÉRATION CENOV_DEV TERMINÉE AVEC SUCCÈS');
 		console.log('='.repeat(60));
 		console.log(`⏱️  Durée totale: ${Math.round(duration / 1000)}s`);
 		console.log(
@@ -331,11 +331,11 @@ async function fetchDevData() {
 if (import.meta.url.includes('fetch-dev-data.mjs')) {
 	fetchDevData()
 		.then(() => {
-			console.log('\n🎉 Script principal cenov_dev_ewan terminé avec succès');
+			console.log('\n🎉 Script principal cenov_dev terminé avec succès');
 			process.exit(0);
 		})
 		.catch((error) => {
-			console.error('\n💥 Échec du script principal cenov_dev_ewan:', error);
+			console.error('\n💥 Échec du script principal cenov_dev:', error);
 			process.exit(1);
 		});
 }

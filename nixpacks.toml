@@ -25,7 +25,7 @@ cmds = [
     "pnpm run prisma:generate-all",
     "pnpm run build"
 ]
-cacheDirectories = ["node_modules/.cache", "prisma/cenov_dev_ewan/generated"]
+cacheDirectories = ["node_modules/.cache", "prisma/cenov_dev/generated"]
 
 [start]
 cmd = "node build"

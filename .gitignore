@@ -28,11 +28,11 @@ static/Excel/
 
 # BDD-IA
 scripts/BDD-IA/cenov/output/
-scripts/BDD-IA/cenov_dev_ewan/output/
+scripts/BDD-IA/cenov_dev/output/
 
 # Prisma generated clients
 prisma/generated/
-prisma/cenov_dev_ewan/generated/
+prisma/cenov_dev/generated/
 prisma/cenov/generated/
 
 # Prisma old files (deprecated structure)

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
  * Script pour récupérer toutes les données des vues des schémas public et produit
- * de la base cenov_dev_ewan - Mode lecture seule - aucune modification/suppression/ajout
+ * de la base cenov_dev - Mode lecture seule - aucune modification/suppression/ajout
  *
  * Commandes pour lancer les scripts :
- * - Tables seulement : node scripts/BDD-IA/cenov_dev_ewan/fetch-dev-tables.mjs
- * - Vues seulement : node scripts/BDD-IA/cenov_dev_ewan/fetch-dev-views.mjs
- * - Tout (recommandé) : node scripts/BDD-IA/cenov_dev_ewan/fetch-dev-data.mjs
+ * - Tables seulement : node scripts/BDD-IA/cenov_dev/fetch-dev-tables.mjs
+ * - Vues seulement : node scripts/BDD-IA/cenov_dev/fetch-dev-views.mjs
+ * - Tout (recommandé) : node scripts/BDD-IA/cenov_dev/fetch-dev-data.mjs
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -128,12 +128,12 @@ async function getViewColumns(schemaName, viewName) {
  */
 async function fetchDevViews() {
 	try {
-		console.log('🔍 Récupération des vues pour cenov_dev_ewan...');
+		console.log('🔍 Récupération des vues pour cenov_dev...');
 		console.log(`📊 Schémas à traiter: ${SCHEMAS.join(', ')}`);
 
 		const results = {
 			timestamp: new Date().toISOString(),
-			database: 'cenov_dev_ewan',
+			database: 'cenov_dev',
 			schemas: {}
 		};
 
@@ -195,7 +195,7 @@ async function fetchDevViews() {
 		}
 
 		// Sauvegarde des résultats
-		const outputDir = path.join(process.cwd(), 'scripts', 'BDD-IA', 'cenov_dev_ewan', 'output');
+		const outputDir = path.join(process.cwd(), 'scripts', 'BDD-IA', 'cenov_dev', 'output');
 		await fs.mkdir(outputDir, { recursive: true });
 
 		const outputFile = path.join(
@@ -243,10 +243,10 @@ async function fetchDevViews() {
 // Exécution si le script est lancé directement
 if (
 	import.meta.url ===
-		`file://${process.cwd().replace(/\\/g, '/')}/scripts/BDD-IA/cenov_dev_ewan/fetch-dev-views.mjs` ||
+		`file://${process.cwd().replace(/\\/g, '/')}/scripts/BDD-IA/cenov_dev/fetch-dev-views.mjs` ||
 	process.argv[1]?.endsWith('fetch-dev-views.mjs')
 ) {
-	console.log('🚀 Démarrage du script de récupération des vues cenov_dev_ewan...');
+	console.log('🚀 Démarrage du script de récupération des vues cenov_dev...');
 	fetchDevViews()
 		.then(() => {
 			console.log('✅ Script terminé avec succès');

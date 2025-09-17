@@ -29,7 +29,7 @@ pnpm prisma:push          # Push schéma vers BDD
 pnpm prisma:pull          # Pull schéma depuis BDD
 ```
 
-**Prisma - CENOV_DEV_EWAN (Développement) :**
+**Prisma - CENOV_DEV (Développement) :**
 
 ```bash
 pnpm prisma:generate-dev  # Génération client dev
@@ -59,11 +59,11 @@ node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 - `src/lib/components/` : Composants réutilisables + UI library
 - `src/lib/schemas/dbSchema.ts` : Schémas Zod pour validation
 - `prisma/cenov/schema.prisma` : Schéma principal base de données CENOV
-- `prisma/cenov_dev_ewan/schema.prisma` : Schéma base de données CENOV_DEV_EWAN
+- `prisma/cenov_dev/schema.prisma` : Schéma base de données CENOV_DEV
 
 ## Workflow Prisma
 
-1. Éditer `prisma/cenov/schema.prisma` (ou `prisma/cenov_dev_ewan/schema.prisma`)
+1. Éditer `prisma/cenov/schema.prisma` (ou `prisma/cenov_dev/schema.prisma`)
 2. Exécuter les commandes Prisma directement sur le schéma principal
 
 ## Base de données
@@ -71,7 +71,7 @@ node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 **Architecture double base :**
 
 - **CENOV Database** (`DATABASE_URL`) - Base principale production
-- **CENOV_DEV_EWAN Database** (`CENOV_DEV_DATABASE_URL`) - Base développement étendue
+- **CENOV_DEV Database** (`CENOV_DEV_DATABASE_URL`) - Base développement étendue
 
 **Clients Prisma :**
 
@@ -80,8 +80,8 @@ node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
-// Base CENOV_DEV_EWAN :
-import { PrismaClient as CenovDevPrismaClient } from '../../prisma/cenov_dev_ewan/generated';
+// Base CENOV_DEV :
+import { PrismaClient as CenovDevPrismaClient } from '../../prisma/cenov_dev/generated';
 const cenovDevPrisma = new CenovDevPrismaClient();
 ```
 

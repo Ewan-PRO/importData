@@ -237,7 +237,7 @@ export const actions: Actions = {
 				selectedTables.map(async (table) => ({
 					table,
 					rules: await getTableValidationRules(
-						table.includes('_dev') || table.startsWith('v_') ? 'cenov_dev_ewan' : 'cenov',
+						table.includes('_dev') || table.startsWith('v_') ? 'cenov_dev' : 'cenov',
 						table
 					)
 				}))
@@ -406,7 +406,7 @@ export const actions: Actions = {
 				selectedTables.map(async (table) => ({
 					table,
 					rules: await getTableValidationRules(
-						table.includes('_dev') || table.startsWith('v_') ? 'cenov_dev_ewan' : 'cenov',
+						table.includes('_dev') || table.startsWith('v_') ? 'cenov_dev' : 'cenov',
 						table
 					)
 				}))
@@ -629,7 +629,7 @@ async function processRow(
 		// Préparation des données pour l'importation
 		const recordData: Record<string, unknown> = {};
 		const database: DatabaseName = targetTable.includes('_dev') || targetTable.startsWith('v_')
-			? 'cenov_dev_ewan'
+			? 'cenov_dev'
 			: 'cenov';
 		const validationRules = await getTableValidationRules(database, targetTable);
 
@@ -682,7 +682,7 @@ async function updateRecordGeneric(
 ): Promise<void> {
 	const uniqueConstraint = await getUniqueConstraint(targetTable, recordData);
 	const database: DatabaseName = targetTable.includes('_dev') || targetTable.startsWith('v_')
-		? 'cenov_dev_ewan'
+		? 'cenov_dev'
 		: 'cenov';
 
 	await updateRecord(database, targetTable, uniqueConstraint, recordData);
@@ -695,7 +695,7 @@ async function createRecord(
 	recordData: Record<string, unknown>
 ): Promise<void> {
 	const database: DatabaseName = targetTable.includes('_dev') || targetTable.startsWith('v_')
-		? 'cenov_dev_ewan'
+		? 'cenov_dev'
 		: 'cenov';
 
 	await createRecordGeneric(database, targetTable, recordData);
@@ -726,7 +726,7 @@ async function checkExistingRecord(
 	// Préparation de la condition de recherche
 	const whereCondition: Record<string, unknown> = {};
 	const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
-		? 'cenov_dev_ewan'
+		? 'cenov_dev'
 		: 'cenov';
 	const validationRules = await getTableValidationRules(database, tableName);
 	const uniqueFields = validationRules.uniqueFields;
@@ -747,7 +747,7 @@ async function checkExistingRecord(
 	try {
 		// Recherche dans la table appropriée via DMMF générique
 		const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
-			? 'cenov_dev_ewan'
+			? 'cenov_dev'
 			: 'cenov';
 
 		const existingRecord = await findRecord(database, tableName, whereCondition);
@@ -791,7 +791,7 @@ async function getUniqueConstraint(
 	data: Record<string, unknown>
 ): Promise<Record<string, unknown>> {
 	const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
-		? 'cenov_dev_ewan'
+		? 'cenov_dev'
 		: 'cenov';
 	const validationRules = await getTableValidationRules(database, tableName);
 	const uniqueFields = validationRules.uniqueFields;

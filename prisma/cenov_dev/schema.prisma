@@ -1,10 +1,10 @@
-generator cenov_dev_ewan_client {
+generator cenov_dev_client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["views"]
 }
 
-datasource cenov_dev_ewan_db {
+datasource cenov_dev_db {
   provider = "postgresql"
   url      = env("CENOV_DEV_DATABASE_URL")
   schemas  = ["produit", "public"]
@@ -13,8 +13,8 @@ datasource cenov_dev_ewan_db {
 model categorie {
   cat_id             Int                  @id @default(autoincrement())
   fk_parent          Int?
-  cat_code           String?              @cenov_dev_ewan_db.VarChar(60)
-  cat_label          String?              @cenov_dev_ewan_db.VarChar(100)
+  cat_code           String?              @cenov_dev_db.VarChar(60)
+  cat_label          String?              @cenov_dev_db.VarChar(100)
   categorie          categorie?           @relation("categorieTocategorie", fields: [fk_parent], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_categorie_fk_parent_fkey")
   other_categorie    categorie[]          @relation("categorieTocategorie")
   categorie_attribut categorie_attribut[]
@@ -46,8 +46,8 @@ model cross_ref {
 model famille {
   fam_id        Int         @id(map: "produit_famille_pkey") @default(autoincrement())
   fk_parent     Int?
-  fam_code      String?     @cenov_dev_ewan_db.VarChar(60)
-  fam_label     String?     @cenov_dev_ewan_db.VarChar(100)
+  fam_code      String?     @cenov_dev_db.VarChar(60)
+  fam_label     String?     @cenov_dev_db.VarChar(100)
   fk_supplier   Int
   fournisseur   fournisseur @relation(fields: [fk_supplier], references: [frs_id], onDelete: NoAction, onUpdate: NoAction, map: "famille_supplier_sup_id_fk")
   famille       famille?    @relation("familleTofamille", fields: [fk_parent], references: [fam_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_famille_fk_parent_fkey")
@@ -60,8 +60,8 @@ model famille {
 model famille_ewan {
   fam_id      Int     @id
   fk_parent   Int?
-  fam_code    String? @cenov_dev_ewan_db.VarChar(60)
-  fam_label   String? @cenov_dev_ewan_db.VarChar(100)
+  fam_code    String? @cenov_dev_db.VarChar(60)
+  fam_label   String? @cenov_dev_db.VarChar(100)
   fk_supplier Int?
 
   @@schema("produit")
@@ -69,14 +69,14 @@ model famille_ewan {
 
 model produit {
   pro_id            Int                 @id @default(autoincrement())
-  pro_code          String?             @cenov_dev_ewan_db.VarChar(20)
+  pro_code          String?             @cenov_dev_db.VarChar(20)
   fk_supplier       Int?
   fk_kit            Int?
   fk_famille        Int?
   fk_sfamille       Int?
   fk_ssfamille      Int?
-  created_at        DateTime?           @default(now()) @cenov_dev_ewan_db.Timestamp(6)
-  updated_at        DateTime?           @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  created_at        DateTime?           @default(now()) @cenov_dev_db.Timestamp(6)
+  updated_at        DateTime?           @default(now()) @cenov_dev_db.Timestamp(6)
   cross_ref         cross_ref[]
   kit               kit?                @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
   fournisseur       fournisseur?        @relation(fields: [fk_supplier], references: [frs_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_supplier_sup_id_fk")
@@ -98,7 +98,7 @@ model produit_categorie {
 
 model tarif_achat {
   fk_produit      Int
-  taa_date        DateTime @cenov_dev_ewan_db.Date
+  taa_date        DateTime @cenov_dev_db.Date
   taa_montant     Float?
   taa_remise      Float?
   taa_montant_net Float?   @default(dbgenerated("(taa_montant * ((1)::double precision - (taa_remise / (100)::double precision)))"))
@@ -111,11 +111,11 @@ model tarif_achat {
 
 model attribut {
   atr_id                                                   Int                  @id(map: "attribute_pkey") @default(autoincrement())
-  atr_nat                                                  String?              @cenov_dev_ewan_db.VarChar(60)
-  atr_val                                                  String?              @cenov_dev_ewan_db.VarChar(60)
-  atr_label                                                String?              @cenov_dev_ewan_db.VarChar(100)
-  created_at                                               DateTime?            @default(now()) @cenov_dev_ewan_db.Timestamp(6)
-  updated_at                                               DateTime?            @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  atr_nat                                                  String?              @cenov_dev_db.VarChar(60)
+  atr_val                                                  String?              @cenov_dev_db.VarChar(60)
+  atr_label                                                String?              @cenov_dev_db.VarChar(100)
+  created_at                                               DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
+  updated_at                                               DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
   categorie_attribut                                       categorie_attribut[]
   kit_attribute_kit_attribute_fk_attribute_caracToattribut kit_attribute[]      @relation("kit_attribute_fk_attribute_caracToattribut")
   kit_attribute_kit_attribute_fk_attribute_unitToattribut  kit_attribute[]      @relation("kit_attribute_fk_attribute_unitToattribut")
@@ -126,8 +126,8 @@ model attribut {
 
 model fournisseur {
   frs_id    Int       @id(map: "supplier_pk") @default(autoincrement())
-  frs_code  String    @cenov_dev_ewan_db.VarChar(10)
-  frs_label String?   @cenov_dev_ewan_db.VarChar(70)
+  frs_code  String    @cenov_dev_db.VarChar(10)
+  frs_label String?   @cenov_dev_db.VarChar(70)
   famille   famille[]
   produit   produit[]
 
@@ -137,9 +137,9 @@ model fournisseur {
 
 model kit {
   kit_id        Int             @id @default(autoincrement())
-  kit_label     String?         @cenov_dev_ewan_db.VarChar(100)
-  created_at    DateTime?       @default(now()) @cenov_dev_ewan_db.Timestamp(6)
-  updated_at    DateTime?       @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  kit_label     String?         @cenov_dev_db.VarChar(100)
+  created_at    DateTime?       @default(now()) @cenov_dev_db.Timestamp(6)
+  updated_at    DateTime?       @default(now()) @cenov_dev_db.Timestamp(6)
   produit       produit[]
   kit_attribute kit_attribute[]
   part_nc       part_nc[]
@@ -151,9 +151,9 @@ model kit_attribute {
   fk_kit                                              Int?
   fk_attribute_carac                                  Int?
   fk_attribute_unit                                   Int?
-  kat_valeur                                          String?   @cenov_dev_ewan_db.VarChar(50)
-  created_at                                          DateTime? @default(now()) @cenov_dev_ewan_db.Timestamp(6)
-  updated_at                                          DateTime? @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  kat_valeur                                          String?   @cenov_dev_db.VarChar(50)
+  created_at                                          DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
+  updated_at                                          DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   kat_id                                              Int       @id @default(autoincrement())
   attribut_kit_attribute_fk_attribute_caracToattribut attribut? @relation("kit_attribute_fk_attribute_caracToattribut", fields: [fk_attribute_carac], references: [atr_id], onDelete: NoAction, onUpdate: NoAction)
   attribut_kit_attribute_fk_attribute_unitToattribut  attribut? @relation("kit_attribute_fk_attribute_unitToattribut", fields: [fk_attribute_unit], references: [atr_id], onDelete: Cascade, onUpdate: NoAction, map: "kit_attribute_fk_attribute_fkey")
@@ -165,9 +165,9 @@ model kit_attribute {
 model part_nc {
   par_id     Int       @id(map: "part_pkey") @default(autoincrement())
   fk_kit     Int?
-  par_label  String?   @cenov_dev_ewan_db.VarChar(100)
-  created_at DateTime? @default(now()) @cenov_dev_ewan_db.Timestamp(6)
-  updated_at DateTime? @default(now()) @cenov_dev_ewan_db.Timestamp(6)
+  par_label  String?   @cenov_dev_db.VarChar(100)
+  created_at DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
+  updated_at DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   kit        kit?      @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction, map: "part_fk_kit_fkey")
 
   @@schema("public")
@@ -175,7 +175,7 @@ model part_nc {
 
 view v_tarif_achat {
   fk_produit      Int?
-  taa_date        DateTime? @cenov_dev_ewan_db.Date
+  taa_date        DateTime? @cenov_dev_db.Date
   taa_montant     Float?
   taa_remise      Float?
   taa_montant_net Float?
@@ -185,10 +185,10 @@ view v_tarif_achat {
 
 view produit_v_produit_categorie_attribut {
   pro_id    Int?
-  kit_label String? @cenov_dev_ewan_db.VarChar(100)
+  kit_label String? @cenov_dev_db.VarChar(100)
   atr_id    Int?
-  atr_label String? @cenov_dev_ewan_db.VarChar(100)
-  cat_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_label String? @cenov_dev_db.VarChar(100)
+  cat_label String? @cenov_dev_db.VarChar(100)
 
   @@map("v_produit_categorie_attribut")
   @@schema("produit")
@@ -196,10 +196,10 @@ view produit_v_produit_categorie_attribut {
 
 view public_v_produit_categorie_attribut {
   pro_id    Int?
-  kit_label String? @cenov_dev_ewan_db.VarChar(100)
+  kit_label String? @cenov_dev_db.VarChar(100)
   atr_id    Int?
-  atr_label String? @cenov_dev_ewan_db.VarChar(100)
-  cat_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_label String? @cenov_dev_db.VarChar(100)
+  cat_label String? @cenov_dev_db.VarChar(100)
 
   @@map("v_produit_categorie_attribut")
   @@schema("public")
@@ -207,30 +207,30 @@ view public_v_produit_categorie_attribut {
 
 view v_categorie {
   atr_0_id    Int?
-  atr_0_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_0_label String? @cenov_dev_db.VarChar(100)
   atr_1_id    Int?
-  atr_1_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_1_label String? @cenov_dev_db.VarChar(100)
   atr_2_id    Int?
-  atr_2_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_2_label String? @cenov_dev_db.VarChar(100)
   atr_3_id    Int?
-  atr_3_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_3_label String? @cenov_dev_db.VarChar(100)
   atr_4_id    Int?
-  atr_4_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_4_label String? @cenov_dev_db.VarChar(100)
   atr_5_id    Int?
-  atr_5_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_5_label String? @cenov_dev_db.VarChar(100)
   atr_6_id    Int?
-  atr_6_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_6_label String? @cenov_dev_db.VarChar(100)
   atr_7_id    Int?
-  atr_7_label String? @cenov_dev_ewan_db.VarChar(100)
+  atr_7_label String? @cenov_dev_db.VarChar(100)
 
   @@schema("public")
 }
 
 view v_kit_caracteristique {
-  kit_label String? @cenov_dev_ewan_db.VarChar(100)
-  atr_label String? @cenov_dev_ewan_db.VarChar(100)
-  valeur    String? @cenov_dev_ewan_db.VarChar(50)
-  unit      String? @cenov_dev_ewan_db.VarChar(60)
+  kit_label String? @cenov_dev_db.VarChar(100)
+  atr_label String? @cenov_dev_db.VarChar(100)
+  valeur    String? @cenov_dev_db.VarChar(50)
+  unit      String? @cenov_dev_db.VarChar(60)
 
   @@schema("public")
 }

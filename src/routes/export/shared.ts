@@ -42,7 +42,7 @@ export async function extractTableData(
 		const parts = tableId.split('-');
 		const dbName = parts[0];
 		// Validation du nom de base de données
-		if (dbName !== 'cenov' && dbName !== 'cenov_dev_ewan') {
+		if (dbName !== 'cenov' && dbName !== 'cenov_dev') {
 			throw new Error(`Base de données inconnue: ${dbName}`);
 		}
 		database = dbName as DatabaseName;
