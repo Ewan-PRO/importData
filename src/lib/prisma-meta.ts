@@ -1,5 +1,5 @@
 // src/lib/prisma-meta.ts - Micro-wrapper pour métadonnées Prisma
-import { browser } from '$app/environment';
+import { browser, dev } from '$app/environment';
 
 // Types pour les modules Prisma
 interface PrismaModule {
@@ -41,40 +41,93 @@ async function initializePrisma() {
 let CenovDevPrisma: PrismaModule['Prisma'] | undefined;
 let CenovDevPrismaClient: PrismaModule['PrismaClient'] | undefined;
 
-// Initialisation du client de développement
+// Fonction helper pour déterminer si on utilise les vues dev (comme db.ts)
+function shouldUseDevViews() {
+	// Utiliser process.env directement (côté serveur uniquement)
+	if (browser) return false;
+	return process.env.USE_DEV_VIEWS === 'true' || dev;
+}
+
+// Initialisation du client de développement - Solution hybride dev/prod
 async function initializeCenovDevPrisma() {
 	if (browser) return;
 
 	await initializePrisma();
 
+	const useDevViews = shouldUseDevViews();
+	console.log('🔍 [PRISMA-META] Configuration:', {
+		USE_DEV_VIEWS: process.env.USE_DEV_VIEWS,
+		dev,
+		useDevViews
+	});
+
+	if (!useDevViews) {
+		// Pas de vues dev - utiliser client principal uniquement
+		console.log('⚪ [PRISMA-META] Client principal seul (USE_DEV_VIEWS=false)');
+		CenovDevPrisma = Prisma;
+		CenovDevPrismaClient = PrismaClient;
+		return;
+	}
+
+	// USE_DEV_VIEWS=true - Chargement selon environnement
+	console.log('✅ [PRISMA-META] Chargement client dev (USE_DEV_VIEWS=true)');
 	try {
-		// Import direct avec file:// URL (plus fiable pour modules ES)
 		let devPrismaModule: PrismaModule | undefined;
 
-		try {
-			const path = await import('node:path');
-			const { pathToFileURL } = await import('node:url');
-			const absolutePath = path.resolve(process.cwd(), 'prisma/cenov_dev_ewan/generated/index.js');
-			const fileUrl = pathToFileURL(absolutePath).href;
+		if (dev) {
+			// DEV: createRequire (gère CommonJS)
+			console.log('🛠️ [PRISMA-META] Mode DEV - createRequire');
+			try {
+				const { createRequire } = await import('node:module');
+				const { fileURLToPath } = await import('node:url');
+				const path = await import('node:path');
 
-			devPrismaModule = (await import(fileUrl)) as unknown as PrismaModule;
-		} catch {
-			// Fallback vers import relatif
-			devPrismaModule = (await import(
-				'../../prisma/cenov_dev_ewan/generated/index.js'
-			)) as unknown as PrismaModule;
+				const __filename = fileURLToPath(import.meta.url);
+				const __dirname = path.dirname(__filename);
+				const require = createRequire(import.meta.url);
+
+				const devPrismaPath = path.resolve(__dirname, '../../prisma/cenov_dev_ewan/generated');
+				devPrismaModule = require(devPrismaPath) as unknown as PrismaModule;
+				console.log('✅ [PRISMA-META] createRequire réussi');
+			} catch (createRequireError) {
+				console.log('❌ [PRISMA-META] createRequire échoué:', createRequireError);
+				throw createRequireError;
+			}
+		} else {
+			// PROD: import() avec @vite-ignore (marche en production)
+			console.log('🚀 [PRISMA-META] Mode PROD - import()');
+			try {
+				const path = await import('node:path');
+				const { pathToFileURL } = await import('node:url');
+				const absolutePath = path.resolve(
+					process.cwd(),
+					'prisma/cenov_dev_ewan/generated/index.js'
+				);
+				const fileUrl = pathToFileURL(absolutePath).href;
+
+				devPrismaModule = (await import(/* @vite-ignore */ fileUrl)) as unknown as PrismaModule;
+			} catch {
+				// Fallback import relatif
+				devPrismaModule = (await import(
+					/* @vite-ignore */ '../../prisma/cenov_dev_ewan/generated/index.js'
+				)) as unknown as PrismaModule;
+			}
+			console.log('✅ [PRISMA-META] import() réussi');
 		}
 
-		if (!devPrismaModule?.Prisma || !devPrismaModule?.PrismaClient) {
-			throw new Error('Module invalide');
+		if (devPrismaModule?.Prisma && devPrismaModule?.PrismaClient) {
+			CenovDevPrisma = devPrismaModule.Prisma;
+			CenovDevPrismaClient = devPrismaModule.PrismaClient;
+			console.log('✅ [PRISMA-META] Client dev chargé avec succès');
+		} else {
+			throw new Error('Module dev invalide - Prisma/PrismaClient manquants');
 		}
-
-		CenovDevPrisma = devPrismaModule.Prisma;
-		CenovDevPrismaClient = devPrismaModule.PrismaClient;
-	} catch {
+	} catch (error) {
+		console.log('❌ [PRISMA-META] Erreur client dev:', error);
 		// Fallback au client principal
 		CenovDevPrisma = Prisma;
 		CenovDevPrismaClient = PrismaClient;
+		console.log('⚪ [PRISMA-META] Utilisation client principal en fallback');
 	}
 }
 
