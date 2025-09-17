@@ -21,8 +21,11 @@ cacheDirectories = ["/root/.local/share/pnpm/store/v3"]
 
 [phases.build]
 dependsOn = ["install"]
-cmds = ["pnpm run build"]
-cacheDirectories = ["node_modules/.cache"]
+cmds = [
+    "pnpm run prisma:generate-all",
+    "pnpm run build"
+]
+cacheDirectories = ["node_modules/.cache", "prisma/cenov_dev_ewan/generated"]
 
 [start]
 cmd = "node build"

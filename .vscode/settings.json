@@ -18,21 +18,5 @@
 		"titleBar.inactiveBackground": "#ff3d0099",
 		"titleBar.inactiveForeground": "#e7e7e799"
 	},
-	"peacock.color": "#ff3d00",
-	"files.exclude": {
-		"**/node_modules": true,
-		"**/.git": true,
-		"**/.svelte-kit": true,
-		"**/build": true,
-		"prisma/**/generated": true
-	},
-	"search.exclude": {
-		"**/node_modules": true,
-		"**/.git": true,
-		"**/.svelte-kit": true,
-		"**/build": true,
-		"prisma/**/generated": true
-	},
-	"prisma.fileWatcher": false,
-	"typescript.preferences.includePackageJsonAutoImports": "off"
+	"peacock.color": "#ff3d00"
 }

@@ -48,19 +48,30 @@ async function initializeCenovDevPrisma() {
 	await initializePrisma();
 
 	try {
-		const { createRequire } = await import('node:module');
-		const path = await import('node:path');
+		// Import direct avec file:// URL (plus fiable pour modules ES)
+		let devPrismaModule: PrismaModule | undefined;
 
-		const require = createRequire(import.meta.url);
+		try {
+			const path = await import('node:path');
+			const { pathToFileURL } = await import('node:url');
+			const absolutePath = path.resolve(process.cwd(), 'prisma/cenov_dev_ewan/generated/index.js');
+			const fileUrl = pathToFileURL(absolutePath).href;
 
-		// Utiliser process.cwd() qui fonctionne partout grâce à vite.config.ts noExternal
-		const devPrismaPath = path.resolve(process.cwd(), 'prisma/cenov_dev_ewan/generated');
+			devPrismaModule = (await import(fileUrl)) as unknown as PrismaModule;
+		} catch {
+			// Fallback vers import relatif
+			devPrismaModule = (await import(
+				'../../prisma/cenov_dev_ewan/generated/index.js'
+			)) as unknown as PrismaModule;
+		}
 
-		const devPrismaModule = require(devPrismaPath) as unknown as PrismaModule;
+		if (!devPrismaModule?.Prisma || !devPrismaModule?.PrismaClient) {
+			throw new Error('Module invalide');
+		}
+
 		CenovDevPrisma = devPrismaModule.Prisma;
 		CenovDevPrismaClient = devPrismaModule.PrismaClient;
-	} catch (error) {
-		console.error('❌ [PRISMA-META] Impossible de charger le client CENOV_DEV_EWAN, utilisation du client principal:', error instanceof Error ? error.message : String(error));
+	} catch {
 		// Fallback au client principal
 		CenovDevPrisma = Prisma;
 		CenovDevPrismaClient = PrismaClient;
@@ -136,6 +147,7 @@ export async function getDatabases(): Promise<DatabaseConfig> {
 	if (!databasesCache) {
 		databasesCache = await createDatabases();
 	}
+
 	return databasesCache;
 }
 
@@ -165,10 +177,6 @@ function detectPrimaryKeyFromDMMF(model: DMMFModelFromPrisma): string | null {
 
 	// 3. Dernier recours : premier champ
 	if (model.fields.length > 0) {
-		// Debug : clé primaire non trouvée pour cette table
-		console.log(
-			`⚠️ [PRISMA-META] ${model.name}: aucune clé trouvée, utilisation du premier champ: ${model.fields[0].name}`
-		);
 		return model.fields[0].name;
 	}
 
@@ -229,7 +237,6 @@ export async function getAllTables(database: DatabaseName): Promise<TableInfo[]>
 		// Utiliser le nom mappé (@@map) comme displayName par défaut
 		let displayName = realTableName;
 		const schema = modelWithMeta.schema || 'public';
-
 
 		// Nettoyer uniquement les préfixes automatiques évidents (comme public_)
 		// MAIS GARDER les vrais noms de tables qui contiennent le nom du schéma
@@ -307,10 +314,8 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 		return 0;
 	});
 
-
 	return sortedTables;
 }
-
 
 // Obtenir tous les noms de bases de données
 export async function getAllDatabaseNames(): Promise<DatabaseName[]> {
