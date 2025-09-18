@@ -1155,55 +1155,53 @@
 									</div>
 								</div>
 
-								{#if rows.length > 0}
+								<!-- Afficher colonnes même si pas de données -->
+								{#if matchingTableInfo?.columns && matchingTableInfo.columns.length > 0}
 									<div class="overflow-x-auto">
 										<Table.Root variant="striped">
 											{#if previewConfig?.includeHeaders ?? $form.includeHeaders}
 												<Table.Header>
 													<Table.Row variant="striped">
-														{#each Object.keys(rows[0] as Record<string, unknown>) as column}
-															<Table.Head variant="striped">{column}</Table.Head>
+														{#each matchingTableInfo.columns as column}
+															<Table.Head variant="striped">{column.name}</Table.Head>
 														{/each}
 													</Table.Row>
 												</Table.Header>
 											{/if}
 											<Table.Body>
-												{#each rows as row, rowIndex}
+												{#if rows.length > 0}
+													{#each rows as row, rowIndex}
+														<Table.Row variant="striped">
+															{#each matchingTableInfo.columns as column}
+																<Table.Cell variant="striped" {rowIndex}>
+																	{@const typedRow = row as Record<string, unknown>}
+																	{formatPreviewValue(typedRow[column.name])}
+																</Table.Cell>
+															{/each}
+														</Table.Row>
+													{/each}
+												{:else}
+													<!-- Table vide : afficher une ligne d'exemple vide -->
 													<Table.Row variant="striped">
-														{#each Object.keys(rows[0] as Record<string, unknown>) as column}
-															<Table.Cell variant="striped" {rowIndex}>
-																{@const typedRow = row as Record<string, unknown>}
-																{formatPreviewValue(typedRow[column])}
+														{#each matchingTableInfo.columns as column}
+															<Table.Cell variant="striped" class="text-gray-400 italic">
+																(aucune donnée)
 															</Table.Cell>
 														{/each}
 													</Table.Row>
-												{/each}
+												{/if}
 											</Table.Body>
 										</Table.Root>
 									</div>
 								{:else}
-									<!-- Distinguer table vide vs erreur -->
-									{#if matchingTableInfo?.columns && matchingTableInfo.columns.length > 0}
-										<div class="py-8 text-center">
-											<div class="mb-2 text-gray-400">
-												<Database class="mx-auto h-12 w-12" />
-											</div>
-											<p class="font-medium text-gray-600">
-												Aucune donnée disponible dans la base de données
-											</p>
-											<p class="text-sm text-gray-500">
-												La table existe mais ne contient aucune ligne
-											</p>
+									<!-- Erreur de lecture des métadonnées -->
+									<div class="py-8 text-center">
+										<div class="mb-2 text-red-400">
+											<AlertCircle class="mx-auto h-12 w-12" />
 										</div>
-									{:else}
-										<div class="py-8 text-center">
-											<div class="mb-2 text-red-400">
-												<AlertCircle class="mx-auto h-12 w-12" />
-											</div>
-											<p class="font-medium text-red-600">Erreur de lecture des données</p>
-											<p class="text-sm text-gray-500">Impossible d'accéder à cette table</p>
-										</div>
-									{/if}
+										<p class="font-medium text-red-600">Erreur de lecture des métadonnées</p>
+										<p class="text-sm text-gray-500">Impossible d'accéder aux informations de cette table</p>
+									</div>
 								{/if}
 							</div>
 						{/each}
