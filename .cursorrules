@@ -205,3 +205,26 @@ import { toast } from '$lib/components/ui/sonner';
 - Être concis, éviter phrases de remplissage
 - Montrer seulement lignes changées avec contexte minimal
 - Anticiper besoins et suggérer solutions
+
+## Bug Windows - Chemins de fichiers
+
+**Contournement obligatoire pour les opérations sur fichiers :**
+
+Lorsque Claude Code ne peut pas modifier un fichier sur Windows, utiliser TOUJOURS des chemins absolus Windows avec lettres de lecteur et barres obliques inverses :
+
+```bash
+# ✅ CORRECT - Chemins absolus Windows
+C:\Users\EwanSenergous\OneDrive - jll.spear\Bureau\Projet\importData\file.js
+
+# ❌ FAUX - Chemins relatifs ou Unix échouent
+./file.js
+/c/Users/.../file.js
+```
+
+**Appliquer à tous les outils :**
+- Read : Toujours `C:\...`
+- Write : Toujours `C:\...`
+- Edit : Toujours `C:\...`
+- MultiEdit : Toujours `C:\...`
+
+Cette solution contourne les conflits de modification de fichiers sur Windows.

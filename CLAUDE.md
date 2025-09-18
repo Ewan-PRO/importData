@@ -410,3 +410,28 @@ This typically occurs when files are automatically formatted by linters/formatte
 - Don't revert linter changes unless explicitly requested
 - Use git restore only when edit conflicts prevent progress
 - Re-read files after any formatting to get current state
+
+## Windows File Path Bug Workaround
+
+**When encountering file modification errors on Windows:**
+
+There is a bug in Claude Code on Windows where file operations may fail. The workaround is:
+
+**Always use absolute Windows paths with drive letters and backslashes for ALL file operations:**
+
+```bash
+# ✅ CORRECT - Use absolute Windows paths
+C:\Users\EwanSenergous\OneDrive - jll.spear\Bureau\Projet\importData\file.js
+
+# ❌ WRONG - Relative or Unix-style paths may fail
+./file.js
+/c/Users/.../file.js
+```
+
+**Apply this to all tools:**
+- Read tool: Always use `C:\...` paths
+- Write tool: Always use `C:\...` paths
+- Edit tool: Always use `C:\...` paths
+- MultiEdit tool: Always use `C:\...` paths
+
+This workaround resolves file modification conflicts and ensures reliable file operations on Windows systems.

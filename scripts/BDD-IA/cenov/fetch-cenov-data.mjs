@@ -1,29 +1,28 @@
 #!/usr/bin/env node
 /**
- * Script principal pour récupérer toutes les données de la base Cenov
- * Récupère toutes les tables et vues du schéma public en mode lecture seule
+ * Script principal pour recuperer toutes les donnees de la base cenov
+ * Recupere toutes les tables et vues des schemas public et produit en mode lecture seule
  *
  * Commandes pour lancer les scripts :
- * - Tables seulement : node scripts/BDD-IA/cenov/fetch-all-tables.mjs
- * - Vues seulement : node scripts/BDD-IA/cenov/fetch-all-views.mjs
- * - Tout (recommandé) : node scripts/BDD-IA/cenov/fetch-cenov-data.mjs
+ * - Tables seulement : node scripts/BDD-IA/cenov/fetch-cenov-tables.mjs
+ * - Vues seulement : node scripts/BDD-IA/cenov/fetch-cenov-views.mjs
+ * - Tout (recommande) : node scripts/BDD-IA/cenov/fetch-cenov-data.mjs
  */
 
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs/promises';
 import path from 'path';
-import { getAllTables, getTableData } from './fetch-all-tables.mjs';
+import { getTablesForSchema, getTableData, SCHEMAS } from './fetch-cenov-tables.mjs';
 import {
-	getAllViews,
-	getAllMaterializedViews,
-	getViewData,
-	getViewColumns
-} from './fetch-all-views.mjs';
+	getViewsForSchema,
+	getMaterializedViewsForSchema,
+	getViewData
+} from './fetch-cenov-views.mjs';
 
 const prisma = new PrismaClient({
 	datasources: {
 		db: {
-			url: process.env.DATABASE_URL || process.env.CENOV_DATABASE_URL
+			url: process.env.DATABASE_URL
 		}
 	},
 	log: ['error', 'warn'],
@@ -31,7 +30,7 @@ const prisma = new PrismaClient({
 });
 
 /**
- * Convertit les BigInt en Number pour éviter les erreurs de sérialisation JSON
+ * Convertit les BigInt en Number pour eviter les erreurs de serialisation JSON
  */
 function convertBigIntToNumber(obj) {
 	if (obj === null || obj === undefined) return obj;
@@ -48,133 +47,199 @@ function convertBigIntToNumber(obj) {
 }
 
 /**
- * Récupère les informations générales sur la base de données
+ * Recupere les informations generales sur la base de donnees cenov
  */
-async function getDatabaseInfo() {
+async function getCenovDatabaseInfo() {
 	try {
-		const [dbInfo, schemaInfo] = await Promise.all([
-			// Informations générales sur la base
+		const [dbInfo, schemasInfo] = await Promise.all([
+			// Informations generales sur la base
 			prisma.$queryRaw`
-        SELECT 
+        SELECT
           current_database() as database_name,
           current_schema() as current_schema,
           version() as postgres_version
       `,
-			// Informations sur le schéma public
+			// Informations sur les schemas public et produit
 			prisma.$queryRaw`
-        SELECT 
+        SELECT
           schemaname,
           COUNT(*) FILTER (WHERE tabletype = 'table') as table_count,
-          COUNT(*) FILTER (WHERE tabletype = 'view') as view_count
+          COUNT(*) FILTER (WHERE tabletype = 'view') as view_count,
+          COUNT(*) FILTER (WHERE tabletype = 'materialized_view') as materialized_view_count
         FROM (
-          SELECT schemaname, 'table' as tabletype FROM pg_tables WHERE schemaname = 'public'
+          SELECT schemaname, 'table' as tabletype FROM pg_tables WHERE schemaname = ANY(${SCHEMAS})
           UNION ALL
-          SELECT schemaname, 'view' as tabletype FROM pg_views WHERE schemaname = 'public'
+          SELECT schemaname, 'view' as tabletype FROM pg_views WHERE schemaname = ANY(${SCHEMAS})
           UNION ALL
-          SELECT schemaname, 'materialized_view' as tabletype FROM pg_matviews WHERE schemaname = 'public'
+          SELECT schemaname, 'materialized_view' as tabletype FROM pg_matviews WHERE schemaname = ANY(${SCHEMAS})
         ) combined
         GROUP BY schemaname
+        ORDER BY schemaname
       `
 		]);
 
 		return {
 			database: convertBigIntToNumber(dbInfo[0]),
-			schema: convertBigIntToNumber(
-				schemaInfo[0] || { schemaname: 'public', table_count: 0, view_count: 0 }
-			)
+			schemas: convertBigIntToNumber(schemasInfo)
 		};
 	} catch (error) {
-		console.error('Erreur lors de la récupération des infos DB:', error);
+		console.error('Erreur lors de la recuperation des infos DB:', error);
 		return null;
 	}
 }
 
 /**
- * Fonction principale pour récupérer toutes les données Cenov
+ * Fonction principale pour recuperer toutes les donnees cenov
  */
 async function fetchCenovData() {
 	const startTime = new Date();
-	console.log('🚀 Démarrage de la récupération complète des données Cenov');
-	console.log(`⏰ Début: ${startTime.toISOString()}\n`);
+	console.log('🚀 Demarrage de la recuperation complete des donnees cenov');
+	console.log(`📊 Schemas cibles: ${SCHEMAS.join(', ')}`);
+	console.log(`⏰ Debut: ${startTime.toISOString()}\n`);
 
 	try {
-		// Récupération des informations sur la base
-		console.log('📋 Récupération des informations de la base de données...');
-		const dbInfo = await getDatabaseInfo();
+		// Recuperation des informations sur la base
+		console.log('📋 Recuperation des informations de la base de donnees...');
+		const dbInfo = await getCenovDatabaseInfo();
 		if (dbInfo) {
-			console.log(`   Base de données: ${dbInfo.database.database_name}`);
+			console.log(`   Base de donnees: ${dbInfo.database.database_name}`);
 			console.log(`   Version PostgreSQL: ${dbInfo.database.postgres_version.split(' ')[0]}`);
-			console.log(`   Tables: ${dbInfo.schema.table_count}, Vues: ${dbInfo.schema.view_count}\n`);
-		}
 
-		// Récupération des listes de tables et vues
-		console.log('📊 Récupération des données...\n');
-		console.log('🔍 Récupération de la liste des tables...');
-		const tables = await getAllTables();
-		console.log(`📊 ${tables.length} tables trouvées dans le schéma public`);
-
-		console.log('🔍 Récupération de la liste des vues...');
-		const [views, materializedViews] = await Promise.all([
-			getAllViews(),
-			getAllMaterializedViews()
-		]);
-
-		const allViews = [
-			...views.map((v) => ({ ...v, type: 'VIEW' })),
-			...materializedViews.map((v) => ({ ...v, type: 'MATERIALIZED VIEW' }))
-		];
-
-		console.log(`📊 ${allViews.length} vues trouvées dans le schéma public`);
-		console.log(`   - ${views.length} vues normales`);
-		console.log(`   - ${materializedViews.length} vues matérialisées`);
-
-		// Compilation des données
-		const compiledTables = {};
-		const compiledViews = {};
-		let totalTablesRows = 0;
-		let totalViewsRows = 0;
-		let tablesWithErrors = 0;
-		let viewsWithErrors = 0;
-
-		// Récupération des données de chaque table
-		for (const table of tables) {
-			try {
-				const tableData = await getTableData(table.table_name);
-				compiledTables[table.table_name] = tableData;
-				totalTablesRows += tableData.rowCount;
-				console.log(`✅ ${table.table_name}: ${tableData.rowCount} lignes`);
-			} catch (error) {
-				console.error(`❌ Erreur ${table.table_name}:`, error.message);
-				tablesWithErrors++;
+			if (dbInfo.schemas.length > 0) {
+				console.log('   Schemas detectes:');
+				for (const schema of dbInfo.schemas) {
+					const totalViews = (schema.view_count || 0) + (schema.materialized_view_count || 0);
+					console.log(
+						`     - ${schema.schemaname}: ${schema.table_count} tables, ${totalViews} vues`
+					);
+				}
 			}
+			console.log();
 		}
 
-		// Récupération des données de chaque vue
-		for (const view of allViews) {
-			try {
-				const viewData = await getViewData(view.view_name);
-				const viewColumns = await getViewColumns(view.view_name);
-				compiledViews[view.view_name] = {
-					...viewData,
-					type: view.type,
-					definition: view.view_definition,
-					columns: viewColumns
-				};
-				totalViewsRows += viewData.rowCount;
-				console.log(`✅ ${view.view_name} (${view.type}): ${viewData.rowCount} lignes`);
-			} catch (error) {
-				console.error(`❌ Erreur ${view.view_name}:`, error.message);
-				viewsWithErrors++;
+		// Recuperation des tables et vues en parallele
+		console.log('📊 Recuperation des donnees...\n');
+
+		const compiledSchemas = {};
+
+		for (const schema of SCHEMAS) {
+			console.log(`🔍 Traitement du schema: ${schema}`);
+
+			// Recuperation des tables
+			const tables = await getTablesForSchema(schema);
+			console.log(`   📊 ${tables.length} tables trouvees dans ${schema}`);
+
+			const schemaTables = {};
+			let totalTablesRows = 0;
+			let tablesWithErrors = 0;
+
+			for (const table of tables) {
+				try {
+					const tableData = await getTableData(schema, table.table_name);
+					schemaTables[table.table_name] = tableData;
+					totalTablesRows += tableData.rowCount;
+					console.log(`   ✅ ${table.table_name}: ${tableData.rowCount} lignes`);
+				} catch (error) {
+					console.error(`   ❌ Erreur ${table.table_name}:`, error.message);
+					tablesWithErrors++;
+				}
 			}
-		}
 
-		const tablesData = { tables: compiledTables };
-		const viewsData = { views: compiledViews };
+			// Recuperation des vues (normales + materialisees)
+			const [normalViews, materializedViews] = await Promise.all([
+				getViewsForSchema(schema),
+				getMaterializedViewsForSchema(schema)
+			]);
+
+			const allViews = [
+				...normalViews.map((v) => ({ ...v, type: 'VIEW' })),
+				...materializedViews.map((v) => ({ ...v, type: 'MATERIALIZED VIEW' }))
+			];
+
+			console.log(`   📊 ${allViews.length} vues trouvees dans ${schema}`);
+			if (normalViews.length > 0 || materializedViews.length > 0) {
+				console.log(`      - ${normalViews.length} vues normales`);
+				console.log(`      - ${materializedViews.length} vues materialisees`);
+			}
+
+			const schemaViews = {};
+			let totalViewsRows = 0;
+			let viewsWithErrors = 0;
+
+			for (const view of allViews) {
+				try {
+					const viewData = await getViewData(schema, view.view_name);
+					schemaViews[view.view_name] = {
+						...viewData,
+						type: view.type,
+						definition: view.view_definition
+					};
+					totalViewsRows += viewData.rowCount;
+					console.log(`   ✅ ${view.view_name} (${view.type}): ${viewData.rowCount} lignes`);
+				} catch (error) {
+					console.error(`   ❌ Erreur ${view.view_name}:`, error.message);
+					viewsWithErrors++;
+				}
+			}
+
+			compiledSchemas[schema] = {
+				name: schema,
+				tables: schemaTables,
+				views: schemaViews,
+				summary: {
+					tables: {
+						count: tables.length,
+						totalRows: totalTablesRows,
+						errors: tablesWithErrors
+					},
+					views: {
+						count: allViews.length,
+						totalRows: totalViewsRows,
+						errors: viewsWithErrors
+					}
+				}
+			};
+
+			console.log(
+				`   📈 Total ${schema}: ${tables.length} tables (${totalTablesRows} lignes), ${allViews.length} vues (${totalViewsRows} lignes)`
+			);
+		}
 
 		const endTime = new Date();
 		const duration = endTime - startTime;
 
-		// Compilation des résultats
+		// Calcul des totaux globaux
+		const globalSummary = {
+			tables: {
+				count: Object.values(compiledSchemas).reduce(
+					(sum, schema) => sum + schema.summary.tables.count,
+					0
+				),
+				totalRows: Object.values(compiledSchemas).reduce(
+					(sum, schema) => sum + schema.summary.tables.totalRows,
+					0
+				),
+				errors: Object.values(compiledSchemas).reduce(
+					(sum, schema) => sum + schema.summary.tables.errors,
+					0
+				)
+			},
+			views: {
+				count: Object.values(compiledSchemas).reduce(
+					(sum, schema) => sum + schema.summary.views.count,
+					0
+				),
+				totalRows: Object.values(compiledSchemas).reduce(
+					(sum, schema) => sum + schema.summary.views.totalRows,
+					0
+				),
+				errors: Object.values(compiledSchemas).reduce(
+					(sum, schema) => sum + schema.summary.views.errors,
+					0
+				)
+			}
+		};
+
 		const results = {
 			metadata: {
 				timestamp: endTime.toISOString(),
@@ -182,31 +247,17 @@ async function fetchCenovData() {
 				endTime: endTime.toISOString(),
 				duration: `${Math.round(duration / 1000)}s`,
 				database: dbInfo?.database || null,
-				schema: 'public'
+				targetSchemas: SCHEMAS
 			},
-			summary: {
-				tables: {
-					count: tables.length,
-					totalRows: totalTablesRows,
-					errors: tablesWithErrors
-				},
-				views: {
-					count: allViews.length,
-					totalRows: totalViewsRows,
-					errors: viewsWithErrors
-				}
-			},
-			data: {
-				tables: tablesData.tables || {},
-				views: viewsData.views || {}
-			},
+			summary: globalSummary,
+			schemas: compiledSchemas,
 			errors: {
-				tables: tablesWithErrors > 0 ? `${tablesWithErrors} tables avec erreurs` : null,
-				views: viewsWithErrors > 0 ? `${viewsWithErrors} vues avec erreurs` : null
+				tables: null,
+				views: null
 			}
 		};
 
-		// Sauvegarde des résultats complets
+		// Sauvegarde des resultats complets
 		const outputDir = path.join(process.cwd(), 'scripts', 'BDD-IA', 'cenov', 'output');
 		await fs.mkdir(outputDir, { recursive: true });
 
@@ -216,61 +267,77 @@ async function fetchCenovData() {
 		);
 		await fs.writeFile(outputFile, JSON.stringify(results, null, 2));
 
-		// Création d'un résumé léger
+		// Creation d'un resume leger
 		const summaryFile = path.join(
 			outputDir,
 			`cenov-summary-${new Date().toISOString().split('T')[0]}.json`
 		);
 		const summary = {
 			...results.metadata,
-			...results.summary,
-			tableList: Object.keys(results.data.tables),
-			viewList: Object.keys(results.data.views),
+			globalSummary: results.summary,
+			schemasSummary: Object.fromEntries(
+				Object.entries(results.schemas).map(([name, data]) => [
+					name,
+					{
+						tables: { count: data.summary.tables.count, rows: data.summary.tables.totalRows },
+						views: { count: data.summary.views.count, rows: data.summary.views.totalRows },
+						tableList: Object.keys(data.tables),
+						viewList: Object.keys(data.views)
+					}
+				])
+			),
 			errors: results.errors
 		};
 		await fs.writeFile(summaryFile, JSON.stringify(summary, null, 2));
 
-		console.log('\n' + '='.repeat(50));
-		console.log('✅ RÉCUPÉRATION TERMINÉE AVEC SUCCÈS');
-		console.log('='.repeat(50));
-		console.log(`⏱️  Durée totale: ${Math.round(duration / 1000)}s`);
+		console.log('\n' + '='.repeat(60));
+		console.log('✅ RECUPERATION CENOV TERMINEE AVEC SUCCES');
+		console.log('='.repeat(60));
+		console.log(`⏱️  Duree totale: ${Math.round(duration / 1000)}s`);
 		console.log(
-			`📊 Tables récupérées: ${results.summary.tables.count} (${results.summary.tables.totalRows} lignes)`
+			`📊 Tables recuperees: ${globalSummary.tables.count} (${globalSummary.tables.totalRows} lignes)`
 		);
 		console.log(
-			`👁️  Vues récupérées: ${results.summary.views.count} (${results.summary.views.totalRows} lignes)`
+			`👁️  Vues recuperees: ${globalSummary.views.count} (${globalSummary.views.totalRows} lignes)`
 		);
 
-		if (results.summary.tables.errors > 0 || results.summary.views.errors > 0) {
+		if (globalSummary.tables.errors > 0 || globalSummary.views.errors > 0) {
 			console.log(
-				`⚠️  Erreurs: ${results.summary.tables.errors} tables, ${results.summary.views.errors} vues`
+				`⚠️  Erreurs: ${globalSummary.tables.errors} tables, ${globalSummary.views.errors} vues`
 			);
 		}
 
-		console.log(`\n📁 Fichiers générés:`);
-		console.log(`   - Données complètes: ${outputFile}`);
-		console.log(`   - Résumé: ${summaryFile}`);
+		console.log('\n📋 Detail par schema:');
+		for (const [schemaName, schemaData] of Object.entries(results.schemas)) {
+			console.log(
+				`   ${schemaName}: ${schemaData.summary.tables.count} tables, ${schemaData.summary.views.count} vues`
+			);
+		}
+
+		console.log(`\n📁 Fichiers generes:`);
+		console.log(`   - Donnees completes: ${outputFile}`);
+		console.log(`   - Resume: ${summaryFile}`);
 
 		return results;
 	} catch (error) {
-		console.error('❌ Erreur critique lors de la récupération des données:', error);
+		console.error('❌ Erreur critique lors de la recuperation des donnees:', error);
 		throw error;
 	} finally {
 		await prisma.$disconnect();
 	}
 }
 
-// Exécution si le script est lancé directement
+// Execution si le script est lance directement
 if (import.meta.url.includes('fetch-cenov-data.mjs')) {
 	fetchCenovData()
 		.then(() => {
-			console.log('\n🎉 Script principal terminé avec succès');
+			console.log('\n🎉 Script principal cenov termine avec succes');
 			process.exit(0);
 		})
 		.catch((error) => {
-			console.error('\n💥 Échec du script principal:', error);
+			console.error('\n💥 Echec du script principal cenov:', error);
 			process.exit(1);
 		});
 }
 
-export { fetchCenovData, getDatabaseInfo };
+export { fetchCenovData, getCenovDatabaseInfo };
