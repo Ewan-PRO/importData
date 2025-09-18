@@ -343,12 +343,22 @@
 		} as any;
 	}
 
+	// Fonction utilitaire pour parser le format "database:tableName" côté client
+	function parseTableIdentifierClient(tableIdentifier: string): { database: string; tableName: string } {
+		if (tableIdentifier.includes(':')) {
+			const [database, tableName] = tableIdentifier.split(':');
+			return { database, tableName };
+		}
+		// Fallback pour l'ancien format
+		return { database: 'cenov', tableName: tableIdentifier };
+	}
+
 	// Fonction pour calculer les champs requis basée sur les données DMMF du serveur
 	function getRequiredFieldsForTables(tables: string[]): string[] {
 		let result: string[] = [];
 
-		tables.forEach((table) => {
-			const requiredFields = tableRequiredFields[table] || [];
+		tables.forEach((tableIdentifier) => {
+			const requiredFields = tableRequiredFields[tableIdentifier] || [];
 			requiredFields.forEach((field: string) => {
 				if (!result.includes(field)) {
 					result.push(field);

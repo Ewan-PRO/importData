@@ -404,12 +404,30 @@ export async function countTableRows(database: DatabaseName, tableName: string):
 
 // ========== FONCTIONS POUR L'IMPORT ==========
 
+// Fonction pour parser le format "database:tableName"
+export function parseTableIdentifier(tableIdentifier: string): { database: DatabaseName; tableName: string } {
+	if (tableIdentifier.includes(':')) {
+		const [database, tableName] = tableIdentifier.split(':');
+		return { database: database as DatabaseName, tableName };
+	}
+
+	// Fallback pour l'ancien format (juste le nom de table)
+	return { database: 'cenov', tableName: tableIdentifier };
+}
+
 // Fonction pour détecter automatiquement la database d'une table via DMMF
-export async function detectDatabaseForTable(tableName: string): Promise<DatabaseName> {
+export async function detectDatabaseForTable(tableIdentifier: string): Promise<DatabaseName> {
 	if (browser) {
 		throw new Error('[PRISMA-META] detectDatabaseForTable ne peut être appelé côté client');
 	}
 
+	// Si c'est le nouveau format "database:tableName", parser directement
+	const { database, tableName } = parseTableIdentifier(tableIdentifier);
+	if (tableIdentifier.includes(':')) {
+		return database;
+	}
+
+	// Sinon, chercher via DMMF (pour compatibilité ancien format)
 	const databases = await getDatabases();
 
 	// Chercher d'abord dans cenov

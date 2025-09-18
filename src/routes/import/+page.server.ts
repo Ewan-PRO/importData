@@ -14,8 +14,8 @@ import {
 	updateRecord,
 	findRecord,
 	detectDatabaseForTable,
-	type ValidationRules,
-	type DatabaseName
+	parseTableIdentifier,
+	type ValidationRules
 } from '$lib/prisma-meta';
 
 const prisma = new PrismaClient();
@@ -180,13 +180,14 @@ export const actions: Actions = {
 
 			// Obtenir les règles de validation pour toutes les tables sélectionnées via DMMF
 			const allValidationRules = await Promise.all(
-				selectedTables.map(async (table) => ({
-					table,
-					rules: await getTableValidationRules(
-						await detectDatabaseForTable(table),
-						table
-					)
-				}))
+				selectedTables.map(async (tableIdentifier) => {
+					const { database, tableName } = parseTableIdentifier(tableIdentifier);
+					return {
+						table: tableIdentifier,
+						tableName,
+						rules: await getTableValidationRules(database, tableName)
+					};
+				})
 			);
 
 			// Préparation pour le traitement
@@ -200,7 +201,7 @@ export const actions: Actions = {
 					let isValidForAnyTable = false;
 
 					// Valider pour chaque table sélectionnée
-					for (const { table, rules } of allValidationRules) {
+					for (const { table, tableName, rules } of allValidationRules) {
 						const tempResult: ValidationResult = {
 							totalRows: 0,
 							validRows: 0,
@@ -220,7 +221,7 @@ export const actions: Actions = {
 
 						if (validationResult) {
 							// Vérification des doublons avec la base de données pour cette table
-							const existingRecord = await checkExistingRecord(table, mappedFields, row);
+							const existingRecord = await checkExistingRecord(tableName, mappedFields, row);
 
 							if (!existingRecord) {
 								// Ligne valide pour cette table spécifique
@@ -325,13 +326,14 @@ export const actions: Actions = {
 			// Préparation pour le traitement
 			const columnMap = prepareColumnMap(mappedFields);
 			const allValidationRules = await Promise.all(
-				selectedTables.map(async (table) => ({
-					table,
-					rules: await getTableValidationRules(
-						await detectDatabaseForTable(table),
-						table
-					)
-				}))
+				selectedTables.map(async (tableIdentifier) => {
+					const { database, tableName } = parseTableIdentifier(tableIdentifier);
+					return {
+						table: tableIdentifier,
+						tableName,
+						rules: await getTableValidationRules(database, tableName)
+					};
+				})
 			);
 
 			// Pré-validation pour identifier les lignes valides pour chaque table
@@ -346,7 +348,7 @@ export const actions: Actions = {
 					if (!Array.isArray(row)) continue;
 
 					// Valider la ligne pour chaque table sélectionnée
-					for (const { table, rules } of allValidationRules) {
+					for (const { table, tableName, rules } of allValidationRules) {
 						const tempResult: ValidationResult = {
 							totalRows: 0,
 							validRows: 0,
@@ -366,7 +368,7 @@ export const actions: Actions = {
 
 						if (isValid) {
 							// Vérifier les doublons en base pour cette table
-							const existingRecord = await checkExistingRecord(table, mappedFields, row);
+							const existingRecord = await checkExistingRecord(tableName, mappedFields, row);
 							if (!existingRecord) {
 								validRowsByTable[table].push({ index: rowIndex, row });
 							}
@@ -543,17 +545,15 @@ async function processRow(
 	row: unknown[],
 	rowIndex: number,
 	columnMap: ColumnMap,
-	targetTable: string,
+	targetTableIdentifier: string,
 	tx: PrismaTransactionClient,
 	result: ImportResult
 ): Promise<void> {
 	try {
 		// Préparation des données pour l'importation
 		const recordData: Record<string, unknown> = {};
-		const database: DatabaseName = targetTable.includes('_dev') || targetTable.startsWith('v_')
-			? 'cenov_dev'
-			: 'cenov';
-		const validationRules = await getTableValidationRules(database, targetTable);
+		const { database, tableName } = parseTableIdentifier(targetTableIdentifier);
+		const validationRules = await getTableValidationRules(database, tableName);
 
 		Object.entries(columnMap).forEach(([field, colIndex]) => {
 			const value = row[colIndex];
@@ -567,24 +567,24 @@ async function processRow(
 
 		// Vérification si le record existe déjà
 		const existingRecord = await checkExistingRecord(
-			targetTable,
+			tableName,
 			Object.fromEntries(Object.entries(columnMap).map(([k, v]) => [v.toString(), k])),
 			row
 		);
 
 		if (existingRecord) {
 			// Mise à jour d'un enregistrement existant
-			await updateRecordGeneric(targetTable, recordData);
+			await updateRecordGeneric(tableName, recordData);
 			result.updated++;
-			if (result.resultsByTable && result.resultsByTable[targetTable]) {
-				result.resultsByTable[targetTable].updated++;
+			if (result.resultsByTable && result.resultsByTable[targetTableIdentifier]) {
+				result.resultsByTable[targetTableIdentifier].updated++;
 			}
 		} else {
 			// Création d'un nouvel enregistrement
-			await createRecord(tx, targetTable, recordData);
+			await createRecord(tx, tableName, recordData);
 			result.inserted++;
-			if (result.resultsByTable && result.resultsByTable[targetTable]) {
-				result.resultsByTable[targetTable].inserted++;
+			if (result.resultsByTable && result.resultsByTable[targetTableIdentifier]) {
+				result.resultsByTable[targetTableIdentifier].inserted++;
 			}
 		}
 
@@ -599,28 +599,24 @@ async function processRow(
 
 // Fonction pour mettre à jour un enregistrement existant via DMMF
 async function updateRecordGeneric(
-	targetTable: string,
+	tableName: string,
 	recordData: Record<string, unknown>
 ): Promise<void> {
-	const uniqueConstraint = await getUniqueConstraint(targetTable, recordData);
-	const database: DatabaseName = targetTable.includes('_dev') || targetTable.startsWith('v_')
-		? 'cenov_dev'
-		: 'cenov';
+	const uniqueConstraint = await getUniqueConstraint(tableName, recordData);
+	const database = await detectDatabaseForTable(tableName);
 
-	await updateRecord(database, targetTable, uniqueConstraint, recordData);
+	await updateRecord(database, tableName, uniqueConstraint, recordData);
 }
 
 // Fonction pour créer un nouvel enregistrement
 async function createRecord(
 	tx: PrismaTransactionClient,
-	targetTable: string,
+	tableName: string,
 	recordData: Record<string, unknown>
 ): Promise<void> {
-	const database: DatabaseName = targetTable.includes('_dev') || targetTable.startsWith('v_')
-		? 'cenov_dev'
-		: 'cenov';
+	const database = await detectDatabaseForTable(tableName);
 
-	await createRecordGeneric(database, targetTable, recordData);
+	await createRecordGeneric(database, tableName, recordData);
 }
 
 // Fonction sécurisée pour convertir en string pour affichage
@@ -647,9 +643,7 @@ async function checkExistingRecord(
 ): Promise<string | null> {
 	// Préparation de la condition de recherche
 	const whereCondition: Record<string, unknown> = {};
-	const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
-		? 'cenov_dev'
-		: 'cenov';
+	const database = await detectDatabaseForTable(tableName);
 	const validationRules = await getTableValidationRules(database, tableName);
 	const uniqueFields = validationRules.uniqueFields;
 
@@ -668,9 +662,7 @@ async function checkExistingRecord(
 
 	try {
 		// Recherche dans la table appropriée via DMMF générique
-		const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
-			? 'cenov_dev'
-			: 'cenov';
+		const database = await detectDatabaseForTable(tableName);
 
 		const existingRecord = await findRecord(database, tableName, whereCondition);
 
@@ -712,9 +704,7 @@ async function getUniqueConstraint(
 	tableName: string,
 	data: Record<string, unknown>
 ): Promise<Record<string, unknown>> {
-	const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
-		? 'cenov_dev'
-		: 'cenov';
+	const database = await detectDatabaseForTable(tableName);
 	const validationRules = await getTableValidationRules(database, tableName);
 	const uniqueFields = validationRules.uniqueFields;
 	const constraint: Record<string, unknown> = {};
@@ -759,15 +749,37 @@ export const load: ServerLoad = async (event) => {
 		// Récupérer les tables et champs importables via DMMF
 		console.log('📊 [IMPORT] Récupération des tables importables via DMMF');
 		const availableTables = await getImportableTables();
-		const tableFields = await getImportableTableFields();
-		const tableRequiredFields = await getImportableTableRequiredFields();
+		const rawTableFields = await getImportableTableFields();
+		const rawTableRequiredFields = await getImportableTableRequiredFields();
 
 		// Transformer les données pour le frontend
 		const formattedTables = availableTables.map((table) => ({
-			value: table.name,
+			value: `${table.database}:${table.name}`, // Inclure database pour unicité
 			name: `${table.displayName} (${table.database === 'cenov' ? 'Production' : 'Dev'})`,
 			category: getCategoryFromTable(table)
 		}));
+
+		// Transformer les champs et champs requis pour utiliser les nouvelles clés
+		const tableFields: Record<string, string[]> = {};
+		const tableRequiredFields: Record<string, string[]> = {};
+
+		Object.entries(rawTableFields).forEach(([tableName, fields]) => {
+			// Trouver la database de cette table
+			const table = availableTables.find(t => t.name === tableName);
+			if (table) {
+				const key = `${table.database}:${table.name}`;
+				tableFields[key] = fields;
+			}
+		});
+
+		Object.entries(rawTableRequiredFields).forEach(([tableName, fields]) => {
+			// Trouver la database de cette table
+			const table = availableTables.find(t => t.name === tableName);
+			if (table) {
+				const key = `${table.database}:${table.name}`;
+				tableRequiredFields[key] = fields;
+			}
+		});
 
 		console.log('📝 [IMPORT] Formulaire créé:', {
 			valid: form.valid,
