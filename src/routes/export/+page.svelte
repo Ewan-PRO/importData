@@ -37,8 +37,7 @@
 	import {
 		getExportFormats,
 		formatNumber,
-		formatFileSize,
-		formatPreviewValue
+		formatFileSize
 	} from './shared.js';
 
 	export let data;
@@ -438,7 +437,20 @@
 		return matchesType && matchesDB && matchesSchema && matchesSearch;
 	});
 
-	// Fonctions de formatage importées depuis shared.ts (duplication éliminée)
+	// Fonction de formatage pour l'aperçu (utilisée seulement dans ce fichier)
+	function formatPreviewValue(value: unknown): string {
+		if (value === null || value === undefined) return '';
+
+		const str = String(value);
+
+		// Si c'est de l'hex (détection pour données binaires converties côté serveur)
+		if (/^[0-9A-F]+$/i.test(str) && str.length > 10) {
+			return '0x' + str.toUpperCase(); // Format DataGrip : 0xFFD8FF...
+		}
+
+		// Autres données - troncature à 50 caractères max
+		return str.length > 50 ? str.substring(0, 47) + '...' : str;
+	}
 
 	// Réinitialiser l'export
 	function resetExport() {

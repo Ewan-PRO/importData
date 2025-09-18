@@ -3,20 +3,18 @@ import type { RequestHandler } from './$types';
 import * as XLSX from 'xlsx';
 import { XMLBuilder } from 'fast-xml-parser';
 import type { ExportConfig, ExportResult } from '../+page.server.js';
-import { getAllDatabaseTables, type DatabaseName } from '$lib/prisma-meta.js';
-import { extractTableData as sharedExtractTableData, getValidFormats } from '../shared.js';
-
-// Types pour l'export des données
-interface ExportData {
-	tableName: string;
-	database: DatabaseName;
-	data: Record<string, unknown>[];
-	columns: string[];
-	totalRows: number;
-}
+import { getAllDatabaseTables } from '$lib/prisma-meta.js';
+import {
+	extractTableData as sharedExtractTableData,
+	getValidFormats,
+	type SharedExportData
+} from '../shared.js';
 
 // Fonction pour générer un nom de fichier intelligent et dynamique
-async function generateFileName(exportDataList: ExportData[], format: string): Promise<string> {
+async function generateFileName(
+	exportDataList: SharedExportData[],
+	format: string
+): Promise<string> {
 	// Calculer dynamiquement le nombre total de tables disponibles
 	const allTables = await getAllDatabaseTables();
 	const totalAvailableTables = allTables.length;
@@ -58,6 +56,27 @@ interface ExportFile {
 	size: number;
 }
 
+// Formatage centralisé des valeurs pour export (fonction locale)
+function formatValueForExport(value: unknown): string {
+	// Formatage des valeurs nulles
+	if (value === null || value === undefined) {
+		return '';
+	}
+
+	// Formatage des dates
+	if (value instanceof Date) {
+		return value.toISOString();
+	}
+
+	// Formatage des objets
+	if (typeof value === 'object') {
+		return JSON.stringify(value);
+	}
+
+	// Conversion en string
+	return String(value);
+}
+
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const config: ExportConfig = await request.json();
@@ -73,7 +92,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		// Collecte des données à exporter
-		const exportDataList: ExportData[] = [];
+		const exportDataList: SharedExportData[] = [];
 		const warnings: string[] = [];
 		const errors: string[] = [];
 		let totalExportedRows = 0;
@@ -85,14 +104,8 @@ export const POST: RequestHandler = async ({ request }) => {
 					maxBinaryLength: undefined // Pas de limite pour export complet
 				});
 
-				// Adapter le format pour l'export
-				const tableData: ExportData = {
-					tableName: sharedTableData.tableName,
-					database: sharedTableData.database,
-					data: sharedTableData.data,
-					columns: sharedTableData.columns,
-					totalRows: sharedTableData.totalRows
-				};
+				// Utiliser directement SharedExportData (pas besoin d'adaptation)
+				const tableData: SharedExportData = sharedTableData;
 
 				exportDataList.push(tableData);
 				totalExportedRows += tableData.totalRows;
@@ -178,11 +191,9 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 };
 
-// Ancienne fonction extractTableData supprimée - logique déplacée vers shared.ts
-
 // Génération d'un fichier Excel
 async function generateExcelFile(
-	exportDataList: ExportData[],
+	exportDataList: SharedExportData[],
 	config: ExportConfig
 ): Promise<ExportFile> {
 	const workbook = XLSX.utils.book_new();
@@ -201,19 +212,7 @@ async function generateExcelFile(
 		for (const row of tableData.data) {
 			const excelRow: unknown[] = [];
 			for (const column of tableData.columns) {
-				let value = row[column];
-
-				// Formatage des valeurs pour Excel
-				if (value instanceof Date) {
-					// Ne pas reformater si c'est déjà un timestamp formaté
-					value = value.toISOString();
-				} else if (value === null || value === undefined) {
-					value = '';
-				} else if (typeof value === 'object') {
-					value = JSON.stringify(value);
-				}
-				// Les timestamps sont maintenant des strings formatés, on les garde tels quels
-
+				const value = formatValueForExport(row[column]);
 				excelRow.push(value);
 			}
 			worksheetData.push(excelRow);
@@ -262,7 +261,7 @@ async function generateExcelFile(
 
 // Génération d'un fichier CSV
 async function generateCSVFile(
-	exportDataList: ExportData[],
+	exportDataList: SharedExportData[],
 	config: ExportConfig
 ): Promise<ExportFile> {
 	let csvContent = '';
@@ -287,27 +286,14 @@ async function generateCSVFile(
 		for (const row of tableData.data) {
 			const csvRow: string[] = [];
 			for (const column of tableData.columns) {
-				let value = row[column];
+				let value = formatValueForExport(row[column]);
 
-				// Formatage pour CSV
-				if (value === null || value === undefined) {
-					value = '';
-				} else if (typeof value === 'object') {
-					value = JSON.stringify(value);
-				} else {
-					value = String(value);
-				}
-				// Les timestamps sont maintenant des strings formatés, on les garde tels quels
-
-				// Échappement des guillemets et des virgules
-				if (
-					typeof value === 'string' &&
-					(value.includes(',') || value.includes('"') || value.includes('\n'))
-				) {
+				// Échappement CSV spécifique
+				if (value.includes(',') || value.includes('"') || value.includes('\n')) {
 					value = `"${value.replace(/"/g, '""')}"`;
 				}
 
-				csvRow.push(String(value));
+				csvRow.push(value);
 			}
 			csvContent += csvRow.join(',') + '\n';
 		}
@@ -327,7 +313,7 @@ async function generateCSVFile(
 }
 
 // Génération d'un fichier XML
-async function generateXMLFile(exportDataList: ExportData[]): Promise<ExportFile> {
+async function generateXMLFile(exportDataList: SharedExportData[]): Promise<ExportFile> {
 	const xmlData: Record<string, unknown> = {
 		export: {
 			'@_generated': new Date().toISOString(),
@@ -346,16 +332,7 @@ async function generateXMLFile(exportDataList: ExportData[]): Promise<ExportFile
 						row: tableData.data.map((row) => {
 							const xmlRow: Record<string, unknown> = {};
 							for (const column of tableData.columns) {
-								let value = row[column];
-								if (value === null || value === undefined) {
-									value = '';
-								} else if (typeof value === 'object') {
-									value = JSON.stringify(value);
-								} else {
-									value = String(value);
-								}
-								// Les timestamps sont maintenant des strings formatés, on les garde tels quels
-								xmlRow[column] = value;
+								xmlRow[column] = formatValueForExport(row[column]);
 							}
 							return xmlRow;
 						})
@@ -385,7 +362,7 @@ async function generateXMLFile(exportDataList: ExportData[]): Promise<ExportFile
 
 // Génération d'un fichier JSON
 async function generateJSONFile(
-	exportDataList: ExportData[],
+	exportDataList: SharedExportData[],
 	config: ExportConfig
 ): Promise<ExportFile> {
 	const jsonData = {

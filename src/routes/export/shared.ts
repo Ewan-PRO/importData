@@ -1,3 +1,13 @@
+/**
+ * src/routes/export/shared.ts
+ *
+ * Fichier de partage pour le code réutilisé dans PLUSIEURS fichiers du dossier export/
+ * Contient uniquement les fonctions, types et constantes utilisées par au moins 2 fichiers.
+ *
+ * Le code utilisé dans un seul fichier doit rester dans ce fichier spécifique.
+ * Note: shared.ts ne compte pas comme "fichier utilisateur" pour cette règle.
+ */
+
 // src/routes/export/shared.ts - Utilitaire partagé pour l'extraction de données d'export
 import {
 	getAllDatabaseTables,
@@ -81,20 +91,6 @@ export function formatFileSize(bytes: number): string {
 		unitIndex++;
 	}
 	return `${size.toFixed(1)} ${units[unitIndex]}`;
-}
-
-export function formatPreviewValue(value: unknown): string {
-	if (value === null || value === undefined) return '';
-
-	const str = String(value);
-
-	// Si c'est de l'hex (détection pour données binaires converties côté serveur)
-	if (/^[0-9A-F]+$/i.test(str) && str.length > 10) {
-		return '0x' + str.toUpperCase(); // Format DataGrip : 0xFFD8FF...
-	}
-
-	// Autres données - troncature à 50 caractères max
-	return str.length > 50 ? str.substring(0, 47) + '...' : str;
 }
 
 // Extractions données tables
