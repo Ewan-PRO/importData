@@ -319,52 +319,49 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 	const cenovDevTables = await getAllTables('cenov_dev');
 	const allTables = [...cenovTables, ...cenovDevTables];
 
-	// Tri par schéma puis par type (table/vue) : tables schema → vues schema → tables schema suivant
+	// Tri uniforme : par database → par schéma → par type (tables avant vues) → par nom
 	const sortedTables = allTables.sort((a, b) => {
-		// Définir la priorité des schémas et databases
-		const getSchemaOrder = (item: TableInfo) => {
-			if (item.database === 'cenov') return 1;
-			if (item.database === 'cenov_dev' && item.schema === 'produit') return 2;
-			if (item.database === 'cenov_dev' && item.schema === 'public') return 3;
-			return 4;
+		// Définir la priorité des databases
+		const getDatabaseOrder = (database: string) => {
+			if (database === 'cenov') return 1;
+			if (database === 'cenov_dev') return 2;
+			return 3;
 		};
 
-		// Définir la priorité du type (table avant vue dans chaque schéma)
+		// Définir la priorité des schémas
+		const getSchemaOrder = (schema: string) => {
+			if (schema === 'produit') return 1;
+			if (schema === 'public') return 2;
+			return 3;
+		};
+
+		// Définir la priorité du type (table avant vue)
 		const getTypeOrder = (category: 'table' | 'view') => (category === 'table' ? 1 : 2);
 
-		const aSchemaOrder = getSchemaOrder(a);
-		const bSchemaOrder = getSchemaOrder(b);
+		const aDatabaseOrder = getDatabaseOrder(a.database);
+		const bDatabaseOrder = getDatabaseOrder(b.database);
+		const aSchemaOrder = getSchemaOrder(a.schema);
+		const bSchemaOrder = getSchemaOrder(b.schema);
 		const aTypeOrder = getTypeOrder(a.category);
 		const bTypeOrder = getTypeOrder(b.category);
 
-		// Comparer d'abord par schéma/database
+		// 1. Comparer par database
+		if (aDatabaseOrder !== bDatabaseOrder) {
+			return aDatabaseOrder - bDatabaseOrder;
+		}
+
+		// 2. Comparer par schéma dans la même database
 		if (aSchemaOrder !== bSchemaOrder) {
 			return aSchemaOrder - bSchemaOrder;
 		}
 
-		// Puis par type (table/vue) dans le même schéma
+		// 3. Comparer par type dans le même schéma (tables avant vues)
 		if (aTypeOrder !== bTypeOrder) {
 			return aTypeOrder - bTypeOrder;
 		}
 
-		// Enfin, tri spécial pour les vues avec suffixe _dev
-		if (a.category === 'view' && b.category === 'view') {
-			const aBaseName = a.displayName.replace(/_dev$/, '');
-			const bBaseName = b.displayName.replace(/_dev$/, '');
-
-			// Si même nom de base, version normale avant _dev
-			if (aBaseName === bBaseName) {
-				const aIsDev = a.displayName.endsWith('_dev');
-				const bIsDev = b.displayName.endsWith('_dev');
-				return aIsDev ? 1 : bIsDev ? -1 : 0;
-			}
-
-			// Sinon tri alphabétique par nom de base
-			return aBaseName.localeCompare(bBaseName);
-		}
-
-		// Pour les tables, garder l'ordre d'origine
-		return 0;
+		// 4. Tri alphabétique par nom dans le même type
+		return a.displayName.localeCompare(b.displayName);
 	});
 
 	return sortedTables;
