@@ -345,12 +345,8 @@
 
 	// Fonction utilitaire pour parser le format "database:tableName" côté client
 	function parseTableIdentifierClient(tableIdentifier: string): { database: string; tableName: string } {
-		if (tableIdentifier.includes(':')) {
-			const [database, tableName] = tableIdentifier.split(':');
-			return { database, tableName };
-		}
-		// Fallback pour l'ancien format
-		return { database: 'cenov', tableName: tableIdentifier };
+		const [database, tableName] = tableIdentifier.split(':');
+		return { database, tableName };
 	}
 
 	// Fonction pour calculer les champs requis basée sur les données DMMF du serveur

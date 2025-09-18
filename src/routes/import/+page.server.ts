@@ -759,27 +759,9 @@ export const load: ServerLoad = async (event) => {
 			category: getCategoryFromTable(table)
 		}));
 
-		// Transformer les champs et champs requis pour utiliser les nouvelles clés
-		const tableFields: Record<string, string[]> = {};
-		const tableRequiredFields: Record<string, string[]> = {};
-
-		Object.entries(rawTableFields).forEach(([tableName, fields]) => {
-			// Trouver la database de cette table
-			const table = availableTables.find(t => t.name === tableName);
-			if (table) {
-				const key = `${table.database}:${table.name}`;
-				tableFields[key] = fields;
-			}
-		});
-
-		Object.entries(rawTableRequiredFields).forEach(([tableName, fields]) => {
-			// Trouver la database de cette table
-			const table = availableTables.find(t => t.name === tableName);
-			if (table) {
-				const key = `${table.database}:${table.name}`;
-				tableRequiredFields[key] = fields;
-			}
-		});
+		// Les clés sont déjà au format database:tableName depuis prisma-meta
+		const tableFields = rawTableFields;
+		const tableRequiredFields = rawTableRequiredFields;
 
 		console.log('📝 [IMPORT] Formulaire créé:', {
 			valid: form.valid,

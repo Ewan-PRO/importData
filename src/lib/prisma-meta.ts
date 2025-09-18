@@ -61,16 +61,8 @@ async function initializeCenovDevPrisma() {
 		useDevViews
 	});
 
-	if (!useDevViews) {
-		// Pas de vues dev - utiliser client principal uniquement
-		console.log('⚪ [PRISMA-META] Client principal seul (USE_DEV_VIEWS=false)');
-		CenovDevPrisma = Prisma;
-		CenovDevPrismaClient = PrismaClient;
-		return;
-	}
-
-	// USE_DEV_VIEWS=true - Chargement selon environnement
-	console.log('✅ [PRISMA-META] Chargement client dev (USE_DEV_VIEWS=true)');
+	// TOUJOURS charger le client dev si possible pour categorie_attribut
+	console.log('✅ [PRISMA-META] Chargement client dev (garantit les bonnes métadonnées)');
 	try {
 		let devPrismaModule: PrismaModule | undefined;
 
@@ -99,10 +91,7 @@ async function initializeCenovDevPrisma() {
 			try {
 				const path = await import('node:path');
 				const { pathToFileURL } = await import('node:url');
-				const absolutePath = path.resolve(
-					process.cwd(),
-					'prisma/cenov_dev/generated/index.js'
-				);
+				const absolutePath = path.resolve(process.cwd(), 'prisma/cenov_dev/generated/index.js');
 				const fileUrl = pathToFileURL(absolutePath).href;
 
 				devPrismaModule = (await import(/* @vite-ignore */ fileUrl)) as unknown as PrismaModule;
@@ -405,49 +394,23 @@ export async function countTableRows(database: DatabaseName, tableName: string):
 // ========== FONCTIONS POUR L'IMPORT ==========
 
 // Fonction pour parser le format "database:tableName"
-export function parseTableIdentifier(tableIdentifier: string): { database: DatabaseName; tableName: string } {
-	if (tableIdentifier.includes(':')) {
-		const [database, tableName] = tableIdentifier.split(':');
-		return { database: database as DatabaseName, tableName };
-	}
-
-	// Fallback pour l'ancien format (juste le nom de table)
-	return { database: 'cenov', tableName: tableIdentifier };
+export function parseTableIdentifier(tableIdentifier: string): {
+	database: DatabaseName;
+	tableName: string;
+} {
+	const [database, tableName] = tableIdentifier.split(':');
+	return { database: database as DatabaseName, tableName };
 }
 
-// Fonction pour détecter automatiquement la database d'une table via DMMF
+// Fonction pour détecter automatiquement la database d'une table via parser
 export async function detectDatabaseForTable(tableIdentifier: string): Promise<DatabaseName> {
 	if (browser) {
 		throw new Error('[PRISMA-META] detectDatabaseForTable ne peut être appelé côté client');
 	}
 
-	// Si c'est le nouveau format "database:tableName", parser directement
-	const { database, tableName } = parseTableIdentifier(tableIdentifier);
-	if (tableIdentifier.includes(':')) {
-		return database;
-	}
-
-	// Sinon, chercher via DMMF (pour compatibilité ancien format)
-	const databases = await getDatabases();
-
-	// Chercher d'abord dans cenov
-	const cenovModel = databases.cenov.dmmf.datamodel.models.find((m) => m.name === tableName);
-	if (cenovModel) {
-		return 'cenov';
-	}
-
-	// Sinon chercher dans cenov_dev
-	const cenovDevModel = databases.cenov_dev.dmmf.datamodel.models.find((m) => m.name === tableName);
-	if (cenovDevModel) {
-		return 'cenov_dev';
-	}
-
-	// Fallback basé sur les patterns existants si pas trouvé dans DMMF
-	if (tableName.includes('_dev') || tableName.startsWith('v_')) {
-		return 'cenov_dev';
-	}
-
-	return 'cenov';
+	// Parser le format "database:tableName" directement
+	const { database } = parseTableIdentifier(tableIdentifier);
+	return database;
 }
 
 // Types pour les règles de validation d'import
@@ -653,7 +616,9 @@ export async function getImportableTableFields(): Promise<Record<string, string[
 	for (const table of tables) {
 		const metadata = await getTableMetadata(table.database, table.name);
 		if (metadata) {
-			result[table.name] = metadata.fields.map((field) => field.name);
+			// Utiliser database:tableName comme clé pour éviter les collisions
+			const key = `${table.database}:${table.name}`;
+			result[key] = metadata.fields.map((field) => field.name);
 		}
 	}
 
@@ -663,7 +628,9 @@ export async function getImportableTableFields(): Promise<Record<string, string[
 // Obtenir les champs requis pour les tables importables (côté serveur uniquement)
 export async function getImportableTableRequiredFields(): Promise<Record<string, string[]>> {
 	if (browser) {
-		throw new Error('[PRISMA-META] getImportableTableRequiredFields ne peut être appelé côté client');
+		throw new Error(
+			'[PRISMA-META] getImportableTableRequiredFields ne peut être appelé côté client'
+		);
 	}
 
 	const tables = await getImportableTables();
@@ -671,7 +638,9 @@ export async function getImportableTableRequiredFields(): Promise<Record<string,
 
 	for (const table of tables) {
 		const validationRules = await getTableValidationRules(table.database, table.name);
-		result[table.name] = validationRules.requiredFields;
+		// Utiliser database:tableName comme clé pour éviter les collisions
+		const key = `${table.database}:${table.name}`;
+		result[key] = validationRules.requiredFields;
 	}
 
 	return result;
@@ -690,7 +659,9 @@ export async function createRecord(
 	}
 
 	const client = await getClient(database);
-	const model = client[tableName] as { create: (args: { data: unknown }) => Promise<Record<string, unknown>> };
+	const model = client[tableName] as {
+		create: (args: { data: unknown }) => Promise<Record<string, unknown>>;
+	};
 
 	if (!model || !model.create) {
 		throw new Error(`Table ${tableName} not found in database ${database}`);
@@ -711,7 +682,9 @@ export async function updateRecord(
 	}
 
 	const client = await getClient(database);
-	const model = client[tableName] as { updateMany: (args: { where: unknown; data: unknown }) => Promise<{ count: number }> };
+	const model = client[tableName] as {
+		updateMany: (args: { where: unknown; data: unknown }) => Promise<{ count: number }>;
+	};
 
 	if (!model || !model.updateMany) {
 		throw new Error(`Table ${tableName} not found in database ${database}`);
@@ -736,7 +709,9 @@ export async function findRecord(
 	}
 
 	const client = await getClient(database);
-	const model = client[tableName] as { findFirst: (args: { where: unknown }) => Promise<Record<string, unknown> | null> };
+	const model = client[tableName] as {
+		findFirst: (args: { where: unknown }) => Promise<Record<string, unknown> | null>;
+	};
 
 	if (!model || !model.findFirst) {
 		throw new Error(`Table ${tableName} not found in database ${database}`);
@@ -744,4 +719,3 @@ export async function findRecord(
 
 	return await model.findFirst({ where });
 }
-
