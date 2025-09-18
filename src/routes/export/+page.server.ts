@@ -11,7 +11,7 @@ import {
 	type TableInfo as PrismaTableInfo,
 	type FieldInfo
 } from '$lib/prisma-meta';
-import { extractTableData, type SharedExportData } from './shared.js';
+import { extractTableData, getValidFormats, type SharedExportData } from './shared.js';
 
 // Types pour l'export
 export interface ExportConfig {
@@ -44,7 +44,7 @@ export interface ExportResult {
 // Schéma de validation pour l'export
 const exportSchema = z.object({
 	selectedTables: z.array(z.string()).min(1, 'Sélectionnez au moins une table'),
-	format: z.enum(['xlsx', 'csv', 'xml', 'json'], {
+	format: z.enum(getValidFormats() as [string, ...string[]], {
 		errorMap: () => ({ message: 'Format non supporté' })
 	}),
 	includeRelations: z.boolean().default(false),

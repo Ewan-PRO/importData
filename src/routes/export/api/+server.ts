@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import { XMLBuilder } from 'fast-xml-parser';
 import type { ExportConfig, ExportResult } from '../+page.server.js';
 import { getAllDatabaseTables, type DatabaseName } from '$lib/prisma-meta.js';
-import { extractTableData as sharedExtractTableData } from '../shared.js';
+import { extractTableData as sharedExtractTableData, getValidFormats } from '../shared.js';
 
 // Types pour l'export des données
 interface ExportData {
@@ -67,7 +67,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			throw error(400, "Aucune table sélectionnée pour l'export");
 		}
 
-		const supportedFormats = ['xlsx', 'csv', 'xml', 'json'];
+		const supportedFormats = getValidFormats();
 		if (!supportedFormats.includes(config.format)) {
 			throw error(400, `Format non supporté: ${config.format}`);
 		}

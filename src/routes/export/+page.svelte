@@ -34,6 +34,12 @@
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
 	import { getAllDatabaseNames, type DatabaseName } from '$lib/prisma-meta.js';
+	import {
+		getExportFormats,
+		formatNumber,
+		formatFileSize,
+		formatPreviewValue
+	} from './shared.js';
 
 	export let data;
 
@@ -127,9 +133,21 @@
 	// Récupération statique des bases de données (côté client)
 	const databases: DatabaseName[] = ['cenov', 'cenov_dev'];
 
+	// Configuration des bases de données (centralisée localement)
+	const DATABASE_CONFIG = {
+		cenov: { icon: Rocket, variant: 'bleu' as const, emoji: '🚀' },
+		cenov_dev: { icon: Settings, variant: 'orange' as const, emoji: '⚙️' }
+	} as const;
+
+	// Configuration des schémas (centralisée localement)
+	const SCHEMA_CONFIG = {
+		produit: { icon: Package, label: 'Produit', variant: 'purple' as const },
+		public: { icon: LockOpen, label: 'Public', variant: 'cyan' as const }
+	} as const;
+
 	// Fonction pour obtenir l'icône d'une BDD
 	function getDatabaseIcon(database: string) {
-		return database.includes('dev') ? Settings : Rocket;
+		return database.includes('dev') ? DATABASE_CONFIG.cenov_dev.icon : DATABASE_CONFIG.cenov.icon;
 	}
 
 	// Obtenir les schémas uniques
@@ -137,7 +155,7 @@
 
 	// Fonction pour obtenir l'icône d'un schéma
 	function getSchemaIcon(schema: string) {
-		return schema === 'produit' ? Package : LockOpen;
+		return SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.icon || LockOpen;
 	}
 
 	// Génération dynamique des catégories avec schémas
@@ -152,39 +170,16 @@
 		})),
 		...uniqueSchemas.map((schema: string) => ({
 			value: `schema_${schema}`,
-			label: schema === 'produit' ? 'Produit' : 'Public',
+			label: SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.label || schema,
 			icon: getSchemaIcon(schema)
 		}))
 	];
 
-	// Formats d'export
-	const exportFormats = [
-		{
-			value: 'csv',
-			label: 'CSV (.csv)',
-			icon: FileText,
-			description: 'Fichier texte séparé par des virgules',
-			recommended: true
-		},
-		{
-			value: 'xlsx',
-			label: 'Excel (.xlsx)',
-			icon: FileSpreadsheet,
-			description: 'Classeur Excel avec plusieurs feuilles'
-		},
-		{
-			value: 'json',
-			label: 'JSON (.json)',
-			icon: FileText,
-			description: 'Structure de données avec métadonnées'
-		},
-		{
-			value: 'xml',
-			label: 'XML (.xml)',
-			icon: FileText,
-			description: 'Données structurées en XML'
-		}
-	];
+	// Formats d'export (depuis shared.ts pour éliminer duplication)
+	const exportFormats = getExportFormats().map(format => ({
+		...format,
+		icon: format.value === 'xlsx' ? FileSpreadsheet : FileText
+	}));
 
 	// Icones pour les types de tables
 	function getTableIcon(category: string) {
@@ -213,12 +208,11 @@
 		variant: 'bleu' | 'noir' | 'orange';
 		label: string;
 	} {
-		const isDev = database.includes('dev');
-		const emoji = isDev ? '⚙️' : '🚀';
-		const variant = isDev ? ('orange' as const) : ('bleu' as const);
-		const label = `${emoji} ${database.toUpperCase()}`;
-
-		return { variant, label };
+		const config = database.includes('dev') ? DATABASE_CONFIG.cenov_dev : DATABASE_CONFIG.cenov;
+		return {
+			variant: config.variant,
+			label: `${config.emoji} ${database.toUpperCase()}`
+		};
 	}
 
 	// Gestion des résultats d'export
@@ -444,36 +438,7 @@
 		return matchesType && matchesDB && matchesSchema && matchesSearch;
 	});
 
-	// Formatage des nombres
-	function formatNumber(num: number): string {
-		return new Intl.NumberFormat('fr-FR').format(num);
-	}
-
-	// Formatage de la taille de fichier
-	function formatFileSize(bytes: number): string {
-		const units = ['B', 'KB', 'MB', 'GB'];
-		let size = bytes;
-		let unitIndex = 0;
-		while (size >= 1024 && unitIndex < units.length - 1) {
-			size /= 1024;
-			unitIndex++;
-		}
-		return `${size.toFixed(1)} ${units[unitIndex]}`;
-	}
-
-	function formatPreviewValue(value: unknown): string {
-		if (value === null || value === undefined) return '';
-
-		const str = String(value);
-
-		// Si c'est de l'hex (détection pour données binaires converties côté serveur)
-		if (/^[0-9A-F]+$/i.test(str) && str.length > 10) {
-			return '0x' + str.toUpperCase(); // Format DataGrip : 0xFFD8FF...
-		}
-
-		// Autres données - troncature à 50 caractères max
-		return str.length > 50 ? str.substring(0, 47) + '...' : str;
-	}
+	// Fonctions de formatage importées depuis shared.ts (duplication éliminée)
 
 	// Réinitialiser l'export
 	function resetExport() {
@@ -737,7 +702,7 @@
 											{:else}
 												<LockOpen class="mr-0.5 inline h-4 w-4" />
 											{/if}
-											{schema === 'produit' ? 'Produit' : 'Public'} ({filteredTables.filter(
+											{SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.label || schema} ({filteredTables.filter(
 												(t) => t.schema === schema
 											).length})
 										</span>
@@ -825,8 +790,8 @@
 					<div class="grid gap-3">
 						{#each filteredTables as table (`${table.database}-${table.name}`)}
 							{@const dbInfo = getDatabaseBadgeInfo(table.database)}
-							{@const schemaVariant = table.schema === 'produit' ? 'purple' : 'cyan'}
-							{@const schemaLabel = table.schema === 'produit' ? 'Produit' : 'Public'}
+							{@const schemaVariant = SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.variant || 'cyan'}
+							{@const schemaLabel = SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.label || table.schema}
 							<label
 								class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100 sm:max-w-none"
 							>
@@ -887,11 +852,7 @@
 														{table.database.toUpperCase()}
 													</Badge>
 													<Badge variant={schemaVariant}>
-														{#if table.schema === 'produit'}
-															<Package />
-														{:else}
-															<LockOpen />
-														{/if}
+														<svelte:component this={getSchemaIcon(table.schema)} />
 														{schemaLabel}
 													</Badge>
 												</div>
@@ -929,11 +890,7 @@
 														{/if}
 													</Badge>
 													<Badge variant={schemaVariant}>
-														{#if table.schema === 'produit'}
-															<Package />
-														{:else}
-															<LockOpen />
-														{/if}
+														<svelte:component this={getSchemaIcon(table.schema)} />
 														{schemaLabel}
 													</Badge>
 												</div>
@@ -1091,8 +1048,8 @@
 							{@const dbInfo = matchingTableInfo
 								? getDatabaseBadgeInfo(matchingTableInfo.database)
 								: { variant: 'noir' as const, label: 'Inconnue' }}
-							{@const schemaVariant = matchingTableInfo?.schema === 'produit' ? 'purple' : 'cyan'}
-							{@const schemaLabel = matchingTableInfo?.schema === 'produit' ? 'Produit' : 'Public'}
+							{@const schemaVariant = matchingTableInfo?.schema ? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.variant || 'cyan' : 'cyan'}
+							{@const schemaLabel = matchingTableInfo?.schema ? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.label || matchingTableInfo.schema : 'Inconnu'}
 							<div>
 								<div class="mb-3">
 									<!-- Desktop: layout horizontal -->
@@ -1126,8 +1083,8 @@
 													{matchingTableInfo?.database.toUpperCase()}
 												</Badge>
 												<Badge variant={schemaVariant}>
-													{#if matchingTableInfo?.schema === 'produit'}
-														<Package />
+													{#if matchingTableInfo?.schema}
+														<svelte:component this={getSchemaIcon(matchingTableInfo.schema)} />
 													{:else}
 														<LockOpen />
 													{/if}
@@ -1174,8 +1131,8 @@
 													{/if}
 												</Badge>
 												<Badge variant={schemaVariant}>
-													{#if matchingTableInfo?.schema === 'produit'}
-														<Package />
+													{#if matchingTableInfo?.schema}
+														<svelte:component this={getSchemaIcon(matchingTableInfo.schema)} />
 													{:else}
 														<LockOpen />
 													{/if}

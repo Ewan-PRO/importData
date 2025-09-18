@@ -23,6 +23,80 @@ export interface ExtractionOptions {
 	maxBinaryLength?: number;
 }
 
+// Configuration des formats d'export (centralisé pour éliminer duplication)
+export const EXPORT_FORMATS_CONFIG = {
+	csv: {
+		value: 'csv',
+		label: 'CSV (.csv)',
+		description: 'Fichier texte séparé par des virgules',
+		mimeType: 'text/csv; charset=utf-8',
+		recommended: true
+	},
+	xlsx: {
+		value: 'xlsx',
+		label: 'Excel (.xlsx)',
+		description: 'Classeur Excel avec plusieurs feuilles',
+		mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+		recommended: false
+	},
+	json: {
+		value: 'json',
+		label: 'JSON (.json)',
+		description: 'Structure de données avec métadonnées',
+		mimeType: 'application/json',
+		recommended: false
+	},
+	xml: {
+		value: 'xml',
+		label: 'XML (.xml)',
+		description: 'Données structurées en XML',
+		mimeType: 'application/xml',
+		recommended: false
+	}
+} as const;
+
+export function getExportFormats() {
+	return Object.values(EXPORT_FORMATS_CONFIG);
+}
+
+export function getValidFormats(): string[] {
+	return Object.keys(EXPORT_FORMATS_CONFIG);
+}
+
+export function isValidFormat(format: string): boolean {
+	return format in EXPORT_FORMATS_CONFIG;
+}
+
+// Fonctions de formatage (centralisées pour éliminer duplication)
+export function formatNumber(num: number): string {
+	return new Intl.NumberFormat('fr-FR').format(num);
+}
+
+export function formatFileSize(bytes: number): string {
+	const units = ['B', 'KB', 'MB', 'GB'];
+	let size = bytes;
+	let unitIndex = 0;
+	while (size >= 1024 && unitIndex < units.length - 1) {
+		size /= 1024;
+		unitIndex++;
+	}
+	return `${size.toFixed(1)} ${units[unitIndex]}`;
+}
+
+export function formatPreviewValue(value: unknown): string {
+	if (value === null || value === undefined) return '';
+
+	const str = String(value);
+
+	// Si c'est de l'hex (détection pour données binaires converties côté serveur)
+	if (/^[0-9A-F]+$/i.test(str) && str.length > 10) {
+		return '0x' + str.toUpperCase(); // Format DataGrip : 0xFFD8FF...
+	}
+
+	// Autres données - troncature à 50 caractères max
+	return str.length > 50 ? str.substring(0, 47) + '...' : str;
+}
+
 // Extractions données tables
 export async function extractTableData(
 	tableId: string,
