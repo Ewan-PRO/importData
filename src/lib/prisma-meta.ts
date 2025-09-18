@@ -404,6 +404,34 @@ export async function countTableRows(database: DatabaseName, tableName: string):
 
 // ========== FONCTIONS POUR L'IMPORT ==========
 
+// Fonction pour détecter automatiquement la database d'une table via DMMF
+export async function detectDatabaseForTable(tableName: string): Promise<DatabaseName> {
+	if (browser) {
+		throw new Error('[PRISMA-META] detectDatabaseForTable ne peut être appelé côté client');
+	}
+
+	const databases = await getDatabases();
+
+	// Chercher d'abord dans cenov
+	const cenovModel = databases.cenov.dmmf.datamodel.models.find((m) => m.name === tableName);
+	if (cenovModel) {
+		return 'cenov';
+	}
+
+	// Sinon chercher dans cenov_dev
+	const cenovDevModel = databases.cenov_dev.dmmf.datamodel.models.find((m) => m.name === tableName);
+	if (cenovDevModel) {
+		return 'cenov_dev';
+	}
+
+	// Fallback basé sur les patterns existants si pas trouvé dans DMMF
+	if (tableName.includes('_dev') || tableName.startsWith('v_')) {
+		return 'cenov_dev';
+	}
+
+	return 'cenov';
+}
+
 // Types pour les règles de validation d'import
 export interface ValidationRules {
 	requiredFields: string[];
@@ -576,30 +604,14 @@ function createValidatorForField(field: FieldInfo): (value: unknown) => boolean 
 	};
 }
 
-// Fonction helper pour les limites de longueur des strings (basée sur les patterns du projet)
+// Fonction helper pour les limites de longueur des strings (limite générique)
 function getStringLengthLimit(fieldName: string, value: string): boolean {
-	// Règles spécifiques basées sur l'analyse du code existant
-	if (fieldName.includes('_nat') || fieldName.includes('_val')) {
-		return value.length <= 60;
-	}
-	if (fieldName.includes('_label')) {
-		return value.length <= 150;
-	}
-	if (fieldName.includes('_code')) {
-		return value.length <= 30;
-	}
-	if (fieldName.includes('sup_label')) {
-		return value.length <= 50;
-	}
-	if (fieldName.includes('atr_0_label')) {
-		return value.length <= 100;
-	}
-
-	// Limite par défaut
-	return value.length <= 255;
+	// Limite générique pour tous les champs string
+	// Les contraintes spécifiques sont gérées par les validators Prisma DMMF
+	return value.length <= 1000; // Limite raisonnable générale
 }
 
-// Obtenir toutes les tables importables (exclut les vues en lecture seule) (côté serveur uniquement)
+// Obtenir toutes les tables importables (tables uniquement, pas les vues) (côté serveur uniquement)
 export async function getImportableTables(): Promise<TableInfo[]> {
 	if (browser) {
 		throw new Error('[PRISMA-META] getImportableTables ne peut être appelé côté client');
@@ -607,22 +619,8 @@ export async function getImportableTables(): Promise<TableInfo[]> {
 
 	const allTables = await getAllDatabaseTables();
 
-	// Filtrer pour garder seulement les tables importables
-	// Exclure les vues qui ne correspondent pas à des tables réelles ou qui sont en lecture seule
-	return allTables.filter((table) => {
-		// Garder toutes les tables réelles
-		if (table.category === 'table') {
-			return true;
-		}
-
-		// Pour les vues, garder seulement celles qui sont importables (comme v_categories_dev)
-		if (table.category === 'view') {
-			// v_categories_dev est importable car elle correspond à l'insertion dans attribute_dev
-			return table.displayName === 'v_categories_dev';
-		}
-
-		return false;
-	});
+	// Filtrer pour garder seulement les tables (pas les vues en lecture seule)
+	return allTables.filter((table) => table.category === 'table');
 }
 
 // Obtenir les champs disponibles pour les tables importables (côté serveur uniquement)
@@ -639,6 +637,23 @@ export async function getImportableTableFields(): Promise<Record<string, string[
 		if (metadata) {
 			result[table.name] = metadata.fields.map((field) => field.name);
 		}
+	}
+
+	return result;
+}
+
+// Obtenir les champs requis pour les tables importables (côté serveur uniquement)
+export async function getImportableTableRequiredFields(): Promise<Record<string, string[]>> {
+	if (browser) {
+		throw new Error('[PRISMA-META] getImportableTableRequiredFields ne peut être appelé côté client');
+	}
+
+	const tables = await getImportableTables();
+	const result: Record<string, string[]> = {};
+
+	for (const table of tables) {
+		const validationRules = await getTableValidationRules(table.database, table.name);
+		result[table.name] = validationRules.requiredFields;
 	}
 
 	return result;
@@ -661,11 +676,6 @@ export async function createRecord(
 
 	if (!model || !model.create) {
 		throw new Error(`Table ${tableName} not found in database ${database}`);
-	}
-
-	// Gestion spéciale pour v_categories_dev qui insère dans attribute_dev
-	if (tableName === 'v_categories_dev') {
-		return await handleCategoryInsertGeneric(database, data);
 	}
 
 	return await model.create({ data });
@@ -717,66 +727,3 @@ export async function findRecord(
 	return await model.findFirst({ where });
 }
 
-// Fonction spéciale pour gérer l'insertion des catégories (côté serveur uniquement)
-async function handleCategoryInsertGeneric(
-	database: DatabaseName,
-	data: Record<string, unknown>
-): Promise<Record<string, unknown>> {
-	if (browser) {
-		throw new Error('[PRISMA-META] handleCategoryInsertGeneric ne peut être appelé côté client');
-	}
-
-	const client = await getClient(database);
-	const attributeModel = client['attribute_dev'] as { upsert: (args: unknown) => Promise<Record<string, unknown>> };
-
-	if (!attributeModel || !attributeModel.upsert) {
-		throw new Error('attribute_dev model not found');
-	}
-
-	let lastInserted: Record<string, unknown> = {};
-
-	// Niveau 0 (catégorie principale)
-	if (data.atr_0_label) {
-		lastInserted = await attributeModel.upsert({
-			where: {
-				atr_nat_atr_val: {
-					atr_nat: 'Catégorie des produits',
-					atr_val: String(data.atr_0_label)
-				}
-			},
-			update: {
-				atr_label: String(data.atr_0_label)
-			},
-			create: {
-				atr_nat: 'Catégorie des produits',
-				atr_val: String(data.atr_0_label),
-				atr_label: String(data.atr_0_label)
-			}
-		});
-	}
-
-	// Niveaux 1-7 (sous-catégories)
-	for (let i = 1; i <= 7; i++) {
-		const labelField = `atr_${i}_label`;
-		if (data[labelField]) {
-			lastInserted = await attributeModel.upsert({
-				where: {
-					atr_nat_atr_val: {
-						atr_nat: 'Catégorie des produits',
-						atr_val: String(data[labelField])
-					}
-				},
-				update: {
-					atr_label: String(data[labelField])
-				},
-				create: {
-					atr_nat: 'Catégorie des produits',
-					atr_val: String(data[labelField]),
-					atr_label: String(data[labelField])
-				}
-			});
-		}
-	}
-
-	return lastInserted;
-}

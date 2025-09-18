@@ -9,9 +9,11 @@ import {
 	getTableValidationRules,
 	getImportableTables,
 	getImportableTableFields,
+	getImportableTableRequiredFields,
 	createRecord as createRecordGeneric,
 	updateRecord,
 	findRecord,
+	detectDatabaseForTable,
 	type ValidationRules,
 	type DatabaseName
 } from '$lib/prisma-meta';
@@ -117,42 +119,6 @@ function validateCSVFormat(
 	return errors;
 }
 
-// Nouvelle fonction pour valider atr_0_label spécifiquement
-function validateAtr0Label(
-	data: unknown[][],
-	mappedFields: Record<string, string>,
-	result: ValidationResult
-): void {
-	const expectedValue = 'Catégorie des produits';
-
-	// Trouver l'index de la colonne atr_0_label
-	const atr0ColumnIndex = Object.entries(mappedFields).find(
-		([, field]) => field === 'atr_0_label'
-	)?.[0];
-
-	if (atr0ColumnIndex === undefined) {
-		return;
-	}
-
-	const columnIndex = parseInt(atr0ColumnIndex);
-
-	data.forEach((row, rowIndex) => {
-		if (!Array.isArray(row)) return;
-
-		const value = row[columnIndex];
-		const stringValue = typeof value === 'string' ? value.trim() : String(value ?? '');
-
-		// Vérifier si la valeur n'est pas "Catégorie des produits"
-		if (stringValue && stringValue !== expectedValue) {
-			result.invalidData.push({
-				row: rowIndex,
-				field: 'atr_0_label',
-				value: stringValue,
-				error: `Valeur non conforme - doit être "${expectedValue}"`
-			});
-		}
-	});
-}
 
 export const actions: Actions = {
 	validate: async (event) => {
@@ -210,26 +176,6 @@ export const actions: Actions = {
 					};
 				}
 
-				// Validation spécifique pour atr_0_label si une des tables sélectionnées est v_categories_dev
-				if (selectedTables.includes('v_categories_dev')) {
-					validateAtr0Label(data, mappedFields, result);
-
-					// Si des erreurs atr_0_label sont détectées, arrêter ici
-					const atr0Errors = result.invalidData.filter((error) => error.field === 'atr_0_label');
-					if (atr0Errors.length > 0) {
-						return {
-							form: {
-								...form,
-								data: {
-									data: data || [],
-									mappedFields: mappedFields || {},
-									selectedTables: selectedTables || [],
-									result
-								}
-							}
-						};
-					}
-				}
 			}
 
 			// Obtenir les règles de validation pour toutes les tables sélectionnées via DMMF
@@ -237,7 +183,7 @@ export const actions: Actions = {
 				selectedTables.map(async (table) => ({
 					table,
 					rules: await getTableValidationRules(
-						table.includes('_dev') || table.startsWith('v_') ? 'cenov_dev' : 'cenov',
+						await detectDatabaseForTable(table),
 						table
 					)
 				}))
@@ -374,30 +320,6 @@ export const actions: Actions = {
 					};
 				}
 
-				// Validation spécifique pour atr_0_label si une des tables sélectionnées est v_categories_dev
-				if (selectedTables.includes('v_categories_dev')) {
-					validateAtr0Label(data, mappedFields, result);
-
-					// Si des erreurs atr_0_label sont détectées, arrêter le traitement
-					const atr0Errors = result.invalidData.filter((error) => error.field === 'atr_0_label');
-					if (atr0Errors.length > 0) {
-						result.errors.push(
-							`${atr0Errors.length} ligne(s) rejetée(s) - valeur atr_0_label non conforme`
-						);
-
-						return {
-							form: {
-								...form,
-								data: {
-									data: data || [],
-									mappedFields: mappedFields || {},
-									selectedTables: selectedTables || [],
-									result
-								}
-							}
-						};
-					}
-				}
 			}
 
 			// Préparation pour le traitement
@@ -406,7 +328,7 @@ export const actions: Actions = {
 				selectedTables.map(async (table) => ({
 					table,
 					rules: await getTableValidationRules(
-						table.includes('_dev') || table.startsWith('v_') ? 'cenov_dev' : 'cenov',
+						await detectDatabaseForTable(table),
 						table
 					)
 				}))
@@ -808,17 +730,15 @@ async function getUniqueConstraint(
 
 
 
-// Fonction helper pour déterminer la catégorie d'une table
+// Fonction helper pour déterminer la catégorie d'une table basée sur le schéma
 function getCategoryFromTable(table: {
 	name: string;
 	displayName: string;
 	category: string;
+	schema: string;
 }): string {
-	if (table.name.includes('supplier')) return 'supplier';
-	if (table.name.includes('attribute')) return 'attribute';
-	if (table.name.includes('categories') || table.displayName.includes('Catégories'))
-		return 'category';
-	return 'other';
+	// Utiliser le schéma comme catégorie principale
+	return table.schema;
 }
 
 // Pour SuperForms, nous devons également fournir la fonction de chargement
@@ -840,6 +760,7 @@ export const load: ServerLoad = async (event) => {
 		console.log('📊 [IMPORT] Récupération des tables importables via DMMF');
 		const availableTables = await getImportableTables();
 		const tableFields = await getImportableTableFields();
+		const tableRequiredFields = await getImportableTableRequiredFields();
 
 		// Transformer les données pour le frontend
 		const formattedTables = availableTables.map((table) => ({
@@ -852,14 +773,16 @@ export const load: ServerLoad = async (event) => {
 			valid: form.valid,
 			hasErrors: Object.keys(form.errors || {}).length > 0,
 			tablesCount: formattedTables.length,
-			fieldsCount: Object.keys(tableFields).length
+			fieldsCount: Object.keys(tableFields).length,
+			requiredFieldsCount: Object.keys(tableRequiredFields).length
 		});
 
 		console.log('✅ [IMPORT] Chargement terminé avec succès');
 		return {
 			form,
 			availableTables: formattedTables,
-			tableFields
+			tableFields,
+			tableRequiredFields
 		};
 	} catch (err) {
 		console.error('❌ [IMPORT] Erreur dans le chargement de la page import:', err);

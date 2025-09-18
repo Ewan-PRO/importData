@@ -26,6 +26,7 @@
 		form: SuperValidated<{ data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[]; }, any, { data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[]; }>;
 		availableTables: { value: string; name: string; category: string; }[];
 		tableFields: Record<string, string[]>;
+		tableRequiredFields: Record<string, string[]>;
 	};
 
 	// Définition du type de résultat attendu
@@ -109,7 +110,7 @@
 	let rawData: unknown[][] = [];
 	let headers: string[] = [];
 	let previewData: unknown[][] = [];
-	let selectedTables: string[] = ['supplier_dev']; // Tables sélectionnées par défaut
+	let selectedTables: string[] = []; // Tables sélectionnées (par défaut vide, sera rempli dynamiquement)
 	let mappedFields: Record<string, string> = {};
 	let hasHeaders = true; // Détection automatique
 	let showNoHeaderAlert = false; // Nouvelle variable pour l'alerte
@@ -117,6 +118,9 @@
 	// Données provenant du serveur via DMMF (remplace le hardcodage)
 	$: availableTables = data.availableTables || [];
 	$: tableFields = data.tableFields || {};
+	$: tableRequiredFields = data.tableRequiredFields || {};
+
+	// Pas de sélection automatique - l'utilisateur doit choisir manuellement
 
 	// Utilisons le type défini précédemment
 	let validationResults: ValidationResult = {
@@ -339,23 +343,14 @@
 		} as any;
 	}
 
-	// Fonction pour calculer les champs requis basée sur les patterns DMMF
+	// Fonction pour calculer les champs requis basée sur les données DMMF du serveur
 	function getRequiredFieldsForTables(tables: string[]): string[] {
 		let result: string[] = [];
 
 		tables.forEach((table) => {
-			const fields = tableFields[table] || [];
-			// Heuristique simple : les champs requis sont généralement les premiers champs (pas les labels)
-			// et suivent certains patterns
-			fields.forEach((field: string) => {
-				const isRequired =
-					// Patterns spécifiques pour les champs requis
-					(field.includes('_nat') && field.includes('atr_')) ||
-					(field.includes('_val') && field.includes('atr_')) ||
-					(field.includes('_code') && field.includes('sup_')) ||
-					field === 'atr_0_label'; // Exception pour les catégories
-
-				if (isRequired && !result.includes(field)) {
+			const requiredFields = tableRequiredFields[table] || [];
+			requiredFields.forEach((field: string) => {
+				if (!result.includes(field)) {
 					result.push(field);
 				}
 			});
@@ -553,11 +548,11 @@
 					<div class="mb-6">
 						<div class="mb-3 block font-medium text-gray-700">Tables de destination</div>
 						<div class="space-y-4">
-							<!-- Groupement par catégorie -->
+							<!-- Groupement par schéma -->
 							<div class="rounded-lg border p-4">
-								<h3 class="mb-2 font-medium text-gray-600">Fournisseurs</h3>
+								<h3 class="mb-2 font-medium text-gray-600">Schéma: produit</h3>
 								<div class="space-y-2">
-									{#each availableTables.filter((t: { value: string; name: string; category: string; }) => t.category === 'supplier') as table}
+									{#each availableTables.filter((t: { value: string; name: string; category: string; }) => t.category === 'produit') as table}
 										<label class="flex items-center space-x-2">
 											<input
 												type="checkbox"
@@ -573,27 +568,9 @@
 							</div>
 
 							<div class="rounded-lg border p-4">
-								<h3 class="mb-2 font-medium text-gray-600">Attributs</h3>
+								<h3 class="mb-2 font-medium text-gray-600">Schéma: public</h3>
 								<div class="space-y-2">
-									{#each availableTables.filter((t: { value: string; name: string; category: string; }) => t.category === 'attribute') as table}
-										<label class="flex items-center space-x-2">
-											<input
-												type="checkbox"
-												bind:group={selectedTables}
-												value={table.value}
-												on:change={handleTableChange}
-												class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-											/>
-											<span class="text-sm">{table.name}</span>
-										</label>
-									{/each}
-								</div>
-							</div>
-
-							<div class="rounded-lg border p-4">
-								<h3 class="mb-2 font-medium text-gray-600">Catégories</h3>
-								<div class="space-y-2">
-									{#each availableTables.filter((t: { value: string; name: string; category: string; }) => t.category === 'category') as table}
+									{#each availableTables.filter((t: { value: string; name: string; category: string; }) => t.category === 'public') as table}
 										<label class="flex items-center space-x-2">
 											<input
 												type="checkbox"

@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { json, error } from '@sveltejs/kit';
-import { getTableValidationRules, createRecord, findRecord, type ValidationRules, type DatabaseName } from '$lib/prisma-meta';
+import { getTableValidationRules, createRecord, findRecord, detectDatabaseForTable, type ValidationRules } from '$lib/prisma-meta';
 
 // Types importés du fichier principal
 type ColumnMap = Record<string, number>;
@@ -224,9 +224,7 @@ async function checkExistingRecord(
 	row: unknown[]
 ): Promise<string | null> {
 	const whereCondition: Record<string, unknown> = {};
-	const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
-		? 'cenov_dev'
-		: 'cenov';
+	const database = await detectDatabaseForTable(tableName);
 	const validationRules = await getTableValidationRules(database, tableName);
 	const uniqueFields = validationRules.uniqueFields;
 
@@ -244,9 +242,7 @@ async function checkExistingRecord(
 	}
 
 	try {
-		const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
-			? 'cenov_dev'
-			: 'cenov';
+		const database = await detectDatabaseForTable(tableName);
 
 		const existingRecord = await findRecord(database, tableName, whereCondition);
 
@@ -321,29 +317,17 @@ async function insertValidData(
 				// Préparer les données pour l'insertion
 				const insertData: Record<string, unknown> = {};
 
-				// Pour les catégories, ne pas mapper les champs atr_X_label directement
-				if (tableName === 'v_categories_dev') {
-					// Stocker les données de catégorie temporairement pour handleCategoryInsert
-					Object.entries(mappedFields).forEach(([columnIndex, fieldName]) => {
-						if (fieldName && row[parseInt(columnIndex)] !== undefined) {
-							insertData[fieldName] = formatValueForDatabase(fieldName, row[parseInt(columnIndex)]);
-						}
-					});
-				} else {
-					// Pour les autres tables, procéder normalement
-					Object.entries(mappedFields).forEach(([columnIndex, fieldName]) => {
-						if (fieldName && row[parseInt(columnIndex)] !== undefined) {
-							insertData[fieldName] = formatValueForDatabase(fieldName, row[parseInt(columnIndex)]);
-						}
-					});
-				}
+				// Procéder normalement pour toutes les tables
+				Object.entries(mappedFields).forEach(([columnIndex, fieldName]) => {
+					if (fieldName && row[parseInt(columnIndex)] !== undefined) {
+						insertData[fieldName] = formatValueForDatabase(fieldName, row[parseInt(columnIndex)]);
+					}
+				});
 
 				console.log(`🔍 Insert data for row ${rowIndex}:`, insertData);
 
 				// Insérer dans la table appropriée en utilisant la fonction générique
-				const database: DatabaseName = tableName.includes('_dev') || tableName.startsWith('v_')
-					? 'cenov_dev'
-					: 'cenov';
+				const database = await detectDatabaseForTable(tableName);
 
 				await createRecord(database, tableName, insertData);
 				console.log(`✅ Inserted into ${tableName}:`, insertData);
@@ -395,9 +379,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		// Obtenir la structure de la table cible via DMMF
-		const database: DatabaseName = targetTable.includes('_dev') || targetTable.startsWith('v_')
-			? 'cenov_dev'
-			: 'cenov';
+		const database = await detectDatabaseForTable(targetTable);
 		const validationRules = await getTableValidationRules(database, targetTable);
 
 		// Préparation pour le traitement
