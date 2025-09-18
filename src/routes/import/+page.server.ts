@@ -201,7 +201,7 @@ export const actions: Actions = {
 					let isValidForAnyTable = false;
 
 					// Valider pour chaque table sélectionnée
-					for (const { table, tableName, rules } of allValidationRules) {
+					for (const { table, rules } of allValidationRules) {
 						const tempResult: ValidationResult = {
 							totalRows: 0,
 							validRows: 0,
@@ -221,7 +221,7 @@ export const actions: Actions = {
 
 						if (validationResult) {
 							// Vérification des doublons avec la base de données pour cette table
-							const existingRecord = await checkExistingRecord(tableName, mappedFields, row);
+							const existingRecord = await checkExistingRecord(table, mappedFields, row);
 
 							if (!existingRecord) {
 								// Ligne valide pour cette table spécifique
@@ -348,7 +348,7 @@ export const actions: Actions = {
 					if (!Array.isArray(row)) continue;
 
 					// Valider la ligne pour chaque table sélectionnée
-					for (const { table, tableName, rules } of allValidationRules) {
+					for (const { table, rules } of allValidationRules) {
 						const tempResult: ValidationResult = {
 							totalRows: 0,
 							validRows: 0,
@@ -368,7 +368,7 @@ export const actions: Actions = {
 
 						if (isValid) {
 							// Vérifier les doublons en base pour cette table
-							const existingRecord = await checkExistingRecord(tableName, mappedFields, row);
+							const existingRecord = await checkExistingRecord(table, mappedFields, row);
 							if (!existingRecord) {
 								validRowsByTable[table].push({ index: rowIndex, row });
 							}
@@ -567,7 +567,7 @@ async function processRow(
 
 		// Vérification si le record existe déjà
 		const existingRecord = await checkExistingRecord(
-			tableName,
+			targetTableIdentifier,
 			Object.fromEntries(Object.entries(columnMap).map(([k, v]) => [v.toString(), k])),
 			row
 		);
@@ -637,13 +637,13 @@ function formatDisplayValue(value: unknown): string {
 }
 
 async function checkExistingRecord(
-	tableName: string,
+	tableIdentifier: string,
 	mappedFields: Record<string, string>,
 	row: unknown[]
 ): Promise<string | null> {
 	// Préparation de la condition de recherche
 	const whereCondition: Record<string, unknown> = {};
-	const database = await detectDatabaseForTable(tableName);
+	const { database, tableName } = parseTableIdentifier(tableIdentifier);
 	const validationRules = await getTableValidationRules(database, tableName);
 	const uniqueFields = validationRules.uniqueFields;
 
@@ -662,8 +662,6 @@ async function checkExistingRecord(
 
 	try {
 		// Recherche dans la table appropriée via DMMF générique
-		const database = await detectDatabaseForTable(tableName);
-
 		const existingRecord = await findRecord(database, tableName, whereCondition);
 
 		// Retourner une représentation textuelle de l'enregistrement trouvé

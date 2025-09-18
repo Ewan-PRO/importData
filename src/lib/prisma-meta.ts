@@ -155,6 +155,12 @@ interface DatabaseConfig {
 // Cache pour les bases de données (singleton)
 let databasesCache: DatabaseConfig | null = null;
 
+// Fonction pour invalider le cache (utile pour le debugging et les recharges)
+export function clearDatabaseCache() {
+	databasesCache = null;
+	console.log('🔄 [PRISMA-META] Cache des bases de données vidé');
+}
+
 // Configuration des bases - création unique (côté serveur uniquement)
 async function createDatabases(): Promise<DatabaseConfig> {
 	if (browser) {
