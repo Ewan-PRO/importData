@@ -574,14 +574,14 @@ async function processRow(
 
 		if (existingRecord) {
 			// Mise à jour d'un enregistrement existant
-			await updateRecordGeneric(tableName, recordData);
+			await updateRecordGeneric(targetTableIdentifier, recordData);
 			result.updated++;
 			if (result.resultsByTable && result.resultsByTable[targetTableIdentifier]) {
 				result.resultsByTable[targetTableIdentifier].updated++;
 			}
 		} else {
 			// Création d'un nouvel enregistrement
-			await createRecord(tx, tableName, recordData);
+			await createRecord(tx, targetTableIdentifier, recordData);
 			result.inserted++;
 			if (result.resultsByTable && result.resultsByTable[targetTableIdentifier]) {
 				result.resultsByTable[targetTableIdentifier].inserted++;
@@ -599,11 +599,13 @@ async function processRow(
 
 // Fonction pour mettre à jour un enregistrement existant via DMMF
 async function updateRecordGeneric(
-	tableName: string,
+	targetTableIdentifier: string,
 	recordData: Record<string, unknown>
 ): Promise<void> {
+	const { database, tableName } = parseTableIdentifier(targetTableIdentifier);
+	console.log(`🔍 [DEBUG] updateRecordGeneric appelé avec: { targetTableIdentifier: '${targetTableIdentifier}', database: '${database}', tableName: '${tableName}' }`);
+
 	const uniqueConstraint = await getUniqueConstraint(tableName, recordData);
-	const database = await detectDatabaseForTable(tableName);
 
 	await updateRecord(database, tableName, uniqueConstraint, recordData);
 }
@@ -611,10 +613,11 @@ async function updateRecordGeneric(
 // Fonction pour créer un nouvel enregistrement
 async function createRecord(
 	tx: PrismaTransactionClient,
-	tableName: string,
+	targetTableIdentifier: string,
 	recordData: Record<string, unknown>
 ): Promise<void> {
-	const database = await detectDatabaseForTable(tableName);
+	const { database, tableName } = parseTableIdentifier(targetTableIdentifier);
+	console.log(`🔍 [DEBUG] createRecord appelé avec: { targetTableIdentifier: '${targetTableIdentifier}', database: '${database}', tableName: '${tableName}' }`);
 
 	await createRecordGeneric(database, tableName, recordData);
 }
@@ -651,9 +654,20 @@ async function checkExistingRecord(
 	uniqueFields.forEach((field) => {
 		const colIndex = Object.entries(mappedFields).find(([, f]) => f === field)?.[0];
 		if (colIndex !== undefined) {
-			whereCondition[field] = formatValueForDatabase(field, row[parseInt(colIndex)]);
+			const rawValue = row[parseInt(colIndex)];
+			const formattedValue = formatValueForDatabase(field, rawValue);
+			console.log('🔍 [DEBUG] checkExistingRecord field formatting:', {
+				field,
+				colIndex,
+				rawValue,
+				formattedValue,
+				type: typeof formattedValue
+			});
+			whereCondition[field] = formattedValue;
 		}
 	});
+
+	console.log('🔍 [DEBUG] Final whereCondition for checkExistingRecord:', whereCondition);
 
 	// Si aucun champ unique trouvé, on ne peut pas vérifier
 	if (Object.keys(whereCondition).length === 0) {
@@ -687,14 +701,25 @@ function formatValueForDatabase(field: string, value: unknown): unknown {
 		return null;
 	}
 
+	console.log('🔍 [DEBUG] formatValueForDatabase:', { field, value, type: typeof value });
+
+	// Conversion spécifique pour les champs ID/FK (entiers)
+	if (field.includes('_id') || field.includes('fk_') || field.includes('_qty')) {
+		const numValue = parseInt(String(value), 10);
+		console.log('🔍 [DEBUG] Converting to int:', { field, value, numValue, isNaN: isNaN(numValue) });
+		return isNaN(numValue) ? null : numValue;
+	}
+
 	// Conversion selon le type de champ
-	if (field.includes('_valeur') || field.includes('_qty')) {
-		// Conversion en nombre
+	if (field.includes('_valeur')) {
+		// Conversion en nombre décimal
 		const numValue = parseFloat(String(value).replace(',', '.'));
+		console.log('🔍 [DEBUG] Converting to float:', { field, value, numValue, isNaN: isNaN(numValue) });
 		return isNaN(numValue) ? null : numValue;
 	}
 
 	// Par défaut, retourner la valeur comme chaîne de caractères
+	console.log('🔍 [DEBUG] Keeping as string:', { field, value });
 	return String(value);
 }
 

@@ -379,6 +379,22 @@ export async function getClient(database: DatabaseName): Promise<Record<string, 
 	}
 
 	const databases = await getDatabases();
+
+	console.log('🔍 [DEBUG] getClient appelé:', {
+		database,
+		databasesKeys: Object.keys(databases),
+		hasDatabaseKey: !!databases[database],
+		hasClient: !!databases[database]?.client
+	});
+
+	if (!databases[database]) {
+		throw new Error(`[PRISMA-META] Database '${database}' not found in getClient. Available: ${Object.keys(databases).join(', ')}`);
+	}
+
+	if (!databases[database].client) {
+		throw new Error(`[PRISMA-META] Client not found for database '${database}'`);
+	}
+
 	return databases[database].client;
 }
 
