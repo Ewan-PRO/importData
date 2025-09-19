@@ -7,6 +7,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Select from '$lib/components/ui/select';
 	import * as Table from '$lib/components/ui/table';
+	import { Badge } from '$lib/components/ui/badge';
+	import TableSelector from '$lib/components/TableSelector.svelte';
 	import {
 		Upload,
 		FileCheck,
@@ -25,7 +27,7 @@
 	export let data: {
 		user: UserInfoResponse | undefined;
 		form: SuperValidated<{ data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[]; }, any, { data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[]; }>;
-		availableTables: { value: string; name: string; category: string; }[];
+		availableTables: { value: string; name: string; displayName?: string; category: string; }[];
 		tableFields: Record<string, string[]>;
 		tableRequiredFields: Record<string, string[]>;
 	};
@@ -552,59 +554,29 @@
 						</div>
 					{/if}
 
-					<div class="mb-6">
-						<div class="mb-3 block font-medium text-gray-700">Tables de destination</div>
-						<div class="space-y-4">
-							<!-- Groupement par schéma -->
-							<div class="rounded-lg border p-4">
-								<h3 class="mb-2 font-medium text-gray-600">Schéma: produit</h3>
-								<div class="space-y-2">
-									{#each availableTables.filter((t: { value: string; name: string; category: string; }) => t.category === 'produit') as table}
-										<label class="flex items-center space-x-2">
-											<input
-												type="checkbox"
-												bind:group={selectedTables}
-												value={table.value}
-												on:change={handleTableChange}
-												class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-											/>
-											<span class="text-sm">{table.name}</span>
-										</label>
-									{/each}
-								</div>
-							</div>
+					<!-- Nouveau composant TableSelector -->
+					<TableSelector
+						bind:availableTables={availableTables}
+						bind:selectedTables={selectedTables}
+						title="Tables de destination"
+						on:selectionChange={handleTableChange}
+					/>
 
-							<div class="rounded-lg border p-4">
-								<h3 class="mb-2 font-medium text-gray-600">Schéma: public</h3>
-								<div class="space-y-2">
-									{#each availableTables.filter((t: { value: string; name: string; category: string; }) => t.category === 'public') as table}
-										<label class="flex items-center space-x-2">
-											<input
-												type="checkbox"
-												bind:group={selectedTables}
-												value={table.value}
-												on:change={handleTableChange}
-												class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-											/>
-											<span class="text-sm">{table.name}</span>
-										</label>
-									{/each}
-								</div>
-							</div>
-						</div>
-
-						{#if selectedTables.length === 0}
-							<p class="mt-2 text-sm text-red-600">
-								Veuillez sélectionner au moins une table de destination.
-							</p>
-						{:else}
-							<p class="mt-2 text-sm text-gray-600">
-								{selectedTables.length} table(s) sélectionnée(s): {selectedTables
-									.map((t: string) => availableTables.find((at: { value: string; name: string; category: string; }) => at.value === t)?.name)
-									.join(', ')}
-							</p>
-						{/if}
-					</div>
+					{#if selectedTables.length === 0}
+						<p class="mt-2 text-sm text-red-600">
+							Veuillez sélectionner au moins une table de destination.
+						</p>
+					{:else}
+						<p class="mt-2 text-sm text-gray-600">
+							{selectedTables.length} table(s) sélectionnée(s): {selectedTables
+								.map((t: string) => {
+									const table = availableTables.find((at: { value: string; name: string; displayName?: string; category: string; }) => at.value === t);
+									return table?.displayName || table?.name;
+								})
+								.filter(name => name) // Filtrer les undefined
+								.join(', ')}
+						</p>
+					{/if}
 
 					<h3 class="mb-2 font-medium">Aperçu des données</h3>
 					<div class="mb-6 overflow-x-auto">

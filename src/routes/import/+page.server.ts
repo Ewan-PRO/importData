@@ -778,8 +778,12 @@ export const load: ServerLoad = async (event) => {
 		// Transformer les données pour le frontend
 		const formattedTables = availableTables.map((table) => ({
 			value: `${table.database}:${table.name}`, // Inclure database pour unicité
-			name: `${table.displayName} (${table.database === 'cenov' ? 'Production' : 'Dev'})`,
-			category: getCategoryFromTable(table)
+			name: table.displayName,
+			displayName: table.displayName,
+			category: getCategoryFromTable(table),
+			database: table.database,
+			rowCount: table.rowCount,
+			columns: table.columns
 		}));
 
 		// Les clés sont déjà au format database:tableName depuis prisma-meta
