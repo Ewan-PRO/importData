@@ -69,6 +69,19 @@ export interface InsertionResult {
 
 // ========== FONCTIONS DE VALIDATION ==========
 
+export function calculateValidRowsSet(result: ValidationResult, totalRows: number): Set<number> {
+	const validRowsSet = new Set<number>();
+	const invalidRowIndices = new Set(result.invalidData.map(error => error.row));
+
+	for (let i = 0; i < totalRows; i++) {
+		if (!invalidRowIndices.has(i)) {
+			validRowsSet.add(i);
+		}
+	}
+
+	return validRowsSet;
+}
+
 export function prepareColumnMap(mappedFields: Record<string, string>): ColumnMap {
 	const columnMap: ColumnMap = {};
 	Object.entries(mappedFields).forEach(([index, field]) => {

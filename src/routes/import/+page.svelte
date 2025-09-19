@@ -26,6 +26,7 @@
 	} from 'lucide-svelte';
 	import type { UserInfoResponse } from '@logto/node';
 	import type { SuperValidated } from 'sveltekit-superforms';
+	import type { ValidationResult } from './shared.js';
 
 	export let data: {
 		user: UserInfoResponse | undefined;
@@ -48,25 +49,6 @@
 		tableRequiredFields: Record<string, string[]>;
 	};
 
-	// Définition du type de résultat attendu
-	type ValidationResult = {
-		totalRows: number;
-		validRows: number;
-		duplicates: number;
-		invalidData: { row: number; field: string; value: string; error: string }[];
-		processed: boolean;
-		inserted?: number;
-		updated?: number;
-		errors?: string[];
-		resultsByTable?: Record<
-			string,
-			{
-				validRows: number;
-				inserted: number;
-				updated: number;
-			}
-		>;
-	};
 
 	// Type pour le formulaire multi-tables
 	type MultiTableFormData = {
@@ -417,10 +399,6 @@
 
 		return noTablesSelected || someRequiredFieldsNotMapped || isSubmitting;
 	})();
-
-	function getRequiredFields(): string[] {
-		return requiredFields;
-	}
 
 	function isFieldMapped(fieldName: string): boolean {
 		return Object.values(mappedFields).includes(fieldName);

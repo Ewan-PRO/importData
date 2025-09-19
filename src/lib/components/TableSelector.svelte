@@ -142,6 +142,26 @@
 		return new Intl.NumberFormat('fr-FR').format(num);
 	}
 
+	function renderBadges(table: any, dbInfo: any, schemaConfig: any) {
+		return {
+			tableBadge: {
+				variant: getBadgeVariant(table) as 'vert' | 'noir',
+				icon: table.tableType === 'view' ? Eye : TableIcon,
+				label: table.tableType === 'view' ? 'Vue' : 'Table'
+			},
+			dbBadge: {
+				variant: dbInfo.variant as 'bleu' | 'orange',
+				icon: table.database?.includes('dev') ? Settings : Rocket,
+				label: table.database?.toUpperCase()
+			},
+			schemaBadge: schemaConfig ? {
+				variant: schemaConfig.variant as 'purple' | 'cyan',
+				icon: schemaConfig.icon,
+				label: schemaConfig.label
+			} : null
+		};
+	}
+
 </script>
 
 <div class="w-full">
@@ -345,6 +365,7 @@
 					{@const tableDatabase = table.database || (table.value.includes('cenov_dev:') ? 'cenov_dev' : 'cenov')}
 					{@const dbInfo = getDatabaseBadgeInfo(tableDatabase)}
 					{@const schemaConfig = SCHEMA_CONFIG[table.category as keyof typeof SCHEMA_CONFIG]}
+					{@const badges = renderBadges(table, dbInfo, schemaConfig)}
 					<label class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-blue-50 sm:max-w-none">
 						<input
 							type="checkbox"
@@ -384,27 +405,18 @@
 									<div class="hidden sm:block">
 										<div class="flex items-center gap-2">
 											<span class="font-medium">{table.displayName || table.name}</span>
-											<Badge variant={getBadgeVariant(table)}>
-												{#if table.tableType === 'view'}
-													<Eye />
-													Vue
-												{:else}
-													<TableIcon />
-													Table
-												{/if}
+											<Badge variant={badges.tableBadge.variant}>
+												<svelte:component this={badges.tableBadge.icon} />
+												{badges.tableBadge.label}
 											</Badge>
-											<Badge variant={dbInfo.variant}>
-												{#if tableDatabase.includes('dev')}
-													<Settings />
-												{:else}
-													<Rocket />
-												{/if}
-												{tableDatabase.toUpperCase()}
+											<Badge variant={badges.dbBadge.variant}>
+												<svelte:component this={badges.dbBadge.icon} />
+												{badges.dbBadge.label}
 											</Badge>
-											{#if schemaConfig}
-												<Badge variant={schemaConfig.variant}>
-													<svelte:component this={schemaConfig.icon} />
-													{schemaConfig.label}
+											{#if badges.schemaBadge}
+												<Badge variant={badges.schemaBadge.variant}>
+													<svelte:component this={badges.schemaBadge.icon} />
+													{badges.schemaBadge.label}
 												</Badge>
 											{/if}
 										</div>
@@ -420,27 +432,18 @@
 											{formatNumber(table.rowCount || 0)} lignes • {table.columns?.length || 0} colonnes
 										</div>
 										<div class="mt-2 flex flex-wrap gap-1">
-											<Badge variant={getBadgeVariant(table)}>
-												{#if table.tableType === 'view'}
-													<Eye />
-													Vue
-												{:else}
-													<TableIcon />
-													Table
-												{/if}
+											<Badge variant={badges.tableBadge.variant}>
+												<svelte:component this={badges.tableBadge.icon} />
+												{badges.tableBadge.label}
 											</Badge>
-											<Badge variant={dbInfo.variant}>
-												{#if tableDatabase.includes('dev')}
-													<Settings />
-												{:else}
-													<Rocket />
-												{/if}
-												{tableDatabase.toUpperCase()}
+											<Badge variant={badges.dbBadge.variant}>
+												<svelte:component this={badges.dbBadge.icon} />
+												{badges.dbBadge.label}
 											</Badge>
-											{#if schemaConfig}
-												<Badge variant={schemaConfig.variant}>
-													<svelte:component this={schemaConfig.icon} />
-													{schemaConfig.label}
+											{#if badges.schemaBadge}
+												<Badge variant={badges.schemaBadge.variant}>
+													<svelte:component this={badges.schemaBadge.icon} />
+													{badges.schemaBadge.label}
 												</Badge>
 											{/if}
 										</div>

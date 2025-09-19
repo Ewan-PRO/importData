@@ -437,6 +437,11 @@
 		return matchesType && matchesDB && matchesSchema && matchesSearch;
 	});
 
+	// Compter combien de sources filtrées sont sélectionnées
+	$: selectedFilteredCount = filteredTables.filter((table: ExportTableInfo) =>
+		$form.selectedSources.includes(`${table.database}-${table.name}`)
+	).length;
+
 	// Fonction de formatage pour l'aperçu (utilisée seulement dans ce fichier)
 	function formatPreviewValue(value: unknown): string {
 		if (value === null || value === undefined) return '';
@@ -785,8 +790,8 @@
 							class="flex min-h-[42px] items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-6 py-3 text-center"
 						>
 							<div class="flex items-center justify-center gap-1 text-sm text-purple-800">
-								<FileType class="h-4 w-4" />
-								<span class="font-semibold">{filteredTables.length}</span> sources filtrées
+								<CheckCircle class="h-4 w-4" />
+								<span class="font-semibold">{selectedFilteredCount}</span> sélectionnées
 							</div>
 						</div>
 					</div>

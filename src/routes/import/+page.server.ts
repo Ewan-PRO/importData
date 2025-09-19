@@ -13,6 +13,7 @@ import {
 import {
 	validateImportData,
 	insertValidatedData,
+	calculateValidRowsSet,
 	type ImportConfig,
 	type ValidationResult
 } from './shared.js';
@@ -35,19 +36,6 @@ const importSchema = z.object({
 });
 
 
-// Fonction utilitaire pour calculer les lignes valides depuis ValidationResult
-function calculateValidRowsSet(result: ValidationResult, totalRows: number): Set<number> {
-	const validRowsSet = new Set<number>();
-	const invalidRowIndices = new Set(result.invalidData.map(error => error.row));
-
-	for (let i = 0; i < totalRows; i++) {
-		if (!invalidRowIndices.has(i)) {
-			validRowsSet.add(i);
-		}
-	}
-
-	return validRowsSet;
-}
 
 
 export const actions: Actions = {

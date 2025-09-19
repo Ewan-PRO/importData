@@ -3,8 +3,8 @@ import { json, error } from '@sveltejs/kit';
 import {
 	validateImportData,
 	insertValidatedData,
-	type ImportConfig,
-	type ValidationResult
+	calculateValidRowsSet,
+	type ImportConfig
 } from '../shared.js';
 
 // Types spécifiques à l'API
@@ -16,19 +16,6 @@ interface ApiRequest {
 }
 
 
-// Fonction utilitaire pour calculer les lignes valides depuis ValidationResult
-function calculateValidRowsSet(result: ValidationResult, totalRows: number): Set<number> {
-	const validRowsSet = new Set<number>();
-	const invalidRowIndices = new Set(result.invalidData.map(error => error.row));
-
-	for (let i = 0; i < totalRows; i++) {
-		if (!invalidRowIndices.has(i)) {
-			validRowsSet.add(i);
-		}
-	}
-
-	return validRowsSet;
-}
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
