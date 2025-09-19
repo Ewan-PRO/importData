@@ -129,6 +129,7 @@ export interface TableInfo {
 	database: DatabaseName;
 	schema: string;
 	rowCount?: number;
+	columns?: FieldInfo[];
 }
 
 export interface FieldInfo {
@@ -293,12 +294,27 @@ export async function getAllTables(database: DatabaseName): Promise<TableInfo[]>
 			displayName = cleanName;
 		}
 
+		// Extraire les informations sur les colonnes depuis le modèle DMMF
+		const columns = model.fields
+			.filter((f) => f.kind === 'scalar')
+			.map((f) => ({
+				name: f.name,
+				type: f.type,
+				isRequired: f.isRequired,
+				isPrimaryKey: f.isId || false,
+				isTimestamp:
+					f.type === 'DateTime' &&
+					/^(created_at|updated_at|deleted_at|timestamp|date_|.*_at)$/i.test(f.name),
+				dbType: f.type
+			}));
+
 		return {
 			name: model.name, // Garder le nom de modèle Prisma pour l'accès programmatique
 			displayName, // Utiliser le nom @@map pour l'affichage
 			category,
 			database,
-			schema
+			schema,
+			columns
 		};
 	});
 	return tables;
