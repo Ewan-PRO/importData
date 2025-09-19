@@ -16,7 +16,8 @@
 		Check,
 		X,
 		CircleArrowLeft,
-		CircleCheck
+		CircleCheck,
+		CirclePlus
 	} from 'lucide-svelte';
 	import type { UserInfoResponse } from '@logto/node';
 	import type { SuperValidated } from 'sveltekit-superforms';
@@ -865,7 +866,10 @@
 						{/if}
 
 						<div class="text-center">
-							<Button variant="bleu" onclick={resetImport}>Nouvelle importation</Button>
+							<Button variant="bleu" onclick={resetImport}>
+								<CirclePlus class="mr-2 h-4 w-4" />
+								Nouvelle importation
+							</Button>
 						</div>
 					</div>
 				{/if}
