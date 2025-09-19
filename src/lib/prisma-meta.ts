@@ -623,7 +623,27 @@ export async function getImportableTables(): Promise<TableInfo[]> {
 	const allTables = await getAllDatabaseTables();
 
 	// Filtrer pour garder seulement les tables (pas les vues en lecture seule)
-	return allTables.filter((table) => table.category === 'table');
+	const importableTables = allTables.filter((table) => table.category === 'table');
+
+	// Ajouter le comptage des lignes comme dans l'export
+	const tablesWithCounts = await Promise.all(
+		importableTables.map(async (table) => {
+			try {
+				const count = await countTableRows(table.database, table.name);
+				return {
+					...table,
+					rowCount: count
+				};
+			} catch {
+				return {
+					...table,
+					rowCount: 0
+				};
+			}
+		})
+	);
+
+	return tablesWithCounts;
 }
 
 // Obtenir les champs disponibles pour les tables importables (côté serveur uniquement)

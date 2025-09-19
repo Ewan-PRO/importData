@@ -644,7 +644,9 @@
 						</div>
 					</div>
 
-					<h3 class="mb-2 font-medium text-black">Aperçu des données importées du fichier :</h3>
+					<h3 class="mb-2 font-medium text-black">
+						Aperçu des données importées du fichier {fileName} :
+					</h3>
 					<div class="mb-6 overflow-x-auto">
 						<Table.Root variant="striped">
 							<Table.Header>
