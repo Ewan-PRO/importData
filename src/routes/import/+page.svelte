@@ -9,6 +9,7 @@
 	import * as Table from '$lib/components/ui/table';
 	import { Badge } from '$lib/components/ui/badge';
 	import TableSelector from '$lib/components/TableSelector.svelte';
+	import { toast } from 'svelte-sonner';
 	import {
 		Upload,
 		FileCheck,
@@ -28,8 +29,21 @@
 
 	export let data: {
 		user: UserInfoResponse | undefined;
-		form: SuperValidated<{ data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[]; }, any, { data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[]; }>;
-		availableTables: { value: string; name: string; displayName?: string; category: string; tableType?: string; database?: string; rowCount?: number; columns?: any[]; }[];
+		form: SuperValidated<
+			{ data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[] },
+			any,
+			{ data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[] }
+		>;
+		availableTables: {
+			value: string;
+			name: string;
+			displayName?: string;
+			category: string;
+			tableType?: string;
+			database?: string;
+			rowCount?: number;
+			columns?: any[];
+		}[];
 		tableFields: Record<string, string[]>;
 		tableRequiredFields: Record<string, string[]>;
 	};
@@ -353,8 +367,15 @@
 		} as any;
 	}
 
+	function formatNumber(num: number): string {
+		return new Intl.NumberFormat('fr-FR').format(num);
+	}
+
 	// Fonction utilitaire pour parser le format "database:tableName" côté client
-	function parseTableIdentifierClient(tableIdentifier: string): { database: string; tableName: string } {
+	function parseTableIdentifierClient(tableIdentifier: string): {
+		database: string;
+		tableName: string;
+	} {
 		const [database, tableName] = tableIdentifier.split(':');
 		return { database, tableName };
 	}
@@ -577,8 +598,6 @@
 		{:else if step === 2}
 			<form method="POST" action="?/validate" use:superEnhance>
 				<div class="mb-6">
-					<h2 class="mb-4 text-xl font-semibold">Mappage des colonnes</h2>
-
 					{#if showNoHeaderAlert}
 						<div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
 							<div class="flex items-center">
@@ -596,32 +615,36 @@
 
 					<!-- Nouveau composant TableSelector -->
 					<TableSelector
-						bind:availableTables={availableTables}
-						bind:selectedTables={selectedTables}
-						bind:totalTables={totalTables}
-						bind:totalRows={totalRows}
-						bind:filteredCount={filteredCount}
-						title="Tables de destination"
+						bind:availableTables
+						bind:selectedTables
+						bind:totalTables
+						bind:totalRows
+						bind:filteredCount
+						title="Tables de destination :"
 						on:selectionChange={handleTableChange}
 					/>
 
-					{#if selectedTables.length === 0}
-						<p class="mt-2 text-sm text-red-600">
-							Veuillez sélectionner au moins une table de destination.
-						</p>
-					{:else}
-						<p class="mt-2 text-sm text-gray-600">
-							{selectedTables.length} table(s) sélectionnée(s): {selectedTables
-								.map((t: string) => {
-									const table = availableTables.find((at: { value: string; name: string; displayName?: string; category: string; }) => at.value === t);
-									return table?.displayName || table?.name;
-								})
-								.filter(name => name) // Filtrer les undefined
-								.join(', ')}
-						</p>
-					{/if}
+					<!-- Champs requis -->
+					<div class="mb-6">
+						<h3 class="mb-2 font-medium text-black">Champs requis :</h3>
+						<div class="flex flex-wrap gap-2">
+							{#each requiredFields as field}
+								{@const fieldMapped = isFieldMapped(field)}
+								<div
+									class={`rounded-full px-3 py-1 text-sm font-medium ${fieldMapped ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+								>
+									{#if fieldMapped}
+										<Check class="mr-1 inline h-4 w-4" />
+									{:else}
+										<X class="mr-1 inline h-4 w-4" />
+									{/if}
+									{field}
+								</div>
+							{/each}
+						</div>
+					</div>
 
-					<h3 class="mb-2 font-medium">Aperçu des données</h3>
+					<h3 class="mb-2 font-medium text-black">Aperçu des données importées du fichier :</h3>
 					<div class="mb-6 overflow-x-auto">
 						<Table.Root variant="striped">
 							<Table.Header>
@@ -674,26 +697,6 @@
 								{/each}
 							</Table.Body>
 						</Table.Root>
-					</div>
-
-					<!-- Champs requis -->
-					<div class="mb-6">
-						<h3 class="mb-2 font-medium">Champs requis</h3>
-						<div class="flex flex-wrap gap-2">
-							{#each requiredFields as field}
-								{@const fieldMapped = isFieldMapped(field)}
-								<div
-									class={`rounded-full px-3 py-1 text-sm font-medium ${fieldMapped ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
-								>
-									{#if fieldMapped}
-										<Check class="mr-1 inline h-4 w-4" />
-									{:else}
-										<X class="mr-1 inline h-4 w-4" />
-									{/if}
-									{field}
-								</div>
-							{/each}
-						</div>
 					</div>
 
 					<!-- Champs cachés pour le formulaire -->
@@ -752,7 +755,10 @@
 							<div class="space-y-2">
 								{#each selectedTables as table}
 									{@const tableResult = validationResults.resultsByTable[table]}
-									{@const tableName = availableTables.find((t: { value: string; name: string; category: string; }) => t.value === table)?.name || table}
+									{@const tableName =
+										availableTables.find(
+											(t: { value: string; name: string; category: string }) => t.value === table
+										)?.name || table}
 									{#if tableResult}
 										<div class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
 											<span class="font-medium">{tableName}</span>
@@ -854,7 +860,10 @@
 							<div class="mb-4 space-y-3">
 								{#each selectedTables as table}
 									{@const tableResult = validationResults.resultsByTable[table]}
-									{@const tableName = availableTables.find((t: { value: string; name: string; category: string; }) => t.value === table)?.name || table}
+									{@const tableName =
+										availableTables.find(
+											(t: { value: string; name: string; category: string }) => t.value === table
+										)?.name || table}
 									{#if tableResult && tableResult.inserted > 0}
 										<div
 											class="flex items-center justify-between rounded-lg border border-green-200 bg-white p-3"
@@ -872,7 +881,12 @@
 							<p class="mb-4 text-center">
 								{validationResults.inserted || validationResults.validRows} lignes ont été importées
 								dans la table : {selectedTables
-									.map((t: string) => availableTables.find((at: { value: string; name: string; category: string; }) => at.value === t)?.name)
+									.map(
+										(t: string) =>
+											availableTables.find(
+												(at: { value: string; name: string; category: string }) => at.value === t
+											)?.name
+									)
 									.join(', ')}.
 								{#if validationResults.inserted && validationResults.updated}
 									({validationResults.inserted} insertions et {validationResults.updated} mises à jour)

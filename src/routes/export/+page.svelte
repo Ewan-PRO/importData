@@ -469,12 +469,6 @@
 
 	// Validation des données avant de passer à l'étape suivante
 	function validateAndNext() {
-		if ($form.selectedTables.length === 0) {
-			toast.error('Aucune table sélectionnée', {
-				description: 'Veuillez sélectionner au moins une table à exporter.'
-			});
-			return;
-		}
 		if (!$form.format) {
 			toast.error('Format non sélectionné', {
 				description: "Veuillez sélectionner un format d'export."
@@ -957,7 +951,7 @@
 				</div>
 
 				<div class="flex justify-center gap-4">
-					<Button variant="bleu" onclick={validateAndNext}>
+					<Button variant="bleu" onclick={validateAndNext} disabled={$form.selectedTables.length === 0 || !$form.format}>
 						Continuer
 						<CircleArrowRight class="ml-2 h-4 w-4" />
 					</Button>

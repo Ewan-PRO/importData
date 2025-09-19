@@ -5,6 +5,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
 	import * as Table from '$lib/components/ui/table';
+	import { toast } from 'svelte-sonner';
 	import {
 		Database,
 		Package,
@@ -349,7 +350,29 @@
 							type="checkbox"
 							bind:group={selectedTables}
 							value={table.value}
-							on:change={() => dispatch('selectionChange')}
+							on:change={() => {
+								// Toast info quand on sélectionne/désélectionne une table
+								const tableId = table.value;
+								const isSelected = selectedTables.includes(tableId);
+								const tableType = table.tableType === 'view' ? 'vue' : 'table';
+
+								if (isSelected) {
+									toast.info(
+										`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} sélectionnée`,
+										{
+											description: `${table.displayName || table.name} (${formatNumber(table.rowCount || 0)} lignes)`
+										}
+									);
+								} else {
+									toast.info(
+										`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} désélectionnée`,
+										{
+											description: table.displayName || table.name
+										}
+									);
+								}
+								dispatch('selectionChange');
+							}}
 							class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 						/>
 
