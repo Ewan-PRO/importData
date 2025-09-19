@@ -145,39 +145,6 @@
 
 <div class="w-full">
 	<div class="mb-6">
-		<!-- Cards statistiques au-dessus du titre -->
-		<Card class="mb-6 w-full max-w-none">
-			<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-				<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
-					<div class="flex items-center justify-between">
-						<div>
-							<div class="text-2xl font-bold text-blue-600">{totalTables}</div>
-							<div class="text-sm text-blue-800">Sources disponibles</div>
-						</div>
-						<Database class="h-8 w-8 text-blue-500" />
-					</div>
-				</div>
-				<div class="rounded-lg border border-green-200 bg-green-50 p-4">
-					<div class="flex items-center justify-between">
-						<div>
-							<div class="text-2xl font-bold text-green-600">{formatNumber(totalRows)}</div>
-							<div class="text-sm text-green-800">Lignes totales</div>
-						</div>
-						<CheckCircle class="h-8 w-8 text-green-500" />
-					</div>
-				</div>
-				<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
-					<div class="flex items-center justify-between">
-						<div>
-							<div class="text-2xl font-bold text-purple-600">{filteredCount}</div>
-							<div class="text-sm text-purple-800">Sources filtrées</div>
-						</div>
-						<CheckCircle class="h-8 w-8 text-purple-500" />
-					</div>
-				</div>
-			</div>
-		</Card>
-
 		<h2 class="mb-4 text-xl font-bold text-black">{title}</h2>
 
 		<!-- Cards de filtres -->

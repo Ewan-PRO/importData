@@ -19,7 +19,9 @@
 		X,
 		CircleArrowLeft,
 		CircleCheck,
-		CirclePlus
+		CirclePlus,
+		Database,
+		CheckCircle
 	} from 'lucide-svelte';
 	import type { UserInfoResponse } from '@logto/node';
 	import type { SuperValidated } from 'sveltekit-superforms';
@@ -481,6 +483,39 @@
 		</div>
 	</Card>
 
+	<!-- Card Statistiques -->
+	<Card class="mb-6 w-full max-w-none">
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+			<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
+				<div class="flex items-center justify-between">
+					<div>
+						<div class="text-2xl font-bold text-blue-600">{totalTables}</div>
+						<div class="text-sm text-blue-800">Sources disponibles</div>
+					</div>
+					<Database class="h-8 w-8 text-blue-500" />
+				</div>
+			</div>
+			<div class="rounded-lg border border-green-200 bg-green-50 p-4">
+				<div class="flex items-center justify-between">
+					<div>
+						<div class="text-2xl font-bold text-green-600">{totalRows}</div>
+						<div class="text-sm text-green-800">Lignes totales</div>
+					</div>
+					<CheckCircle class="h-8 w-8 text-green-500" />
+				</div>
+			</div>
+			<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
+				<div class="flex items-center justify-between">
+					<div>
+						<div class="text-2xl font-bold text-purple-600">{filteredCount}</div>
+						<div class="text-sm text-purple-800">Sources filtrées</div>
+					</div>
+					<CheckCircle class="h-8 w-8 text-purple-500" />
+				</div>
+			</div>
+		</div>
+	</Card>
+
 	<Card class="mx-auto w-full max-w-6xl">
 		{#if step === 1}
 			<div class="mb-6">
@@ -563,6 +598,9 @@
 					<TableSelector
 						bind:availableTables={availableTables}
 						bind:selectedTables={selectedTables}
+						bind:totalTables={totalTables}
+						bind:totalRows={totalRows}
+						bind:filteredCount={filteredCount}
 						title="Tables de destination"
 						on:selectionChange={handleTableChange}
 					/>
