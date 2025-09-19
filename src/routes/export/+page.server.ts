@@ -15,7 +15,7 @@ import { extractTableData, getValidFormats, type SharedExportData } from './shar
 
 // Types pour l'export
 export interface ExportConfig {
-	selectedTables: string[];
+	selectedSources: string[];
 	format: 'xlsx' | 'csv' | 'xml' | 'json';
 	includeRelations: boolean;
 	rowLimit?: number;
@@ -43,7 +43,7 @@ export interface ExportResult {
 
 // Schéma de validation pour l'export
 const exportSchema = z.object({
-	selectedTables: z.array(z.string()).min(1, 'Sélectionnez au moins une table'),
+	selectedSources: z.array(z.string()).min(1, 'Sélectionnez au moins une source'),
 	format: z.enum(getValidFormats() as [string, ...string[]], {
 		errorMap: () => ({ message: 'Format non supporté' })
 	}),
@@ -115,7 +115,7 @@ export const load = (async (event) => {
 		const form = await superValidate(zod(exportSchema));
 
 		form.data = {
-			selectedTables: [],
+			selectedSources: [],
 			format: 'csv',
 			includeRelations: false,
 			filters: {},
@@ -148,11 +148,11 @@ export const actions: Actions = {
 		}
 
 		try {
-			const { selectedTables } = form.data;
+			const { selectedSources } = form.data;
 			const previewData: Record<string, unknown[]> = {};
 
 			// Récupérer un aperçu des données pour chaque table sélectionnée
-			for (const tableId of selectedTables) {
+			for (const tableId of selectedSources) {
 				try {
 					const tableData: SharedExportData = await extractTableData(tableId, {
 						limit: 6,

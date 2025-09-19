@@ -82,7 +82,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		const config: ExportConfig = await request.json();
 
 		// Validation des données
-		if (!config.selectedTables || config.selectedTables.length === 0) {
+		if (!config.selectedSources || config.selectedSources.length === 0) {
 			throw error(400, "Aucune table sélectionnée pour l'export");
 		}
 
@@ -97,7 +97,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		const errors: string[] = [];
 		let totalExportedRows = 0;
 
-		for (const tableId of config.selectedTables) {
+		for (const tableId of config.selectedSources) {
 			try {
 				const sharedTableData = await sharedExtractTableData(tableId, {
 					limit: config.rowLimit,

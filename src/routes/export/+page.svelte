@@ -120,7 +120,7 @@
 		console.log('📋 [CLIENT] Config sauvegardée:', savedExportConfig);
 		console.log('📋 [CLIENT] Formulaire avant sync:', { ...$form });
 
-		$form.selectedTables = savedExportConfig.selectedTables;
+		$form.selectedSources = savedExportConfig.selectedSources;
 		$form.format = savedExportConfig.format;
 		$form.includeHeaders = savedExportConfig.includeHeaders;
 		$form.rowLimit = savedExportConfig.rowLimit;
@@ -287,16 +287,16 @@
 	function toggleAllTables() {
 		const filteredTableIds = filteredTables.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
 		const selectedFilteredCount = filteredTableIds.filter((id) =>
-			$form.selectedTables.includes(id)
+			$form.selectedSources.includes(id)
 		).length;
 
 		if (selectedFilteredCount === filteredTables.length) {
 			// Désélectionner toutes les tables filtrées
-			$form.selectedTables = $form.selectedTables.filter((id) => !filteredTableIds.includes(id));
+			$form.selectedSources = $form.selectedSources.filter((id) => !filteredTableIds.includes(id));
 		} else {
 			// Sélectionner toutes les tables visibles
-			const newSelection = [...new Set([...$form.selectedTables, ...filteredTableIds])];
-			$form.selectedTables = newSelection;
+			const newSelection = [...new Set([...$form.selectedSources, ...filteredTableIds])];
+			$form.selectedSources = newSelection;
 		}
 	}
 
@@ -305,7 +305,7 @@
 		const tablesInCategory = data.tables
 			.filter((t: ExportTableInfo) => category === 'all' || t.category === category)
 			.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
-		$form.selectedTables = tablesInCategory;
+		$form.selectedSources = tablesInCategory;
 	}
 
 	// Fonction pour basculer la sélection d'une catégorie (avec filtre BDD optionnel)
@@ -321,15 +321,15 @@
 
 		const tableIds = tablesInCategory.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
 
-		const isAllSelected = tableIds.every((tableId) => $form.selectedTables.includes(tableId));
+		const isAllSelected = tableIds.every((tableId) => $form.selectedSources.includes(tableId));
 
 		if (isAllSelected) {
 			// Désélectionner toutes les tables de cette catégorie
-			$form.selectedTables = $form.selectedTables.filter((id) => !tableIds.includes(id));
+			$form.selectedSources = $form.selectedSources.filter((id) => !tableIds.includes(id));
 		} else {
 			// Sélectionner toutes les tables de cette catégorie
-			const newSelection = [...new Set([...$form.selectedTables, ...tableIds])];
-			$form.selectedTables = newSelection;
+			const newSelection = [...new Set([...$form.selectedSources, ...tableIds])];
+			$form.selectedSources = newSelection;
 		}
 	}
 
@@ -346,15 +346,15 @@
 
 		const tableIds = tablesInDatabase.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
 
-		const isAllSelected = tableIds.every((tableId) => $form.selectedTables.includes(tableId));
+		const isAllSelected = tableIds.every((tableId) => $form.selectedSources.includes(tableId));
 
 		if (isAllSelected) {
 			// Désélectionner toutes les tables de cette base
-			$form.selectedTables = $form.selectedTables.filter((id) => !tableIds.includes(id));
+			$form.selectedSources = $form.selectedSources.filter((id) => !tableIds.includes(id));
 		} else {
 			// Sélectionner toutes les tables de cette base
-			const newSelection = [...new Set([...$form.selectedTables, ...tableIds])];
-			$form.selectedTables = newSelection;
+			const newSelection = [...new Set([...$form.selectedSources, ...tableIds])];
+			$form.selectedSources = newSelection;
 		}
 	}
 
@@ -363,15 +363,15 @@
 		const tablesInSchema = data.tables.filter((t: ExportTableInfo) => t.schema === schema);
 		const tableIds = tablesInSchema.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
 
-		const isAllSelected = tableIds.every((tableId) => $form.selectedTables.includes(tableId));
+		const isAllSelected = tableIds.every((tableId) => $form.selectedSources.includes(tableId));
 
 		if (isAllSelected) {
 			// Désélectionner toutes les tables de ce schéma
-			$form.selectedTables = $form.selectedTables.filter((id) => !tableIds.includes(id));
+			$form.selectedSources = $form.selectedSources.filter((id) => !tableIds.includes(id));
 		} else {
 			// Sélectionner toutes les tables de ce schéma
-			const newSelection = [...new Set([...$form.selectedTables, ...tableIds])];
-			$form.selectedTables = newSelection;
+			const newSelection = [...new Set([...$form.selectedSources, ...tableIds])];
+			$form.selectedSources = newSelection;
 		}
 	}
 
@@ -382,13 +382,13 @@
 		);
 		const tableIds = tablesInSchema.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
 
-		const isAllSelected = tableIds.every((tableId) => $form.selectedTables.includes(tableId));
+		const isAllSelected = tableIds.every((tableId) => $form.selectedSources.includes(tableId));
 
 		if (isAllSelected) {
-			$form.selectedTables = $form.selectedTables.filter((id) => !tableIds.includes(id));
+			$form.selectedSources = $form.selectedSources.filter((id) => !tableIds.includes(id));
 		} else {
-			const newSelection = [...new Set([...$form.selectedTables, ...tableIds])];
-			$form.selectedTables = newSelection;
+			const newSelection = [...new Set([...$form.selectedSources, ...tableIds])];
+			$form.selectedSources = newSelection;
 		}
 	}
 
@@ -399,13 +399,13 @@
 		);
 		const tableIds = tablesInSchema.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
 
-		const isAllSelected = tableIds.every((tableId) => $form.selectedTables.includes(tableId));
+		const isAllSelected = tableIds.every((tableId) => $form.selectedSources.includes(tableId));
 
 		if (isAllSelected) {
-			$form.selectedTables = $form.selectedTables.filter((id) => !tableIds.includes(id));
+			$form.selectedSources = $form.selectedSources.filter((id) => !tableIds.includes(id));
 		} else {
-			const newSelection = [...new Set([...$form.selectedTables, ...tableIds])];
-			$form.selectedTables = newSelection;
+			const newSelection = [...new Set([...$form.selectedSources, ...tableIds])];
+			$form.selectedSources = newSelection;
 		}
 	}
 
@@ -727,27 +727,27 @@
 									type="checkbox"
 									checked={filteredTables.length > 0 &&
 										filteredTables.every((table: ExportTableInfo) =>
-											$form.selectedTables.includes(`${table.database}-${table.name}`)
+											$form.selectedSources.includes(`${table.database}-${table.name}`)
 										)}
 									onchange={() => {
 										const filteredTableIds = filteredTables.map(
 											(t: ExportTableInfo) => `${t.database}-${t.name}`
 										);
 										const selectedFilteredCount = filteredTableIds.filter((id) =>
-											$form.selectedTables.includes(id)
+											$form.selectedSources.includes(id)
 										).length;
 
 										if (selectedFilteredCount === filteredTables.length) {
 											// Désélectionner toutes les tables filtrées
-											$form.selectedTables = $form.selectedTables.filter(
+											$form.selectedSources = $form.selectedSources.filter(
 												(id) => !filteredTableIds.includes(id)
 											);
 										} else {
 											// Sélectionner toutes les tables visibles
 											const newSelection = [
-												...new Set([...$form.selectedTables, ...filteredTableIds])
+												...new Set([...$form.selectedSources, ...filteredTableIds])
 											];
-											$form.selectedTables = newSelection;
+											$form.selectedSources = newSelection;
 										}
 									}}
 									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -803,12 +803,12 @@
 							>
 								<input
 									type="checkbox"
-									bind:group={$form.selectedTables}
+									bind:group={$form.selectedSources}
 									value={`${table.database}-${table.name}`}
 									onchange={() => {
 										// Toast info quand on sélectionne/désélectionne une table
 										const tableId = `${table.database}-${table.name}`;
-										const isSelected = $form.selectedTables.includes(tableId);
+										const isSelected = $form.selectedSources.includes(tableId);
 										const tableType = table.category === 'view' ? 'vue' : 'table';
 
 										if (isSelected) {
@@ -951,7 +951,7 @@
 				</div>
 
 				<div class="flex justify-center gap-4">
-					<Button variant="bleu" onclick={validateAndNext} disabled={$form.selectedTables.length === 0 || !$form.format}>
+					<Button variant="bleu" onclick={validateAndNext} disabled={$form.selectedSources.length === 0 || !$form.format}>
 						Continuer
 						<CircleArrowRight class="ml-2 h-4 w-4" />
 					</Button>
@@ -1002,7 +1002,7 @@
 					</div>
 
 					<!-- Champs cachés -->
-					<input type="hidden" name="selectedTables" value={JSON.stringify($form.selectedTables)} />
+					<input type="hidden" name="selectedSources" value={JSON.stringify($form.selectedSources)} />
 					<input type="hidden" name="format" value={$form.format} />
 					<input type="hidden" name="includeHeaders" value={$form.includeHeaders} />
 					<input type="hidden" name="rowLimit" value={$form.rowLimit} />
