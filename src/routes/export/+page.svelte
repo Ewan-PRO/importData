@@ -761,6 +761,7 @@
 									selectedType = 'all';
 									selectedDatabase = 'all';
 									selectedSchema = 'all';
+									searchTerm = '';
 								}}
 							>
 								<RefreshCcw class="mr-2 h-4 w-4" />
