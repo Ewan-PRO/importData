@@ -780,7 +780,8 @@ export const load: ServerLoad = async (event) => {
 			value: `${table.database}:${table.name}`, // Inclure database pour unicité
 			name: table.displayName,
 			displayName: table.displayName,
-			category: getCategoryFromTable(table),
+			category: getCategoryFromTable(table), // produit/public (schéma)
+			tableType: table.category, // table/view (type réel)
 			database: table.database,
 			rowCount: table.rowCount,
 			columns: table.columns

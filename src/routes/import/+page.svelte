@@ -27,7 +27,7 @@
 	export let data: {
 		user: UserInfoResponse | undefined;
 		form: SuperValidated<{ data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[]; }, any, { data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[]; }>;
-		availableTables: { value: string; name: string; displayName?: string; category: string; }[];
+		availableTables: { value: string; name: string; displayName?: string; category: string; tableType?: string; database?: string; rowCount?: number; columns?: any[]; }[];
 		tableFields: Record<string, string[]>;
 		tableRequiredFields: Record<string, string[]>;
 	};
@@ -117,6 +117,11 @@
 	let mappedFields: Record<string, string> = {};
 	let hasHeaders = true; // Détection automatique
 	let showNoHeaderAlert = false; // Nouvelle variable pour l'alerte
+
+	// Variables pour récupérer les statistiques depuis TableSelector
+	let totalTables = 0;
+	let totalRows = 0;
+	let filteredCount = 0;
 
 	// Données provenant du serveur via DMMF (remplace le hardcodage)
 	$: availableTables = data.availableTables || [];

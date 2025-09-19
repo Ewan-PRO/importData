@@ -20,10 +20,14 @@
 	} from 'lucide-svelte';
 
 	// Props
-	export let availableTables: { value: string; name: string; displayName?: string; category: string; database?: string; rowCount?: number; columns?: any[] }[] = [];
+	export let availableTables: { value: string; name: string; displayName?: string; category: string; tableType?: string; database?: string; rowCount?: number; columns?: any[] }[] = [];
 	export let selectedTables: string[] = [];
 	export const mode: 'export' | 'import' = 'import';
 	export let title: string = 'Sélection des tables';
+	// Props exportés pour les statistiques
+	export let totalTables: number = 0;
+	export let totalRows: number = 0;
+	export let filteredCount: number = 0;
 
 	// Events
 	import { createEventDispatcher } from 'svelte';
@@ -54,8 +58,8 @@
 	$: filteredTables = availableTables.filter((table) => {
 		const matchesType =
 			selectedType === 'all' ||
-			(selectedType === 'tables' && !table.value.includes('v_')) ||
-			(selectedType === 'views' && table.value.includes('v_'));
+			(selectedType === 'tables' && (table.tableType === 'table' || !table.tableType)) ||
+			(selectedType === 'views' && table.tableType === 'view');
 
 		const tableDatabase = table.database || (table.value.includes('cenov_dev:') ? 'cenov_dev' : 'cenov');
 		const matchesDB = selectedDatabase === 'all' || tableDatabase === selectedDatabase;
@@ -70,7 +74,7 @@
 		return matchesType && matchesDB && matchesSchema && matchesSearch;
 	});
 
-	// Statistiques
+	// Statistiques - assignation automatique aux props exportés
 	$: totalTables = availableTables.length;
 	$: totalRows = availableTables.reduce((sum, table) => {
 		// Si rowCount n'existe pas, essayer de calculer à partir des données disponibles
@@ -118,11 +122,11 @@
 	}
 
 	function getTableIcon(table: any) {
-		return table.value.includes('v_') ? Eye : TableIcon;
+		return table.tableType === 'view' ? Eye : TableIcon;
 	}
 
 	function getBadgeVariant(table: any) {
-		return table.value.includes('v_') ? 'vert' : 'noir';
+		return table.tableType === 'view' ? 'vert' : 'noir';
 	}
 
 	function getDatabaseBadgeInfo(database: string) {
@@ -141,9 +145,7 @@
 
 <div class="w-full">
 	<div class="mb-6">
-		<h2 class="mb-4 text-xl font-bold text-black">{title}</h2>
-
-		<!-- Cards statistiques dans une card blanche séparée -->
+		<!-- Cards statistiques au-dessus du titre -->
 		<Card class="mb-6 w-full max-w-none">
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 				<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
@@ -175,6 +177,8 @@
 				</div>
 			</div>
 		</Card>
+
+		<h2 class="mb-4 text-xl font-bold text-black">{title}</h2>
 
 		<!-- Cards de filtres -->
 		<div class="mb-6 space-y-4">
@@ -211,7 +215,7 @@
 							/>
 							<span class="text-sm text-gray-900">
 								<TableIcon class="mr-1 inline h-4 w-4" />
-								Tables ({filteredTables.filter(t => !t.value.includes('v_')).length})
+								Tables ({filteredTables.filter(t => t.tableType === 'table' || !t.tableType).length})
 							</span>
 						</label>
 						<label class="flex cursor-pointer items-center space-x-2">
@@ -225,7 +229,7 @@
 							/>
 							<span class="text-sm text-gray-900">
 								<Eye class="mr-1 inline h-4 w-4" />
-								Vues ({filteredTables.filter(t => t.value.includes('v_')).length})
+								Vues ({filteredTables.filter(t => t.tableType === 'view').length})
 							</span>
 						</label>
 					</div>
@@ -361,12 +365,6 @@
 					<div class="flex items-center justify-center gap-1 text-sm text-purple-800">
 						<CheckCircle class="h-4 w-4" />
 						<span class="font-semibold">{selectedTables.length}</span> sélectionnées
-						{#if selectedTables.length > 0}
-							<Button variant="blanc" size="sm" onclick={resetSelection} class="ml-2">
-								<RefreshCcw class="mr-1 h-3 w-3" />
-								Reset
-							</Button>
-						{/if}
 					</div>
 				</div>
 			</div>
@@ -397,7 +395,7 @@
 										<div class="flex items-center gap-2">
 											<span class="font-medium">{table.displayName || table.name}</span>
 											<Badge variant={getBadgeVariant(table)}>
-												{#if table.value.includes('v_')}
+												{#if table.tableType === 'view'}
 													<Eye />
 													Vue
 												{:else}
@@ -433,7 +431,7 @@
 										</div>
 										<div class="mt-2 flex flex-wrap gap-1">
 											<Badge variant={getBadgeVariant(table)}>
-												{#if table.value.includes('v_')}
+												{#if table.tableType === 'view'}
 													<Eye />
 													Vue
 												{:else}
