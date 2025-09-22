@@ -65,7 +65,6 @@ interface InsertionOptions {
 
 interface InsertionResult {
 	inserted: number;
-	updated: number;
 	errors: string[];
 }
 
@@ -516,7 +515,6 @@ async function insertValidatedData(
 	const { useTransaction = false, prismaClient } = options;
 
 	let insertedCount = 0;
-	let updatedCount = 0;
 	const errors: string[] = [];
 
 	try {
@@ -529,7 +527,6 @@ async function insertValidatedData(
 				for (const table of config.selectedTables) {
 					const result = await processTableData(config, table, validRowsSet);
 					insertedCount += result.inserted;
-					updatedCount += result.updated;
 					errors.push(...result.errors);
 				}
 			});
@@ -538,7 +535,6 @@ async function insertValidatedData(
 			const table = config.targetTable || config.selectedTables[0];
 			const result = await processTableData(config, table, validRowsSet);
 			insertedCount = result.inserted;
-			updatedCount = result.updated;
 			errors.push(...result.errors);
 		}
 	} catch (err) {
@@ -547,7 +543,6 @@ async function insertValidatedData(
 
 	return {
 		inserted: insertedCount,
-		updated: updatedCount,
 		errors
 	};
 }
@@ -595,7 +590,7 @@ async function processTableData(
 		}
 	}
 
-	return { inserted, updated: 0, errors };
+	return { inserted, errors };
 }
 
 // ========== FONCTIONS UTILITAIRES COMMUNES ==========
@@ -721,7 +716,7 @@ export const actions: Actions = {
 				...validationResult,
 				processed: true,
 				inserted: insertResult.inserted,
-				updated: insertResult.updated,
+				updated: 0,
 				errors: insertResult.errors
 			};
 

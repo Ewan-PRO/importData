@@ -34,11 +34,22 @@
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
 	import { getAllDatabaseNames, type DatabaseName } from '$lib/prisma-meta.js';
-	import {
-		getExportFormats,
-		formatNumber,
-		formatFileSize
-	} from './shared.js';
+
+	// Fonctions utilitaires locales (pour les cas non couverts par le serveur)
+	function formatNumber(num: number): string {
+		return new Intl.NumberFormat('fr-FR').format(num);
+	}
+
+	function formatFileSize(bytes: number): string {
+		const units = ['B', 'KB', 'MB', 'GB'];
+		let size = bytes;
+		let unitIndex = 0;
+		while (size >= 1024 && unitIndex < units.length - 1) {
+			size /= 1024;
+			unitIndex++;
+		}
+		return `${size.toFixed(1)} ${units[unitIndex]}`;
+	}
 
 	export let data;
 
@@ -60,7 +71,9 @@
 				if ('result' in form.data) {
 					console.log("📦 [CLIENT] Résultat d'export reçu:", form.data.result);
 					const result = form.data.result as ExportResult;
-					handleExportResult(result);
+					const fileData = (form.data as any).fileData;
+					console.log('📁 [CLIENT] fileData reçu:', fileData);
+					handleExportResult(result, fileData);
 				}
 				if ('preview' in form.data) {
 					console.log("👀 [CLIENT] Données d'aperçu reçues");
@@ -77,7 +90,9 @@
 				if ('result' in result.data) {
 					console.log("📦 [CLIENT] Résultat d'export dans onResult:", result.data.result);
 					const exportResult = result.data.result as ExportResult;
-					handleExportResult(exportResult);
+					const fileData = (result.data as any).fileData;
+					console.log('📁 [CLIENT] fileData dans onResult:', fileData);
+					handleExportResult(exportResult, fileData);
 				}
 				if ('preview' in result.data) {
 					console.log('👀 [CLIENT] Aperçu dans onResult');
@@ -174,8 +189,8 @@
 		}))
 	];
 
-	// Formats d'export (depuis shared.ts pour éliminer duplication)
-	const exportFormats = getExportFormats().map(format => ({
+	// Formats d'export (depuis les données du serveur)
+	const exportFormats = data.exportFormats.map((format) => ({
 		...format,
 		icon: format.value === 'xlsx' ? FileSpreadsheet : FileText
 	}));
@@ -215,16 +230,16 @@
 	}
 
 	// Gestion des résultats d'export
-	function handleExportResult(result: ExportResult) {
+	function handleExportResult(result: ExportResult, fileData?: any) {
 		console.log('🎯 [CLIENT] handleExportResult appelé avec:', result);
 		exportResult = result;
 		if (result.success) {
 			console.log('✅ [CLIENT] Export réussi, affichage du message de succès');
 
-			// Si un téléchargement client est nécessaire
-			if (result.needsClientDownload && result.downloadUrl) {
-				console.log('📁 [CLIENT] Déclenchement du téléchargement client:', result.downloadUrl);
-				triggerClientDownload(result);
+			// Téléchargement direct avec les données base64
+			if (fileData) {
+				console.log('📁 [CLIENT] Déclenchement du téléchargement direct depuis fileData');
+				triggerDirectDownload(fileData);
 			}
 
 			Alert.alertActions.success(result.message);
@@ -235,50 +250,38 @@
 		}
 	}
 
-	// Fonction pour déclencher le téléchargement côté client
-	async function triggerClientDownload(result: ExportResult) {
+	// Fonction pour déclencher le téléchargement direct depuis les données base64
+	function triggerDirectDownload(fileData: any) {
 		try {
-			console.log('🌐 [CLIENT] Lancement requête de téléchargement');
-			console.log('📋 [CLIENT] Configuration actuelle du formulaire:', $form);
+			console.log('📁 [CLIENT] Déclenchement téléchargement direct avec fileData:', fileData);
 
-			const exportData = {
-				...$form,
-				...(previewConfig && { includeHeaders: previewConfig.includeHeaders })
-			};
-
-			const response = await fetch('/export/api', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(exportData)
-			});
-
-			if (!response.ok) {
-				console.error('❌ [CLIENT] Erreur de téléchargement:', response.status);
-				Alert.alertActions.error('Erreur lors du téléchargement du fichier');
-				return;
+			// Décoder le base64 en ArrayBuffer
+			const binaryString = atob(fileData.content);
+			const bytes = new Uint8Array(binaryString.length);
+			for (let i = 0; i < binaryString.length; i++) {
+				bytes[i] = binaryString.charCodeAt(i);
 			}
 
-			console.log('📄 [CLIENT] Réponse téléchargement reçue, création du blob');
-
-			// Créer un blob et déclencher le téléchargement
-			const blob = await response.blob();
+			// Créer un blob avec le bon MIME type
+			const blob = new Blob([bytes], { type: fileData.mimeType });
 			const url = window.URL.createObjectURL(blob);
+
+			// Créer le lien de téléchargement
 			const link = document.createElement('a');
 			link.href = url;
-			link.download = result.fileName || 'export.xlsx';
+			link.download = fileData.fileName;
 			document.body.appendChild(link);
 
-			console.log('⬇️ [CLIENT] Déclenchement du téléchargement:', result.fileName);
+			console.log('⬇️ [CLIENT] Déclenchement du téléchargement:', fileData.fileName);
 			link.click();
 
+			// Nettoyage
 			document.body.removeChild(link);
 			window.URL.revokeObjectURL(url);
 
-			console.log('✅ [CLIENT] Téléchargement terminé avec succès');
+			console.log('✅ [CLIENT] Téléchargement direct terminé avec succès');
 		} catch (err) {
-			console.error('❌ [CLIENT] Erreur téléchargement client:', err);
+			console.error('❌ [CLIENT] Erreur téléchargement direct:', err);
 			Alert.alertActions.error('Erreur lors du téléchargement du fichier');
 		}
 	}
@@ -550,7 +553,7 @@
 			<div class="rounded-lg border border-green-200 bg-green-50 p-4">
 				<div class="flex items-center justify-between">
 					<div>
-						<div class="text-2xl font-bold text-green-600">{formatNumber(data.totalRows)}</div>
+						<div class="text-2xl font-bold text-green-600">{data.formattedTotalRows}</div>
 						<div class="text-sm text-green-800">Lignes totales</div>
 					</div>
 					<ChartColumn class="h-8 w-8 text-green-500" />
@@ -802,8 +805,10 @@
 					<div class="grid gap-3">
 						{#each filteredTables as table (`${table.database}-${table.name}`)}
 							{@const dbInfo = getDatabaseBadgeInfo(table.database)}
-							{@const schemaVariant = SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.variant || 'cyan'}
-							{@const schemaLabel = SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.label || table.schema}
+							{@const schemaVariant =
+								SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.variant || 'cyan'}
+							{@const schemaLabel =
+								SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.label || table.schema}
 							<label
 								class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100 sm:max-w-none"
 							>
@@ -821,7 +826,7 @@
 											toast.info(
 												`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} sélectionnée`,
 												{
-													description: `${table.displayName} (${formatNumber(table.rowCount || 0)} lignes)`
+													description: `${table.displayName} (${table.formattedRowCount || formatNumber(table.rowCount || 0)} lignes)`
 												}
 											);
 										} else {
@@ -869,7 +874,8 @@
 													</Badge>
 												</div>
 												<div class="text-sm text-gray-500">
-													{table.displayName} • {formatNumber(table.rowCount || 0)} lignes
+													{table.displayName} • {table.formattedRowCount ||
+														formatNumber(table.rowCount || 0)} lignes
 												</div>
 											</div>
 
@@ -878,7 +884,8 @@
 												<div class="font-medium">{table.displayName}</div>
 												<div class="mt-1 text-sm text-gray-500">
 													<span class="inline"
-														>{table.displayName} • {formatNumber(table.rowCount || 0)} lignes •
+														>{table.displayName} • {table.formattedRowCount ||
+															formatNumber(table.rowCount || 0)} lignes •
 													</span>
 													<span class="inline-block">{table.columns.length} colonnes</span>
 												</div>
@@ -957,7 +964,11 @@
 				</div>
 
 				<div class="flex justify-center gap-4">
-					<Button variant="bleu" onclick={validateAndNext} disabled={$form.selectedSources.length === 0 || !$form.format}>
+					<Button
+						variant="bleu"
+						onclick={validateAndNext}
+						disabled={$form.selectedSources.length === 0 || !$form.format}
+					>
 						Continuer
 						<CircleArrowRight class="ml-2 h-4 w-4" />
 					</Button>
@@ -1008,7 +1019,11 @@
 					</div>
 
 					<!-- Champs cachés -->
-					<input type="hidden" name="selectedSources" value={JSON.stringify($form.selectedSources)} />
+					<input
+						type="hidden"
+						name="selectedSources"
+						value={JSON.stringify($form.selectedSources)}
+					/>
 					<input type="hidden" name="format" value={$form.format} />
 					<input type="hidden" name="includeHeaders" value={$form.includeHeaders} />
 					<input type="hidden" name="rowLimit" value={$form.rowLimit} />
@@ -1060,8 +1075,14 @@
 							{@const dbInfo = matchingTableInfo
 								? getDatabaseBadgeInfo(matchingTableInfo.database)
 								: { variant: 'noir' as const, label: 'Inconnue' }}
-							{@const schemaVariant = matchingTableInfo?.schema ? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.variant || 'cyan' : 'cyan'}
-							{@const schemaLabel = matchingTableInfo?.schema ? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.label || matchingTableInfo.schema : 'Inconnu'}
+							{@const schemaVariant = matchingTableInfo?.schema
+								? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.variant ||
+									'cyan'
+								: 'cyan'}
+							{@const schemaLabel = matchingTableInfo?.schema
+								? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.label ||
+									matchingTableInfo.schema
+								: 'Inconnu'}
 							<div>
 								<div class="mb-3">
 									<!-- Desktop: layout horizontal -->
@@ -1200,7 +1221,9 @@
 											<AlertCircle class="mx-auto h-12 w-12" />
 										</div>
 										<p class="font-medium text-red-600">Erreur de lecture des métadonnées</p>
-										<p class="text-sm text-gray-500">Impossible d'accéder aux informations de cette table</p>
+										<p class="text-sm text-gray-500">
+											Impossible d'accéder aux informations de cette table
+										</p>
 									</div>
 								{/if}
 							</div>
