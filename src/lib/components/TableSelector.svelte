@@ -19,7 +19,8 @@
 		Settings,
 		Rocket,
 		CircleCheck,
-		CircleX
+		CircleX,
+		Download
 	} from 'lucide-svelte';
 
 	// Props avec runes Svelte 5
@@ -61,7 +62,7 @@
 
 	// États internes avec runes
 	let searchTerm = $state('');
-	let selectedType = $state<'all' | 'tables' | 'views'>('all');
+	let selectedType = $state<'all' | 'tables' | 'views' | 'compatible'>('all');
 	let selectedDatabase = $state<'all' | 'cenov' | 'cenov_dev'>('all');
 	let selectedSchema = $state<'all' | 'produit' | 'public'>('all');
 
@@ -83,10 +84,18 @@
 	// Tables filtrées
 	let filteredTables = $derived(
 		availableTables.filter((table) => {
-			const matchesType =
-				selectedType === 'all' ||
-				(selectedType === 'tables' && (table.tableType === 'table' || !table.tableType)) ||
-				(selectedType === 'views' && table.tableType === 'view');
+			let matchesType = false;
+
+			if (selectedType === 'all') {
+				matchesType = true;
+			} else if (selectedType === 'tables') {
+				matchesType = table.tableType === 'table' || !table.tableType;
+			} else if (selectedType === 'views') {
+				matchesType = table.tableType === 'view';
+			} else if (selectedType === 'compatible') {
+				const requiredStatus = getRequiredFieldsStatus(table.value);
+				matchesType = requiredStatus?.allMapped === true;
+			}
 
 			const tableDatabase =
 				table.database || (table.value.includes('cenov_dev:') ? 'cenov_dev' : 'cenov');
@@ -114,7 +123,7 @@
 	});
 
 	// Fonctions de gestion
-	function handleTypeChange(type: 'all' | 'tables' | 'views') {
+	function handleTypeChange(type: 'all' | 'tables' | 'views' | 'compatible') {
 		selectedType = type;
 	}
 
@@ -147,6 +156,14 @@
 		selectedSchema = 'all';
 		searchTerm = '';
 	}
+
+	// Calculer le nombre de tables compatibles
+	let compatibleCount = $derived(
+		availableTables.filter(table => {
+			const requiredStatus = getRequiredFieldsStatus(table.value);
+			return requiredStatus?.allMapped === true;
+		}).length
+	);
 
 	function resetSelection() {
 		selectedTables = [];
@@ -235,7 +252,7 @@
 		<div class="mb-6 space-y-4">
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				<!-- Card Type -->
-				<Card class="h-36 border-blue-200 bg-blue-50 p-4 shadow-none">
+				<Card class="h-44 border-blue-200 bg-blue-50 p-4 shadow-none">
 					<div class="mb-2 flex items-center gap-2">
 						<FileType class="h-5 w-5 text-blue-600" />
 						<h3 class="text-lg font-semibold text-blue-700">Type de données :</h3>
@@ -284,11 +301,25 @@
 								Vues ({filteredTables.filter((t) => t.tableType === 'view').length})
 							</span>
 						</label>
+						<label class="flex cursor-pointer items-center space-x-2">
+							<input
+								type="radio"
+								name="type"
+								value="compatible"
+								bind:group={selectedType}
+								onchange={() => handleTypeChange('compatible')}
+								class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+							/>
+							<span class="text-sm text-gray-900">
+								<Download class="mr-1 inline h-4 w-4" />
+								Tables prêtes pour l'importation ({compatibleCount})
+							</span>
+						</label>
 					</div>
 				</Card>
 
 				<!-- Card Base de données -->
-				<Card class="h-36 border-emerald-200 bg-emerald-50 p-4 shadow-none">
+				<Card class="h-44 border-emerald-200 bg-emerald-50 p-4 shadow-none">
 					<div class="mb-2 flex items-center gap-2">
 						<Database class="h-5 w-5 text-emerald-600" />
 						<h3 class="text-lg font-semibold text-emerald-700">Base de données :</h3>
@@ -337,7 +368,7 @@
 				</Card>
 
 				<!-- Card Schéma -->
-				<Card class="h-36 border-purple-200 bg-purple-50 p-4 shadow-none">
+				<Card class="h-44 border-purple-200 bg-purple-50 p-4 shadow-none">
 					<div class="mb-2 flex items-center gap-2">
 						<Package class="h-5 w-5 text-purple-600" />
 						<h3 class="text-lg font-semibold text-purple-700">Schéma :</h3>
