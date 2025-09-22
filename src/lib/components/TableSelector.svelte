@@ -32,7 +32,8 @@
 		totalTables = $bindable(0),
 		totalRows = $bindable(0),
 		filteredCount = $bindable(0),
-		tableRequiredFields = {}
+		tableRequiredFields = {},
+		fileHeaders = []
 	}: {
 		availableTables: {
 			value: string;
@@ -51,6 +52,7 @@
 		totalRows: number;
 		filteredCount: number;
 		tableRequiredFields: Record<string, string[]>;
+		fileHeaders: string[];
 	} = $props();
 
 	// Utiliser le store au lieu des props
@@ -209,19 +211,31 @@
 
 	function getRequiredFieldsStatus(tableIdentifier: string) {
 		const requiredFields = tableRequiredFields[tableIdentifier] || [];
-		const mappedCount = requiredFields.filter((field) => Object.values(mappedFields).includes(field)).length;
 		const totalCount = requiredFields.length;
 
 		if (totalCount === 0) return null;
 
-		const allMapped = mappedCount === totalCount;
+		// Normalisation des en-têtes du fichier pour comparaison
+		const normalizedFileHeaders = fileHeaders.map(header =>
+			String(header).toLowerCase().replace(/[^a-z0-9]/g, '')
+		);
+
+		// Vérification si chaque champ requis est présent dans les en-têtes du fichier
+		const foundCount = requiredFields.filter(field => {
+			const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
+			return normalizedFileHeaders.some(header =>
+				header.includes(normalizedField) || normalizedField.includes(header)
+			);
+		}).length;
+
+		const allFound = foundCount === totalCount;
 		return {
-			allMapped,
-			mappedCount,
+			allMapped: allFound,
+			mappedCount: foundCount,
 			totalCount,
-			variant: (allMapped ? 'vert' : 'rouge') as 'vert' | 'rouge',
-			icon: allMapped ? CircleCheck : CircleX,
-			label: `${mappedCount}/${totalCount} requis`
+			variant: (allFound ? 'vert' : 'rouge') as 'vert' | 'rouge',
+			icon: allFound ? CircleCheck : CircleX,
+			label: `${foundCount}/${totalCount} requis`
 		};
 	}
 </script>

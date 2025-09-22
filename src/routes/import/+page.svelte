@@ -618,6 +618,7 @@
 						bind:totalRows
 						bind:filteredCount
 						tableRequiredFields={tableRequiredFields}
+						fileHeaders={headers}
 						title="Tables de destination :"
 						on:selectionChange={handleTableChange}
 					/>
