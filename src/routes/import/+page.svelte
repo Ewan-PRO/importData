@@ -10,6 +10,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import TableSelector from '$lib/components/TableSelector.svelte';
 	import { toast } from 'svelte-sonner';
+	import { mappedFields as mappedFieldsStore } from '$lib/stores/mappedFields';
 	import {
 		Upload,
 		FileCheck,
@@ -22,7 +23,8 @@
 		CircleCheck,
 		CirclePlus,
 		Database,
-		CheckCircle
+		CheckCircle,
+		CircleX
 	} from 'lucide-svelte';
 	import type { UserInfoResponse } from '@logto/node';
 	import type { SuperValidated } from 'sveltekit-superforms';
@@ -290,7 +292,7 @@
 
 	function guessFieldMapping() {
 		// Réinitialiser seulement les mappings
-		mappedFields = {};
+		const newMappedFields: Record<string, string> = {};
 
 		// Obtenir tous les champs possibles des tables sélectionnées
 		const allFields = selectedTables.reduce((acc, table) => {
@@ -334,10 +336,15 @@
 				});
 
 				if (bestScore > 0.5) {
-					mappedFields[index.toString()] = bestMatch;
+					newMappedFields[index.toString()] = bestMatch;
 				}
 			});
 		}
+
+		console.log('ImportPage - After guessFieldMapping:', newMappedFields);
+		// Mettre à jour le store ET la variable locale
+		mappedFields = newMappedFields;
+		mappedFieldsStore.set(newMappedFields);
 	}
 
 	function handleTableChange() {
@@ -347,6 +354,9 @@
 			selectedTables,
 			mappedFields
 		} as any;
+
+		// Force la réactivité pour TableSelector
+		mappedFields = {...mappedFields};
 	}
 
 	function formatNumber(num: number): string {
@@ -385,6 +395,13 @@
 		}
 	}
 
+
+	// Variable réactive pour synchroniser mappedFields avec TableSelector
+	$: {
+		// Force la réactivité pour TableSelector
+		mappedFields = mappedFields;
+	}
+
 	// Variable réactive pour les champs requis (union de tous les champs requis des tables sélectionnées)
 	$: requiredFields = getRequiredFieldsForTables(selectedTables);
 
@@ -401,7 +418,9 @@
 	})();
 
 	function isFieldMapped(fieldName: string): boolean {
-		return Object.values(mappedFields).includes(fieldName);
+		const mapped = Object.values(mappedFields).includes(fieldName);
+		console.log(`ImportPage - Field ${fieldName}:`, mapped, 'mappedFields:', mappedFields);
+		return mapped;
 	}
 
 	function resetImport() {
@@ -598,6 +617,7 @@
 						bind:totalTables
 						bind:totalRows
 						bind:filteredCount
+						tableRequiredFields={tableRequiredFields}
 						title="Tables de destination :"
 						on:selectionChange={handleTableChange}
 					/>
@@ -608,16 +628,14 @@
 						<div class="flex flex-wrap gap-2">
 							{#each requiredFields as field}
 								{@const fieldMapped = isFieldMapped(field)}
-								<div
-									class={`rounded-full px-3 py-1 text-sm font-medium ${fieldMapped ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
-								>
+								<Badge variant={fieldMapped ? 'vert' : 'rouge'}>
 									{#if fieldMapped}
-										<Check class="mr-1 inline h-4 w-4" />
+										<CircleCheck />
 									{:else}
-										<X class="mr-1 inline h-4 w-4" />
+										<CircleX />
 									{/if}
 									{field}
-								</div>
+								</Badge>
 							{/each}
 						</div>
 					</div>
@@ -638,6 +656,9 @@
 												onValueChange={(value) => {
 													mappedFields[i.toString()] = value || '';
 													$form.mappedFields = mappedFields;
+													// Mettre à jour le store
+													mappedFieldsStore.set(mappedFields);
+													console.log('AFTER mapping change:', mappedFields);
 												}}
 											>
 												<Select.SelectTrigger

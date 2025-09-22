@@ -6,6 +6,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as Table from '$lib/components/ui/table';
 	import { toast } from 'svelte-sonner';
+	import { mappedFields as mappedFieldsStore } from '$lib/stores/mappedFields';
 	import {
 		Database,
 		Package,
@@ -17,28 +18,58 @@
 		RefreshCcw,
 		CheckCircle,
 		Settings,
-		Rocket
+		Rocket,
+		CircleCheck,
+		CircleX
 	} from 'lucide-svelte';
 
-	// Props
-	export let availableTables: { value: string; name: string; displayName?: string; category: string; tableType?: string; database?: string; rowCount?: number; columns?: any[] }[] = [];
-	export let selectedTables: string[] = [];
-	export const mode: 'export' | 'import' = 'import';
-	export let title: string = 'Sélection des tables';
-	// Props exportés pour les statistiques
-	export let totalTables: number = 0;
-	export let totalRows: number = 0;
-	export let filteredCount: number = 0;
+	// Props avec runes Svelte 5
+	let {
+		availableTables = $bindable([]),
+		selectedTables = $bindable([]),
+		mode = 'import',
+		title = 'Sélection des tables',
+		totalTables = $bindable(0),
+		totalRows = $bindable(0),
+		filteredCount = $bindable(0),
+		tableRequiredFields = {}
+	}: {
+		availableTables: {
+			value: string;
+			name: string;
+			displayName?: string;
+			category: string;
+			tableType?: string;
+			database?: string;
+			rowCount?: number;
+			columns?: any[];
+		}[];
+		selectedTables: string[];
+		mode?: 'export' | 'import';
+		title?: string;
+		totalTables: number;
+		totalRows: number;
+		filteredCount: number;
+		tableRequiredFields: Record<string, string[]>;
+	} = $props();
+
+	// Utiliser le store au lieu des props
+	let mappedFields = $derived($mappedFieldsStore);
+
+	// Debug pour voir quand ça change
+	$effect(() => {
+		console.log('🔥 TableSelector - Store changed:', $mappedFieldsStore);
+	});
 
 	// Events
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
-	// États internes
-	let searchTerm = '';
-	let selectedType: 'all' | 'tables' | 'views' = 'all';
-	let selectedDatabase: 'all' | 'cenov' | 'cenov_dev' = 'all';
-	let selectedSchema: 'all' | 'produit' | 'public' = 'all';
+	// États internes avec runes
+	let searchTerm = $state('');
+	let selectedType = $state<'all' | 'tables' | 'views'>('all');
+	let selectedDatabase = $state<'all' | 'cenov' | 'cenov_dev'>('all');
+	let selectedSchema = $state<'all' | 'produit' | 'public'>('all');
 
 	// Configuration des couleurs et icônes
 	const SCHEMA_CONFIG = {
@@ -51,38 +82,42 @@
 		cenov_dev: { icon: Settings, variant: 'orange' as const, emoji: '⚙️' }
 	} as const;
 
-	// Calculs réactifs
-	$: databases = ['cenov', 'cenov_dev'];
-	$: uniqueSchemas = [...new Set(availableTables.map(t => t.category))];
+	// Calculs réactifs avec runes
+	let databases = $derived(['cenov', 'cenov_dev']);
+	let uniqueSchemas = $derived([...new Set(availableTables.map((t) => t.category))]);
 
 	// Tables filtrées
-	$: filteredTables = availableTables.filter((table) => {
-		const matchesType =
-			selectedType === 'all' ||
-			(selectedType === 'tables' && (table.tableType === 'table' || !table.tableType)) ||
-			(selectedType === 'views' && table.tableType === 'view');
+	let filteredTables = $derived(
+		availableTables.filter((table) => {
+			const matchesType =
+				selectedType === 'all' ||
+				(selectedType === 'tables' && (table.tableType === 'table' || !table.tableType)) ||
+				(selectedType === 'views' && table.tableType === 'view');
 
-		const tableDatabase = table.database || (table.value.includes('cenov_dev:') ? 'cenov_dev' : 'cenov');
-		const matchesDB = selectedDatabase === 'all' || tableDatabase === selectedDatabase;
+			const tableDatabase =
+				table.database || (table.value.includes('cenov_dev:') ? 'cenov_dev' : 'cenov');
+			const matchesDB = selectedDatabase === 'all' || tableDatabase === selectedDatabase;
 
-		const matchesSchema = selectedSchema === 'all' || table.category === selectedSchema;
+			const matchesSchema = selectedSchema === 'all' || table.category === selectedSchema;
 
-		const matchesSearch =
-			searchTerm === '' ||
-			(table.displayName || table.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
-			table.value.toLowerCase().includes(searchTerm.toLowerCase());
+			const matchesSearch =
+				searchTerm === '' ||
+				(table.displayName || table.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
+				table.value.toLowerCase().includes(searchTerm.toLowerCase());
 
-		return matchesType && matchesDB && matchesSchema && matchesSearch;
+			return matchesType && matchesDB && matchesSchema && matchesSearch;
+		})
+	);
+
+	// Statistiques avec effet
+	$effect(() => {
+		totalTables = availableTables.length;
+		totalRows = availableTables.reduce((sum, table) => {
+			const count = table.rowCount || 0;
+			return sum + count;
+		}, 0);
+		filteredCount = filteredTables.length;
 	});
-
-	// Statistiques - assignation automatique aux props exportés
-	$: totalTables = availableTables.length;
-	$: totalRows = availableTables.reduce((sum, table) => {
-		// Si rowCount n'existe pas, essayer de calculer à partir des données disponibles
-		const count = table.rowCount || 0;
-		return sum + count;
-	}, 0);
-	$: filteredCount = filteredTables.length;
 
 	// Fonctions de gestion
 	function handleTypeChange(type: 'all' | 'tables' | 'views') {
@@ -98,11 +133,13 @@
 	}
 
 	function toggleAllTables() {
-		const filteredTableIds = filteredTables.map(t => t.value);
-		const selectedFilteredCount = filteredTableIds.filter(id => selectedTables.includes(id)).length;
+		const filteredTableIds = filteredTables.map((t) => t.value);
+		const selectedFilteredCount = filteredTableIds.filter((id) =>
+			selectedTables.includes(id)
+		).length;
 
 		if (selectedFilteredCount === filteredTables.length) {
-			selectedTables = selectedTables.filter(id => !filteredTableIds.includes(id));
+			selectedTables = selectedTables.filter((id) => !filteredTableIds.includes(id));
 		} else {
 			const newSelection = [...new Set([...selectedTables, ...filteredTableIds])];
 			selectedTables = newSelection;
@@ -154,14 +191,39 @@
 				icon: table.database?.includes('dev') ? Settings : Rocket,
 				label: table.database?.toUpperCase()
 			},
-			schemaBadge: schemaConfig ? {
-				variant: schemaConfig.variant as 'purple' | 'cyan',
-				icon: schemaConfig.icon,
-				label: schemaConfig.label
-			} : null
+			schemaBadge: schemaConfig
+				? {
+						variant: schemaConfig.variant as 'purple' | 'cyan',
+						icon: schemaConfig.icon,
+						label: schemaConfig.label
+					}
+				: null
 		};
 	}
 
+	function isFieldMapped(fieldName: string): boolean {
+		const mapped = Object.values(mappedFields).includes(fieldName);
+		console.log(`TableSelector - Field ${fieldName}:`, mapped, 'mappedFields:', mappedFields);
+		return mapped;
+	}
+
+	function getRequiredFieldsStatus(tableIdentifier: string) {
+		const requiredFields = tableRequiredFields[tableIdentifier] || [];
+		const mappedCount = requiredFields.filter((field) => Object.values(mappedFields).includes(field)).length;
+		const totalCount = requiredFields.length;
+
+		if (totalCount === 0) return null;
+
+		const allMapped = mappedCount === totalCount;
+		return {
+			allMapped,
+			mappedCount,
+			totalCount,
+			variant: (allMapped ? 'vert' : 'rouge') as 'vert' | 'rouge',
+			icon: allMapped ? CircleCheck : CircleX,
+			label: `${mappedCount}/${totalCount} requis`
+		};
+	}
 </script>
 
 <div class="w-full">
@@ -184,7 +246,7 @@
 								name="type"
 								value="all"
 								bind:group={selectedType}
-								on:change={() => handleTypeChange('all')}
+								onchange={() => handleTypeChange('all')}
 								class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 							/>
 							<span class="text-sm text-gray-900">
@@ -198,12 +260,13 @@
 								name="type"
 								value="tables"
 								bind:group={selectedType}
-								on:change={() => handleTypeChange('tables')}
+								onchange={() => handleTypeChange('tables')}
 								class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 							/>
 							<span class="text-sm text-gray-900">
 								<TableIcon class="mr-1 inline h-4 w-4" />
-								Tables ({filteredTables.filter(t => t.tableType === 'table' || !t.tableType).length})
+								Tables ({filteredTables.filter((t) => t.tableType === 'table' || !t.tableType)
+									.length})
 							</span>
 						</label>
 						<label class="flex cursor-pointer items-center space-x-2">
@@ -212,12 +275,12 @@
 								name="type"
 								value="views"
 								bind:group={selectedType}
-								on:change={() => handleTypeChange('views')}
+								onchange={() => handleTypeChange('views')}
 								class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 							/>
 							<span class="text-sm text-gray-900">
 								<Eye class="mr-1 inline h-4 w-4" />
-								Vues ({filteredTables.filter(t => t.tableType === 'view').length})
+								Vues ({filteredTables.filter((t) => t.tableType === 'view').length})
 							</span>
 						</label>
 					</div>
@@ -236,7 +299,7 @@
 								name="database"
 								value="all"
 								bind:group={selectedDatabase}
-								on:change={() => handleDatabaseChange('all')}
+								onchange={() => handleDatabaseChange('all')}
 								class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 							/>
 							<span class="text-sm text-gray-900">
@@ -252,7 +315,7 @@
 									name="database"
 									value={database}
 									bind:group={selectedDatabase}
-									on:change={() => handleDatabaseChange(database as 'all' | 'cenov' | 'cenov_dev')}
+									onchange={() => handleDatabaseChange(database as 'all' | 'cenov' | 'cenov_dev')}
 									class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
 								<span class="text-sm text-gray-900">
@@ -261,8 +324,9 @@
 									{:else}
 										<Rocket class="mr-0.5 inline h-4 w-4" />
 									{/if}
-									{dbInfo.label.split(' ')[1]} ({filteredTables.filter(t => {
-										const tableDb = t.database || (t.value.includes('cenov_dev:') ? 'cenov_dev' : 'cenov');
+									{dbInfo.label.split(' ')[1]} ({filteredTables.filter((t) => {
+										const tableDb =
+											t.database || (t.value.includes('cenov_dev:') ? 'cenov_dev' : 'cenov');
 										return tableDb === database;
 									}).length})
 								</span>
@@ -284,7 +348,7 @@
 								name="schema"
 								value="all"
 								bind:group={selectedSchema}
-								on:change={() => handleSchemaChange('all')}
+								onchange={() => handleSchemaChange('all')}
 								class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 							/>
 							<span class="text-sm text-gray-900">
@@ -299,7 +363,7 @@
 									name="schema"
 									value={schema}
 									bind:group={selectedSchema}
-									on:change={() => handleSchemaChange(schema as 'all' | 'produit' | 'public')}
+									onchange={() => handleSchemaChange(schema as 'all' | 'produit' | 'public')}
 									class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
 								<span class="text-sm text-gray-900">
@@ -309,7 +373,7 @@
 										<LockOpen class="mr-0.5 inline h-4 w-4" />
 									{/if}
 									{SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.label || schema}
-									({filteredTables.filter(t => t.category === schema).length})
+									({filteredTables.filter((t) => t.category === schema).length})
 								</span>
 							</label>
 						{/each}
@@ -324,8 +388,9 @@
 					<label class="flex min-h-[42px] cursor-pointer items-center space-x-2">
 						<input
 							type="checkbox"
-							checked={filteredTables.length > 0 && filteredTables.every(table => selectedTables.includes(table.value))}
-							on:change={toggleAllTables}
+							checked={filteredTables.length > 0 &&
+								filteredTables.every((table) => selectedTables.includes(table.value))}
+							onchange={toggleAllTables}
 							class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 						/>
 						<span class="text-sm">Sélectionner tout ({filteredCount})</span>
@@ -339,7 +404,7 @@
 
 				<!-- Recherche -->
 				<div class="relative">
-					<Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+					<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
 					<Input
 						type="text"
 						bind:value={searchTerm}
@@ -349,7 +414,9 @@
 				</div>
 
 				<!-- Résumé sélection -->
-				<div class="flex min-h-[42px] items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-6 py-3 text-center">
+				<div
+					class="flex min-h-[42px] items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-6 py-3 text-center"
+				>
 					<div class="flex items-center justify-center gap-1 text-sm text-purple-800">
 						<CheckCircle class="h-4 w-4" />
 						<span class="font-semibold">{selectedTables.length}</span> sélectionnées
@@ -362,16 +429,20 @@
 		<div class="max-h-96 overflow-y-auto">
 			<div class="grid gap-3">
 				{#each filteredTables as table (table.value)}
-					{@const tableDatabase = table.database || (table.value.includes('cenov_dev:') ? 'cenov_dev' : 'cenov')}
+					{@const tableDatabase =
+						table.database || (table.value.includes('cenov_dev:') ? 'cenov_dev' : 'cenov')}
 					{@const dbInfo = getDatabaseBadgeInfo(tableDatabase)}
 					{@const schemaConfig = SCHEMA_CONFIG[table.category as keyof typeof SCHEMA_CONFIG]}
 					{@const badges = renderBadges(table, dbInfo, schemaConfig)}
-					<label class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-blue-50 sm:max-w-none">
+					{@const requiredStatus = getRequiredFieldsStatus(table.value)}
+					<label
+						class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-blue-50 sm:max-w-none"
+					>
 						<input
 							type="checkbox"
 							bind:group={selectedTables}
 							value={table.value}
-							on:change={() => {
+							onchange={() => {
 								// Toast info quand on sélectionne/désélectionne une table
 								const tableId = table.value;
 								const isSelected = selectedTables.includes(tableId);
@@ -399,24 +470,42 @@
 
 						<div class="flex-1">
 							<div class="flex items-center gap-3">
-								<svelte:component this={getTableIcon(table)} class="h-5 w-5 text-gray-500" />
+								{#if true}
+									{@const IconComponent = getTableIcon(table)}
+									<IconComponent class="h-5 w-5 text-gray-500" />
+								{/if}
+
 								<div class="min-w-0 flex-1">
 									<!-- Desktop layout -->
 									<div class="hidden sm:block">
 										<div class="flex items-center gap-2">
 											<span class="font-medium">{table.displayName || table.name}</span>
-											<Badge variant={badges.tableBadge.variant}>
-												<svelte:component this={badges.tableBadge.icon} />
-												{badges.tableBadge.label}
-											</Badge>
-											<Badge variant={badges.dbBadge.variant}>
-												<svelte:component this={badges.dbBadge.icon} />
-												{badges.dbBadge.label}
-											</Badge>
+											{#if badges.tableBadge}
+												<Badge variant={badges.tableBadge.variant}>
+													{@const TableBadgeIcon = badges.tableBadge.icon}
+													<TableBadgeIcon />
+													{badges.tableBadge.label}
+												</Badge>
+											{/if}
+											{#if badges.dbBadge}
+												<Badge variant={badges.dbBadge.variant}>
+													{@const DbBadgeIcon = badges.dbBadge.icon}
+													<DbBadgeIcon />
+													{badges.dbBadge.label}
+												</Badge>
+											{/if}
 											{#if badges.schemaBadge}
 												<Badge variant={badges.schemaBadge.variant}>
-													<svelte:component this={badges.schemaBadge.icon} />
+													{@const SchemaBadgeIcon = badges.schemaBadge.icon}
+													<SchemaBadgeIcon />
 													{badges.schemaBadge.label}
+												</Badge>
+											{/if}
+											{#if requiredStatus}
+												<Badge variant={requiredStatus.variant}>
+													{@const RequiredIcon = requiredStatus.icon}
+													<RequiredIcon />
+													{requiredStatus.label}
 												</Badge>
 											{/if}
 										</div>
@@ -432,18 +521,32 @@
 											{formatNumber(table.rowCount || 0)} lignes • {table.columns?.length || 0} colonnes
 										</div>
 										<div class="mt-2 flex flex-wrap gap-1">
-											<Badge variant={badges.tableBadge.variant}>
-												<svelte:component this={badges.tableBadge.icon} />
-												{badges.tableBadge.label}
-											</Badge>
-											<Badge variant={badges.dbBadge.variant}>
-												<svelte:component this={badges.dbBadge.icon} />
-												{badges.dbBadge.label}
-											</Badge>
+											{#if badges.tableBadge}
+												<Badge variant={badges.tableBadge.variant}>
+													{@const TableBadgeIcon = badges.tableBadge.icon}
+													<TableBadgeIcon />
+													{badges.tableBadge.label}
+												</Badge>
+											{/if}
+											{#if badges.dbBadge}
+												<Badge variant={badges.dbBadge.variant}>
+													{@const DbBadgeIcon = badges.dbBadge.icon}
+													<DbBadgeIcon />
+													{badges.dbBadge.label}
+												</Badge>
+											{/if}
 											{#if badges.schemaBadge}
 												<Badge variant={badges.schemaBadge.variant}>
-													<svelte:component this={badges.schemaBadge.icon} />
+													{@const SchemaBadgeIcon = badges.schemaBadge.icon}
+													<SchemaBadgeIcon />
 													{badges.schemaBadge.label}
+												</Badge>
+											{/if}
+											{#if requiredStatus}
+												<Badge variant={requiredStatus.variant}>
+													{@const RequiredIcon = requiredStatus.icon}
+													<RequiredIcon />
+													{requiredStatus.label}
 												</Badge>
 											{/if}
 										</div>
