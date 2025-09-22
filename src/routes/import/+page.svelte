@@ -93,11 +93,9 @@
 	} = superForm(data.form, {
 		dataType: 'json',
 		onUpdated: ({ form }) => {
-			console.log('Formulaire mis à jour:', form);
 
 			if (form && form.data && 'result' in form.data) {
 				const result = form.data.result as ValidationResult;
-				console.log('Résultat traité correctement:', result);
 				updateFormWithResult(result);
 
 				if (result.processed) {
@@ -260,7 +258,6 @@
 
 				step = 2;
 			} catch (err) {
-				console.error('Erreur détaillée:', err);
 				Alert.alertActions.error(
 					`Erreur lors de la lecture du fichier: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
 				);
@@ -270,7 +267,6 @@
 		};
 
 		reader.onerror = () => {
-			console.error('Erreur de lecture du fichier');
 			Alert.alertActions.error('Échec de lecture du fichier');
 			isProcessing = false;
 		};

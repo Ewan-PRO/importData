@@ -20,7 +20,8 @@ const prisma = new PrismaClient();
 
 type ColumnMap = Record<string, number>;
 
-interface ValidationResult {
+// Interface unifiée pour tous les résultats d'importation
+interface ImportResult {
 	totalRows: number;
 	validRows: number;
 	duplicates: number;
@@ -31,9 +32,9 @@ interface ValidationResult {
 		error: string;
 	}>;
 	processed: boolean;
-	inserted?: number;
-	updated?: number;
-	errors?: string[];
+	inserted: number;
+	updated: number;
+	errors: string[];
 	resultsByTable?: Record<
 		string,
 		{
@@ -43,6 +44,9 @@ interface ValidationResult {
 		}
 	>;
 }
+
+// Alias pour rétrocompatibilité
+type ValidationResult = ImportResult;
 
 interface ImportConfig {
 	data: unknown[][];
@@ -62,13 +66,6 @@ interface InsertionOptions {
 }
 
 interface InsertionResult {
-	inserted: number;
-	updated: number;
-	errors: string[];
-}
-
-// Types SvelteKit spécifiques
-interface ImportResult extends ValidationResult {
 	inserted: number;
 	updated: number;
 	errors: string[];
@@ -362,8 +359,7 @@ async function checkExistingRecord(
 		}
 
 		return null;
-	} catch (err) {
-		console.error('Erreur lors de la vérification des doublons:', err);
+	} catch {
 		return null;
 	}
 }
@@ -376,12 +372,15 @@ async function validateImportData(
 ): Promise<ValidationResult> {
 	const { multiTable = false, enableDatabaseCheck = true } = options;
 
-	const result: ValidationResult = {
+	const result: ImportResult = {
 		totalRows: Array.isArray(config.data) ? config.data.length : 0,
 		validRows: 0,
 		duplicates: 0,
 		invalidData: [],
-		processed: false
+		processed: false,
+		inserted: 0,
+		updated: 0,
+		errors: []
 	};
 
 	// Initialiser resultsByTable si multi-table
@@ -429,12 +428,15 @@ async function validateImportData(
 				let isValidForAnyTable = false;
 
 				for (const { table, rules } of allValidationRules) {
-					const tempResult: ValidationResult = {
+					const tempResult: ImportResult = {
 						totalRows: 0,
 						validRows: 0,
 						duplicates: 0,
 						invalidData: [],
-						processed: false
+						processed: false,
+						inserted: 0,
+						updated: 0,
+						errors: []
 					};
 
 					const validationResult = validateRow(
@@ -549,7 +551,6 @@ async function insertValidatedData(
 			errors.push(...result.errors);
 		}
 	} catch (err) {
-		console.error("❌ Erreur lors de l'insertion:", err);
 		errors.push(`Erreur d'insertion: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
 	}
 
@@ -566,7 +567,6 @@ async function processTableData(
 	validRowsSet: Set<number>
 ): Promise<InsertionResult> {
 	let inserted = 0;
-	const updated = 0;
 	const errors: string[] = [];
 
 	const { database, tableName } = parseTableIdentifier(tableIdentifier);
@@ -598,14 +598,54 @@ async function processTableData(
 				inserted++;
 			}
 		} catch (err) {
-			console.error(`Erreur lors de l'importation de la ligne ${rowIndex}:`, err);
 			errors.push(
 				`Ligne ${rowIndex + 1}: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
 			);
 		}
 	}
 
-	return { inserted, updated, errors };
+	return { inserted, updated: 0, errors };
+}
+
+// ========== FONCTIONS UTILITAIRES COMMUNES ==========
+
+// Détermine le mode de traitement (mono/multi-table) et les tables finales
+function determineImportMode(selectedTables: string[], targetTable?: string) {
+	const finalSelectedTables =
+		selectedTables.length > 0 ? selectedTables : targetTable ? [targetTable] : [];
+
+	return {
+		finalSelectedTables,
+		isMultiTable: finalSelectedTables.length > 1
+	};
+}
+
+// Construit la configuration d'importation commune
+
+function buildImportConfig(
+	data: unknown[][],
+	mappedFields: Record<string, string>,
+	finalSelectedTables: string[],
+	targetTable?: string
+): ImportConfig {
+	return {
+		data,
+		mappedFields,
+		selectedTables: finalSelectedTables,
+		targetTable
+	};
+}
+
+// Exécute la validation avec les options communes
+
+async function executeValidation(
+	config: ImportConfig,
+	isMultiTable: boolean
+): Promise<ImportResult> {
+	return await validateImportData(config, {
+		multiTable: isMultiTable,
+		enableDatabaseCheck: true
+	});
 }
 
 // ========== ACTIONS SVELTEKIT UNIFIÉES ==========
@@ -619,37 +659,20 @@ export const actions: Actions = {
 		try {
 			// Validation du formulaire avec SuperForms
 			const form = await superValidate(request, zod(importSchema));
-			console.log('Formulaire reçu:', form);
 
 			if (!form.valid) {
-				console.error('Formulaire invalide:', form.errors);
 				return fail(400, { form });
 			}
 
 			const { data, mappedFields, selectedTables, targetTable } = form.data;
 
-			// Détection automatique du mode : priorité à selectedTables, fallback sur targetTable
-			const finalSelectedTables = selectedTables.length > 0
-				? selectedTables
-				: targetTable ? [targetTable] : [];
-
-			const isMultiTable = finalSelectedTables.length > 1;
-
-			console.log(`🔄 Mode détecté: ${isMultiTable ? 'MULTI-TABLE' : 'SIMPLE'} (${finalSelectedTables.length} table(s))`);
-
-			// Conversion vers format commun
-			const config: ImportConfig = {
-				data,
-				mappedFields,
-				selectedTables: finalSelectedTables,
+			// Utilisation des fonctions utilitaires
+			const { finalSelectedTables, isMultiTable } = determineImportMode(
+				selectedTables,
 				targetTable
-			};
-
-			// Validation avec mode automatique
-			const result = await validateImportData(config, {
-				multiTable: isMultiTable,
-				enableDatabaseCheck: true
-			});
+			);
+			const config = buildImportConfig(data, mappedFields, finalSelectedTables, targetTable);
+			const result = await executeValidation(config, isMultiTable);
 
 			// Retourner un formulaire avec le résultat intégré
 			return {
@@ -665,7 +688,6 @@ export const actions: Actions = {
 				}
 			};
 		} catch (err) {
-			console.error('Erreur lors de la validation:', err);
 			return fail(500, {
 				error: `Erreur de validation: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
 			});
@@ -687,28 +709,13 @@ export const actions: Actions = {
 
 			const { data, mappedFields, selectedTables, targetTable } = form.data;
 
-			// Détection automatique du mode : priorité à selectedTables, fallback sur targetTable
-			const finalSelectedTables = selectedTables.length > 0
-				? selectedTables
-				: targetTable ? [targetTable] : [];
-
-			const isMultiTable = finalSelectedTables.length > 1;
-
-			console.log(`🔄 Mode détecté: ${isMultiTable ? 'MULTI-TABLE' : 'SIMPLE'} (${finalSelectedTables.length} table(s))`);
-
-			// Conversion vers format commun
-			const config: ImportConfig = {
-				data,
-				mappedFields,
-				selectedTables: finalSelectedTables,
+			// Utilisation des fonctions utilitaires
+			const { finalSelectedTables, isMultiTable } = determineImportMode(
+				selectedTables,
 				targetTable
-			};
-
-			// Validation d'abord avec mode automatique
-			const validationResult = await validateImportData(config, {
-				multiTable: isMultiTable,
-				enableDatabaseCheck: true
-			});
+			);
+			const config = buildImportConfig(data, mappedFields, finalSelectedTables, targetTable);
+			const validationResult = await executeValidation(config, isMultiTable);
 
 			// Calculer les lignes valides depuis le résultat de validation
 			const validRowsSet = calculateValidRowsSet(validationResult, config.data.length);
@@ -740,7 +747,6 @@ export const actions: Actions = {
 				}
 			};
 		} catch (err) {
-			console.error("Erreur lors de l'importation:", err);
 			return fail(500, {
 				error: `Erreur d'importation: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
 			});
@@ -748,34 +754,16 @@ export const actions: Actions = {
 	}
 };
 
-// Fonction helper pour déterminer la catégorie d'une table basée sur le schéma
-function getCategoryFromTable(table: {
-	name: string;
-	displayName: string;
-	category: string;
-	schema: string;
-}): string {
-	// Utiliser le schéma comme catégorie principale
-	return table.schema;
-}
-
 // Pour SuperForms, nous devons également fournir la fonction de chargement
 export const load: ServerLoad = async (event) => {
 	// Protection de la route - redirection vers / si non connecté
 	await protect(event);
 
-	const { url } = event;
-	console.log('🚀 [IMPORT] Début du chargement de la page import');
-	console.log('🔍 [IMPORT] URL:', url.pathname);
-
 	try {
-		console.log('📝 [IMPORT] Création du formulaire SuperForms pour import');
-
 		// Initialisation d'un formulaire vide
 		const form = await superValidate(zod(importSchema));
 
 		// Récupérer les tables et champs importables via DMMF
-		console.log('📊 [IMPORT] Récupération des tables importables via DMMF');
 		const availableTables = await getImportableTables();
 		const rawTableFields = await getImportableTableFields();
 		const rawTableRequiredFields = await getImportableTableRequiredFields();
@@ -785,7 +773,7 @@ export const load: ServerLoad = async (event) => {
 			value: `${table.database}:${table.name}`, // Inclure database pour unicité
 			name: table.displayName,
 			displayName: table.displayName,
-			category: getCategoryFromTable(table), // produit/public (schéma)
+			category: table.schema, // produit/public (schéma)
 			tableType: table.category, // table/view (type réel)
 			database: table.database,
 			rowCount: table.rowCount,
@@ -796,15 +784,6 @@ export const load: ServerLoad = async (event) => {
 		const tableFields = rawTableFields;
 		const tableRequiredFields = rawTableRequiredFields;
 
-		console.log('📝 [IMPORT] Formulaire créé:', {
-			valid: form.valid,
-			hasErrors: Object.keys(form.errors || {}).length > 0,
-			tablesCount: formattedTables.length,
-			fieldsCount: Object.keys(tableFields).length,
-			requiredFieldsCount: Object.keys(tableRequiredFields).length
-		});
-
-		console.log('✅ [IMPORT] Chargement terminé avec succès');
 		return {
 			form,
 			availableTables: formattedTables,
@@ -812,8 +791,6 @@ export const load: ServerLoad = async (event) => {
 			tableRequiredFields
 		};
 	} catch (err) {
-		console.error('❌ [IMPORT] Erreur dans le chargement de la page import:', err);
-		console.error('❌ [IMPORT] Stack trace:', err instanceof Error ? err.stack : 'N/A');
 		throw new Error(
 			`Erreur lors du chargement de la page import: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
 		);
