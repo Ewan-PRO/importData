@@ -6,7 +6,6 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as Table from '$lib/components/ui/table';
 	import { toast } from 'svelte-sonner';
-	import { mappedFields as mappedFieldsStore } from '$lib/stores/mappedFields';
 	import {
 		Database,
 		Package,
@@ -55,13 +54,6 @@
 		fileHeaders: string[];
 	} = $props();
 
-	// Utiliser le store au lieu des props
-	let mappedFields = $derived($mappedFieldsStore);
-
-	// Debug pour voir quand ça change
-	$effect(() => {
-		console.log('🔥 TableSelector - Store changed:', $mappedFieldsStore);
-	});
 
 	// Events
 	import { createEventDispatcher } from 'svelte';
@@ -203,11 +195,6 @@
 		};
 	}
 
-	function isFieldMapped(fieldName: string): boolean {
-		const mapped = Object.values(mappedFields).includes(fieldName);
-		console.log(`TableSelector - Field ${fieldName}:`, mapped, 'mappedFields:', mappedFields);
-		return mapped;
-	}
 
 	function getRequiredFieldsStatus(tableIdentifier: string) {
 		const requiredFields = tableRequiredFields[tableIdentifier] || [];

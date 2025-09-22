@@ -10,7 +10,6 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import TableSelector from '$lib/components/TableSelector.svelte';
 	import { toast } from 'svelte-sonner';
-	import { mappedFields as mappedFieldsStore } from '$lib/stores/mappedFields';
 	import {
 		Upload,
 		FileCheck,
@@ -341,10 +340,7 @@
 			});
 		}
 
-		console.log('ImportPage - After guessFieldMapping:', newMappedFields);
-		// Mettre à jour le store ET la variable locale
 		mappedFields = newMappedFields;
-		mappedFieldsStore.set(newMappedFields);
 	}
 
 	function handleTableChange() {
@@ -355,8 +351,6 @@
 			mappedFields
 		} as any;
 
-		// Force la réactivité pour TableSelector
-		mappedFields = {...mappedFields};
 	}
 
 	function formatNumber(num: number): string {
@@ -396,11 +390,6 @@
 	}
 
 
-	// Variable réactive pour synchroniser mappedFields avec TableSelector
-	$: {
-		// Force la réactivité pour TableSelector
-		mappedFields = mappedFields;
-	}
 
 	// Variable réactive pour les champs requis (union de tous les champs requis des tables sélectionnées)
 	$: requiredFields = getRequiredFieldsForTables(selectedTables);
@@ -418,9 +407,7 @@
 	})();
 
 	function isFieldMapped(fieldName: string): boolean {
-		const mapped = Object.values(mappedFields).includes(fieldName);
-		console.log(`ImportPage - Field ${fieldName}:`, mapped, 'mappedFields:', mappedFields);
-		return mapped;
+		return Object.values(mappedFields).includes(fieldName);
 	}
 
 	function resetImport() {
@@ -657,9 +644,6 @@
 												onValueChange={(value) => {
 													mappedFields[i.toString()] = value || '';
 													$form.mappedFields = mappedFields;
-													// Mettre à jour le store
-													mappedFieldsStore.set(mappedFields);
-													console.log('AFTER mapping change:', mappedFields);
 												}}
 											>
 												<Select.SelectTrigger
