@@ -45,8 +45,6 @@ interface ImportResult {
 	>;
 }
 
-// Alias pour rétrocompatibilité
-type ValidationResult = ImportResult;
 
 interface ImportConfig {
 	data: unknown[][];
@@ -81,7 +79,11 @@ const importSchema = z.object({
 
 // ========== FONCTIONS UTILITAIRES ==========
 
-function calculateValidRowsSet(result: ValidationResult, totalRows: number): Set<number> {
+function formatError(err: unknown): string {
+	return err instanceof Error ? err.message : 'Erreur inconnue';
+}
+
+function calculateValidRowsSet(result: ImportResult, totalRows: number): Set<number> {
 	const validRowsSet = new Set<number>();
 	const invalidRowIndices = new Set(result.invalidData.map((error) => error.row));
 
@@ -198,7 +200,7 @@ function validateRequiredFields(
 	row: unknown[],
 	columnMap: ColumnMap,
 	validationRules: ValidationRules,
-	result: ValidationResult
+	result: ImportResult
 ): boolean {
 	for (const fieldName of validationRules.requiredFields) {
 		const colIndex = columnMap[fieldName];
@@ -230,7 +232,7 @@ function validateDataFormat(
 	row: unknown[],
 	columnMap: ColumnMap,
 	validationRules: ValidationRules,
-	result: ValidationResult
+	result: ImportResult
 ): boolean {
 	let valid = true;
 
@@ -261,7 +263,7 @@ function validateUniqueEntries(
 	columnMap: ColumnMap,
 	validationRules: ValidationRules,
 	uniqueEntries: Set<string>,
-	result: ValidationResult
+	result: ImportResult
 ): boolean {
 	const uniqueKey = validationRules.uniqueFields
 		.map((field) => {
@@ -293,7 +295,7 @@ function validateRow(
 	columnMap: ColumnMap,
 	validationRules: ValidationRules,
 	uniqueEntries: Set<string>,
-	result: ValidationResult
+	result: ImportResult
 ): boolean {
 	// Vérifier les champs requis
 	const requiredValid = validateRequiredFields(rowIndex, row, columnMap, validationRules, result);
@@ -369,7 +371,7 @@ async function checkExistingRecord(
 async function validateImportData(
 	config: ImportConfig,
 	options: ValidationOptions = {}
-): Promise<ValidationResult> {
+): Promise<ImportResult> {
 	const { multiTable = false, enableDatabaseCheck = true } = options;
 
 	const result: ImportResult = {
@@ -448,18 +450,11 @@ async function validateImportData(
 						tempResult
 					);
 
-					if (validationResult && enableDatabaseCheck) {
-						// Vérification des doublons avec la base de données pour cette table
-						const existingRecord = await checkExistingRecord(table, config.mappedFields, row);
-
-						if (!existingRecord) {
-							// Ligne valide pour cette table spécifique
+					if (validationResult) {
+						if (!enableDatabaseCheck || !await checkExistingRecord(table, config.mappedFields, row)) {
 							result.resultsByTable![table].validRows++;
 							isValidForAnyTable = true;
 						}
-					} else if (validationResult) {
-						result.resultsByTable![table].validRows++;
-						isValidForAnyTable = true;
 					}
 				}
 
@@ -488,27 +483,23 @@ async function validateImportData(
 					result
 				);
 
-				// Vérification des doublons avec la base de données
-				if (validationResult && enableDatabaseCheck) {
-					const existingRecord = await checkExistingRecord(
-						config.selectedTables[0],
-						config.mappedFields,
-						row
-					);
-
-					if (existingRecord) {
-						result.duplicates++;
-						result.invalidData.push({
-							row: rowIndex,
-							field: rules.uniqueFields.join(', '),
-							value: existingRecord,
-							error: 'Existe déjà dans la base de données'
-						});
+				if (validationResult) {
+					if (enableDatabaseCheck) {
+						const existingRecord = await checkExistingRecord(config.selectedTables[0], config.mappedFields, row);
+						if (existingRecord) {
+							result.duplicates++;
+							result.invalidData.push({
+								row: rowIndex,
+								field: rules.uniqueFields.join(', '),
+								value: existingRecord,
+								error: 'Existe déjà dans la base de données'
+							});
+						} else {
+							result.validRows++;
+						}
 					} else {
 						result.validRows++;
 					}
-				} else if (validationResult) {
-					result.validRows++;
 				}
 			}
 		}
@@ -551,7 +542,7 @@ async function insertValidatedData(
 			errors.push(...result.errors);
 		}
 	} catch (err) {
-		errors.push(`Erreur d'insertion: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+		errors.push(`Erreur d'insertion: ${formatError(err)}`);
 	}
 
 	return {
@@ -599,7 +590,7 @@ async function processTableData(
 			}
 		} catch (err) {
 			errors.push(
-				`Ligne ${rowIndex + 1}: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+				`Ligne ${rowIndex + 1}: ${formatError(err)}`
 			);
 		}
 	}
@@ -689,7 +680,7 @@ export const actions: Actions = {
 			};
 		} catch (err) {
 			return fail(500, {
-				error: `Erreur de validation: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+				error: `Erreur de validation: ${formatError(err)}`
 			});
 		}
 	},
@@ -748,7 +739,7 @@ export const actions: Actions = {
 			};
 		} catch (err) {
 			return fail(500, {
-				error: `Erreur d'importation: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+				error: `Erreur d'importation: ${formatError(err)}`
 			});
 		}
 	}
@@ -792,7 +783,7 @@ export const load: ServerLoad = async (event) => {
 		};
 	} catch (err) {
 		throw new Error(
-			`Erreur lors du chargement de la page import: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+			`Erreur lors du chargement de la page import: ${formatError(err)}`
 		);
 	}
 };
