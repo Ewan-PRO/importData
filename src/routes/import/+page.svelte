@@ -23,7 +23,9 @@
 		CirclePlus,
 		Database,
 		CheckCircle,
-		CircleX
+		CircleX,
+		Settings,
+		Rocket
 	} from 'lucide-svelte';
 	import type { UserInfoResponse } from '@logto/node';
 	import type { SuperValidated } from 'sveltekit-superforms';
@@ -745,9 +747,21 @@
 										availableTables.find(
 											(t: { value: string; name: string; category: string }) => t.value === table
 										)?.name || table}
+									{@const tableDatabase = table.includes('cenov_dev:') ? 'cenov_dev' : 'cenov'}
 									{#if tableResult}
 										<div class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
-											<span class="font-medium">{tableName}</span>
+											<div class="flex items-center gap-2">
+												<span class="font-medium">{tableName}</span>
+												<Badge variant={tableDatabase === 'cenov_dev' ? 'orange' : 'bleu'}>
+													{#if tableDatabase === 'cenov_dev'}
+														<Settings />
+														CENOV_DEV
+													{:else}
+														<Rocket />
+														CENOV
+													{/if}
+												</Badge>
+											</div>
 											<span class="text-green-600">{tableResult.validRows} ligne(s) valide(s)</span>
 										</div>
 									{/if}
