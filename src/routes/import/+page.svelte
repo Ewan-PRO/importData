@@ -29,7 +29,30 @@
 	} from 'lucide-svelte';
 	import type { UserInfoResponse } from '@logto/node';
 	import type { SuperValidated } from 'sveltekit-superforms';
-	import type { ValidationResult } from './shared.js';
+	// Types intégrés directement - plus besoin d'importer depuis shared.ts
+	interface ValidationResult {
+		totalRows: number;
+		validRows: number;
+		duplicates: number;
+		invalidData: Array<{
+			row: number;
+			field: string;
+			value: string;
+			error: string;
+		}>;
+		processed: boolean;
+		inserted?: number;
+		updated?: number;
+		errors?: string[];
+		resultsByTable?: Record<
+			string,
+			{
+				validRows: number;
+				inserted: number;
+				updated: number;
+			}
+		>;
+	}
 
 	export let data: {
 		user: UserInfoResponse | undefined;
@@ -780,7 +803,7 @@
 								{ key: 'value', label: 'Valeur' },
 								{ key: 'error', label: 'Erreur' }
 							]}
-							data={validationResults.invalidData.map((error) => ({
+							data={validationResults.invalidData.map((error: { row: number; field: string; value: string; error: string }) => ({
 								row: error.row + 1,
 								field: error.field,
 								value: error.value || '',
@@ -794,7 +817,7 @@
 						{@const validData = (hasHeaders ? rawData.slice(1) : rawData)
 							.map((row, index) => {
 								// Vérifier si cette ligne a des erreurs
-								const hasError = validationResults.invalidData.some((error) => error.row === index);
+								const hasError = validationResults.invalidData.some((error: { row: number; field: string; value: string; error: string }) => error.row === index);
 								if (hasError) return null;
 
 								// Créer un objet avec les champs mappés
