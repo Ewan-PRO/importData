@@ -164,9 +164,9 @@ model part_nc {
 }
 
 view v_tarif_achat {
-  fk_produit      Int?
-  taa_date        DateTime? @cenov_dev_db.Date
-  taa_montant     Float?
+  fk_produit      Int
+  taa_date        DateTime @cenov_dev_db.Date
+  taa_montant     Float
   taa_remise      Float?
   taa_montant_net Float?
 
@@ -174,32 +174,32 @@ view v_tarif_achat {
 }
 
 view produit_v_produit_categorie_attribut {
-  pro_id    Int?
-  kit_label String? @cenov_dev_db.VarChar(100)
-  atr_id    Int?
-  atr_label String? @cenov_dev_db.VarChar(100)
-  cat_label String? @cenov_dev_db.VarChar(100)
+  pro_id    Int
+  kit_label String @cenov_dev_db.VarChar(100)
+  atr_id    Int
+  atr_label String @cenov_dev_db.VarChar(100)
+  cat_label String @cenov_dev_db.VarChar(100)
 
   @@map("v_produit_categorie_attribut")
   @@schema("produit")
 }
 
 view public_v_produit_categorie_attribut {
-  pro_id    Int?
-  kit_label String? @cenov_dev_db.VarChar(100)
-  atr_id    Int?
-  atr_label String? @cenov_dev_db.VarChar(100)
-  cat_label String? @cenov_dev_db.VarChar(100)
+  pro_id    Int
+  kit_label String @cenov_dev_db.VarChar(100)
+  atr_id    Int
+  atr_label String @cenov_dev_db.VarChar(100)
+  cat_label String @cenov_dev_db.VarChar(100)
 
   @@map("v_produit_categorie_attribut")
   @@schema("public")
 }
 
 view v_categorie {
-  atr_0_id    Int?
-  atr_0_label String? @cenov_dev_db.VarChar(100)
-  atr_1_id    Int?
-  atr_1_label String? @cenov_dev_db.VarChar(100)
+  atr_0_id    Int
+  atr_0_label String  @cenov_dev_db.VarChar(100)
+  atr_1_id    Int
+  atr_1_label String  @cenov_dev_db.VarChar(100)
   atr_2_id    Int?
   atr_2_label String? @cenov_dev_db.VarChar(100)
   atr_3_id    Int?
@@ -217,10 +217,10 @@ view v_categorie {
 }
 
 view v_kit_caracteristique {
-  kit_label String? @cenov_dev_db.VarChar(100)
-  atr_label String? @cenov_dev_db.VarChar(100)
-  valeur    String? @cenov_dev_db.VarChar(50)
-  unit      String? @cenov_dev_db.VarChar(60)
+  kit_label String @cenov_dev_db.VarChar(100)
+  atr_label String @cenov_dev_db.VarChar(100)
+  valeur    String @cenov_dev_db.VarChar(50)
+  unit      String @cenov_dev_db.VarChar(60)
 
   @@schema("public")
 }
