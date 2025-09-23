@@ -24,7 +24,6 @@
 	// Navigation items
 	const navItems = [
 		{ href: '/', label: 'Accueil' },
-		{ href: '/categories', label: 'Catégories' },
 		{ href: '/CRUD', label: 'CRUD' },
 		{ href: '/import', label: 'Import' },
 		{ href: '/export', label: 'Export' }
