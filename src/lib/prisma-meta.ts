@@ -1,4 +1,19 @@
-// src/lib/prisma-meta.ts - Micro-wrapper pour métadonnées Prisma
+// src/lib/prisma-meta.ts - Utilitaires PARTAGÉS pour métadonnées Prisma DMMF
+//
+// ⚠️ RÈGLE IMPORTANTE : Ce fichier contient UNIQUEMENT des fonctions PARTAGÉES utilisées par PLUSIEURS pages/composants
+//
+// ✅ À METTRE ICI :
+// - getTableMetadata() : utilisé par import, export, kits, categories, etc.
+// - getAllTables() : utilisé par import, export, navigation, etc.
+// - findRecord(), createRecord(), updateRecord() : CRUD générique pour toutes les tables
+// - getDatabases() : accès aux clients Prisma partagé
+//
+// ❌ À NE PAS METTRE ICI :
+// - Schémas Zod spécifiques à une page (ex: kitSchema → dans +page.server.ts kits)
+// - Fonctions métier spécifiques (ex: createKitWithTransaction → dans +page.server.ts kits)
+// - Logique UI spécifique (ex: formatage pour DataTable → dans le composant)
+//
+// 💡 PRINCIPE : Si c'est utilisé par 2+ pages = ici, sinon = dans la page concernée
 import { browser, dev } from '$app/environment';
 
 // Types pour les modules Prisma

@@ -11,28 +11,29 @@
 
 	console.log('Script de la page kits chargé');
 
-	export let data;
+	// Interface pour les données du serveur
+	interface ServerData {
+		data: DataRecord[];
+		columns: Array<{
+			name: string;
+			type: string;
+			isRequired: boolean;
+			isPrimaryKey: boolean;
+		}>;
+		form: any;
+	}
 
-	// Définition de l'interface pour les kits
-	interface Kit {
-		id?: number;
-		kit_label?: string;
-		atr_label?: string;
-		atr_val?: string;
-		kat_valeur?: string;
+	export let data: ServerData;
+
+	// Interface générique pour les enregistrements (100% dynamique)
+	interface DataRecord {
 		[key: string]: string | number | undefined;
 	}
 
-	// Définition de l'interface pour les événements de formulaire
+	// Interface générique pour les événements de formulaire
 	interface FormEvent {
 		detail: {
-			data: {
-				kit_label: string;
-				atr_label: string;
-				atr_val: string;
-				kat_valeur: string;
-				[key: string]: string;
-			};
+			data: Record<string, string>;
 		};
 	}
 
@@ -44,29 +45,20 @@
 		};
 	}
 
-	// Définition de l'interface pour les données du formulaire
-	interface KitFormData {
-		[key: string]: string;
-	}
+	// Pour le filtrage (100% dynamique)
+	let filteredData: DataRecord[] = [...data.data];
 
-	// Pour le filtrage
-	let filteredKits: Kit[] = [...data.kits];
+	// Génération dynamique des colonnes depuis les métadonnées du serveur
+	$: columns = data.columns?.map(column => ({
+		key: column.name,
+		header: column.name
+	})) || [];
 
-	// Colonnes pour le tableau
-	const columns = [
-		{ key: 'kit_label', header: 'kit_label' },
-		{ key: 'atr_label', header: 'atr_label' },
-		{ key: 'atr_val', header: 'atr_val' },
-		{ key: 'kat_valeur', header: 'kat_valeur' }
-	];
-
-	// Champs pour le filtrage
-	const filterFields = [
-		{ key: 'kit_label', label: 'kit_label' },
-		{ key: 'atr_label', label: 'atr_label' },
-		{ key: 'atr_val', label: 'atr_val' },
-		{ key: 'kat_valeur', label: 'kat_valeur' }
-	];
+	// Génération dynamique des champs de filtrage depuis les colonnes
+	$: filterFields = columns.map(column => ({
+		key: column.key,
+		label: column.header
+	}));
 
 	// SuperForm pour la création
 	const { form, enhance: formEnhance } = superForm(data.form, {
@@ -82,7 +74,7 @@
 	let addFormOpen = false;
 	let editFormOpen = false;
 	let deleteConfirmOpen = false;
-	let selectedKit: Kit | null = null;
+	let selectedRecord: DataRecord | null = null;
 	let formData: Record<string, any> = {};
 
 	// Type pour les champs de formulaire
@@ -100,55 +92,45 @@
 		allowCustom?: boolean;
 	}
 
-	// Champs pour le formulaire d'ajout
-	const addFormFields: FormField[] = [
-		{
-			key: 'kit_label',
-			label: 'kit_label :',
-			type: 'text',
-			required: true,
-			placeholder: 'Ex: Boulon, Pompe à palettes...'
-		},
-		{
-			key: 'atr_label',
-			label: 'atr_label :',
-			type: 'select',
-			required: true,
-			placeholder: 'Ex: Poids, Diamètre, Pression...',
-			options: [
-				{ value: 'Poids', label: 'Poids' },
-				{ value: 'Diamètre', label: 'Diamètre' },
-				{ value: 'Pression', label: 'Pression' },
-				{ value: 'Puissance', label: 'Puissance' },
-				{ value: 'Nombre de phases', label: 'Nombre de phases' }
-			],
-			allowCustom: true
-		},
-		{
-			key: 'atr_val',
-			label: 'atr_val :',
-			type: 'select',
-			required: true,
-			placeholder: 'Ex: g, mm, MBAR...',
-			options: [
-				{ value: 'MBAR', label: 'MBAR' },
-				{ value: 'kW', label: 'kW' },
-				{ value: 'Triphasé', label: 'Triphasé' },
-				{ value: 'Monophasé', label: 'Monophasé' }
-			],
-			allowCustom: true
-		},
-		{
-			key: 'kat_valeur',
-			label: 'kat_valeur :',
-			type: 'number',
-			required: true,
-			placeholder: 'Ex: 5, 12, 150...'
-		}
-	];
+	// Génération dynamique des champs de formulaire depuis les métadonnées du serveur
+	$: formFields = data.columns?.map(column => {
+		let fieldType: FormFieldType = 'text';
 
-	// Champs pour le formulaire d'édition
-	const editFormFields: FormField[] = JSON.parse(JSON.stringify(addFormFields));
+		// Déterminer le type selon le type de colonne
+		switch (column.type) {
+			case 'Int':
+			case 'Float':
+			case 'Decimal':
+				fieldType = 'number';
+				break;
+			case 'Boolean':
+				fieldType = 'select';
+				break;
+			case 'DateTime':
+				fieldType = 'text'; // ou 'datetime-local' si supporté
+				break;
+			default:
+				fieldType = 'text';
+		}
+
+		return {
+			key: column.name,
+			label: `${column.name} :`,
+			type: fieldType,
+			required: column.isRequired && !column.isPrimaryKey,
+			placeholder: `Saisir ${column.name}...`,
+			...(fieldType === 'select' && column.type === 'Boolean' ? {
+				options: [
+					{ value: 'true', label: 'Oui' },
+					{ value: 'false', label: 'Non' }
+				]
+			} : {})
+		};
+	}) || [];
+
+	// Utiliser les mêmes champs pour l'ajout et l'édition
+	$: addFormFields = formFields;
+	$: editFormFields = formFields;
 
 	$: {
 		console.log("État du formulaire d'ajout:", { addFormOpen });
@@ -164,44 +146,43 @@
 		console.log('Nouvel état après ouverture:', { addFormOpen });
 	}
 
-	function openEditForm(item: Kit): void {
+	function openEditForm(item: DataRecord): void {
 		console.log('=== Début openEditForm ===');
 		console.log('Item reçu du DataTable:', item);
-		console.log('Type de id:', typeof item.id);
-		console.log('Valeur de id:', item.id);
 
-		// Si l'ID n'est pas dans l'objet item, vérifier si on peut le trouver dans les données originales
-		if (!item.id) {
-			console.log("ID non trouvé dans l'objet reçu, recherche dans les données originales");
-			const originalKit = data.kits.find(
-				(kit: Kit) =>
-					kit.kit_label === item.kit_label &&
-					kit.atr_label === item.atr_label &&
-					kit.atr_val === item.atr_val &&
-					kit.kat_valeur === item.kat_valeur
-			);
-			console.log('Kit original trouvé:', originalKit);
+		// Trouver la clé primaire dynamiquement
+		const primaryKeyColumn = data.columns?.find(col => col.isPrimaryKey);
+		const primaryKey = primaryKeyColumn?.name || 'id';
 
-			// Si trouvé, utiliser l'objet original au lieu de l'objet partiel
-			if (originalKit && originalKit.id) {
-				selectedKit = originalKit;
-			} else {
-				selectedKit = item;
-			}
+		console.log('Clé primaire détectée:', primaryKey);
+		console.log('Valeur de la clé primaire:', item[primaryKey]);
+
+		// Si la clé primaire n'est pas dans l'objet item, chercher dans les données originales
+		if (!item[primaryKey]) {
+			console.log("Clé primaire non trouvée, recherche dans les données originales");
+			// Trouver l'enregistrement par comparaison de tous les champs non-clés
+			const originalRecord = data.data.find((record: DataRecord) => {
+				return Object.keys(item).every(key =>
+					key === primaryKey || record[key] === item[key]
+				);
+			});
+			console.log('Enregistrement original trouvé:', originalRecord);
+
+			selectedRecord = originalRecord || item;
 		} else {
-			selectedKit = item;
+			selectedRecord = item;
 		}
 
-		console.log('selectedKit avec ID:', selectedKit);
+		console.log('selectedRecord avec clé primaire:', selectedRecord);
 		console.log('=== Fin openEditForm ===');
 
 		editFormOpen = true;
 	}
 
-	function confirmDelete(item: Kit): void {
+	function confirmDelete(item: DataRecord): void {
 		console.log('=== Début confirmDelete ===');
-		console.log('Kit sélectionné pour suppression:', item);
-		selectedKit = item;
+		console.log('Enregistrement sélectionné pour suppression:', item);
+		selectedRecord = item;
 		deleteConfirmOpen = true;
 		console.log('=== Fin confirmDelete ===');
 	}
@@ -211,23 +192,22 @@
 		console.log('Filtrage:', { field, term });
 
 		if (!term.trim()) {
-			filteredKits = [...data.kits];
+			filteredData = [...data.data];
 			return;
 		}
 
-		filteredKits = data.kits.filter((kit: Kit) => {
-			const value = kit[field];
+		filteredData = data.data.filter((record: DataRecord) => {
+			const value = record[field];
 			if (value === undefined || value === null) return false;
 			return String(value).toLowerCase().includes(term.toLowerCase());
 		});
 
-		console.log('Résultats filtrés:', filteredKits);
+		console.log('Résultats filtrés:', filteredData);
 	}
 
 	async function handleResetFilter(): Promise<void> {
 		console.log('Réinitialisation du filtre');
-		filteredKits = [...data.kits];
-		// Recharger les données dans l'ordre par défaut (ID décroissant pour kits)
+		filteredData = [...data.data];
 		try {
 			await invalidateAll();
 			toast.success('Données réinitialisées');
@@ -240,95 +220,89 @@
 	async function handleSort(event: CustomEvent<{ order: 'asc' | 'desc' }>): Promise<void> {
 		console.log('Tri demandé:', event.detail.order);
 		try {
-			// La vue a maintenant un tri ASC fixe, donc on inverse localement pour DESC
-			const response = await fetch('/kits/api');
-			if (response.ok) {
-				let sortedKits = await response.json();
+			// Tri local par la clé primaire
+			const primaryKeyColumn = data.columns?.find(col => col.isPrimaryKey);
+			const primaryKey = primaryKeyColumn?.name || 'id';
 
-				// Si ordre inversé demandé, inverser le tableau
-				if (event.detail.order === 'desc') {
-					sortedKits = [...sortedKits].reverse();
+			let sortedData = [...data.data];
+
+			// Tri selon l'ordre demandé
+			sortedData.sort((a: DataRecord, b: DataRecord) => {
+				const aVal = a[primaryKey];
+				const bVal = b[primaryKey];
+
+				if (event.detail.order === 'asc') {
+					return (aVal as number) - (bVal as number);
+				} else {
+					return (bVal as number) - (aVal as number);
 				}
+			});
 
-				data.kits = sortedKits;
-				filteredKits = [...sortedKits];
-				toast.success(
-					`Tri appliqué : ${event.detail.order === 'asc' ? 'Ordre par défaut' : 'Ordre inversé'}`
-				);
-			} else {
-				toast.error('Erreur lors du tri');
-			}
+			data.data = sortedData;
+			filteredData = [...sortedData];
+			toast.success(
+				`Tri appliqué : ${event.detail.order === 'asc' ? 'Ordre croissant' : 'Ordre décroissant'}`
+			);
 		} catch (error) {
 			console.error('Erreur lors du tri:', error);
 			toast.error('Erreur lors du tri');
 		}
 	}
 
-	function handleAddKit(): void {
+	function handleAddRecord(): void {
 		openAddForm();
 	}
 
 	function handleFormSubmit(event: FormEvent): void {
 		console.log('=== Début handleFormSubmit ===');
 		console.log('Données du formulaire reçues:', event.detail.data);
-		console.log('selectedKit actuel:', selectedKit);
+		console.log('selectedRecord actuel:', selectedRecord);
 		console.log('editFormOpen:', editFormOpen);
 		console.log('addFormOpen:', addFormOpen);
 
-		// Validation numérique pour kat_valeur
-		const katValeur = event.detail.data.kat_valeur;
-		const katValeurStr = String(katValeur || '').trim();
-
-		if (!katValeur || katValeurStr === '') {
-			Alert.alertActions.warning('La valeur numérique est obligatoire');
-			return;
-		}
-
-		// Vérifier si c'est un nombre valide
-		const numericValue = parseFloat(katValeurStr);
-		// Regex corrigée pour accepter : entiers, décimaux, négatifs, notation scientifique
-		const isValidNumber = /^-?\d+(\.\d+)?([eE][-+]?\d+)?$/.test(katValeurStr);
-
-		if (isNaN(numericValue) || !isFinite(numericValue) || !isValidNumber) {
-			Alert.alertActions.warning(
-				'La valeur doit être un nombre valide (ex: 12, 12.5, -3.14, 1.5e10)'
-			);
-			return;
-		}
-
-		const formElement = document.querySelector('#kitForm') as HTMLFormElement;
+		const formElement = document.querySelector('#dynamicForm') as HTMLFormElement;
 		if (!formElement) {
 			console.error('Formulaire non trouvé');
 			return;
 		}
 
-		// Remplir les champs cachés avec les données du formulaire
-		const kitLabelInput = formElement.querySelector('input[name="kit_label"]') as HTMLInputElement;
-		const atrLabelInput = formElement.querySelector('input[name="atr_label"]') as HTMLInputElement;
-		const atrValInput = formElement.querySelector('input[name="atr_val"]') as HTMLInputElement;
-		const katValeurInput = formElement.querySelector(
-			'input[name="kat_valeur"]'
-		) as HTMLInputElement;
-		const idInput = formElement.querySelector('input[name="id"]') as HTMLInputElement;
+		// Vider tous les champs existants
+		formElement.querySelectorAll('input[type="hidden"]').forEach(input => {
+			(input as HTMLInputElement).value = '';
+		});
 
-		if (kitLabelInput) kitLabelInput.value = event.detail.data.kit_label || '';
-		if (atrLabelInput) atrLabelInput.value = event.detail.data.atr_label || '';
-		if (atrValInput) atrValInput.value = event.detail.data.atr_val || '';
-		if (katValeurInput) katValeurInput.value = String(event.detail.data.kat_valeur || '');
+		// Remplir dynamiquement tous les champs depuis les données du formulaire
+		Object.entries(event.detail.data).forEach(([fieldName, fieldValue]) => {
+			let input = formElement.querySelector(`input[name="${fieldName}"]`) as HTMLInputElement;
 
-		// Pour la modification, s'assurer que l'ID est présent
-		if (selectedKit?.id && idInput) {
-			idInput.value = String(selectedKit.id);
-			console.log('ID défini dans le formulaire caché:', idInput.value);
+			// Créer l'input s'il n'existe pas
+			if (!input) {
+				input = document.createElement('input');
+				input.type = 'hidden';
+				input.name = fieldName;
+				formElement.appendChild(input);
+			}
+
+			input.value = String(fieldValue || '');
+		});
+
+		// Pour la modification, s'assurer que la clé primaire est présente
+		const primaryKeyColumn = data.columns?.find(col => col.isPrimaryKey);
+		const primaryKey = primaryKeyColumn?.name || 'id';
+
+		if (selectedRecord?.[primaryKey]) {
+			let idInput = formElement.querySelector(`input[name="${primaryKey}"]`) as HTMLInputElement;
+			if (!idInput) {
+				idInput = document.createElement('input');
+				idInput.type = 'hidden';
+				idInput.name = primaryKey;
+				formElement.appendChild(idInput);
+			}
+			idInput.value = String(selectedRecord[primaryKey]);
+			console.log(`${primaryKey} défini dans le formulaire caché:`, idInput.value);
 		}
 
-		console.log('Champs cachés remplis avec:', {
-			kit_label: kitLabelInput?.value,
-			atr_label: atrLabelInput?.value,
-			atr_val: atrValInput?.value,
-			kat_valeur: katValeurInput?.value,
-			id: idInput?.value
-		});
+		console.log('Champs cachés remplis dynamiquement');
 
 		// Soumettre le formulaire
 		formElement.requestSubmit();
@@ -337,11 +311,15 @@
 
 	function handleDeleteConfirm(): void {
 		console.log('=== Début handleDeleteConfirm ===');
-		console.log('Kit à supprimer:', selectedKit);
+		console.log('Enregistrement à supprimer:', selectedRecord);
 
-		if (!selectedKit?.id) {
-			console.error('Aucun kit sélectionné ou ID manquant');
-			Alert.alertActions.error('Erreur: Aucun kit sélectionné');
+		// Trouver la clé primaire dynamiquement
+		const primaryKeyColumn = data.columns?.find(col => col.isPrimaryKey);
+		const primaryKey = primaryKeyColumn?.name || 'id';
+
+		if (!selectedRecord?.[primaryKey]) {
+			console.error('Aucun enregistrement sélectionné ou clé primaire manquante');
+			Alert.alertActions.error('Erreur: Aucun enregistrement sélectionné');
 			deleteConfirmOpen = false;
 			return;
 		}
@@ -353,13 +331,17 @@
 			return;
 		}
 
-		// Remplir le champ caché avec l'ID
-		const idInput = formElement.querySelector('input[name="id"]') as HTMLInputElement;
-		if (idInput) {
-			idInput.value = String(selectedKit.id);
+		// Remplir le champ caché avec la clé primaire
+		let idInput = formElement.querySelector(`input[name="${primaryKey}"]`) as HTMLInputElement;
+		if (!idInput) {
+			idInput = document.createElement('input');
+			idInput.type = 'hidden';
+			idInput.name = primaryKey;
+			formElement.appendChild(idInput);
 		}
+		idInput.value = String(selectedRecord[primaryKey]);
 
-		console.log('ID rempli pour suppression:', idInput?.value);
+		console.log(`${primaryKey} rempli pour suppression:`, idInput.value);
 
 		// Fermer la boîte de dialogue de confirmation
 		deleteConfirmOpen = false;
@@ -369,46 +351,56 @@
 		console.log('=== Fin handleDeleteConfirm ===');
 	}
 
-	async function confirmDeleteMultiple(items: Kit[]): Promise<void> {
+	async function confirmDeleteMultiple(items: DataRecord[]): Promise<void> {
 		console.log('=== Début confirmDeleteMultiple ===');
-		console.log('Kits à supprimer:', items);
+		console.log('Enregistrements à supprimer:', items);
 
 		if (!items.length) {
-			Alert.alertActions.error('Aucun kit sélectionné');
+			Alert.alertActions.error('Aucun enregistrement sélectionné');
 			return;
 		}
+
+		// Trouver la clé primaire dynamiquement
+		const primaryKeyColumn = data.columns?.find(col => col.isPrimaryKey);
+		const primaryKey = primaryKeyColumn?.name || 'id';
 
 		try {
 			let successCount = 0;
 			let errorCount = 0;
 
-			// Supprimer chaque kit sélectionné
-			for (const kit of items) {
-				if (kit.id) {
-					const response = await fetch(`/kits/api/${kit.id}`, {
-						method: 'DELETE'
+			// Supprimer chaque enregistrement sélectionné
+			for (const record of items) {
+				const primaryKeyValue = record[primaryKey];
+				if (primaryKeyValue) {
+					// Utiliser l'action de suppression via formulaire
+					const formData = new FormData();
+					formData.append(primaryKey, String(primaryKeyValue));
+
+					const response = await fetch('?/delete', {
+						method: 'POST',
+						body: formData
 					});
 
 					if (response.ok) {
 						successCount++;
 					} else {
 						errorCount++;
-						console.error(`Erreur lors de la suppression du kit ${kit.id}`);
+						console.error(`Erreur lors de la suppression de l'enregistrement ${primaryKeyValue}`);
 					}
 				} else {
 					errorCount++;
-					console.error('Kit sans ID:', kit);
+					console.error('Enregistrement sans clé primaire:', record);
 				}
 			}
 
 			// Afficher le résultat
 			if (errorCount === 0) {
-				Alert.alertActions.success(`${successCount} kit(s) supprimé(s) avec succès`);
+				Alert.alertActions.success(`${successCount} enregistrement(s) supprimé(s) avec succès`);
 				toast.success(`${successCount} élément(s) supprimé(s) avec succès`);
 			} else if (successCount === 0) {
-				Alert.alertActions.error(`Erreur lors de la suppression des ${errorCount} kit(s)`);
+				Alert.alertActions.error(`Erreur lors de la suppression des ${errorCount} enregistrement(s)`);
 			} else {
-				Alert.alertActions.error(`${successCount} kit(s) supprimé(s), ${errorCount} erreur(s)`);
+				Alert.alertActions.error(`${successCount} enregistrement(s) supprimé(s), ${errorCount} erreur(s)`);
 			}
 
 			// Recharger les données
@@ -422,19 +414,19 @@
 
 	// Réactivité pour mettre à jour les données filtrées
 	$: {
-		if (data.kits) {
-			filteredKits = [...data.kits];
+		if (data.data) {
+			filteredData = [...data.data];
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>Gestion des Kits</title>
+	<title>Gestion des Données</title>
 </svelte:head>
 
 <div class="container mx-auto p-6">
 	<div class="mb-6">
-		<h1 class="text-3xl font-bold text-gray-900">Gestion des Kits</h1>
+		<h1 class="text-3xl font-bold text-gray-900">Gestion des Données</h1>
 	</div>
 
 	<Alert.GlobalAlert />
@@ -442,20 +434,20 @@
 	<!-- Composant de filtrage avec bouton d'ajout -->
 	<Filter
 		fields={filterFields}
-		placeholder="Rechercher un kit..."
+		placeholder="Rechercher..."
 		showAddButton={true}
-		addButtonText="Ajouter un kit"
+		addButtonText="Ajouter un enregistrement"
 		showSortFilter={true}
 		hideIdDesc={true}
 		on:filter={handleFilter}
 		on:reset={handleResetFilter}
-		on:add={handleAddKit}
+		on:add={handleAddRecord}
 		on:sort={handleSort}
 	/>
 
 	<!-- Tableau des données -->
 	<DataTable
-		data={filteredKits}
+		data={filteredData}
 		{columns}
 		selectable={true}
 		multiSelect={true}
@@ -467,7 +459,7 @@
 	<!-- Formulaire d'ajout -->
 	<Form
 		bind:isOpen={addFormOpen}
-		title="Ajouter un kit"
+		title="Ajouter un enregistrement"
 		fields={addFormFields}
 		data={formData}
 		submitLabel="Créer"
@@ -481,22 +473,22 @@
 	<!-- Formulaire d'édition -->
 	<Form
 		bind:isOpen={editFormOpen}
-		title="Modifier le kit"
+		title="Modifier l'enregistrement"
 		fields={editFormFields}
-		data={selectedKit || {}}
+		data={selectedRecord || {}}
 		submitLabel="Modifier"
 		isEdit={true}
 		on:submit={handleFormSubmit}
 		on:cancel={() => {
 			editFormOpen = false;
-			selectedKit = null;
+			selectedRecord = null;
 		}}
 	/>
 
 	<!-- Confirmation de suppression -->
 	<Form
 		bind:isOpen={deleteConfirmOpen}
-		title="Supprimer ce kit"
+		title="Supprimer cet enregistrement"
 		fields={[]}
 		submitLabel="Supprimer"
 		cancelLabel="Annuler"
@@ -504,27 +496,27 @@
 		on:submit={handleDeleteConfirm}
 		on:cancel={() => {
 			deleteConfirmOpen = false;
-			selectedKit = null;
+			selectedRecord = null;
 		}}
 	/>
 
-	<!-- Formulaire caché pour les actions -->
+	<!-- Formulaire caché pour les actions CRUD dynamiques -->
 	<form
-		id="kitForm"
+		id="dynamicForm"
 		method="POST"
-		action={selectedKit ? '?/update' : '?/create'}
+		action={selectedRecord ? '?/update' : '?/create'}
 		use:enhance={() => {
 			return async ({ result, update }) => {
 				console.log('Résultat de la soumission:', result);
 
 				if (result.type === 'success') {
 					Alert.alertActions.success(
-						selectedKit ? 'Kit modifié avec succès' : 'Kit créé avec succès'
+						selectedRecord ? 'Enregistrement modifié avec succès' : 'Enregistrement créé avec succès'
 					);
-					toast.success(selectedKit ? 'Élément modifié avec succès' : 'Élément créé avec succès');
+					toast.success(selectedRecord ? 'Élément modifié avec succès' : 'Élément créé avec succès');
 					addFormOpen = false;
 					editFormOpen = false;
-					selectedKit = null;
+					selectedRecord = null;
 					await invalidateAll();
 				} else if (result.type === 'failure') {
 					const errorMsg = (result.data as any)?.error || 'Une erreur est survenue';
@@ -536,11 +528,7 @@
 		}}
 		style="display: none;"
 	>
-		<input type="hidden" name="kit_label" value="" />
-		<input type="hidden" name="atr_label" value="" />
-		<input type="hidden" name="atr_val" value="" />
-		<input type="hidden" name="kat_valeur" value="" />
-		<input type="hidden" name="id" value="" />
+		<!-- Les champs cachés sont créés dynamiquement par JavaScript -->
 	</form>
 
 	<!-- Formulaire de suppression -->
@@ -553,9 +541,9 @@
 				console.log('Résultat de la suppression:', result);
 
 				if (result.type === 'success') {
-					Alert.alertActions.success('Kit supprimé avec succès');
+					Alert.alertActions.success('Enregistrement supprimé avec succès');
 					toast.success('Élément supprimé avec succès');
-					selectedKit = null;
+					selectedRecord = null;
 					await invalidateAll();
 				} else if (result.type === 'failure') {
 					const errorMsg = (result.data as any)?.error || 'Erreur lors de la suppression';
@@ -567,6 +555,6 @@
 		}}
 		style="display: none;"
 	>
-		<input type="hidden" name="id" value="" />
+		<!-- Le champ de clé primaire est créé dynamiquement par JavaScript -->
 	</form>
 </div>

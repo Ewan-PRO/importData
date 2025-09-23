@@ -1,10 +1,20 @@
-// src/routes/kits/+page.server.ts
+// src/routes/kits/+page.server.ts - Serveur unifié avec Prisma DMMF
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { z } from 'zod';
 import { superValidate } from 'sveltekit-superforms/server';
 import { zod } from 'sveltekit-superforms/adapters';
 import { protect } from '$lib/auth/protect';
+import { useDevTables } from '$lib/server/db';
+import {
+	getDatabases,
+	getTableMetadata,
+	findRecord,
+	createRecord,
+	updateRecord,
+	type DatabaseName,
+	type FieldInfo
+} from '$lib/prisma-meta';
 
 // Fonction utilitaire pour convertir en toute sécurité les valeurs FormData en string
 function safeFormDataToString(value: FormDataEntryValue | null): string {
@@ -14,58 +24,297 @@ function safeFormDataToString(value: FormDataEntryValue | null): string {
 	return '';
 }
 
-// Schéma de validation pour les kits
-const kitSchema = z.object({
-	kit_label: z
-		.string()
-		.min(1, { message: 'Le nom du kit est requis' })
-		.max(255, { message: 'Le nom du kit ne peut pas dépasser 255 caractères' }),
-	atr_label: z
-		.string()
-		.min(1, { message: 'La caractéristique est requise' })
-		.max(255, { message: 'La caractéristique ne peut pas dépasser 255 caractères' }),
-	atr_val: z
-		.string()
-		.min(1, { message: "L'unité est requise" })
-		.max(255, { message: "L'unité ne peut pas dépasser 255 caractères" }),
-	kat_valeur: z
-		.string()
-		.min(1, { message: 'La valeur doit être un chiffre ou un nombre valide' })
-		.max(255, { message: 'La valeur ne peut pas dépasser 255 caractères' })
-		.refine((val) => !isNaN(parseFloat(val)), {
-			message: 'La valeur doit être un nombre valide'
-		})
-});
+// ========== SYSTÈME 100% DYNAMIQUE SANS HARDCODING ==========
 
-// Cette fonction sera utilisée à la fois sur le serveur et le kit
+// Fonction générique pour générer un schéma Zod depuis n'importe quelle table DMMF
+async function generateDynamicSchemaFromTable(
+	database: DatabaseName,
+	tableName: string
+): Promise<{
+	schema: z.ZodObject<Record<string, z.ZodTypeAny>>;
+	columns: FieldInfo[];
+}> {
+	const metadata = await getTableMetadata(database, tableName);
+	if (!metadata) {
+		throw new Error(`Métadonnées non trouvées pour la table ${tableName}`);
+	}
+
+	const zodFields: Record<string, z.ZodTypeAny> = {};
+
+	metadata.fields.forEach((field) => {
+		let zodType: z.ZodTypeAny = z.string();
+
+		// Validation selon le type DMMF
+		switch (field.type) {
+			case 'Int':
+			case 'Float':
+			case 'Decimal':
+				zodType = zodType.refine((val) => !isNaN(parseFloat(val)), {
+					message: `${field.name} doit être un nombre valide`
+				});
+				break;
+			case 'DateTime':
+				zodType = zodType.refine((val) => !isNaN(Date.parse(val)), {
+					message: `${field.name} doit être une date valide`
+				});
+				break;
+			case 'Boolean':
+				zodType = zodType.refine((val) => ['true', 'false', '1', '0'].includes(val.toLowerCase()), {
+					message: `${field.name} doit être true/false`
+				});
+				break;
+		}
+
+		// Champs obligatoires (détectés via DMMF)
+		if (field.isRequired && !field.isPrimaryKey) {
+			if (zodType instanceof z.ZodString) {
+				zodType = zodType.min(1, { message: `${field.name} est obligatoire` });
+			}
+		} else {
+			zodType = zodType.optional();
+		}
+
+		zodFields[field.name] = zodType;
+	});
+
+	return {
+		schema: z.object(zodFields),
+		columns: metadata.fields
+	};
+}
+
+// Fonction générique pour récupérer des données depuis n'importe quelle vue/table
+async function getDataFromTable(database: DatabaseName, tableName: string): Promise<unknown[]> {
+	const databases = await getDatabases();
+	const client = databases[database].client;
+
+	const model = client[tableName] as { findMany: () => Promise<unknown[]> };
+	if (!model?.findMany) {
+		throw new Error(`Table/Vue ${tableName} non trouvée dans la base ${database}`);
+	}
+
+	return await model.findMany();
+}
+
+// Fonction générique pour créer un enregistrement dans n'importe quelle table
+async function createRecordDynamic(
+	database: DatabaseName,
+	tableName: string,
+	formData: Record<string, string>
+): Promise<unknown> {
+	const metadata = await getTableMetadata(database, tableName);
+	if (!metadata) {
+		throw new Error(`Métadonnées non trouvées pour la table ${tableName}`);
+	}
+
+	const insertData: Record<string, unknown> = {};
+
+	// Conversion automatique selon les types DMMF
+	metadata.fields.forEach((field) => {
+		if (formData[field.name] !== undefined && !field.isPrimaryKey) {
+			const value = formData[field.name];
+
+			if (value === '' || value === null) {
+				// Valeur vide : null si optionnel, erreur si requis
+				if (!field.isRequired) {
+					insertData[field.name] = null;
+				}
+				return;
+			}
+
+			// Conversion selon le type DMMF
+			switch (field.type) {
+				case 'Int':
+					insertData[field.name] = parseInt(value, 10);
+					break;
+				case 'Float':
+				case 'Decimal':
+					insertData[field.name] = parseFloat(value);
+					break;
+				case 'Boolean':
+					insertData[field.name] = ['true', '1'].includes(value.toLowerCase());
+					break;
+				case 'DateTime':
+					insertData[field.name] = new Date(value);
+					break;
+				default:
+					insertData[field.name] = value;
+			}
+		}
+	});
+
+	return await createRecord(database, tableName, insertData);
+}
+
+// Fonction générique pour mettre à jour un enregistrement dans n'importe quelle table
+async function updateRecordDynamic(
+	database: DatabaseName,
+	tableName: string,
+	id: number,
+	formData: Record<string, string>
+): Promise<unknown> {
+	const metadata = await getTableMetadata(database, tableName);
+	if (!metadata) {
+		throw new Error(`Métadonnées non trouvées pour la table ${tableName}`);
+	}
+
+	const primaryKey = metadata.primaryKey;
+
+	// Vérifier que l'enregistrement existe
+	const existingRecord = await findRecord(database, tableName, { [primaryKey]: id });
+	if (!existingRecord) {
+		throw new Error('Enregistrement non trouvé');
+	}
+
+	const updateData: Record<string, unknown> = {};
+
+	// Conversion automatique selon les types DMMF
+	metadata.fields.forEach((field) => {
+		if (formData[field.name] !== undefined && !field.isPrimaryKey) {
+			const value = formData[field.name];
+
+			if (value === '' || value === null) {
+				if (!field.isRequired) {
+					updateData[field.name] = null;
+				}
+				return;
+			}
+
+			// Conversion selon le type DMMF
+			switch (field.type) {
+				case 'Int':
+					updateData[field.name] = parseInt(value, 10);
+					break;
+				case 'Float':
+				case 'Decimal':
+					updateData[field.name] = parseFloat(value);
+					break;
+				case 'Boolean':
+					updateData[field.name] = ['true', '1'].includes(value.toLowerCase());
+					break;
+				case 'DateTime':
+					updateData[field.name] = new Date(value);
+					break;
+				default:
+					updateData[field.name] = value;
+			}
+		}
+	});
+
+	return await updateRecord(database, tableName, { [primaryKey]: id }, updateData);
+}
+
+// Fonction générique pour supprimer un enregistrement dans n'importe quelle table
+async function deleteRecordDynamic(
+	database: DatabaseName,
+	tableName: string,
+	id: number
+): Promise<unknown> {
+	const metadata = await getTableMetadata(database, tableName);
+	if (!metadata) {
+		throw new Error(`Métadonnées non trouvées pour la table ${tableName}`);
+	}
+
+	const primaryKey = metadata.primaryKey;
+
+	// Vérifier que l'enregistrement existe
+	const existingRecord = await findRecord(database, tableName, { [primaryKey]: id });
+	if (!existingRecord) {
+		throw new Error('Enregistrement non trouvé');
+	}
+
+	const databases = await getDatabases();
+	const client = databases[database].client;
+	const model = client[tableName] as {
+		delete: (args: { where: unknown }) => Promise<unknown>;
+	};
+
+	if (!model?.delete) {
+		throw new Error(`Table ${tableName} non trouvée dans la base ${database}`);
+	}
+
+	return await model.delete({ where: { [primaryKey]: id } });
+}
+
+// ========== CONFIGURATION 100% DYNAMIQUE DMMF ==========
+
+// Récupérer automatiquement la première vue disponible (100% dynamique DMMF)
+async function getFirstAvailableView(): Promise<{ database: DatabaseName; tableName: string }> {
+	const useDevViews = useDevTables();
+	const database: DatabaseName = useDevViews ? 'cenov_dev' : 'cenov';
+
+	const databases = await getDatabases();
+	const availableModels = databases[database].dmmf.datamodel.models;
+
+	// Trouver la première vue (nom contenant 'v_')
+	const firstView = availableModels.find(model =>
+		model.name.includes('v_') || model.name.includes('_v_')
+	);
+
+	if (firstView) {
+		return { database, tableName: firstView.name };
+	}
+
+	// Si aucune vue, prendre le premier modèle disponible
+	return { database, tableName: availableModels[0]?.name || 'defaultTable' };
+}
+
+// Récupérer automatiquement la première table disponible (100% dynamique DMMF)
+async function getFirstAvailableTable(): Promise<{ database: DatabaseName; tableName: string }> {
+	const useDevViews = useDevTables();
+	const database: DatabaseName = useDevViews ? 'cenov_dev' : 'cenov';
+
+	const databases = await getDatabases();
+	const availableModels = databases[database].dmmf.datamodel.models;
+
+	// Trouver la première table (nom ne contenant pas 'v_')
+	const firstTable = availableModels.find(model =>
+		!model.name.includes('v_') && !model.name.includes('_v_')
+	);
+
+	if (firstTable) {
+		return { database, tableName: firstTable.name };
+	}
+
+	// Si aucune table, prendre le premier modèle disponible
+	return { database, tableName: availableModels[0]?.name || 'defaultTable' };
+}
+
+// ========== LOAD ET ACTIONS ==========
+
 export const load = (async (event) => {
 	// Protection de la route - redirection vers / si non connecté
 	await protect(event);
 
-	const { fetch, depends } = event;
+	const { depends } = event;
 	depends('app:kits'); // Pour permettre l'invalidation avec invalidateAll()
 
 	try {
-		// Récupérer les kits via l'API (par défaut ordre naturel de la vue - ID croissant)
-		const kitsResponse = await fetch('/kits/api?sortOrder=asc');
+		// Détection 100% dynamique via DMMF
+		const viewInfo = await getFirstAvailableView();
+		const tableInfo = await getFirstAvailableTable();
 
-		if (!kitsResponse.ok) {
-			throw new Error(`Erreur API: ${kitsResponse.status} - ${kitsResponse.statusText}`);
-		}
+		// Récupérer les données depuis la vue détectée
+		const data = await getDataFromTable(viewInfo.database, viewInfo.tableName);
 
-		const kits = await kitsResponse.json();
+		// Générer le schéma et les colonnes dynamiquement depuis la table détectée
+		const { schema, columns } = await generateDynamicSchemaFromTable(
+			tableInfo.database,
+			tableInfo.tableName
+		);
 
-		// Créer un formulaire vide pour l'ajout de kit
-		const form = await superValidate(zod(kitSchema));
+		// Créer un formulaire avec le schéma dynamique
+		const form = await superValidate(zod(schema));
 
 		return {
-			kits,
+			data,
+			columns,
 			form
 		};
 	} catch (err) {
 		throw error(
 			500,
-			`Erreur lors du chargement des kits: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
+			`Erreur lors du chargement des données: ${err instanceof Error ? err.message : 'Erreur inconnue'}`
 		);
 	}
 }) satisfies PageServerLoad;
@@ -75,38 +324,33 @@ export const actions: Actions = {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
 
-		const { request, fetch } = event;
+		const { request } = event;
 		const formData = await request.formData();
-		const form = await superValidate(formData, zod(kitSchema));
+
+		// Détection 100% dynamique via DMMF
+		const tableInfo = await getFirstAvailableTable();
+		const { schema } = await generateDynamicSchemaFromTable(
+			tableInfo.database,
+			tableInfo.tableName
+		);
+
+		const form = await superValidate(formData, zod(schema));
 
 		if (!form.valid) {
 			return fail(400, { form });
 		}
 
 		try {
-			const response = await fetch('/kits/api', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(form.data)
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				return fail(response.status, {
-					form,
-					error: errorData.error ?? 'Erreur lors de la création du kit'
-				});
-			}
+			const result = await createRecordDynamic(tableInfo.database, tableInfo.tableName, form.data);
 
 			// Réinitialiser le formulaire après succès
-			return { form, success: true };
+			return { form, success: true, data: result };
 		} catch (err) {
-			console.error('Erreur lors de la création du kit:', err);
+			console.error('Erreur lors de la création:', err);
+			const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création';
 			return fail(500, {
 				form,
-				error: 'Erreur lors de la création du kit'
+				error: errorMessage
 			});
 		}
 	},
@@ -115,55 +359,37 @@ export const actions: Actions = {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
 
-		const { request, fetch } = event;
+		const { request } = event;
 		const formData = await request.formData();
 		const id = safeFormDataToString(formData.get('id'));
 
-		console.log('=== ACTION UPDATE DEBUG ===');
-		console.log('FormData reçue:', Object.fromEntries(formData.entries()));
-		console.log('ID extrait:', id);
-
 		if (!id) {
-			console.log("❌ ID manquant - Échec de l'action update");
-			return fail(400, { error: 'ID de kit manquant' });
+			return fail(400, { error: 'ID manquant' });
 		}
 
-		// Extraire les données du formulaire pour la mise à jour
-		const updateData = {
-			kit_label: safeFormDataToString(formData.get('kit_label')),
-			atr_label: safeFormDataToString(formData.get('atr_label')),
-			atr_val: safeFormDataToString(formData.get('atr_val')),
-			kat_valeur: safeFormDataToString(formData.get('kat_valeur'))
-		};
+		// Détection 100% dynamique via DMMF
+		const tableInfo = await getFirstAvailableTable();
 
-		console.log('Données de mise à jour:', updateData);
+		// Extraire toutes les données du formulaire dynamiquement
+		const updateData: Record<string, string> = {};
+		for (const [key, value] of formData.entries()) {
+			if (key !== 'id') {
+				updateData[key] = safeFormDataToString(value);
+			}
+		}
 
 		try {
-			console.log('Envoi de la requête PUT vers:', `/kits/api/${id}`);
-			const response = await fetch(`/kits/api/${id}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(updateData)
-			});
-
-			console.log('Statut de la réponse API:', response.status);
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				console.log('❌ Erreur API:', errorData);
-				return fail(response.status, {
-					error: errorData.error ?? 'Erreur lors de la mise à jour du kit'
-				});
-			}
-
-			const responseData = await response.json();
-			console.log('✅ Succès API:', responseData);
-			return { success: true };
+			const result = await updateRecordDynamic(
+				tableInfo.database,
+				tableInfo.tableName,
+				parseInt(id),
+				updateData
+			);
+			return { success: true, data: result };
 		} catch (err) {
-			console.error('Erreur lors de la mise à jour du kit:', err);
-			return fail(500, { error: 'Erreur lors de la mise à jour du kit' });
+			console.error('Erreur lors de la mise à jour:', err);
+			const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour';
+			return fail(500, { error: errorMessage });
 		}
 	},
 
@@ -171,30 +397,24 @@ export const actions: Actions = {
 		// Protection de l'action - redirection vers / si non connecté
 		await protect(event);
 
-		const { request, fetch } = event;
+		const { request } = event;
 		const formData = await request.formData();
 		const id = safeFormDataToString(formData.get('id'));
 
 		if (!id) {
-			return fail(400, { error: 'ID de kit manquant' });
+			return fail(400, { error: 'ID manquant' });
 		}
 
+		// Détection 100% dynamique via DMMF
+		const tableInfo = await getFirstAvailableTable();
+
 		try {
-			const response = await fetch(`/kits/api/${id}`, {
-				method: 'DELETE'
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				return fail(response.status, {
-					error: errorData.error ?? 'Erreur lors de la suppression du kit'
-				});
-			}
-
+			await deleteRecordDynamic(tableInfo.database, tableInfo.tableName, parseInt(id));
 			return { success: true };
 		} catch (err) {
-			console.error('Erreur lors de la suppression du kit:', err);
-			return fail(500, { error: 'Erreur lors de la suppression du kit' });
+			console.error('Erreur lors de la suppression:', err);
+			const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la suppression';
+			return fail(500, { error: errorMessage });
 		}
 	}
 };
