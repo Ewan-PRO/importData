@@ -653,8 +653,10 @@ export async function getImportableTables(): Promise<TableInfo[]> {
 
 	const allTables = await getAllDatabaseTables();
 
-	// Filtrer pour garder seulement les tables (pas les vues en lecture seule)
-	const importableTables = allTables.filter((table) => table.category === 'table');
+	// Inclure à la fois les tables et les vues pour l'import
+	const importableTables = allTables.filter((table) =>
+		table.category === 'table' || table.category === 'view'
+	);
 
 	// Ajouter le comptage des lignes comme dans l'export
 	const tablesWithCounts = await Promise.all(
@@ -719,6 +721,82 @@ export async function getImportableTableRequiredFields(): Promise<Record<string,
 	return result;
 }
 
+// ========== FONCTIONS D'ANALYSE DES VUES ==========
+
+// Parser SQL pour extraire les noms de tables
+function parseTablesFromSQL(sqlDefinition: string): string[] {
+	const tables = new Set<string>();
+
+	// Regex pour capturer FROM table et JOIN table
+	const tableRegex = /(?:FROM|JOIN)\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi;
+	let match;
+
+	while ((match = tableRegex.exec(sqlDefinition)) !== null) {
+		tables.add(match[1]);
+	}
+
+	return Array.from(tables);
+}
+
+// Obtenir les tables sources d'une vue via analyse SQL PostgreSQL
+async function getViewSourceTablesFromSQL(database: DatabaseName, viewName: string): Promise<string[]> {
+	if (browser) {
+		throw new Error('[PRISMA-META] getViewSourceTablesFromSQL ne peut être appelé côté client');
+	}
+
+	try {
+		const client = await getClient(database);
+
+		// PostgreSQL : obtenir la définition complète de la vue
+		const result = await (client as { $queryRaw: (query: TemplateStringsArray, ...values: unknown[]) => Promise<Array<{ definition: string }>> }).$queryRaw`
+			SELECT pg_get_viewdef(c.oid) as definition
+			FROM pg_class c
+			JOIN pg_namespace n ON n.oid = c.relnamespace
+			WHERE c.relname = ${viewName} AND c.relkind = 'v'
+		`;
+
+		if (result[0]?.definition) {
+			return parseTablesFromSQL(result[0].definition);
+		}
+
+		return [];
+	} catch (error) {
+		console.warn(`Erreur lors de l'analyse SQL de la vue ${viewName}:`, error);
+		return [];
+	}
+}
+
+// Fonction de résolution automatique des cibles d'import
+export async function resolveImportTarget(tableIdentifier: string): Promise<{
+	isView: boolean;
+	targetTables: string[];
+	originalSelection: string;
+}> {
+	if (browser) {
+		throw new Error('[PRISMA-META] resolveImportTarget ne peut être appelé côté client');
+	}
+
+	const { database, tableName } = parseTableIdentifier(tableIdentifier);
+
+	// Détecter si c'est une vue
+	const isView = tableName.startsWith('v_') || tableName.includes('_v_');
+
+	if (isView) {
+		const sourceTables = await getViewSourceTablesFromSQL(database, tableName);
+		return {
+			isView: true,
+			targetTables: sourceTables,
+			originalSelection: tableIdentifier
+		};
+	}
+
+	return {
+		isView: false,
+		targetTables: [tableName],
+		originalSelection: tableIdentifier
+	};
+}
+
 // ========== FONCTIONS CRUD GÉNÉRIQUES ==========
 
 // Créer un enregistrement de manière générique (côté serveur uniquement)
@@ -729,6 +807,13 @@ export async function createRecord(
 ): Promise<Record<string, unknown>> {
 	if (browser) {
 		throw new Error('[PRISMA-META] createRecord ne peut être appelé côté client');
+	}
+
+	// Protection contre l'insertion directe dans les vues
+	if (tableName.startsWith('v_') || tableName.includes('_v_')) {
+		throw new Error(
+			`Import direct impossible sur vue ${tableName}. Les vues sont en lecture seule. Utilisez la résolution automatique via resolveImportTarget().`
+		);
 	}
 
 	const client = await getClient(database);

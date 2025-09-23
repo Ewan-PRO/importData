@@ -13,6 +13,7 @@ import {
 	createRecord,
 	findRecord,
 	parseTableIdentifier,
+	resolveImportTarget,
 	type ValidationRules
 } from '$lib/prisma-meta';
 
@@ -404,9 +405,33 @@ async function validateImportData(
 		}
 	}
 
-	// Obtenir les règles de validation pour toutes les tables sélectionnées
-	const allValidationRules = await Promise.all(
+	// Résoudre les tables cibles (vues → tables sous-jacentes)
+	const resolvedTables: Array<{
+		originalTable: string;
+		resolvedTables: string[];
+		isView: boolean;
+	}> = await Promise.all(
 		config.selectedTables.map(async (tableIdentifier) => {
+			const resolved = await resolveImportTarget(tableIdentifier);
+			return {
+				originalTable: tableIdentifier,
+				resolvedTables: resolved.isView
+					? resolved.targetTables.map(t => {
+						const { database } = parseTableIdentifier(tableIdentifier);
+						return `${database}:${t}`;
+					})
+					: [tableIdentifier],
+				isView: resolved.isView
+			};
+		})
+	);
+
+	// Créer une liste plate de toutes les tables finales à valider
+	const finalTables = resolvedTables.flatMap(r => r.resolvedTables);
+
+	// Obtenir les règles de validation pour toutes les tables finales
+	const allValidationRules = await Promise.all(
+		finalTables.map(async (tableIdentifier) => {
 			const { database, tableName } = parseTableIdentifier(tableIdentifier);
 			return {
 				table: tableIdentifier,
@@ -555,6 +580,26 @@ async function processTableData(
 	let inserted = 0;
 	const errors: string[] = [];
 
+	// Résoudre la cible d'import (vue → tables sous-jacentes)
+	const resolved = await resolveImportTarget(tableIdentifier);
+
+	if (resolved.isView) {
+		// Si c'est une vue, traiter chaque table sous-jacente
+		for (const targetTable of resolved.targetTables) {
+			const { database } = parseTableIdentifier(tableIdentifier);
+			const fullTableIdentifier = `${database}:${targetTable}`;
+
+			console.log(`Vue ${tableIdentifier} → Import dans table ${fullTableIdentifier}`);
+
+			const result = await processTableData(config, fullTableIdentifier, validRowsSet);
+			inserted += result.inserted;
+			errors.push(...result.errors);
+		}
+
+		return { inserted, errors };
+	}
+
+	// Traitement normal pour une table
 	const { database, tableName } = parseTableIdentifier(tableIdentifier);
 
 	for (let rowIndex = 0; rowIndex < config.data.length; rowIndex++) {
