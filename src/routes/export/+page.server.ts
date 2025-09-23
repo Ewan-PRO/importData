@@ -102,11 +102,7 @@ const EXPORT_FORMATS_CONFIG = {
 	}
 } as const;
 
-// Fonctions utilitaires pour les formats
-export function _getExportFormats() {
-	return Object.values(EXPORT_FORMATS_CONFIG);
-}
-
+// Fonction utilitaire pour les formats valides
 function getValidFormats(): string[] {
 	return Object.keys(EXPORT_FORMATS_CONFIG);
 }
@@ -651,7 +647,7 @@ export const load = (async (event) => {
 			totalTables: tables.length,
 			totalRows,
 			formattedTotalRows: _formatNumber(totalRows), // Formatage côté serveur
-			exportFormats: _getExportFormats() // Données statiques, pas de fonction
+			exportFormats: Object.values(EXPORT_FORMATS_CONFIG) // Données statiques, pas de fonction
 		};
 	} catch (err) {
 		throw error(
