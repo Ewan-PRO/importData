@@ -592,13 +592,20 @@ async function processTableData(
 	// Résoudre la cible d'import (vue → tables sous-jacentes)
 	const resolved = await resolveImportTarget(tableIdentifier);
 
+	console.log(`🔍 [IMPORT] Résolution de ${tableIdentifier}:`, {
+		isView: resolved.isView,
+		targetTables: resolved.targetTables,
+		originalSelection: resolved.originalSelection
+	});
+
 	if (resolved.isView) {
 		// Si c'est une vue, traiter chaque table sous-jacente
 		for (const targetTable of resolved.targetTables) {
 			const { database } = parseTableIdentifier(tableIdentifier);
 			const fullTableIdentifier = `${database}:${targetTable}`;
 
-			console.log(`Vue ${tableIdentifier} → Import dans table ${fullTableIdentifier}`);
+			console.log(`📋 [IMPORT] Vue ${tableIdentifier} → Import dans table ${fullTableIdentifier}`);
+			console.log(`📊 [IMPORT] Champs mappés pour ${fullTableIdentifier}:`, config.mappedFields);
 
 			const result = await processTableData(config, fullTableIdentifier, validRowsSet);
 			inserted += result.inserted;

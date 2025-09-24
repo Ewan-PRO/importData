@@ -721,13 +721,34 @@ export async function getImportableTableRequiredFields(): Promise<Record<string,
 function parseTablesFromSQL(sqlDefinition: string): string[] {
 	const tables = new Set<string>();
 
-	// Regex pour capturer FROM table et JOIN table
-	const tableRegex = /(?:FROM|JOIN)\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi;
+	// Regex améliorée pour capturer FROM/JOIN avec schéma optionnel
+	// Capture: schema.table ou table, mais retourne seulement le nom de la table
+	const tableRegex = /(?:FROM|JOIN)\s+(?:\w+\.)?([a-zA-Z_][a-zA-Z0-9_]*)/gi;
 	let match;
 
 	while ((match = tableRegex.exec(sqlDefinition)) !== null) {
-		tables.add(match[1]);
+		const tableName = match[1];
+		// Exclure les alias et mots-clés
+		if (tableName && !['ON', 'WHERE', 'AND', 'OR'].includes(tableName.toUpperCase())) {
+			tables.add(tableName);
+		}
 	}
+
+	// Parser spécifique pour les sous-requêtes avec schema.table
+	const schemaTableRegex = /(?:FROM|JOIN)\s+([a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*)/gi;
+	let schemaMatch;
+
+	while ((schemaMatch = schemaTableRegex.exec(sqlDefinition)) !== null) {
+		const fullName = schemaMatch[1];
+		// Extraire seulement le nom de la table (après le point)
+		const tableName = fullName.split('.')[1];
+		if (tableName) {
+			tables.add(tableName);
+		}
+	}
+
+	console.log(`🔍 [SQL-PARSER] SQL analysé:`, sqlDefinition);
+	console.log(`📋 [SQL-PARSER] Tables détectées:`, Array.from(tables));
 
 	return Array.from(tables);
 }
@@ -741,6 +762,8 @@ async function getViewSourceTablesFromSQL(database: DatabaseName, viewName: stri
 	try {
 		const client = await getClient(database);
 
+		console.log(`🔍 [PRISMA-META] Analyse SQL pour vue ${viewName} dans ${database}`);
+
 		// PostgreSQL : obtenir la définition complète de la vue
 		const result = await (client as { $queryRaw: (query: TemplateStringsArray, ...values: unknown[]) => Promise<Array<{ definition: string }>> }).$queryRaw`
 			SELECT pg_get_viewdef(c.oid) as definition
@@ -749,13 +772,18 @@ async function getViewSourceTablesFromSQL(database: DatabaseName, viewName: stri
 			WHERE c.relname = ${viewName} AND c.relkind = 'v'
 		`;
 
+		console.log(`📋 [PRISMA-META] Définition SQL récupérée pour ${viewName}:`, result[0]?.definition);
+
 		if (result[0]?.definition) {
-			return parseTablesFromSQL(result[0].definition);
+			const tables = parseTablesFromSQL(result[0].definition);
+			console.log(`📊 [PRISMA-META] Tables détectées pour ${viewName}:`, tables);
+			return tables;
 		}
 
+		console.log(`⚠️ [PRISMA-META] Aucune définition trouvée pour la vue ${viewName}`);
 		return [];
 	} catch (error) {
-		console.warn(`Erreur lors de l'analyse SQL de la vue ${viewName}:`, error);
+		console.error(`❌ [PRISMA-META] Erreur lors de l'analyse SQL de la vue ${viewName}:`, error);
 		return [];
 	}
 }

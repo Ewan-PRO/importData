@@ -1,4 +1,4 @@
-<!-- src/routes/kits/+page.svelte -->
+<!-- src/routes/CRUD/+page.svelte -->
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
@@ -9,7 +9,7 @@
 	import { superForm } from 'sveltekit-superforms/client';
 	import { toast } from 'svelte-sonner';
 
-	console.log('Script de la page kits chargé');
+	console.log('Script de la page CRUD chargé');
 
 	// Interface pour les données du serveur
 	interface ServerData {
@@ -49,13 +49,14 @@
 	let filteredData: DataRecord[] = [...data.data];
 
 	// Génération dynamique des colonnes depuis les métadonnées du serveur
-	$: columns = data.columns?.map(column => ({
-		key: column.name,
-		header: column.name
-	})) || [];
+	$: columns =
+		data.columns?.map((column) => ({
+			key: column.name,
+			header: column.name
+		})) || [];
 
 	// Génération dynamique des champs de filtrage depuis les colonnes
-	$: filterFields = columns.map(column => ({
+	$: filterFields = columns.map((column) => ({
 		key: column.key,
 		label: column.header
 	}));
@@ -93,40 +94,43 @@
 	}
 
 	// Génération dynamique des champs de formulaire depuis les métadonnées du serveur
-	$: formFields = data.columns?.map(column => {
-		let fieldType: FormFieldType = 'text';
+	$: formFields =
+		data.columns?.map((column) => {
+			let fieldType: FormFieldType = 'text';
 
-		// Déterminer le type selon le type de colonne
-		switch (column.type) {
-			case 'Int':
-			case 'Float':
-			case 'Decimal':
-				fieldType = 'number';
-				break;
-			case 'Boolean':
-				fieldType = 'select';
-				break;
-			case 'DateTime':
-				fieldType = 'text'; // ou 'datetime-local' si supporté
-				break;
-			default:
-				fieldType = 'text';
-		}
+			// Déterminer le type selon le type de colonne
+			switch (column.type) {
+				case 'Int':
+				case 'Float':
+				case 'Decimal':
+					fieldType = 'number';
+					break;
+				case 'Boolean':
+					fieldType = 'select';
+					break;
+				case 'DateTime':
+					fieldType = 'text'; // ou 'datetime-local' si supporté
+					break;
+				default:
+					fieldType = 'text';
+			}
 
-		return {
-			key: column.name,
-			label: `${column.name} :`,
-			type: fieldType,
-			required: column.isRequired && !column.isPrimaryKey,
-			placeholder: `Saisir ${column.name}...`,
-			...(fieldType === 'select' && column.type === 'Boolean' ? {
-				options: [
-					{ value: 'true', label: 'Oui' },
-					{ value: 'false', label: 'Non' }
-				]
-			} : {})
-		};
-	}) || [];
+			return {
+				key: column.name,
+				label: `${column.name} :`,
+				type: fieldType,
+				required: column.isRequired && !column.isPrimaryKey,
+				placeholder: `Saisir ${column.name}...`,
+				...(fieldType === 'select' && column.type === 'Boolean'
+					? {
+							options: [
+								{ value: 'true', label: 'Oui' },
+								{ value: 'false', label: 'Non' }
+							]
+						}
+					: {})
+			};
+		}) || [];
 
 	// Utiliser les mêmes champs pour l'ajout et l'édition
 	$: addFormFields = formFields;
@@ -141,7 +145,7 @@
 	}
 
 	function openAddForm(): void {
-		console.log('Bouton "Ajouter un kit" cliqué - État actuel:', { addFormOpen });
+		console.log('Bouton "Ajouter un enregistrement" cliqué - État actuel:', { addFormOpen });
 		addFormOpen = true;
 		console.log('Nouvel état après ouverture:', { addFormOpen });
 	}
@@ -151,7 +155,7 @@
 		console.log('Item reçu du DataTable:', item);
 
 		// Trouver la clé primaire dynamiquement
-		const primaryKeyColumn = data.columns?.find(col => col.isPrimaryKey);
+		const primaryKeyColumn = data.columns?.find((col) => col.isPrimaryKey);
 		const primaryKey = primaryKeyColumn?.name || 'id';
 
 		console.log('Clé primaire détectée:', primaryKey);
@@ -159,12 +163,10 @@
 
 		// Si la clé primaire n'est pas dans l'objet item, chercher dans les données originales
 		if (!item[primaryKey]) {
-			console.log("Clé primaire non trouvée, recherche dans les données originales");
+			console.log('Clé primaire non trouvée, recherche dans les données originales');
 			// Trouver l'enregistrement par comparaison de tous les champs non-clés
 			const originalRecord = data.data.find((record: DataRecord) => {
-				return Object.keys(item).every(key =>
-					key === primaryKey || record[key] === item[key]
-				);
+				return Object.keys(item).every((key) => key === primaryKey || record[key] === item[key]);
 			});
 			console.log('Enregistrement original trouvé:', originalRecord);
 
@@ -221,7 +223,7 @@
 		console.log('Tri demandé:', event.detail.order);
 		try {
 			// Tri local par la clé primaire
-			const primaryKeyColumn = data.columns?.find(col => col.isPrimaryKey);
+			const primaryKeyColumn = data.columns?.find((col) => col.isPrimaryKey);
 			const primaryKey = primaryKeyColumn?.name || 'id';
 
 			let sortedData = [...data.data];
@@ -267,7 +269,7 @@
 		}
 
 		// Vider tous les champs existants
-		formElement.querySelectorAll('input[type="hidden"]').forEach(input => {
+		formElement.querySelectorAll('input[type="hidden"]').forEach((input) => {
 			(input as HTMLInputElement).value = '';
 		});
 
@@ -287,7 +289,7 @@
 		});
 
 		// Pour la modification, s'assurer que la clé primaire est présente
-		const primaryKeyColumn = data.columns?.find(col => col.isPrimaryKey);
+		const primaryKeyColumn = data.columns?.find((col) => col.isPrimaryKey);
 		const primaryKey = primaryKeyColumn?.name || 'id';
 
 		if (selectedRecord?.[primaryKey]) {
@@ -314,7 +316,7 @@
 		console.log('Enregistrement à supprimer:', selectedRecord);
 
 		// Trouver la clé primaire dynamiquement
-		const primaryKeyColumn = data.columns?.find(col => col.isPrimaryKey);
+		const primaryKeyColumn = data.columns?.find((col) => col.isPrimaryKey);
 		const primaryKey = primaryKeyColumn?.name || 'id';
 
 		if (!selectedRecord?.[primaryKey]) {
@@ -361,7 +363,7 @@
 		}
 
 		// Trouver la clé primaire dynamiquement
-		const primaryKeyColumn = data.columns?.find(col => col.isPrimaryKey);
+		const primaryKeyColumn = data.columns?.find((col) => col.isPrimaryKey);
 		const primaryKey = primaryKeyColumn?.name || 'id';
 
 		try {
@@ -398,9 +400,13 @@
 				Alert.alertActions.success(`${successCount} enregistrement(s) supprimé(s) avec succès`);
 				toast.success(`${successCount} élément(s) supprimé(s) avec succès`);
 			} else if (successCount === 0) {
-				Alert.alertActions.error(`Erreur lors de la suppression des ${errorCount} enregistrement(s)`);
+				Alert.alertActions.error(
+					`Erreur lors de la suppression des ${errorCount} enregistrement(s)`
+				);
 			} else {
-				Alert.alertActions.error(`${successCount} enregistrement(s) supprimé(s), ${errorCount} erreur(s)`);
+				Alert.alertActions.error(
+					`${successCount} enregistrement(s) supprimé(s), ${errorCount} erreur(s)`
+				);
 			}
 
 			// Recharger les données
@@ -511,9 +517,13 @@
 
 				if (result.type === 'success') {
 					Alert.alertActions.success(
-						selectedRecord ? 'Enregistrement modifié avec succès' : 'Enregistrement créé avec succès'
+						selectedRecord
+							? 'Enregistrement modifié avec succès'
+							: 'Enregistrement créé avec succès'
 					);
-					toast.success(selectedRecord ? 'Élément modifié avec succès' : 'Élément créé avec succès');
+					toast.success(
+						selectedRecord ? 'Élément modifié avec succès' : 'Élément créé avec succès'
+					);
 					addFormOpen = false;
 					editFormOpen = false;
 					selectedRecord = null;
