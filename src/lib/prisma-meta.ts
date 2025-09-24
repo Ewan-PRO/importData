@@ -411,9 +411,10 @@ export async function getClient(database: DatabaseName): Promise<Record<string, 
 
 	const databases = await getDatabases();
 
-
 	if (!databases[database]) {
-		throw new Error(`[PRISMA-META] Database '${database}' not found in getClient. Available: ${Object.keys(databases).join(', ')}`);
+		throw new Error(
+			`[PRISMA-META] Database '${database}' not found in getClient. Available: ${Object.keys(databases).join(', ')}`
+		);
 	}
 
 	if (!databases[database].client) {
@@ -648,8 +649,8 @@ export async function getImportableTables(): Promise<TableInfo[]> {
 	const allTables = await getAllDatabaseTables();
 
 	// Inclure à la fois les tables et les vues pour l'import
-	const importableTables = allTables.filter((table) =>
-		table.category === 'table' || table.category === 'view'
+	const importableTables = allTables.filter(
+		(table) => table.category === 'table' || table.category === 'view'
 	);
 
 	// Ajouter le comptage des lignes comme dans l'export
@@ -754,7 +755,10 @@ function parseTablesFromSQL(sqlDefinition: string): string[] {
 }
 
 // Obtenir les tables sources d'une vue via analyse SQL PostgreSQL
-async function getViewSourceTablesFromSQL(database: DatabaseName, viewName: string): Promise<string[]> {
+async function getViewSourceTablesFromSQL(
+	database: DatabaseName,
+	viewName: string
+): Promise<string[]> {
 	if (browser) {
 		throw new Error('[PRISMA-META] getViewSourceTablesFromSQL ne peut être appelé côté client');
 	}
@@ -765,14 +769,24 @@ async function getViewSourceTablesFromSQL(database: DatabaseName, viewName: stri
 		console.log(`🔍 [PRISMA-META] Analyse SQL pour vue ${viewName} dans ${database}`);
 
 		// PostgreSQL : obtenir la définition complète de la vue
-		const result = await (client as { $queryRaw: (query: TemplateStringsArray, ...values: unknown[]) => Promise<Array<{ definition: string }>> }).$queryRaw`
+		const result = await (
+			client as {
+				$queryRaw: (
+					query: TemplateStringsArray,
+					...values: unknown[]
+				) => Promise<Array<{ definition: string }>>;
+			}
+		).$queryRaw`
 			SELECT pg_get_viewdef(c.oid) as definition
 			FROM pg_class c
 			JOIN pg_namespace n ON n.oid = c.relnamespace
 			WHERE c.relname = ${viewName} AND c.relkind = 'v'
 		`;
 
-		console.log(`📋 [PRISMA-META] Définition SQL récupérée pour ${viewName}:`, result[0]?.definition);
+		console.log(
+			`📋 [PRISMA-META] Définition SQL récupérée pour ${viewName}:`,
+			result[0]?.definition
+		);
 
 		if (result[0]?.definition) {
 			const tables = parseTablesFromSQL(result[0].definition);
@@ -848,54 +862,6 @@ export async function createRecord(
 	}
 
 	return await model.create({ data });
-}
-
-// UPSERT un enregistrement de manière générique (côté serveur uniquement)
-export async function upsertRecord(
-	database: DatabaseName,
-	tableName: string,
-	where: Record<string, unknown>,
-	data: Record<string, unknown>
-): Promise<{ created: boolean; updated: boolean; record: Record<string, unknown> }> {
-	if (browser) {
-		throw new Error('[PRISMA-META] upsertRecord ne peut être appelé côté client');
-	}
-
-	// Protection contre l'upsert direct dans les vues
-	if (tableName.startsWith('v_') || tableName.includes('_v_')) {
-		throw new Error(
-			`Upsert direct impossible sur vue ${tableName}. Les vues sont en lecture seule. Utilisez la résolution automatique via resolveImportTarget().`
-		);
-	}
-
-	const client = await getClient(database);
-	const model = client[tableName] as {
-		upsert: (args: {
-			where: unknown;
-			create: unknown;
-			update: unknown
-		}) => Promise<Record<string, unknown>>;
-	};
-
-	if (!model || !model.upsert) {
-		throw new Error(`Table ${tableName} not found in database ${database} ou upsert non supporté`);
-	}
-
-	// Vérifier si l'enregistrement existe avant l'upsert pour déterminer si c'est une création ou update
-	const existing = await findRecord(database, tableName, where);
-	const isUpdate = !!existing;
-
-	const result = await model.upsert({
-		where,
-		create: data,  // Si pas trouvé, créer avec toutes les données
-		update: data   // Si trouvé, mettre à jour avec les nouvelles données
-	});
-
-	return {
-		created: !isUpdate,
-		updated: isUpdate,
-		record: result
-	};
 }
 
 // Mettre à jour un enregistrement de manière générique (côté serveur uniquement)

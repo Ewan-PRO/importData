@@ -10,8 +10,8 @@ import {
 	getImportableTableFields,
 	getImportableTableRequiredFields,
 	getTableValidationRules,
-	getTableMetadata,
-	upsertRecord,
+	createRecord,
+	updateRecord,
 	findRecord,
 	parseTableIdentifier,
 	resolveImportTarget,
@@ -46,7 +46,6 @@ interface ImportResult {
 		}
 	>;
 }
-
 
 interface ImportConfig {
 	data: unknown[][];
@@ -420,10 +419,10 @@ async function validateImportData(
 			return {
 				originalTable: tableIdentifier,
 				resolvedTables: resolved.isView
-					? resolved.targetTables.map(t => {
-						const { database } = parseTableIdentifier(tableIdentifier);
-						return `${database}:${t}`;
-					})
+					? resolved.targetTables.map((t) => {
+							const { database } = parseTableIdentifier(tableIdentifier);
+							return `${database}:${t}`;
+						})
 					: [tableIdentifier],
 				isView: resolved.isView
 			};
@@ -431,7 +430,7 @@ async function validateImportData(
 	);
 
 	// Créer une liste plate de toutes les tables finales à valider
-	const finalTables = resolvedTables.flatMap(r => r.resolvedTables);
+	const finalTables = resolvedTables.flatMap((r) => r.resolvedTables);
 
 	// Obtenir les règles de validation pour toutes les tables finales
 	const allValidationRules = await Promise.all(
@@ -479,7 +478,10 @@ async function validateImportData(
 					);
 
 					if (validationResult) {
-						if (!enableDatabaseCheck || !await checkExistingRecord(table, config.mappedFields, row)) {
+						if (
+							!enableDatabaseCheck ||
+							!(await checkExistingRecord(table, config.mappedFields, row))
+						) {
 							result.resultsByTable![table].validRows++;
 							isValidForAnyTable = true;
 						}
@@ -513,7 +515,11 @@ async function validateImportData(
 
 				if (validationResult) {
 					if (enableDatabaseCheck) {
-						const existingRecord = await checkExistingRecord(config.selectedTables[0], config.mappedFields, row);
+						const existingRecord = await checkExistingRecord(
+							config.selectedTables[0],
+							config.mappedFields,
+							row
+						);
 						if (existingRecord) {
 							result.duplicates++;
 							result.invalidData.push({
@@ -628,34 +634,154 @@ async function processTableData(
 		const row = config.data[rowIndex];
 
 		try {
-			// Préparer les données pour l'upsert
-			const recordData: Record<string, unknown> = {};
-			Object.entries(config.mappedFields).forEach(([columnIndex, fieldName]) => {
-				if (fieldName && row[parseInt(columnIndex)] !== undefined) {
-					recordData[fieldName] = formatValueForDatabase(fieldName, row[parseInt(columnIndex)]);
+			// 🔥 ANCIENNE LOGIQUE RESTAURÉE - Simple et robuste
+			// Vérifier une dernière fois que la ligne n'existe pas déjà en base
+			const existingRecord = await checkExistingRecord(tableIdentifier, config.mappedFields, row);
+
+			if (!existingRecord) {
+				// Préparer les données pour l'insertion
+				const insertData: Record<string, unknown> = {};
+
+				Object.entries(config.mappedFields).forEach(([columnIndex, fieldName]) => {
+					if (fieldName && row[parseInt(columnIndex)] !== undefined) {
+						insertData[fieldName] = formatValueForDatabase(fieldName, row[parseInt(columnIndex)]);
+					}
+				});
+
+				// Insérer dans la table appropriée avec l'ancienne méthode
+				await createRecord(database, tableName, insertData);
+				inserted++;
+				console.log(`✅ INSERT ligne ${rowIndex + 1} (${tableName})`);
+			} else {
+				// Log que l'enregistrement existe déjà (pas d'erreur, juste skip)
+				console.log(`⏭️ SKIP ligne ${rowIndex + 1} - Existe déjà:`, existingRecord);
+			}
+		} catch (err) {
+			errors.push(`Ligne ${rowIndex + 1}: ${formatError(err)}`);
+		}
+	}
+
+	console.log(`📊 RÉSUMÉ ${tableName}:`, {
+		inserted,
+		updated: 0, // Ancien système : pas d'update, seulement insert
+		errors: errors.length,
+		total: inserted
+	});
+
+	return { inserted, updated: 0, errors };
+}
+
+// Fonction pour traiter les updates avec validation
+async function updateValidatedData(
+	config: ImportConfig,
+	validRowsSet: Set<number>,
+	options: InsertionOptions = {}
+): Promise<InsertionResult> {
+	const { useTransaction = false, prismaClient } = options;
+
+	let insertedCount = 0;
+	let updatedCount = 0;
+	const errors: string[] = [];
+
+	try {
+		if (useTransaction && prismaClient) {
+			// Mode transaction (SvelteKit)
+			const client = prismaClient as {
+				$transaction: (fn: (tx: unknown) => Promise<void>) => Promise<void>;
+			};
+			await client.$transaction(async () => {
+				for (const table of config.selectedTables) {
+					const result = await updateTableData(config, table, validRowsSet);
+					insertedCount += result.inserted;
+					updatedCount += result.updated;
+					errors.push(...result.errors);
 				}
 			});
+		} else {
+			// Mode direct (API)
+			const table = config.targetTable || config.selectedTables[0];
+			const result = await updateTableData(config, table, validRowsSet);
+			insertedCount = result.inserted;
+			updatedCount = result.updated;
+			errors.push(...result.errors);
+		}
+	} catch (err) {
+		errors.push(`Erreur d'update: ${formatError(err)}`);
+	}
 
-			// Construire la condition WHERE pour l'upsert
-			const validationRules = await getTableValidationRules(database, tableName);
-			const uniqueFields = validationRules.uniqueFields;
+	return {
+		inserted: insertedCount,
+		updated: updatedCount,
+		errors
+	};
+}
 
-			const whereCondition: Record<string, unknown> = {};
+// Nouvelle fonction pour les modifications (UPDATE séparé et simple)
+async function updateTableData(
+	config: ImportConfig,
+	tableIdentifier: string,
+	validRowsSet: Set<number>
+): Promise<InsertionResult & { updated: number }> {
+	let inserted = 0;
+	let updated = 0;
+	const errors: string[] = [];
 
-			// Pour l'upsert Prisma, utiliser seulement la clé primaire principale si disponible
-			const tableMetadata = await getTableMetadata(database, tableName);
-			const primaryKeyField = tableMetadata?.primaryKey;
+	// Résoudre la cible d'import (vue → tables sous-jacentes)
+	const resolved = await resolveImportTarget(tableIdentifier);
 
-			if (primaryKeyField && uniqueFields.includes(primaryKeyField)) {
-				// Utiliser seulement la clé primaire pour l'upsert
-				const colIndex = Object.entries(config.mappedFields).find(([, f]) => f === primaryKeyField)?.[0];
-				if (colIndex !== undefined) {
-					const rawValue = row[parseInt(colIndex)];
-					const formattedValue = formatValueForDatabase(primaryKeyField, rawValue);
-					whereCondition[primaryKeyField] = formattedValue;
-				}
-			} else {
-				// Fallback : utiliser tous les champs uniques
+	console.log(`🔍 [UPDATE] Résolution de ${tableIdentifier}:`, {
+		isView: resolved.isView,
+		targetTables: resolved.targetTables,
+		originalSelection: resolved.originalSelection
+	});
+
+	if (resolved.isView) {
+		// Si c'est une vue, traiter chaque table sous-jacente
+		for (const targetTable of resolved.targetTables) {
+			const { database } = parseTableIdentifier(tableIdentifier);
+			const fullTableIdentifier = `${database}:${targetTable}`;
+
+			console.log(`📋 [UPDATE] Vue ${tableIdentifier} → Update dans table ${fullTableIdentifier}`);
+
+			const result = await updateTableData(config, fullTableIdentifier, validRowsSet);
+			inserted += result.inserted;
+			updated += result.updated;
+			errors.push(...result.errors);
+		}
+
+		return { inserted, updated, errors };
+	}
+
+	// Traitement normal pour une table
+	const { database, tableName } = parseTableIdentifier(tableIdentifier);
+
+	for (let rowIndex = 0; rowIndex < config.data.length; rowIndex++) {
+		// Seulement traiter les lignes marquées comme valides
+		if (!validRowsSet.has(rowIndex)) {
+			continue;
+		}
+
+		const row = config.data[rowIndex];
+
+		try {
+			// 🔥 LOGIQUE UPDATE SIMPLE - Utilise l'ancienne détection qui marche
+			// Vérifier si la ligne existe en base
+			const existingRecord = await checkExistingRecord(tableIdentifier, config.mappedFields, row);
+
+			if (existingRecord) {
+				// Préparer les données pour la mise à jour
+				const updateData: Record<string, unknown> = {};
+				Object.entries(config.mappedFields).forEach(([columnIndex, fieldName]) => {
+					if (fieldName && row[parseInt(columnIndex)] !== undefined) {
+						updateData[fieldName] = formatValueForDatabase(fieldName, row[parseInt(columnIndex)]);
+					}
+				});
+
+				// Construire condition WHERE avec l'ancienne méthode (qui marchait !)
+				const validationRules = await getTableValidationRules(database, tableName);
+				const uniqueFields = validationRules.uniqueFields;
+
+				const whereCondition: Record<string, unknown> = {};
 				uniqueFields.forEach((field) => {
 					const colIndex = Object.entries(config.mappedFields).find(([, f]) => f === field)?.[0];
 					if (colIndex !== undefined) {
@@ -664,34 +790,37 @@ async function processTableData(
 						whereCondition[field] = formattedValue;
 					}
 				});
-			}
 
-			// Si pas de champs uniques trouvés, on ne peut pas faire d'upsert
-			if (Object.keys(whereCondition).length === 0) {
-				throw new Error(`Pas de champs uniques trouvés pour ${tableName}. Upsert impossible.`);
-			}
-
-			// Effectuer l'UPSERT
-			const upsertResult = await upsertRecord(database, tableName, whereCondition, recordData);
-
-			if (upsertResult.created) {
-				inserted++;
-				console.log(`✅ INSERT ligne ${rowIndex + 1} (${tableName})`);
-			} else if (upsertResult.updated) {
-				updated++;
-				console.log(`🔄 UPDATE ligne ${rowIndex + 1} (${tableName}):`, {
-					where: whereCondition,
-					data: recordData
+				if (Object.keys(whereCondition).length > 0) {
+					// Utiliser updateRecord (plus simple que upsert)
+					const result = await updateRecord(database, tableName, whereCondition, updateData);
+					if (result.count > 0) {
+						updated++;
+						console.log(`🔄 UPDATE ligne ${rowIndex + 1} (${tableName}):`, {
+							where: whereCondition,
+							count: result.count
+						});
+					}
+				}
+			} else {
+				// Créer si n'existe pas (mode UPDATE peut aussi créer)
+				const insertData: Record<string, unknown> = {};
+				Object.entries(config.mappedFields).forEach(([columnIndex, fieldName]) => {
+					if (fieldName && row[parseInt(columnIndex)] !== undefined) {
+						insertData[fieldName] = formatValueForDatabase(fieldName, row[parseInt(columnIndex)]);
+					}
 				});
+
+				await createRecord(database, tableName, insertData);
+				inserted++;
+				console.log(`✅ INSERT ligne ${rowIndex + 1} (${tableName}) - Nouveau lors UPDATE`);
 			}
 		} catch (err) {
-			errors.push(
-				`Ligne ${rowIndex + 1}: ${formatError(err)}`
-			);
+			errors.push(`Ligne ${rowIndex + 1}: ${formatError(err)}`);
 		}
 	}
 
-	console.log(`📊 RÉSUMÉ ${tableName}:`, {
+	console.log(`📊 RÉSUMÉ UPDATE ${tableName}:`, {
 		inserted,
 		updated,
 		errors: errors.length,
@@ -848,6 +977,68 @@ export const actions: Actions = {
 				error: `Erreur d'importation: ${formatError(err)}`
 			});
 		}
+	},
+
+	// Action de mise à jour (UPDATE) - Utilise la nouvelle fonction simple
+	update: async (event) => {
+		await protect(event);
+
+		const { request } = event;
+		try {
+			// Validation du formulaire avec SuperForms
+			const form = await superValidate(request, zod(importSchema));
+
+			if (!form.valid) {
+				return fail(400, { form });
+			}
+
+			const { data, mappedFields, selectedTables, targetTable } = form.data;
+
+			// Utilisation des fonctions utilitaires
+			const { finalSelectedTables, isMultiTable } = determineImportMode(
+				selectedTables,
+				targetTable
+			);
+			const config = buildImportConfig(data, mappedFields, finalSelectedTables, targetTable);
+			const validationResult = await executeValidation(config, isMultiTable);
+
+			// Calculer les lignes valides depuis le résultat de validation
+			const validRowsSet = calculateValidRowsSet(validationResult, config.data.length);
+
+			// Mise à jour avec transaction selon le mode
+			const updateResult = await updateValidatedData(config, validRowsSet, {
+				useTransaction: isMultiTable, // Transaction uniquement en multi-table
+				prismaClient: isMultiTable ? prisma : undefined
+			});
+
+			const result: ImportResult = {
+				...validationResult,
+				processed: true,
+				inserted: updateResult.inserted,
+				updated: updateResult.updated,
+				errors: updateResult.errors
+			};
+
+			// Après une mise à jour réussie, reset le formulaire pour un nouvel import
+			const resetForm = await superValidate(zod(importSchema));
+
+			return {
+				form: {
+					...resetForm,
+					data: {
+						data: [],
+						mappedFields: {},
+						selectedTables: [],
+						targetTable: '',
+						result
+					}
+				}
+			};
+		} catch (err) {
+			return fail(500, {
+				error: `Erreur de mise à jour: ${formatError(err)}`
+			});
+		}
 	}
 };
 
@@ -888,8 +1079,6 @@ export const load: ServerLoad = async (event) => {
 			tableRequiredFields
 		};
 	} catch (err) {
-		throw new Error(
-			`Erreur lors du chargement de la page import: ${formatError(err)}`
-		);
+		throw new Error(`Erreur lors du chargement de la page import: ${formatError(err)}`);
 	}
 };
