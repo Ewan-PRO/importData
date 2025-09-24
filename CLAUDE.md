@@ -389,15 +389,26 @@ This typically occurs when files are automatically formatted by linters/formatte
 
 **Solution steps:**
 
-1. **Git restore:** If editing conflicts occur, restore the file to its original state:
+1. **Use absolute Windows paths FIRST:** Always use absolute Windows paths with drive letters and backslashes for ALL file operations:
+
+   ```bash
+   # ✅ CORRECT - Use absolute Windows paths
+   C:\Users\EwanSenergous\OneDrive - jll.spear\Bureau\Projet\importData\file.js
+
+   # ❌ WRONG - Relative or Unix-style paths may fail
+   ./file.js
+   /c/Users/.../file.js
+   ```
+
+2. **Git restore (if absolute paths don't work):** If editing conflicts persist, restore the file to its original state:
 
    ```bash
    git restore path/to/file.svelte
    ```
 
-2. **Re-read before editing:** Always use the Read tool to get the latest file state before making edits
+3. **Re-read before editing:** Always use the Read tool to get the latest file state before making edits
 
-3. **Expected behavior:** Linters may automatically format files, this is intentional and should be preserved
+4. **Expected behavior:** Linters may automatically format files, this is intentional and should be preserved
 
 **Common scenarios:**
 
@@ -407,32 +418,14 @@ This typically occurs when files are automatically formatted by linters/formatte
 
 **Best practices:**
 
+- **ALWAYS try absolute Windows paths first** before using git restore
 - Don't revert linter changes unless explicitly requested
-- Use git restore only when edit conflicts prevent progress
+- Use git restore only when absolute paths and edit conflicts prevent progress
 - Re-read files after any formatting to get current state
 
-## Windows File Path Bug Workaround
-
-**When encountering file modification errors on Windows:**
-
-There is a bug in Claude Code on Windows where file operations may fail. The workaround is:
-
-**Always use absolute Windows paths with drive letters and backslashes for ALL file operations:**
-
-```bash
-# ✅ CORRECT - Use absolute Windows paths
-C:\Users\EwanSenergous\OneDrive - jll.spear\Bureau\Projet\importData\file.js
-
-# ❌ WRONG - Relative or Unix-style paths may fail
-./file.js
-/c/Users/.../file.js
-```
-
-**Apply this to all tools:**
+**Apply absolute Windows paths to all tools:**
 
 - Read tool: Always use `C:\...` paths
 - Write tool: Always use `C:\...` paths
 - Edit tool: Always use `C:\...` paths
 - MultiEdit tool: Always use `C:\...` paths
-
-This workaround resolves file modification conflicts and ensures reliable file operations on Windows systems.
