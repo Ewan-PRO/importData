@@ -10,7 +10,8 @@ import {
 	getImportableTableFields,
 	getImportableTableRequiredFields,
 	getTableValidationRules,
-	createRecord,
+	getTableMetadata,
+	upsertRecord,
 	findRecord,
 	parseTableIdentifier,
 	resolveImportTarget,
@@ -66,6 +67,7 @@ interface InsertionOptions {
 
 interface InsertionResult {
 	inserted: number;
+	updated: number;
 	errors: string[];
 }
 
@@ -352,16 +354,18 @@ async function checkExistingRecord(
 
 		// Retourner une représentation textuelle de l'enregistrement trouvé
 		if (existingRecord) {
-			return uniqueFields
+			const result = uniqueFields
 				.map((field) => {
 					const value = existingRecord?.[field];
 					return formatDisplayValue(value);
 				})
 				.join(', ');
+			return result;
 		}
 
 		return null;
-	} catch {
+	} catch (error) {
+		console.log(`❌ [ERROR] checkExistingRecord échoué:`, error);
 		return null;
 	}
 }
@@ -540,6 +544,7 @@ async function insertValidatedData(
 	const { useTransaction = false, prismaClient } = options;
 
 	let insertedCount = 0;
+	let updatedCount = 0;
 	const errors: string[] = [];
 
 	try {
@@ -552,6 +557,7 @@ async function insertValidatedData(
 				for (const table of config.selectedTables) {
 					const result = await processTableData(config, table, validRowsSet);
 					insertedCount += result.inserted;
+					updatedCount += result.updated;
 					errors.push(...result.errors);
 				}
 			});
@@ -560,6 +566,7 @@ async function insertValidatedData(
 			const table = config.targetTable || config.selectedTables[0];
 			const result = await processTableData(config, table, validRowsSet);
 			insertedCount = result.inserted;
+			updatedCount = result.updated;
 			errors.push(...result.errors);
 		}
 	} catch (err) {
@@ -568,6 +575,7 @@ async function insertValidatedData(
 
 	return {
 		inserted: insertedCount,
+		updated: updatedCount,
 		errors
 	};
 }
@@ -576,8 +584,9 @@ async function processTableData(
 	config: ImportConfig,
 	tableIdentifier: string,
 	validRowsSet: Set<number>
-): Promise<InsertionResult> {
+): Promise<InsertionResult & { updated: number }> {
 	let inserted = 0;
+	let updated = 0;
 	const errors: string[] = [];
 
 	// Résoudre la cible d'import (vue → tables sous-jacentes)
@@ -593,10 +602,11 @@ async function processTableData(
 
 			const result = await processTableData(config, fullTableIdentifier, validRowsSet);
 			inserted += result.inserted;
+			updated += result.updated;
 			errors.push(...result.errors);
 		}
 
-		return { inserted, errors };
+		return { inserted, updated, errors };
 	}
 
 	// Traitement normal pour une table
@@ -611,22 +621,61 @@ async function processTableData(
 		const row = config.data[rowIndex];
 
 		try {
-			// Vérifier une dernière fois que la ligne n'existe pas déjà en base
-			const existingRecord = await checkExistingRecord(tableIdentifier, config.mappedFields, row);
+			// Préparer les données pour l'upsert
+			const recordData: Record<string, unknown> = {};
+			Object.entries(config.mappedFields).forEach(([columnIndex, fieldName]) => {
+				if (fieldName && row[parseInt(columnIndex)] !== undefined) {
+					recordData[fieldName] = formatValueForDatabase(fieldName, row[parseInt(columnIndex)]);
+				}
+			});
 
-			if (!existingRecord) {
-				// Préparer les données pour l'insertion
-				const insertData: Record<string, unknown> = {};
+			// Construire la condition WHERE pour l'upsert
+			const validationRules = await getTableValidationRules(database, tableName);
+			const uniqueFields = validationRules.uniqueFields;
 
-				Object.entries(config.mappedFields).forEach(([columnIndex, fieldName]) => {
-					if (fieldName && row[parseInt(columnIndex)] !== undefined) {
-						insertData[fieldName] = formatValueForDatabase(fieldName, row[parseInt(columnIndex)]);
+			const whereCondition: Record<string, unknown> = {};
+
+			// Pour l'upsert Prisma, utiliser seulement la clé primaire principale si disponible
+			const tableMetadata = await getTableMetadata(database, tableName);
+			const primaryKeyField = tableMetadata?.primaryKey;
+
+			if (primaryKeyField && uniqueFields.includes(primaryKeyField)) {
+				// Utiliser seulement la clé primaire pour l'upsert
+				const colIndex = Object.entries(config.mappedFields).find(([, f]) => f === primaryKeyField)?.[0];
+				if (colIndex !== undefined) {
+					const rawValue = row[parseInt(colIndex)];
+					const formattedValue = formatValueForDatabase(primaryKeyField, rawValue);
+					whereCondition[primaryKeyField] = formattedValue;
+				}
+			} else {
+				// Fallback : utiliser tous les champs uniques
+				uniqueFields.forEach((field) => {
+					const colIndex = Object.entries(config.mappedFields).find(([, f]) => f === field)?.[0];
+					if (colIndex !== undefined) {
+						const rawValue = row[parseInt(colIndex)];
+						const formattedValue = formatValueForDatabase(field, rawValue);
+						whereCondition[field] = formattedValue;
 					}
 				});
+			}
 
-				// Insérer dans la table appropriée
-				await createRecord(database, tableName, insertData);
+			// Si pas de champs uniques trouvés, on ne peut pas faire d'upsert
+			if (Object.keys(whereCondition).length === 0) {
+				throw new Error(`Pas de champs uniques trouvés pour ${tableName}. Upsert impossible.`);
+			}
+
+			// Effectuer l'UPSERT
+			const upsertResult = await upsertRecord(database, tableName, whereCondition, recordData);
+
+			if (upsertResult.created) {
 				inserted++;
+				console.log(`✅ INSERT ligne ${rowIndex + 1} (${tableName})`);
+			} else if (upsertResult.updated) {
+				updated++;
+				console.log(`🔄 UPDATE ligne ${rowIndex + 1} (${tableName}):`, {
+					where: whereCondition,
+					data: recordData
+				});
 			}
 		} catch (err) {
 			errors.push(
@@ -635,7 +684,14 @@ async function processTableData(
 		}
 	}
 
-	return { inserted, errors };
+	console.log(`📊 RÉSUMÉ ${tableName}:`, {
+		inserted,
+		updated,
+		errors: errors.length,
+		total: inserted + updated
+	});
+
+	return { inserted, updated, errors };
 }
 
 // ========== FONCTIONS UTILITAIRES COMMUNES ==========
@@ -761,18 +817,21 @@ export const actions: Actions = {
 				...validationResult,
 				processed: true,
 				inserted: insertResult.inserted,
-				updated: 0,
+				updated: insertResult.updated,
 				errors: insertResult.errors
 			};
 
+			// Après un import réussi, reset le formulaire pour un nouvel import
+			const resetForm = await superValidate(zod(importSchema));
+
 			return {
 				form: {
-					...form,
+					...resetForm,
 					data: {
-						data: data || [],
-						mappedFields: mappedFields || {},
-						selectedTables: finalSelectedTables,
-						targetTable: targetTable || '',
+						data: [],
+						mappedFields: {},
+						selectedTables: [],
+						targetTable: '',
 						result
 					}
 				}

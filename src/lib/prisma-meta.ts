@@ -411,12 +411,6 @@ export async function getClient(database: DatabaseName): Promise<Record<string, 
 
 	const databases = await getDatabases();
 
-	console.log('🔍 [DEBUG] getClient appelé:', {
-		database,
-		databasesKeys: Object.keys(databases),
-		hasDatabaseKey: !!databases[database],
-		hasClient: !!databases[database]?.client
-	});
 
 	if (!databases[database]) {
 		throw new Error(`[PRISMA-META] Database '${database}' not found in getClient. Available: ${Object.keys(databases).join(', ')}`);
@@ -826,6 +820,54 @@ export async function createRecord(
 	}
 
 	return await model.create({ data });
+}
+
+// UPSERT un enregistrement de manière générique (côté serveur uniquement)
+export async function upsertRecord(
+	database: DatabaseName,
+	tableName: string,
+	where: Record<string, unknown>,
+	data: Record<string, unknown>
+): Promise<{ created: boolean; updated: boolean; record: Record<string, unknown> }> {
+	if (browser) {
+		throw new Error('[PRISMA-META] upsertRecord ne peut être appelé côté client');
+	}
+
+	// Protection contre l'upsert direct dans les vues
+	if (tableName.startsWith('v_') || tableName.includes('_v_')) {
+		throw new Error(
+			`Upsert direct impossible sur vue ${tableName}. Les vues sont en lecture seule. Utilisez la résolution automatique via resolveImportTarget().`
+		);
+	}
+
+	const client = await getClient(database);
+	const model = client[tableName] as {
+		upsert: (args: {
+			where: unknown;
+			create: unknown;
+			update: unknown
+		}) => Promise<Record<string, unknown>>;
+	};
+
+	if (!model || !model.upsert) {
+		throw new Error(`Table ${tableName} not found in database ${database} ou upsert non supporté`);
+	}
+
+	// Vérifier si l'enregistrement existe avant l'upsert pour déterminer si c'est une création ou update
+	const existing = await findRecord(database, tableName, where);
+	const isUpdate = !!existing;
+
+	const result = await model.upsert({
+		where,
+		create: data,  // Si pas trouvé, créer avec toutes les données
+		update: data   // Si trouvé, mettre à jour avec les nouvelles données
+	});
+
+	return {
+		created: !isUpdate,
+		updated: isUpdate,
+		record: result
+	};
 }
 
 // Mettre à jour un enregistrement de manière générique (côté serveur uniquement)

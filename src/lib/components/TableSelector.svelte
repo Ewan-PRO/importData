@@ -312,7 +312,7 @@
 							/>
 							<span class="text-sm text-gray-900">
 								<Download class="mr-1 inline h-4 w-4" />
-								Tables prêtes pour l'importation ({compatibleCount})
+								Sources prêtes pour l'importation ({compatibleCount})
 							</span>
 						</label>
 					</div>

@@ -100,6 +100,31 @@
 
 				if (result.processed) {
 					step = 3; // Importation terminée
+
+					// Afficher toast de succès avec résumé de l'import
+					const totalOperations = (result.inserted || 0) + (result.updated || 0);
+					const operations = [];
+					if (result.inserted && result.inserted > 0) {
+						operations.push(`${result.inserted} ajouté${result.inserted > 1 ? 's' : ''}`);
+					}
+					if (result.updated && result.updated > 0) {
+						operations.push(`${result.updated} modifié${result.updated > 1 ? 's' : ''}`);
+					}
+
+					const message = totalOperations > 0
+						? `Import réussi : ${operations.join(', ')}`
+						: 'Import terminé';
+
+					toast.success(message);
+
+					// Reset l'interface après un délai court pour permettre de voir le résultat
+					setTimeout(() => {
+						step = 1;
+						csvData = [];
+						fileName = '';
+						validationResult = null;
+						file = null;
+					}, 2000);
 				} else if (step === 2) {
 					step = 3; // Validation terminée, prêt pour l'importation
 				}
@@ -554,11 +579,20 @@
 				<div
 					role="button"
 					tabindex="0"
-					class={`mb-4 rounded-lg border-2 border-dashed p-8 text-center transition-colors hover:border-blue-400 hover:bg-blue-50 ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
+					class={`mb-4 rounded-lg border-2 border-dashed p-8 text-center transition-colors hover:border-blue-400 hover:bg-blue-50 cursor-pointer ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
 					on:dragenter|preventDefault={handleDragEnter}
 					on:dragleave|preventDefault={handleDragLeave}
 					on:dragover|preventDefault={handleDragOver}
 					on:drop|preventDefault={handleDrop}
+					on:click={() => {
+						document.getElementById('fileInput')?.click();
+					}}
+					on:keydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							document.getElementById('fileInput')?.click();
+						}
+					}}
 				>
 					<div class="flex flex-col items-center">
 						<Upload class="mx-auto mb-2 h-12 w-12 text-gray-400" />
@@ -574,7 +608,8 @@
 							/>
 							<Button
 								variant="bleu"
-								onclick={() => {
+								onclick={(e) => {
+									e.stopPropagation();
 									document.getElementById('fileInput')?.click();
 								}}
 							>
@@ -585,20 +620,6 @@
 					</div>
 				</div>
 
-				{#if file}
-					<div class="mt-4 flex items-center justify-between rounded-lg bg-gray-50 p-4">
-						<div class="flex items-center">
-							<FileCheck class="mr-2 h-6 w-6 text-green-500" />
-							<div>
-								<p class="font-medium">{fileName}</p>
-								<p class="text-sm text-gray-500">{(file.size / 1024).toFixed(2)} Ko</p>
-							</div>
-						</div>
-						<Button variant="bleu" onclick={readFile}>
-							Continuer <ArrowRight class="ml-2 h-4 w-4" />
-						</Button>
-					</div>
-				{/if}
 			</div>
 		{:else if step === 2}
 			<form method="POST" action="?/validate" use:superEnhance>
