@@ -120,9 +120,15 @@
 					// Reset l'interface après un délai court pour permettre de voir le résultat
 					setTimeout(() => {
 						step = 1;
-						csvData = [];
+						rawData = [];
 						fileName = '';
-						validationResult = null;
+						validationResults = {
+							totalRows: 0,
+							validRows: 0,
+							duplicates: 0,
+							invalidData: [],
+							processed: false
+						};
 						file = null;
 					}, 2000);
 				} else if (step === 2) {
