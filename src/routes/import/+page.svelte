@@ -847,7 +847,8 @@
 								const mappedRow: Record<string, any> = {};
 								Object.entries(mappedFields).forEach(([colIndex, fieldName]) => {
 									if (fieldName) {
-										mappedRow[fieldName] = row[parseInt(colIndex)] || '';
+										const rawValue = row[parseInt(colIndex)];
+										mappedRow[fieldName] = rawValue !== undefined ? rawValue : '';
 									}
 								});
 								return mappedRow;

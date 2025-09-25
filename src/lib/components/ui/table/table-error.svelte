@@ -59,7 +59,7 @@
 						</Cell>
 						{#each headers as header}
 							<Cell variant="error" {rowIndex}>
-								{row[header.key] || ''}
+								{row[header.key] !== undefined && row[header.key] !== null ? row[header.key] : ''}
 							</Cell>
 						{/each}
 					</Row>
