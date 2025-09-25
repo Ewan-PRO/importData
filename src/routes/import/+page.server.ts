@@ -15,12 +15,64 @@ import {
 	findRecord,
 	parseTableIdentifier,
 	resolveImportTarget,
+	getDatabases,
 	type ValidationRules
 } from '$lib/prisma-meta';
 
 const prisma = new PrismaClient();
 
 type ColumnMap = Record<string, number>;
+
+// ========== CACHE GLOBAL POUR TYPES PRISMA ==========
+// Cache global: Map<"database:table", Map<"fieldName", "PrismaType">>
+const globalFieldTypes = new Map<string, Map<string, string>>();
+
+// Fonction pour pré-charger TOUS les types de TOUS les champs de TOUTES les tables
+async function preloadAllFieldTypes(): Promise<void> {
+	console.log('🔄 [TYPES] Début pré-chargement des types Prisma...');
+
+	try {
+		const databases = await getDatabases();
+		let totalTables = 0;
+		let totalFields = 0;
+
+		for (const [dbName, db] of Object.entries(databases)) {
+			console.log(`📊 [TYPES] Base ${dbName}: ${db.dmmf.datamodel.models.length} modèles`);
+
+			for (const model of db.dmmf.datamodel.models) {
+				const tableKey = `${dbName}:${model.name}`;
+				const fieldTypes = new Map<string, string>();
+
+				// Extraire tous les champs scalaires avec leurs types
+				model.fields
+					.filter((field: { kind: string; name: string; type: string }) => field.kind === 'scalar')
+					.forEach((field: { name: string; type: string }) => {
+						fieldTypes.set(field.name, field.type);
+						totalFields++;
+					});
+
+				globalFieldTypes.set(tableKey, fieldTypes);
+				totalTables++;
+
+				// Log détaillé pour debug (premiers modèles seulement)
+				if (totalTables <= 3) {
+					console.log(`🔍 [TYPES] ${tableKey}:`, Array.from(fieldTypes.entries()));
+				}
+			}
+		}
+
+		console.log(`✅ [TYPES] Pré-chargement terminé: ${totalTables} tables, ${totalFields} champs`);
+
+		// Log du cache tarif_achat pour debug
+		const tarifTypes = globalFieldTypes.get('cenov_dev:tarif_achat');
+		if (tarifTypes) {
+			console.log(`🎯 [TYPES] tarif_achat types:`, Array.from(tarifTypes.entries()));
+		}
+	} catch (error) {
+		console.error('❌ [TYPES] Erreur pré-chargement:', error);
+		throw error;
+	}
+}
 
 // Interface unifiée pour tous les résultats d'importation
 interface ImportResult {
@@ -121,27 +173,50 @@ function formatDisplayValue(value: unknown): string {
 	return String(value);
 }
 
-function formatValueForDatabase(field: string, value: unknown): unknown {
+// Version SYNCHRONE ultra-rapide utilisant le cache global
+function formatValueForDatabase(field: string, value: unknown, tableIdentifier: string): unknown {
 	// Si la valeur est null ou undefined, retourner null
 	if (value === null || value === undefined || value === '') {
 		return null;
 	}
 
-	// Conversion spécifique pour les champs ID/FK (entiers)
-	if (field.includes('_id') || field.includes('fk_') || field.includes('_qty')) {
-		const numValue = parseInt(String(value), 10);
-		return isNaN(numValue) ? null : numValue;
-	}
+	// Lookup synchrone dans le cache global des types
+	const tableTypes = globalFieldTypes.get(tableIdentifier);
+	const prismaType = tableTypes?.get(field) || 'String';
 
-	// Conversion selon le type de champ
-	if (field.includes('_valeur')) {
-		// Conversion en nombre décimal
-		const numValue = parseFloat(String(value).replace(',', '.'));
-		return isNaN(numValue) ? null : numValue;
-	}
+	const stringValue = String(value).trim();
 
-	// Par défaut, retourner la valeur comme chaîne de caractères avec trim
-	return String(value).trim();
+	// Conversion selon le type Prisma réel
+	switch (prismaType) {
+		case 'Int': {
+			const intValue = parseInt(stringValue, 10);
+			return isNaN(intValue) ? null : intValue;
+		}
+
+		case 'Float':
+		case 'Decimal': {
+			const floatValue = parseFloat(stringValue.replace(',', '.'));
+			return isNaN(floatValue) ? null : floatValue;
+		}
+
+		case 'Boolean': {
+			return (
+				stringValue.toLowerCase() === 'true' ||
+				stringValue === '1' ||
+				stringValue.toLowerCase() === 'yes'
+			);
+		}
+
+		case 'DateTime': {
+			// Laisser Prisma parser la date automatiquement
+			return stringValue;
+		}
+
+		case 'String':
+		default: {
+			return stringValue;
+		}
+	}
 }
 
 function validateCSVFormat(
@@ -338,7 +413,7 @@ async function checkExistingRecord(
 		const colIndex = Object.entries(mappedFields).find(([, f]) => f === field)?.[0];
 		if (colIndex !== undefined) {
 			const rawValue = row[parseInt(colIndex)];
-			const formattedValue = formatValueForDatabase(field, rawValue);
+			const formattedValue = formatValueForDatabase(field, rawValue, tableIdentifier);
 			whereCondition[field] = formattedValue;
 		}
 	});
@@ -662,7 +737,7 @@ async function updateTableData(
 					const colIndex = Object.entries(config.mappedFields).find(([, f]) => f === field)?.[0];
 					if (colIndex !== undefined) {
 						const rawValue = row[parseInt(colIndex)];
-						const formattedValue = formatValueForDatabase(field, rawValue);
+						const formattedValue = formatValueForDatabase(field, rawValue, tableIdentifier);
 						whereCondition[field] = formattedValue;
 					}
 				});
@@ -677,7 +752,11 @@ async function updateTableData(
 				const updateData: Record<string, unknown> = {};
 				Object.entries(config.mappedFields).forEach(([columnIndex, fieldName]) => {
 					if (fieldName && row[parseInt(columnIndex)] !== undefined) {
-						updateData[fieldName] = formatValueForDatabase(fieldName, row[parseInt(columnIndex)]);
+						updateData[fieldName] = formatValueForDatabase(
+							fieldName,
+							row[parseInt(columnIndex)],
+							tableIdentifier
+						);
 					}
 				});
 
@@ -699,7 +778,11 @@ async function updateTableData(
 				const insertData: Record<string, unknown> = {};
 				Object.entries(config.mappedFields).forEach(([columnIndex, fieldName]) => {
 					if (fieldName && row[parseInt(columnIndex)] !== undefined) {
-						insertData[fieldName] = formatValueForDatabase(fieldName, row[parseInt(columnIndex)]);
+						insertData[fieldName] = formatValueForDatabase(
+							fieldName,
+							row[parseInt(columnIndex)],
+							tableIdentifier
+						);
 					}
 				});
 
@@ -871,6 +954,9 @@ export const load: ServerLoad = async (event) => {
 	await protect(event);
 
 	try {
+		// 🚀 PRÉ-CHARGEMENT CRITIQUE: Charger TOUS les types Prisma avant tout
+		await preloadAllFieldTypes();
+
 		// Initialisation d'un formulaire vide
 		const form = await superValidate(zod(importSchema));
 
