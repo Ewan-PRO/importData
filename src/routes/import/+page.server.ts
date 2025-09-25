@@ -208,8 +208,17 @@ function formatValueForDatabase(field: string, value: unknown, tableIdentifier: 
 		}
 
 		case 'DateTime': {
-			// Laisser Prisma parser la date automatiquement
-			return stringValue;
+			if (typeof value === 'string') {
+				const stringValue = value.trim();
+
+				// Format ISO date seule → ajouter T00:00:00Z pour JavaScript
+				if (/^\d{4}-\d{2}-\d{2}$/.test(stringValue)) {
+					return `${stringValue}T00:00:00Z`;
+				}
+
+				return stringValue; // Autres formats inchangés
+			}
+			return value;
 		}
 
 		case 'String':

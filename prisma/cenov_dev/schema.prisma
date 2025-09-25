@@ -163,16 +163,6 @@ model part_nc {
   @@schema("public")
 }
 
-view v_tarif_achat {
-  fk_produit      Int
-  taa_date        DateTime @cenov_dev_db.Date
-  taa_montant     Float
-  taa_remise      Float?
-  taa_montant_net Float?
-
-  @@schema("produit")
-}
-
 view produit_v_produit_categorie_attribut {
   pro_id    Int
   kit_label String @cenov_dev_db.VarChar(100)
@@ -223,4 +213,14 @@ view v_kit_caracteristique {
   unit      String @cenov_dev_db.VarChar(60)
 
   @@schema("public")
+}
+
+view v_tarif_achat_ {
+  fk_produit      Int
+  taa_date        DateTime @cenov_dev_db.Date
+  taa_montant     Float
+  taa_remise      Float?
+  taa_montant_net Float?
+
+  @@schema("produit")
 }
