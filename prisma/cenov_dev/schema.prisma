@@ -13,7 +13,7 @@ datasource cenov_dev_db {
 model categorie {
   cat_id             Int                  @id @default(autoincrement())
   fk_parent          Int?
-  cat_code           String               @cenov_dev_db.VarChar(60)
+  cat_code           String?              @cenov_dev_db.VarChar(60)
   cat_label          String               @cenov_dev_db.VarChar(100)
   categorie          categorie?           @relation("categorieTocategorie", fields: [fk_parent], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_categorie_fk_parent_fkey")
   other_categorie    categorie[]          @relation("categorieTocategorie")
@@ -59,7 +59,7 @@ model famille {
 
 model produit {
   pro_id            Int                 @id @default(autoincrement())
-  pro_code          String              @cenov_dev_db.VarChar(20)
+  pro_code          String?             @cenov_dev_db.VarChar(20)
   fk_supplier       Int?
   fk_kit            Int?
   fk_famille        Int?
@@ -101,8 +101,8 @@ model tarif_achat {
 
 model attribut {
   atr_id                                                   Int                  @id(map: "attribute_pkey") @default(autoincrement())
-  atr_nat                                                  String               @cenov_dev_db.VarChar(60)
-  atr_val                                                  String               @cenov_dev_db.VarChar(60)
+  atr_nat                                                  String?              @cenov_dev_db.VarChar(60)
+  atr_val                                                  String?              @cenov_dev_db.VarChar(60)
   atr_label                                                String               @cenov_dev_db.VarChar(100)
   created_at                                               DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at                                               DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
@@ -221,6 +221,12 @@ view v_tarif_achat_ {
   taa_montant     Float
   taa_remise      Float?
   taa_montant_net Float?
+
+  @@schema("produit")
+}
+
+view v_import_produit {
+  ok Int?
 
   @@schema("produit")
 }
