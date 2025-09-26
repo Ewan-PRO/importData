@@ -500,18 +500,28 @@ async function validateImportData(
 		})
 	);
 
-	// Créer une liste plate de toutes les tables finales à valider
-	const finalTables = resolvedTables.flatMap((r) => r.resolvedTables);
-
-	// Obtenir les règles de validation pour toutes les tables finales
+	// Pour les vues, valider contre les champs de la vue elle-même, pas des tables sous-jacentes
 	const allValidationRules = await Promise.all(
-		finalTables.map(async (tableIdentifier) => {
+		config.selectedTables.map(async (tableIdentifier) => {
 			const { database, tableName } = parseTableIdentifier(tableIdentifier);
-			return {
-				table: tableIdentifier,
-				tableName,
-				rules: await getTableValidationRules(database, tableName)
-			};
+			const resolvedTable = resolvedTables.find(r => r.originalTable === tableIdentifier);
+
+			// Si c'est une vue, utiliser les champs de la vue pour la validation
+			if (resolvedTable?.isView) {
+				console.log(`🔍 [VIEW-VALIDATION] Validation des champs de la vue: ${tableName}`);
+				return {
+					table: tableIdentifier,
+					tableName,
+					rules: await getTableValidationRules(database, tableName) // Vue elle-même
+				};
+			} else {
+				// Table normale
+				return {
+					table: tableIdentifier,
+					tableName,
+					rules: await getTableValidationRules(database, tableName)
+				};
+			}
 		})
 	);
 
@@ -686,6 +696,17 @@ async function updateTableData(
 		if (resolved.targetTables.length > 0) {
 			tableName = resolved.targetTables[0]; // Utiliser la première table
 			console.log(`🔄 [VIEW-RESOLVE] Vue ${tableIdentifier} → Table ${tableName}`);
+		} else {
+			// Si pas de tables trouvées, essayer d'utiliser directement le nom résolu
+			const databases = await getDatabases();
+			const db = databases[database];
+			const model = db.dmmf.datamodel.models.find(m => m.name === tableName) as {
+				name: string;
+				dbName?: string;
+				[key: string]: unknown;
+			};
+			const realTableName = model?.dbName || tableName;
+			console.log(`⚠️ [VIEW-FALLBACK] Pas de tables détectées pour ${tableName}, essai avec nom réel: ${realTableName}`);
 		}
 	}
 

@@ -802,6 +802,22 @@ async function getViewSourceTablesFromSQL(
 	}
 }
 
+// Fonction pour résoudre le nom Prisma vers le nom PostgreSQL réel
+async function getPostgreSQLTableName(database: DatabaseName, prismaModelName: string): Promise<string> {
+	const databases = await getDatabases();
+	const db = databases[database];
+
+	// Trouver le modèle Prisma
+	const model = db.dmmf.datamodel.models.find(m => m.name === prismaModelName) as {
+		name: string;
+		dbName?: string;
+		[key: string]: unknown;
+	};
+
+	// Si @@map existe, utiliser le nom mappé, sinon le nom du modèle
+	return model?.dbName || prismaModelName;
+}
+
 // Fonction de résolution automatique des cibles d'import
 export async function resolveImportTarget(tableIdentifier: string): Promise<{
 	isView: boolean;
@@ -818,7 +834,9 @@ export async function resolveImportTarget(tableIdentifier: string): Promise<{
 	const isView = tableName.startsWith('v_') || tableName.includes('_v_');
 
 	if (isView) {
-		const sourceTables = await getViewSourceTablesFromSQL(database, tableName);
+		// Résoudre le nom Prisma vers le nom PostgreSQL réel
+		const realTableName = await getPostgreSQLTableName(database, tableName);
+		const sourceTables = await getViewSourceTablesFromSQL(database, realTableName);
 		return {
 			isView: true,
 			targetTables: sourceTables,
