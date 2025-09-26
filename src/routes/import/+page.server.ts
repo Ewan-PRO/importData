@@ -486,14 +486,6 @@ async function validateImportData(
 	}> = await Promise.all(
 		config.selectedTables.map(async (tableIdentifier) => {
 			const resolved = await resolveImportTarget(tableIdentifier);
-			const isView = resolved.isView;
-
-			// DEBUG: Log des résolutions de tables
-			if (isView) {
-				console.log(`🔎 [VIEW-RESOLVE] Vue ${tableIdentifier} → Tables: [${resolved.targetTables.join(', ')}]`);
-			} else {
-				console.log(`📋 [TABLE-DIRECT] Table directe: ${tableIdentifier}`);
-			}
 
 			return {
 				originalTable: tableIdentifier,
@@ -685,42 +677,17 @@ async function updateTableData(
 	let updated = 0;
 	const errors: string[] = [];
 
-	const { database, tableName } = parseTableIdentifier(tableIdentifier);
+	const { database } = parseTableIdentifier(tableIdentifier);
+	let { tableName } = parseTableIdentifier(tableIdentifier);
 
-	// CORRECTION: Résoudre les vues avant le traitement
-	const resolved = await resolveImportTarget(tableIdentifier);
-	if (resolved.isView) {
-		console.log(`🔄 [VIEW-RESOLVE] Import sur vue ${tableName} → Tables: [${resolved.targetTables.join(', ')}]`);
-
-		// Traiter chaque table sous-jacente de la vue
-		for (const targetTable of resolved.targetTables) {
-			const targetIdentifier = `${database}:${targetTable}`;
-			console.log(`👨‍💻 [VIEW-TARGET] Traitement de la table: ${targetIdentifier}`);
-
-			const result = await updateTableDataDirect(config, targetIdentifier, validRowsSet);
-			inserted += result.inserted;
-			updated += result.updated;
-			errors.push(...result.errors);
+	// Résoudre les vues vers leurs tables sous-jacentes
+	if (tableName.startsWith('v_') || tableName.includes('_v_')) {
+		const resolved = await resolveImportTarget(tableIdentifier);
+		if (resolved.targetTables.length > 0) {
+			tableName = resolved.targetTables[0]; // Utiliser la première table
+			console.log(`🔄 [VIEW-RESOLVE] Vue ${tableIdentifier} → Table ${tableName}`);
 		}
-
-		return { inserted, updated, errors };
 	}
-
-	// Table directe - traitement normal
-	return await updateTableDataDirect(config, tableIdentifier, validRowsSet);
-}
-
-// Fonction de traitement direct d'une table (pas de vue)
-async function updateTableDataDirect(
-	config: ImportConfig,
-	tableIdentifier: string,
-	validRowsSet: Set<number>
-): Promise<InsertionResult & { updated: number }> {
-	let inserted = 0;
-	let updated = 0;
-	const errors: string[] = [];
-
-	const { database, tableName } = parseTableIdentifier(tableIdentifier);
 
 	for (let rowIndex = 0; rowIndex < config.data.length; rowIndex++) {
 		if (!validRowsSet.has(rowIndex)) continue;

@@ -845,12 +845,6 @@ export async function createRecord(
 		throw new Error('[PRISMA-META] createRecord ne peut être appelé côté client');
 	}
 
-	// Protection contre l'insertion directe dans les vues
-	if (tableName.startsWith('v_') || tableName.includes('_v_')) {
-		throw new Error(
-			`Import direct impossible sur vue ${tableName}. Les vues sont en lecture seule. Utilisez la résolution automatique via resolveImportTarget().`
-		);
-	}
 
 	const client = await getClient(database);
 	const model = client[tableName] as {
@@ -884,10 +878,6 @@ export async function updateRecord(
 		throw new Error(`Table ${tableName} not found in database ${database}`);
 	}
 
-	// Les vues ne peuvent pas être mises à jour directement
-	if (tableName.startsWith('v_')) {
-		throw new Error(`Cannot update view ${tableName}`);
-	}
 
 	return await model.updateMany({ where, data });
 }
