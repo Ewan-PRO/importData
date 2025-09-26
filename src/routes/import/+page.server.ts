@@ -29,16 +29,12 @@ const globalFieldTypes = new Map<string, Map<string, string>>();
 
 // Fonction pour pré-charger TOUS les types de TOUS les champs de TOUTES les tables
 async function preloadAllFieldTypes(): Promise<void> {
-	console.log('🔄 [TYPES] Début pré-chargement des types Prisma...');
-
 	try {
 		const databases = await getDatabases();
 		let totalTables = 0;
 		let totalFields = 0;
 
 		for (const [dbName, db] of Object.entries(databases)) {
-			console.log(`📊 [TYPES] Base ${dbName}: ${db.dmmf.datamodel.models.length} modèles`);
-
 			for (const model of db.dmmf.datamodel.models) {
 				const tableKey = `${dbName}:${model.name}`;
 				const fieldTypes = new Map<string, string>();
@@ -53,21 +49,10 @@ async function preloadAllFieldTypes(): Promise<void> {
 
 				globalFieldTypes.set(tableKey, fieldTypes);
 				totalTables++;
-
-				// Log détaillé pour debug (premiers modèles seulement)
-				if (totalTables <= 3) {
-					console.log(`🔍 [TYPES] ${tableKey}:`, Array.from(fieldTypes.entries()));
-				}
 			}
 		}
 
-		console.log(`✅ [TYPES] Pré-chargement terminé: ${totalTables} tables, ${totalFields} champs`);
-
-		// Log du cache tarif_achat pour debug
-		const tarifTypes = globalFieldTypes.get('cenov_dev:tarif_achat');
-		if (tarifTypes) {
-			console.log(`🎯 [TYPES] tarif_achat types:`, Array.from(tarifTypes.entries()));
-		}
+		console.log(`✅ [TYPES] Types chargés: ${totalTables} tables, ${totalFields} champs`);
 	} catch (error) {
 		console.error('❌ [TYPES] Erreur pré-chargement:', error);
 		throw error;
@@ -501,6 +486,15 @@ async function validateImportData(
 	}> = await Promise.all(
 		config.selectedTables.map(async (tableIdentifier) => {
 			const resolved = await resolveImportTarget(tableIdentifier);
+			const isView = resolved.isView;
+
+			// DEBUG: Log des résolutions de tables
+			if (isView) {
+				console.log(`🔎 [VIEW-RESOLVE] Vue ${tableIdentifier} → Tables: [${resolved.targetTables.join(', ')}]`);
+			} else {
+				console.log(`📋 [TABLE-DIRECT] Table directe: ${tableIdentifier}`);
+			}
+
 			return {
 				originalTable: tableIdentifier,
 				resolvedTables: resolved.isView
@@ -639,11 +633,9 @@ async function updateValidatedData(
 	let updatedCount = 0;
 	const errors: string[] = [];
 
-	console.log(`🔍 [UPDATE] Début updateValidatedData`, {
-		selectedTables: config.selectedTables,
-		targetTable: config.targetTable,
-		useTransaction,
-		hasClient: !!prismaClient
+	console.log(`🔄 [UPDATE] Traitement import`, {
+		tables: config.selectedTables.length,
+		rows: config.data.length
 	});
 
 	try {
@@ -674,12 +666,7 @@ async function updateValidatedData(
 		errors.push(`Erreur d'update: ${formatError(err)}`);
 	}
 
-	console.log(`📊 RÉSUMÉ updateValidatedData:`, {
-		insertedCount,
-		updatedCount,
-		errors: errors.length,
-		errorsDetails: errors
-	});
+	console.log(`✅ [UPDATE] Résultat: +${insertedCount} ~${updatedCount} ⚠${errors.length}`);
 
 	return {
 		inserted: insertedCount,
@@ -690,6 +677,41 @@ async function updateValidatedData(
 
 // UPDATE MINIMAL - Cherche par ID et met à jour
 async function updateTableData(
+	config: ImportConfig,
+	tableIdentifier: string,
+	validRowsSet: Set<number>
+): Promise<InsertionResult & { updated: number }> {
+	let inserted = 0;
+	let updated = 0;
+	const errors: string[] = [];
+
+	const { database, tableName } = parseTableIdentifier(tableIdentifier);
+
+	// CORRECTION: Résoudre les vues avant le traitement
+	const resolved = await resolveImportTarget(tableIdentifier);
+	if (resolved.isView) {
+		console.log(`🔄 [VIEW-RESOLVE] Import sur vue ${tableName} → Tables: [${resolved.targetTables.join(', ')}]`);
+
+		// Traiter chaque table sous-jacente de la vue
+		for (const targetTable of resolved.targetTables) {
+			const targetIdentifier = `${database}:${targetTable}`;
+			console.log(`👨‍💻 [VIEW-TARGET] Traitement de la table: ${targetIdentifier}`);
+
+			const result = await updateTableDataDirect(config, targetIdentifier, validRowsSet);
+			inserted += result.inserted;
+			updated += result.updated;
+			errors.push(...result.errors);
+		}
+
+		return { inserted, updated, errors };
+	}
+
+	// Table directe - traitement normal
+	return await updateTableDataDirect(config, tableIdentifier, validRowsSet);
+}
+
+// Fonction de traitement direct d'une table (pas de vue)
+async function updateTableDataDirect(
 	config: ImportConfig,
 	tableIdentifier: string,
 	validRowsSet: Set<number>
@@ -800,6 +822,7 @@ async function updateTableData(
 			}
 		} catch (err) {
 			const errorMessage = `Ligne ${rowIndex + 1}: ${formatError(err)}`;
+			console.log(`❌ [ROW-ERROR] ${errorMessage}`);
 			errors.push(errorMessage);
 		}
 	}
