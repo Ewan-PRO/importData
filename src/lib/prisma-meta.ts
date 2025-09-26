@@ -648,9 +648,9 @@ export async function getImportableTables(): Promise<TableInfo[]> {
 
 	const allTables = await getAllDatabaseTables();
 
-	// Inclure à la fois les tables et les vues pour l'import
+	// Inclure uniquement les tables pour l'import (les vues sont exclues)
 	const importableTables = allTables.filter(
-		(table) => table.category === 'table' || table.category === 'view'
+		(table) => table.category === 'table'
 	);
 
 	// Ajouter le comptage des lignes comme dans l'export
@@ -716,140 +716,6 @@ export async function getImportableTableRequiredFields(): Promise<Record<string,
 	return result;
 }
 
-// ========== FONCTIONS D'ANALYSE DES VUES ==========
-
-// Parser SQL pour extraire les noms de tables
-function parseTablesFromSQL(sqlDefinition: string): string[] {
-	const tables = new Set<string>();
-
-	// Regex améliorée pour capturer FROM/JOIN avec schéma optionnel
-	// Capture: schema.table ou table, mais retourne seulement le nom de la table
-	const tableRegex = /(?:FROM|JOIN)\s+(?:\w+\.)?([a-zA-Z_][a-zA-Z0-9_]*)/gi;
-	let match;
-
-	while ((match = tableRegex.exec(sqlDefinition)) !== null) {
-		const tableName = match[1];
-		// Exclure les alias et mots-clés
-		if (tableName && !['ON', 'WHERE', 'AND', 'OR'].includes(tableName.toUpperCase())) {
-			tables.add(tableName);
-		}
-	}
-
-	// Parser spécifique pour les sous-requêtes avec schema.table
-	const schemaTableRegex = /(?:FROM|JOIN)\s+([a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*)/gi;
-	let schemaMatch;
-
-	while ((schemaMatch = schemaTableRegex.exec(sqlDefinition)) !== null) {
-		const fullName = schemaMatch[1];
-		// Extraire seulement le nom de la table (après le point)
-		const tableName = fullName.split('.')[1];
-		if (tableName) {
-			tables.add(tableName);
-		}
-	}
-
-	console.log(`🔍 [SQL-PARSER] SQL analysé:`, sqlDefinition);
-	console.log(`📋 [SQL-PARSER] Tables détectées:`, Array.from(tables));
-
-	return Array.from(tables);
-}
-
-// Obtenir les tables sources d'une vue via analyse SQL PostgreSQL
-async function getViewSourceTablesFromSQL(
-	database: DatabaseName,
-	viewName: string
-): Promise<string[]> {
-	if (browser) {
-		throw new Error('[PRISMA-META] getViewSourceTablesFromSQL ne peut être appelé côté client');
-	}
-
-	try {
-		const client = await getClient(database);
-
-		console.log(`🔍 [PRISMA-META] Analyse SQL pour vue ${viewName} dans ${database}`);
-
-		// PostgreSQL : obtenir la définition complète de la vue
-		const result = await (
-			client as {
-				$queryRaw: (
-					query: TemplateStringsArray,
-					...values: unknown[]
-				) => Promise<Array<{ definition: string }>>;
-			}
-		).$queryRaw`
-			SELECT pg_get_viewdef(c.oid) as definition
-			FROM pg_class c
-			JOIN pg_namespace n ON n.oid = c.relnamespace
-			WHERE c.relname = ${viewName} AND c.relkind = 'v'
-		`;
-
-		console.log(
-			`📋 [PRISMA-META] Définition SQL récupérée pour ${viewName}:`,
-			result[0]?.definition
-		);
-
-		if (result[0]?.definition) {
-			const tables = parseTablesFromSQL(result[0].definition);
-			console.log(`📊 [PRISMA-META] Tables détectées pour ${viewName}:`, tables);
-			return tables;
-		}
-
-		console.log(`⚠️ [PRISMA-META] Aucune définition trouvée pour la vue ${viewName}`);
-		return [];
-	} catch (error) {
-		console.error(`❌ [PRISMA-META] Erreur lors de l'analyse SQL de la vue ${viewName}:`, error);
-		return [];
-	}
-}
-
-// Fonction pour résoudre le nom Prisma vers le nom PostgreSQL réel
-async function getPostgreSQLTableName(database: DatabaseName, prismaModelName: string): Promise<string> {
-	const databases = await getDatabases();
-	const db = databases[database];
-
-	// Trouver le modèle Prisma
-	const model = db.dmmf.datamodel.models.find(m => m.name === prismaModelName) as {
-		name: string;
-		dbName?: string;
-		[key: string]: unknown;
-	};
-
-	// Si @@map existe, utiliser le nom mappé, sinon le nom du modèle
-	return model?.dbName || prismaModelName;
-}
-
-// Fonction de résolution automatique des cibles d'import
-export async function resolveImportTarget(tableIdentifier: string): Promise<{
-	isView: boolean;
-	targetTables: string[];
-	originalSelection: string;
-}> {
-	if (browser) {
-		throw new Error('[PRISMA-META] resolveImportTarget ne peut être appelé côté client');
-	}
-
-	const { database, tableName } = parseTableIdentifier(tableIdentifier);
-
-	// Détecter si c'est une vue
-	const isView = tableName.startsWith('v_') || tableName.includes('_v_');
-
-	if (isView) {
-		// Résoudre le nom Prisma vers le nom PostgreSQL réel
-		const realTableName = await getPostgreSQLTableName(database, tableName);
-		const sourceTables = await getViewSourceTablesFromSQL(database, realTableName);
-		return {
-			isView: true,
-			targetTables: sourceTables,
-			originalSelection: tableIdentifier
-		};
-	}
-
-	return {
-		isView: false,
-		targetTables: [tableName],
-		originalSelection: tableIdentifier
-	};
-}
 
 // ========== FONCTIONS CRUD GÉNÉRIQUES ==========
 

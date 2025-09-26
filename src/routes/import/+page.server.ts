@@ -14,7 +14,6 @@ import {
 	updateRecord,
 	findRecord,
 	parseTableIdentifier,
-	resolveImportTarget,
 	getDatabases,
 	type ValidationRules
 } from '$lib/prisma-meta';
@@ -478,50 +477,15 @@ async function validateImportData(
 		}
 	}
 
-	// Résoudre les tables cibles (vues → tables sous-jacentes)
-	const resolvedTables: Array<{
-		originalTable: string;
-		resolvedTables: string[];
-		isView: boolean;
-	}> = await Promise.all(
-		config.selectedTables.map(async (tableIdentifier) => {
-			const resolved = await resolveImportTarget(tableIdentifier);
-
-			return {
-				originalTable: tableIdentifier,
-				resolvedTables: resolved.isView
-					? resolved.targetTables.map((t) => {
-							const { database } = parseTableIdentifier(tableIdentifier);
-							return `${database}:${t}`;
-						})
-					: [tableIdentifier],
-				isView: resolved.isView
-			};
-		})
-	);
-
-	// Pour les vues, valider contre les champs de la vue elle-même, pas des tables sous-jacentes
+	// Valider directement contre les tables sélectionnées (plus de résolution de vues)
 	const allValidationRules = await Promise.all(
 		config.selectedTables.map(async (tableIdentifier) => {
 			const { database, tableName } = parseTableIdentifier(tableIdentifier);
-			const resolvedTable = resolvedTables.find(r => r.originalTable === tableIdentifier);
-
-			// Si c'est une vue, utiliser les champs de la vue pour la validation
-			if (resolvedTable?.isView) {
-				console.log(`🔍 [VIEW-VALIDATION] Validation des champs de la vue: ${tableName}`);
-				return {
-					table: tableIdentifier,
-					tableName,
-					rules: await getTableValidationRules(database, tableName) // Vue elle-même
-				};
-			} else {
-				// Table normale
-				return {
-					table: tableIdentifier,
-					tableName,
-					rules: await getTableValidationRules(database, tableName)
-				};
-			}
+			return {
+				table: tableIdentifier,
+				tableName,
+				rules: await getTableValidationRules(database, tableName)
+			};
 		})
 	);
 
@@ -687,28 +651,7 @@ async function updateTableData(
 	let updated = 0;
 	const errors: string[] = [];
 
-	const { database } = parseTableIdentifier(tableIdentifier);
-	let { tableName } = parseTableIdentifier(tableIdentifier);
-
-	// Résoudre les vues vers leurs tables sous-jacentes
-	if (tableName.startsWith('v_') || tableName.includes('_v_')) {
-		const resolved = await resolveImportTarget(tableIdentifier);
-		if (resolved.targetTables.length > 0) {
-			tableName = resolved.targetTables[0]; // Utiliser la première table
-			console.log(`🔄 [VIEW-RESOLVE] Vue ${tableIdentifier} → Table ${tableName}`);
-		} else {
-			// Si pas de tables trouvées, essayer d'utiliser directement le nom résolu
-			const databases = await getDatabases();
-			const db = databases[database];
-			const model = db.dmmf.datamodel.models.find(m => m.name === tableName) as {
-				name: string;
-				dbName?: string;
-				[key: string]: unknown;
-			};
-			const realTableName = model?.dbName || tableName;
-			console.log(`⚠️ [VIEW-FALLBACK] Pas de tables détectées pour ${tableName}, essai avec nom réel: ${realTableName}`);
-		}
-	}
+	const { database, tableName } = parseTableIdentifier(tableIdentifier);
 
 	for (let rowIndex = 0; rowIndex < config.data.length; rowIndex++) {
 		if (!validRowsSet.has(rowIndex)) continue;
