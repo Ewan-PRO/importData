@@ -2,7 +2,7 @@ SELECT
   kit.kit_label,
   attribute_carac.atr_label,
   kat.kat_valeur AS valeur,
-  attribut.atr_val AS unit
+  attribut.atr_value AS unit
 FROM
   (
     (
@@ -12,7 +12,9 @@ FROM
       )
       JOIN attribut attribute_carac ON (
         (
-          ((attribute_carac.atr_nat) :: text = 'CARAC' :: text)
+          (
+            (attribute_carac.atr_nature) :: text = 'CARAC' :: text
+          )
           AND (kat.fk_attribute_carac = attribute_carac.atr_id)
         )
       )

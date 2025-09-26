@@ -15,6 +15,11 @@ model categorie {
   fk_parent          Int?
   cat_code           String?              @cenov_dev_db.VarChar(60)
   cat_label          String               @cenov_dev_db.VarChar(100)
+  cat_picture        String?              @cenov_dev_db.VarChar(255)
+  cat_wp_id          Int?
+  cat_wp_name        String?              @cenov_dev_db.VarChar(255)
+  created_at         DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
+  updated_at         DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
   categorie          categorie?           @relation("categorieTocategorie", fields: [fk_parent], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_categorie_fk_parent_fkey")
   other_categorie    categorie[]          @relation("categorieTocategorie")
   categorie_attribut categorie_attribut[]
@@ -25,10 +30,13 @@ model categorie {
 }
 
 model categorie_attribut {
-  fk_categorie Int
-  fk_attribute Int
-  attribut     attribut  @relation(fields: [fk_attribute], references: [atr_id], onDelete: NoAction, onUpdate: NoAction, map: "categorie_attribute_fk_attribute_fkey")
-  categorie    categorie @relation(fields: [fk_categorie], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "categorie_attribute_fk_categorie_fkey")
+  fk_categorie     Int
+  fk_attribute     Int
+  cat_atr_required Boolean?  @default(false)
+  created_at       DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
+  attribut         attribut  @relation(fields: [fk_attribute], references: [atr_id], onDelete: NoAction, onUpdate: NoAction, map: "categorie_attribute_fk_attribute_fkey")
+  categorie        categorie @relation(fields: [fk_categorie], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "categorie_attribute_fk_categorie_fkey")
 
   @@id([fk_categorie, fk_attribute])
   @@schema("produit")
@@ -49,6 +57,9 @@ model famille {
   fam_code      String      @cenov_dev_db.VarChar(60)
   fam_label     String      @cenov_dev_db.VarChar(100)
   fk_supplier   Int
+  fk_category   Int?
+  created_at    DateTime?   @default(now()) @cenov_dev_db.Timestamp(6)
+  updated_at    DateTime?   @default(now()) @cenov_dev_db.Timestamp(6)
   fournisseur   fournisseur @relation(fields: [fk_supplier], references: [frs_id], onDelete: NoAction, onUpdate: NoAction, map: "famille_supplier_sup_id_fk")
   famille       famille?    @relation("familleTofamille", fields: [fk_parent], references: [fam_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_famille_fk_parent_fkey")
   other_famille famille[]   @relation("familleTofamille")
@@ -101,16 +112,24 @@ model tarif_achat {
 
 model attribut {
   atr_id                                                   Int                  @id(map: "attribute_pkey") @default(autoincrement())
-  atr_nat                                                  String?              @cenov_dev_db.VarChar(60)
-  atr_val                                                  String?              @cenov_dev_db.VarChar(60)
+  atr_nature                                               String?              @cenov_dev_db.VarChar(60)
+  atr_value                                                String?              @cenov_dev_db.VarChar(60)
   atr_label                                                String               @cenov_dev_db.VarChar(100)
   created_at                                               DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at                                               DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
+  atr_code                                                 String?              @cenov_dev_db.VarChar(50)
+  atr_symbol_intl                                          String?              @cenov_dev_db.VarChar(50)
+  atr_description                                          String?
+  atr_wp_name                                              String?              @cenov_dev_db.VarChar(255)
+  atr_wp_id                                                Int?
+  atr_imposed_value                                        String?              @cenov_dev_db.VarChar(255)
+  atr_check                                                Boolean?
+  atr_symbol_fr                                            String?              @cenov_dev_db.VarChar(50)
   categorie_attribut                                       categorie_attribut[]
   kit_attribute_kit_attribute_fk_attribute_caracToattribut kit_attribute[]      @relation("kit_attribute_fk_attribute_caracToattribut")
   kit_attribute_kit_attribute_fk_attribute_unitToattribut  kit_attribute[]      @relation("kit_attribute_fk_attribute_unitToattribut")
 
-  @@unique([atr_nat, atr_val], map: "idx_attribute")
+  @@unique([atr_nature, atr_value], map: "idx_attribute")
   @@schema("public")
 }
 
