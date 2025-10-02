@@ -105,6 +105,7 @@ model attribut {
   atr_label                                                String               @db.VarChar(100)
   created_at                                               DateTime?            @default(now()) @db.Timestamp(6)
   updated_at                                               DateTime?            @default(now()) @db.Timestamp(6)
+  atr_code                                                 String?              @db.VarChar(100)
   categorie_attribut                                       categorie_attribut[]
   kit_attribute_kit_attribute_fk_attribute_caracToattribut kit_attribute[]      @relation("kit_attribute_fk_attribute_caracToattribut")
   kit_attribute_kit_attribute_fk_attribute_unitToattribut  kit_attribute[]      @relation("kit_attribute_fk_attribute_unitToattribut")

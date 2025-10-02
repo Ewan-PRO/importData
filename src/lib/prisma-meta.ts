@@ -290,13 +290,26 @@ export async function getAllTables(database: DatabaseName): Promise<TableInfo[]>
 
 	const databases = await getDatabases();
 	const tables = databases[database].dmmf.datamodel.models.map((model) => {
-		const modelWithMeta = model as DMMFModelFromPrisma;
+		const modelWithMeta = model as DMMFModelFromPrisma & { primaryKey?: { fields?: string[] } | null };
 
 		// Utiliser le nom @@map si disponible, sinon le nom du modèle
 		const realTableName = modelWithMeta.dbName || model.name;
 
+		// Détecter les vues via plusieurs critères :
+		// 1. Par convention de nommage (v_ ou _v_ ou contient "view")
+		// 2. Par absence de clé primaire (@id ou @@id)
+		const hasNamePattern =
+			realTableName.startsWith('v_') ||
+			realTableName.includes('_v_') ||
+			model.name.toLowerCase().includes('view');
+
+		const hasPrimaryKey =
+			(modelWithMeta.primaryKey !== undefined && modelWithMeta.primaryKey !== null) ||
+			model.fields.some((f) => f.isId);
+
+		// Une vue = pas de clé primaire OU suit la convention de nommage
 		const category: 'table' | 'view' =
-			realTableName.startsWith('v_') || realTableName.includes('_v_') ? 'view' : 'table';
+			!hasPrimaryKey || hasNamePattern ? 'view' : 'table';
 
 		// Utiliser le nom mappé (@@map) comme displayName par défaut
 		let displayName = realTableName;

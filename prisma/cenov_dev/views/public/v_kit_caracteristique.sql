@@ -1,8 +1,8 @@
 SELECT
   kit.kit_label,
   attribute_carac.atr_label,
-  kat.kat_valeur AS valeur,
-  attribut.atr_value AS unit
+  kat.kat_value AS valeur,
+  attribute.atr_value AS unit
 FROM
   (
     (
@@ -10,14 +10,16 @@ FROM
         kit
         JOIN kit_attribute kat ON ((kit.kit_id = kat.fk_kit))
       )
-      JOIN attribut attribute_carac ON (
+      JOIN attribute attribute_carac ON (
         (
           (
             (attribute_carac.atr_nature) :: text = 'CARAC' :: text
           )
-          AND (kat.fk_attribute_carac = attribute_carac.atr_id)
+          AND (
+            kat.fk_attribute_characteristic = attribute_carac.atr_id
+          )
         )
       )
     )
-    JOIN attribut ON ((kat.fk_attribute_unit = attribut.atr_id))
+    JOIN attribute ON ((kat.fk_attribute_unite = attribute.atr_id))
   );

@@ -23,20 +23,20 @@ FROM
           (
             (
               (
-                produit.categorie atr_0
-                LEFT JOIN produit.categorie atr_1 ON (((atr_0.cat_id) :: text = (atr_1.fk_parent) :: text))
+                produit.category atr_0
+                LEFT JOIN produit.category atr_1 ON (((atr_0.cat_id) :: text = (atr_1.fk_parent) :: text))
               )
-              LEFT JOIN produit.categorie atr_2 ON (((atr_1.cat_id) :: text = (atr_2.fk_parent) :: text))
+              LEFT JOIN produit.category atr_2 ON (((atr_1.cat_id) :: text = (atr_2.fk_parent) :: text))
             )
-            LEFT JOIN produit.categorie atr_3 ON (((atr_2.cat_id) :: text = (atr_3.fk_parent) :: text))
+            LEFT JOIN produit.category atr_3 ON (((atr_2.cat_id) :: text = (atr_3.fk_parent) :: text))
           )
-          LEFT JOIN produit.categorie atr_4 ON (((atr_3.cat_id) :: text = (atr_4.fk_parent) :: text))
+          LEFT JOIN produit.category atr_4 ON (((atr_3.cat_id) :: text = (atr_4.fk_parent) :: text))
         )
-        LEFT JOIN produit.categorie atr_5 ON (((atr_4.cat_id) :: text = (atr_5.fk_parent) :: text))
+        LEFT JOIN produit.category atr_5 ON (((atr_4.cat_id) :: text = (atr_5.fk_parent) :: text))
       )
-      LEFT JOIN produit.categorie atr_6 ON (((atr_5.cat_id) :: text = (atr_6.fk_parent) :: text))
+      LEFT JOIN produit.category atr_6 ON (((atr_5.cat_id) :: text = (atr_6.fk_parent) :: text))
     )
-    LEFT JOIN produit.categorie atr_7 ON (((atr_6.cat_id) :: text = (atr_7.fk_parent) :: text))
+    LEFT JOIN produit.category atr_7 ON (((atr_6.cat_id) :: text = (atr_7.fk_parent) :: text))
   )
 ORDER BY
   atr_0.cat_id,
