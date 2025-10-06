@@ -11,14 +11,12 @@
 		CircleArrowLeft,
 		FileDown,
 		CirclePlus,
-		Rocket,
-		Settings,
 		LockOpen,
-		Package,
 		Table as TableIcon,
 		AlertCircle
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
+	import { DATABASE_CONFIG, SCHEMA_CONFIG, Rocket, Settings, Package } from './export-client-utils';
 
 	// Props avec $props() - Mode Runes Svelte 5
 	let {
@@ -76,18 +74,6 @@
 		// Laisser SuperForm gérer la soumission
 		// Le use:superEnhance s'en occupe
 	}
-
-	// Configuration des bases de données (centralisée)
-	const DATABASE_CONFIG = {
-		cenov: { icon: Rocket, variant: 'bleu' as const, emoji: '🚀' },
-		cenov_dev: { icon: Settings, variant: 'orange' as const, emoji: '⚙️' }
-	} as const;
-
-	// Configuration des schémas (centralisée)
-	const SCHEMA_CONFIG = {
-		produit: { icon: Package, label: 'Produit', variant: 'purple' as const },
-		public: { icon: LockOpen, label: 'Public', variant: 'cyan' as const }
-	} as const;
 
 	// Fonction pour obtenir l'icône d'une BDD
 	function getDatabaseIcon(database: string) {

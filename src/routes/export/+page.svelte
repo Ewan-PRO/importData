@@ -18,10 +18,6 @@
 		ChartColumn,
 		RefreshCcw,
 		CircleArrowRight,
-		Rocket,
-		Settings,
-		LockOpen,
-		Package,
 		FileType,
 		Sheet,
 		Table as TableIcon,
@@ -30,6 +26,7 @@
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
 	import type { DatabaseName } from '$lib/prisma-meta.js';
 	import ExportPreviewResult from './ExportPreviewResult.svelte';
+	import { DATABASE_CONFIG, SCHEMA_CONFIG, Rocket, Settings, LockOpen, Package } from './export-client-utils';
 
 	// Fonctions utilitaires locales
 	function formatNumber(num: number): string {
@@ -180,18 +177,6 @@
 
 	// Récupération statique des bases de données
 	const databases: DatabaseName[] = ['cenov', 'cenov_dev'];
-
-	// Configuration des bases de données
-	const DATABASE_CONFIG = {
-		cenov: { icon: Rocket, variant: 'bleu' as const, emoji: '🚀' },
-		cenov_dev: { icon: Settings, variant: 'orange' as const, emoji: '⚙️' }
-	} as const;
-
-	// Configuration des schémas
-	const SCHEMA_CONFIG = {
-		produit: { icon: Package, label: 'Produit', variant: 'purple' as const },
-		public: { icon: LockOpen, label: 'Public', variant: 'cyan' as const }
-	} as const;
 
 	// Obtenir les schémas uniques (Svelte 5 $derived)
 	let uniqueSchemas = $derived([
