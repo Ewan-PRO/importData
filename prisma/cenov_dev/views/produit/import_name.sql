@@ -4,21 +4,10 @@ SELECT
   p.pro_code,
   s.sup_id AS supplier_id,
   s.sup_code AS supplier_code,
-  s.sup_brand_name AS supplier_name,
-  COALESCE(f3.fam_label, f2.fam_label, f1.fam_label) AS famille,
-  (
-    CASE
-      WHEN (f3.fam_id IS NOT NULL) THEN f2.fam_label
-      WHEN (f2.fam_id IS NOT NULL) THEN f1.fam_label
-      ELSE NULL :: character varying
-    END
-  ) :: character varying(100) AS sous_famille,
-  (
-    CASE
-      WHEN (f3.fam_id IS NOT NULL) THEN f1.fam_label
-      ELSE NULL :: character varying
-    END
-  ) :: character varying(100) AS sous_sous_famille,
+  s.sup_label AS supplier_name,
+  f1.fam_label AS famille,
+  f2.fam_label AS sous_famille,
+  f3.fam_label AS sous_sous_famille,
   c.cat_label AS category_label,
   c.cat_code AS category_id,
   k.kit_label AS nom_commercial,
@@ -91,9 +80,19 @@ FROM
                       )
                       LEFT JOIN produit.family f1 ON ((p.fk_family = f1.fam_id))
                     )
-                    LEFT JOIN produit.family f2 ON ((f1.fk_parent = f2.fam_id))
+                    LEFT JOIN produit.family f2 ON (
+                      (
+                        (f1.fam_id = f2.fk_parent)
+                        AND (p.fk_sfamily = f2.fam_id)
+                      )
+                    )
                   )
-                  LEFT JOIN produit.family f3 ON ((f2.fk_parent = f3.fam_id))
+                  LEFT JOIN produit.family f3 ON (
+                    (
+                      (f2.fam_id = f3.fk_parent)
+                      AND (p.fk_ssfamily = f3.fam_id)
+                    )
+                  )
                 )
                 LEFT JOIN produit.product_category pc ON ((p.pro_id = pc.fk_product))
               )
@@ -121,11 +120,8 @@ GROUP BY
   s.sup_id,
   s.sup_code,
   s.sup_label,
-  f1.fam_id,
   f1.fam_label,
-  f2.fam_id,
   f2.fam_label,
-  f3.fam_id,
   f3.fam_label,
   c.cat_label,
   c.cat_code,

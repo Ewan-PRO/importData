@@ -144,7 +144,9 @@ model product {
   sup_code         String?            @cenov_dev_db.VarChar(100)
   created_at       DateTime?          @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at       DateTime?          @default(now()) @cenov_dev_db.Timestamp(6)
-  pro_cenov_id     String?            @cenov_dev_db.VarChar(20)
+  pro_cenov_id     String?            @cenov_dev_db.VarChar(50)
+  fk_ssfamily      Int?
+  fk_sfamily       Int?
   cross_ref        cross_ref[]
   price_purchase   price_purchase[]
   kit              kit?               @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_fk_kit_fkey")
@@ -313,33 +315,6 @@ view v_tarif_achat_ {
   @@schema("produit")
 }
 
-view import_product_v2 {
-  pro_id               Int?
-  cenov_id             String?   @cenov_dev_db.VarChar(20)
-  pro_code             String?   @cenov_dev_db.VarChar(20)
-  supplier_id          Int?
-  supplier_code        String?   @cenov_dev_db.VarChar(10)
-  supplier_name        String?   @cenov_dev_db.VarChar(70)
-  famille              String?   @cenov_dev_db.VarChar(100)
-  sous_famille         String?   @cenov_dev_db.VarChar(100)
-  sous_sous_famille    String?   @cenov_dev_db.VarChar(100)
-  category_label       String?   @cenov_dev_db.VarChar(100)
-  category_id          String?   @cenov_dev_db.VarChar(60)
-  nom_commercial       String?   @cenov_dev_db.VarChar(100)
-  pression_limite_mbar String?
-  puissance_kw         String?
-  att0000053           String?
-  att0000054           String?
-  att0000055           String?
-  att0000056           String?
-  data_source          String?   @cenov_dev_db.VarChar(500)
-  type_file_source     String?   @cenov_dev_db.VarChar(50)
-  link_source          String?   @cenov_dev_db.VarChar(200)
-  modification_date    DateTime? @cenov_dev_db.Timestamp(6)
-
-  @@schema("produit")
-}
-
 view attribute_required {
   cat_id           Int?
   cat_label        String?  @cenov_dev_db.VarChar(100)
@@ -350,9 +325,9 @@ view attribute_required {
   @@schema("public")
 }
 
-view import_product {
+view import_name {
   pro_id               Int?
-  cenov_id             String?   @cenov_dev_db.VarChar(20)
+  cenov_id             String?   @cenov_dev_db.VarChar(50)
   pro_code             String?   @cenov_dev_db.VarChar(20)
   supplier_id          Int?
   supplier_code        String?   @cenov_dev_db.VarChar(10)
