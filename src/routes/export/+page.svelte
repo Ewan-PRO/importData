@@ -510,6 +510,7 @@
 									>
 								</label>
 								{#each uniqueSchemas as schema}
+									{@const SchemaIcon = getSchemaIcon(schema)}
 									<label class="flex cursor-pointer items-center space-x-2">
 										<input
 											type="radio"
@@ -519,11 +520,7 @@
 											class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 										/>
 										<span class="text-sm text-gray-900">
-											{#if schema === 'produit'}
-												<Package class="mr-0.5 inline h-4 w-4" />
-											{:else}
-												<LockOpen class="mr-0.5 inline h-4 w-4" />
-											{/if}
+											<SchemaIcon class="mr-0.5 inline h-4 w-4" />
 											{SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.label || schema} ({filteredTables.filter(
 												(t) => t.schema === schema
 											).length})

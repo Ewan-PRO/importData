@@ -100,9 +100,9 @@ export async function extractTableData(
 		if (modelWithMeta.dbName) {
 			realTableName = modelWithMeta.dbName;
 		} else {
-			// Seulement nettoyer les préfixes évidents comme "public_"
-			if (tableName.startsWith('public_') && schema === 'public') {
-				realTableName = tableName.substring(7); // 'public_'.length = 7
+			// Nettoyer les préfixes de schéma dynamiquement (ex: "public_", "produit_")
+			if (schema && tableName.startsWith(`${schema}_`)) {
+				realTableName = tableName.substring(schema.length + 1); // +1 pour le '_'
 			}
 		}
 	}
