@@ -77,3 +77,11 @@ export function getDatabaseBadgeInfo(database: string): {
 		label: `${config.emoji} ${database.toUpperCase()}`
 	};
 }
+
+// Fonction pour parser un tableName au format "database-tablename"
+export function parseTableName(tableName: string): string {
+	if (tableName.includes('-')) {
+		return tableName.split('-').slice(1).join('-');
+	}
+	return tableName;
+}

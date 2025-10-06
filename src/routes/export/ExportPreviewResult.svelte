@@ -26,7 +26,8 @@
 		getSchemaIcon,
 		getTableIcon,
 		getBadgeVariant,
-		getDatabaseBadgeInfo
+		getDatabaseBadgeInfo,
+		parseTableName
 	} from './export-client-utils';
 
 	// Props avec $props() - Mode Runes Svelte 5
@@ -203,10 +204,7 @@
 								<div class="flex items-center gap-3">
 									<h3 class="flex items-center gap-2 font-medium">
 										<TableIconComponent class="h-5 w-5" />
-										{matchingTableInfo?.displayName ||
-											(tableName.includes('-')
-												? tableName.split('-').slice(1).join('-')
-												: tableName)}
+										{matchingTableInfo?.displayName || parseTableName(tableName)}
 									</h3>
 									{#if matchingTableInfo}
 										<Badge variant={getBadgeVariant(matchingTableInfo.category)}>
@@ -239,10 +237,7 @@
 								<div class="mb-2 flex items-center justify-between">
 									<h3 class="flex items-center gap-2 font-medium">
 										<TableIconComponent class="h-5 w-5" />
-										{matchingTableInfo?.displayName ||
-											(tableName.includes('-')
-												? tableName.split('-').slice(1).join('-')
-												: tableName)}
+										{matchingTableInfo?.displayName || parseTableName(tableName)}
 									</h3>
 									<Badge variant="blanc">{rows.length} lignes</Badge>
 								</div>
