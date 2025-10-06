@@ -20,37 +20,62 @@
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
 
-	// Props
-	export let step: number;
-	export let previewData: Record<string, unknown[]>;
-	export let previewConfig: { includeHeaders: boolean } | null;
-	export let exportResult: ExportResult | null;
-	export let formStore: any; // Le store SuperForm, pas la valeur
-	export let submitting: boolean;
-	export let superEnhance: any;
+	// Props avec $props() - Mode Runes Svelte 5
+	let {
+		step,
+		previewData,
+		previewConfig,
+		exportResult,
+		formStore,
+		submitting,
+		superEnhance,
+		exportFormats,
+		tables,
+		goToStep,
+		resetExport,
+		formatPreviewValue,
+		formatNumber,
+		formatFileSize
+	}: {
+		step: number;
+		previewData: Record<string, unknown[]>;
+		previewConfig: { includeHeaders: boolean } | null;
+		exportResult: ExportResult | null;
+		formStore: any; // Le store SuperForm, pas la valeur
+		submitting: boolean;
+		superEnhance: any;
+		exportFormats: Array<{
+			value: string;
+			label: string;
+			description: string;
+			recommended?: boolean;
+		}>;
+		tables: ExportTableInfo[];
+		goToStep: (step: number) => void;
+		resetExport: () => void;
+		formatPreviewValue: (value: unknown) => string;
+		formatNumber: (num: number) => string;
+		formatFileSize: (bytes: number) => string;
+	} = $props();
 
-	// Créer un raccourci local pour accéder au store
-	$: form = $formStore;
+	// Raccourci local pour accéder au store (mode runes)
+	let form = $derived($formStore);
 
-	// Handler pour forcer la synchronisation avant soumission
+	// ✅ Variables réactives EXPLICITES avec $derived (Svelte 5)
+	// Remplace les console.log réactifs par une approche propre
+	let selectedSourcesData = $derived($formStore.selectedSources || []);
+	let formatData = $derived($formStore.format || 'csv');
+	let includeHeadersData = $derived($formStore.includeHeaders);
+	let rowLimitData = $derived($formStore.rowLimit || '');
+	let filtersData = $derived($formStore.filters || {});
+
+	// Handler pour la soumission - utilise les variables dérivées
 	function handleExportSubmit(event: Event) {
-		console.log('📤 [SUBMIT] Avant soumission - selectedSources:', $formStore.selectedSources?.length, 'format:', $formStore.format);
+		console.log('📤 [SUBMIT] Export:', selectedSourcesData.length, 'sources - Format:', formatData);
 
 		// Laisser SuperForm gérer la soumission
 		// Le use:superEnhance s'en occupe
 	}
-	export let exportFormats: Array<{
-		value: string;
-		label: string;
-		description: string;
-		recommended?: boolean;
-	}>;
-	export let tables: ExportTableInfo[];
-	export let goToStep: (step: number) => void;
-	export let resetExport: () => void;
-	export let formatPreviewValue: (value: unknown) => string;
-	export let formatNumber: (num: number) => string;
-	export let formatFileSize: (bytes: number) => string;
 
 	// Configuration des bases de données (centralisée)
 	const DATABASE_CONFIG = {
@@ -152,7 +177,11 @@
 			</div>
 
 			<!-- Champs cachés -->
-			<input type="hidden" name="selectedSources" value={JSON.stringify($formStore.selectedSources)} />
+			<input
+				type="hidden"
+				name="selectedSources"
+				value={JSON.stringify($formStore.selectedSources)}
+			/>
 			<input type="hidden" name="format" value={$formStore.format} />
 			<input type="hidden" name="includeHeaders" value={$formStore.includeHeaders} />
 			<input type="hidden" name="rowLimit" value={$formStore.rowLimit} />
@@ -210,16 +239,17 @@
 						? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.label ||
 							matchingTableInfo.schema
 						: 'Inconnu'}
+					{@const TableIconComponent = getTableIcon(matchingTableInfo?.category || 'tables')}
+					{@const SchemaIconComponent = matchingTableInfo?.schema
+						? getSchemaIcon(matchingTableInfo.schema)
+						: LockOpen}
 					<div>
 						<div class="mb-3">
 							<!-- Desktop: layout horizontal -->
 							<div class="hidden items-center justify-between sm:flex">
 								<div class="flex items-center gap-3">
 									<h3 class="flex items-center gap-2 font-medium">
-										<svelte:component
-											this={getTableIcon(matchingTableInfo?.category || 'tables')}
-											class="h-5 w-5"
-										/>
+										<TableIconComponent class="h-5 w-5" />
 										{matchingTableInfo?.displayName ||
 											(tableName.includes('-')
 												? tableName.split('-').slice(1).join('-')
@@ -243,11 +273,7 @@
 											{matchingTableInfo?.database.toUpperCase()}
 										</Badge>
 										<Badge variant={schemaVariant}>
-											{#if matchingTableInfo?.schema}
-												<svelte:component this={getSchemaIcon(matchingTableInfo.schema)} />
-											{:else}
-												<LockOpen />
-											{/if}
+											<SchemaIconComponent />
 											{schemaLabel}
 										</Badge>
 									{/if}
@@ -259,10 +285,7 @@
 							<div class="sm:hidden">
 								<div class="mb-2 flex items-center justify-between">
 									<h3 class="flex items-center gap-2 font-medium">
-										<svelte:component
-											this={getTableIcon(matchingTableInfo?.category || 'tables')}
-											class="h-5 w-5"
-										/>
+										<TableIconComponent class="h-5 w-5" />
 										{matchingTableInfo?.displayName ||
 											(tableName.includes('-')
 												? tableName.split('-').slice(1).join('-')
@@ -291,11 +314,7 @@
 											{/if}
 										</Badge>
 										<Badge variant={schemaVariant}>
-											{#if matchingTableInfo?.schema}
-												<svelte:component this={getSchemaIcon(matchingTableInfo.schema)} />
-											{:else}
-												<LockOpen />
-											{/if}
+											<SchemaIconComponent />
 											{schemaLabel}
 										</Badge>
 									</div>
@@ -359,21 +378,14 @@
 		{/if}
 
 		<!-- Export final -->
-		<form method="POST" action="?/export" use:superEnhance on:submit={handleExportSubmit}>
-			<!-- Champs cachés pour conserver les données du formulaire -->
-			<!-- IMPORTANT: On utilise $formStore pour avoir les valeurs synchronisées -->
-			<input type="hidden" name="selectedSources" value={JSON.stringify($formStore.selectedSources || [])} />
-			<input type="hidden" name="format" value={$formStore.format || 'csv'} />
-			<input type="hidden" name="includeHeaders" value={String($formStore.includeHeaders !== false)} />
-			<input type="hidden" name="rowLimit" value={$formStore.rowLimit || ''} />
-			<input type="hidden" name="filters" value={JSON.stringify($formStore.filters || {})} />
-
-			<!-- Debug: afficher les valeurs dans la console -->
-			{#if typeof console !== 'undefined'}
-				{console.log('📝 [FORM EXPORT] selectedSources:', $formStore.selectedSources)}
-				{console.log('📝 [FORM EXPORT] selectedSources length:', $formStore.selectedSources?.length)}
-				{console.log('📝 [FORM EXPORT] format:', $formStore.format)}
-			{/if}
+		<form method="POST" action="?/export" use:superEnhance onsubmit={handleExportSubmit}>
+			<!-- Champs cachés avec variables dérivées réactives -->
+			<!-- ✅ Utilise les variables $derived au lieu de console.log réactifs -->
+			<input type="hidden" name="selectedSources" value={JSON.stringify(selectedSourcesData)} />
+			<input type="hidden" name="format" value={formatData} />
+			<input type="hidden" name="includeHeaders" value={String(includeHeadersData !== false)} />
+			<input type="hidden" name="rowLimit" value={rowLimitData} />
+			<input type="hidden" name="filters" value={JSON.stringify(filtersData)} />
 
 			<div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
 				<Button variant="noir" onclick={() => goToStep(2)}>

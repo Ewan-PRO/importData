@@ -199,6 +199,74 @@ import { toast } from '$lib/components/ui/sonner';
 - Handlers événements : appel direct sans délai
 - Après navigation : fonctionne immédiatement
 
+## Debugging Réactivité Svelte
+
+**Problème courant :** `console.log` maintiennent accidentellement la réactivité dans Svelte 4.
+
+**Symptôme :** Fonctionnalité casse après suppression de logs "innocents".
+
+### Diagnostic rapide
+
+```bash
+# Identifier les logs suspects
+grep -n "console\.(log\|warn\|error)" src/routes/export/*.svelte
+grep -rn "\$:.*console" src/routes/
+```
+
+**Patterns dangereux :**
+
+- `$: { ... console.log(...) ... }` ← Suspect
+- `$: console.log(...)` ← Très suspect
+- Dans `$effect(() => { console.log(...) })` ← OK (informatif)
+
+### Migration Svelte 5 (solution)
+
+```typescript
+// ❌ ANCIEN - Hack réactif avec console.log
+$: if (step === 3 && data.length > 0 && !config) {
+	config = { ...formData };
+	console.log('Config sauvée:', config); // ← Force la réactivité !
+}
+
+// ✅ NOUVEAU - Svelte 5 propre
+let config = $state(null);
+let shouldSaveConfig = $derived(step === 3 && data.length > 0 && !config);
+
+$effect(() => {
+	if (shouldSaveConfig) {
+		config = { ...formData };
+		console.log('Config sauvée:', config); // ← Informatif seulement
+	}
+});
+```
+
+### Patterns de migration
+
+```typescript
+// Variables d'état
+export let data;              → let { data } = $props();
+let state = value;            → let state = $state(value);
+
+// Réactivité
+$: derived = compute(data);   → let derived = $derived(compute(data));
+$: { sideEffect(); }         → $effect(() => { sideEffect(); });
+
+// Composants dynamiques
+<svelte:component this={C} /> → {@const Component = C} <Component />
+```
+
+### Vérification post-migration
+
+```bash
+# Ces commandes doivent retourner vide après migration
+grep -rn "export let" src/routes/
+grep -rn "svelte:component" src/routes/
+grep -rn "console\.log.*\$" src/routes/      # Console.log dans réactivité
+grep -rn "\$:.*console" src/routes/          # Réactivité avec console
+```
+
+**Règle d'or :** Supprimer tous les `console.log` ne doit jamais casser la logique.
+
 ## Réponses en français
 
 - Toujours répondre en français

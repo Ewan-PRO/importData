@@ -429,3 +429,263 @@ This typically occurs when files are automatically formatted by linters/formatte
 - Write tool: Always use `C:\...` paths
 - Edit tool: Always use `C:\...` paths
 - MultiEdit tool: Always use `C:\...` paths
+
+## Debugging Problèmes de Réactivité Svelte
+
+Cette section documente les techniques pour diagnostiquer et résoudre les problèmes de réactivité dans Svelte, particulièrement lors de la migration vers Svelte 5.
+
+### Problème : Console.log Accidentellement Réactifs
+
+**⚠️ Symptôme courant :** Une fonctionnalité cesse de marcher après suppression de `console.log` "innocents".
+
+**🔍 Diagnostic :**
+
+```typescript
+// ❌ PROBLÉMATIQUE - console.log maintient accidentellement la réactivité
+$: if (condition) {
+	someVariable = newValue;
+	console.log('Debug:', someVariable); // ← Force l'évaluation réactive !
+}
+
+// ❌ Quand ce log est supprimé, la réactivité peut se casser
+$: if (condition) {
+	someVariable = newValue;
+	// La variable peut ne plus être "observée" par Svelte
+}
+```
+
+**🎯 Techniques de Diagnostic :**
+
+1. **Identifier les logs suspects :**
+
+   ```bash
+   # Chercher tous les console.log dans les déclarations réactives
+   grep -n "console\.(log\|warn\|error)" src/routes/export/*.svelte
+   ```
+
+2. **Vérifier les logs dans les déclarations réactives :**
+   - `$: { ... console.log(...) ... }` ← Suspect
+   - `$: console.log(...)` ← Très suspect
+   - Dans les `$effect(() => { console.log(...) })` ← OK (informatif)
+
+3. **Tester la théorie :**
+   - Supprimer temporairement un `console.log` suspect
+   - Tester si la fonctionnalité se casse
+   - Si oui → le log maintenait la réactivité
+
+### Solution : Migration Svelte 5 Propre
+
+**✅ Remplacer les hacks réactifs par des primitives explicites :**
+
+```typescript
+// ❌ ANCIEN - Hack avec console.log
+$: if (step === 3 && data.length > 0 && !config) {
+	config = { ...formData };
+	console.log('Config sauvée:', config); // ← Maintient la réactivité
+}
+
+// ✅ NOUVEAU - Svelte 5 propre
+let config = $state(null);
+
+let shouldSaveConfig = $derived(step === 3 && data.length > 0 && !config);
+
+$effect(() => {
+	if (shouldSaveConfig) {
+		config = { ...formData };
+		console.log('Config sauvée:', config); // ← Informatif seulement
+	}
+});
+```
+
+### Patterns de Migration Svelte 5
+
+**1. Variables d'État :**
+
+```typescript
+// ❌ Ancien
+let state = initialValue;
+
+// ✅ Nouveau
+let state = $state(initialValue);
+```
+
+**2. Props :**
+
+```typescript
+// ❌ Ancien
+export let data;
+
+// ✅ Nouveau
+let { data } = $props();
+```
+
+**3. Déclarations Réactives :**
+
+```typescript
+// ❌ Ancien
+$: filteredData = data.filter((item) => item.active);
+
+// ✅ Nouveau
+let filteredData = $derived(data.filter((item) => item.active));
+```
+
+**4. Effets de Bord :**
+
+```typescript
+// ❌ Ancien - Hack réactif
+$: {
+	if (condition) {
+		performSideEffect();
+		console.log('Side effect triggered'); // ← Maintient réactivité
+	}
+}
+
+// ✅ Nouveau - Effet explicite
+$effect(() => {
+	if (condition) {
+		performSideEffect();
+		console.log('Side effect triggered'); // ← Informatif seulement
+	}
+});
+```
+
+**5. Composants Dynamiques :**
+
+```typescript
+// ❌ Ancien - Svelte 4
+<svelte:component this={getComponent(type)} />
+
+// ✅ Nouveau - Svelte 5
+{@const Component = getComponent(type)}
+<Component />
+
+// Ou dans les boucles :
+{#each items as item}
+    {@const ItemComponent = getComponent(item.type)}
+    <ItemComponent />
+{/each}
+```
+
+### Workflow de Diagnostic Complet
+
+**Étape 1 : Identifier le Problème**
+
+```bash
+# Chercher les patterns suspects
+grep -rn "console\.log.*\$" src/routes/
+grep -rn "\$:.*console" src/routes/
+```
+
+**Étape 2 : Tester l'Hypothèse**
+
+- Commenter temporairement les `console.log` suspects
+- Vérifier si la fonctionnalité se casse
+- Si oui → confirmer le problème de réactivité accidentelle
+
+**Étape 3 : Analyser la Réactivité**
+
+```typescript
+// Ajouter des logs de debug pour comprendre le flux
+$effect(() => {
+	console.log('🔄 Reactive state changed:', stateVariable);
+});
+
+$effect(() => {
+	console.log('📊 Derived value updated:', derivedValue);
+});
+```
+
+**Étape 4 : Migrer vers Svelte 5**
+
+- Remplacer `export let` → `$props()`
+- Remplacer `let` variables modifiées → `$state()`
+- Remplacer `$:` → `$derived` ou `$effect`
+- Remplacer `<svelte:component>` → `{@const Component}`
+
+**Étape 5 : Vérifier la Propreté**
+
+```bash
+# Vérifier qu'aucun console.log ne déclenche plus la réactivité
+grep -n "console\.log" src/routes/export/*.svelte
+
+# Les logs restants doivent être soit :
+# - Dans des $effect (OK - informatif)
+# - Dans des fonctions (OK - informatif)
+# - Dans des handlers d'événements (OK - informatuf)
+# - PAS dans des déclarations réactives directes
+```
+
+### Indicateurs de Réactivité Propre
+
+**✅ Signes que la réactivité est correcte :**
+
+1. **Séparation claire :**
+   - `$derived` pour les valeurs calculées
+   - `$effect` pour les effets de bord
+   - `$state` pour les variables modifiables
+   - `console.log` uniquement informatifs
+
+2. **Pas de dépendance aux logs :**
+   - Supprimer tous les `console.log` ne casse rien
+   - La logique fonctionne sans les logs de debug
+
+3. **Architecture explicite :**
+
+   ```typescript
+   // ✅ Réactivité explicite et intentionnelle
+   let data = $state([]);
+   let filteredData = $derived(data.filter((item) => item.active));
+   let count = $derived(filteredData.length);
+
+   $effect(() => {
+   	console.log('Data changed, new count:', count); // ← Informatif
+   });
+   ```
+
+### Erreurs Communes à Éviter
+
+**❌ Console.log dans déclarations réactives :**
+
+```typescript
+$: if (condition) doSomething() && console.log('done'); // ← Danger !
+```
+
+**❌ Mélanger logique et debug :**
+
+```typescript
+$: {
+	processData();
+	console.log('Processing...'); // ← Peut maintenir réactivité
+	updateUI();
+}
+```
+
+**✅ Séparer logique et debug :**
+
+```typescript
+$effect(() => {
+	processData();
+	updateUI();
+});
+
+$effect(() => {
+	console.log('Processing...'); // ← Debug séparé
+});
+```
+
+### Outils de Vérification
+
+**Commandes utiles pour vérifier la migration :**
+
+```bash
+# Vérifier les patterns Svelte 5
+grep -rn "export let" src/routes/        # Doit être vide après migration
+grep -rn "\$:" src/routes/               # Doit être minimal après migration
+grep -rn "svelte:component" src/routes/  # Doit être vide après migration
+
+# Vérifier la réactivité propre
+grep -rn "console\.log.*\$" src/routes/  # Ne doit pas exister
+grep -rn "\$:.*console" src/routes/      # Ne doit pas exister
+```
+
+Cette approche systématique permet de diagnostiquer et résoudre efficacement les problèmes de réactivité subtils dans Svelte, particulièrement lors des migrations vers Svelte 5.

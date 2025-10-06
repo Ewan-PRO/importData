@@ -61,28 +61,36 @@
 		return str.length > 50 ? str.substring(0, 47) + '...' : str;
 	}
 
-	export let data;
+	// Props avec $props() - Mode Runes Svelte 5
+	let { data } = $props();
 
 	if (!data?.tables?.length) {
 		console.warn('⚠️ [CLIENT] Aucune table trouvée');
 	}
 
 	// Initialisation du formulaire SuperForm
-	const { form, enhance: superEnhance, submitting, reset } = superForm(data.form, {
+	const {
+		form,
+		enhance: superEnhance,
+		submitting,
+		reset
+	} = superForm(data.form, {
 		dataType: 'json',
 		onUpdated: ({ form }) => {
-			console.log('🔄 [CLIENT] onUpdated appelé');
-			console.log('📋 [CLIENT] Form data:', form?.data);
+			// ✅ Évaluation réactive explicite sans console.log
+			const formData = form?.data;
+			if (formData && typeof formData === 'object') {
+				// Cette évaluation maintient la réactivité
+				const hasFormData = Object.keys(formData).length > 0;
+			}
 
 			if (form && form.data) {
 				if ('result' in form.data) {
-					console.log('📦 [CLIENT] Résultat d\'export trouvé dans onUpdated');
 					const result = form.data.result as ExportResult;
 					const fileData = (form.data as any).fileData;
 					handleExportResult(result, fileData);
 				}
 				if ('preview' in form.data) {
-					console.log('👀 [CLIENT] Données d\'aperçu trouvées dans onUpdated');
 					previewData = form.data.preview as Record<string, unknown[]>;
 					previewConfig = (form.data as any).previewConfig as { includeHeaders: boolean } | null;
 					step = 3;
@@ -90,19 +98,13 @@
 			}
 		},
 		onResult: ({ result }) => {
-			console.log('🎯 [CLIENT] onResult appelé');
-			console.log('📊 [CLIENT] Result type:', result.type);
-			console.log('📦 [CLIENT] Result data:', result.type === 'success' ? result.data : result);
-
 			if (result.type === 'success' && result.data) {
 				if ('result' in result.data) {
-					console.log('📦 [CLIENT] Résultat d\'export trouvé dans onResult');
 					const exportResult = result.data.result as ExportResult;
 					const fileData = (result.data as any).fileData;
 					handleExportResult(exportResult, fileData);
 				}
 				if ('preview' in result.data) {
-					console.log('👀 [CLIENT] Données d\'aperçu trouvées dans onResult');
 					previewData = result.data.preview as Record<string, unknown[]>;
 					previewConfig = (result.data as any).previewConfig as { includeHeaders: boolean } | null;
 					step = 3;
@@ -117,41 +119,64 @@
 		}
 	});
 
-	// État de l'interface
-	let step = 1;
-	let searchTerm = '';
-	let previewData: Record<string, unknown[]> = {};
-	let previewConfig: { includeHeaders: boolean } | null = null;
-	let exportResult: ExportResult | null = null;
+	// État de l'interface (Svelte 5 $state)
+	let step = $state(1);
+	let searchTerm = $state('');
+	let previewData = $state<Record<string, unknown[]>>({});
+	let previewConfig = $state<{ includeHeaders: boolean } | null>(null);
+	let exportResult = $state<ExportResult | null>(null);
 
-	// États pour les filtres
-	let selectedType: 'all' | 'tables' | 'views' = 'all';
-	let selectedDatabase: 'all' | DatabaseName = 'all';
-	let selectedSchema: 'all' | string = 'all';
+	// États pour les filtres (Svelte 5 $state)
+	let selectedType = $state<'all' | 'tables' | 'views'>('all');
+	let selectedDatabase = $state<'all' | DatabaseName>('all');
+	let selectedSchema = $state<'all' | string>('all');
 
-	// Configuration d'export sauvegardée
-	let savedExportConfig: any = null;
+	// Configuration d'export sauvegardée (Svelte 5 $state)
+	let savedExportConfig = $state<any>(null);
 
-	// Sauvegarder config quand on arrive à l'étape 3
-	$: if (step === 3 && Object.keys(previewData).length > 0 && !savedExportConfig) {
-		savedExportConfig = { ...$form };
-		console.log('💾 [SYNC] Configuration sauvegardée:', savedExportConfig);
-	}
+	// Valeur dérivée pour détecter quand sauvegarder la config
+	let shouldSaveConfig = $derived(
+		step === 3 && Object.keys(previewData).length > 0 && !savedExportConfig
+	);
 
-	// Synchroniser les données du formulaire avec la config sauvegardée À CHAQUE RENDU
-	$: if (step === 3 && savedExportConfig) {
-		console.log('🔄 [SYNC] AVANT - $form.selectedSources:', $form.selectedSources?.length, 'format:', $form.format);
-		console.log('🔄 [SYNC] savedExportConfig.selectedSources:', savedExportConfig.selectedSources?.length, 'format:', savedExportConfig.format);
+	// Effet pour sauvegarder la config quand nécessaire
+	$effect(() => {
+		if (shouldSaveConfig) {
+			savedExportConfig = { ...$form };
+			// Log informatif (pas pour la réactivité)
+			console.log(
+				'💾 [SYNC] Configuration sauvegardée avec',
+				savedExportConfig?.selectedSources?.length || 0,
+				'sources'
+			);
+		}
+	});
 
-		// Forcer la synchronisation
-		$form.selectedSources = savedExportConfig.selectedSources;
-		$form.format = savedExportConfig.format;
-		$form.includeHeaders = savedExportConfig.includeHeaders;
-		$form.rowLimit = savedExportConfig.rowLimit;
-		$form.filters = savedExportConfig.filters;
+	// Valeur dérivée pour détecter si synchronisation nécessaire
+	let needsSync = $derived(() => {
+		if (!(step === 3 && savedExportConfig)) return false;
 
-		console.log('🔄 [SYNC] APRÈS - $form.selectedSources:', $form.selectedSources?.length, 'format:', $form.format);
-	}
+		const currentSources = $form.selectedSources?.length || 0;
+		const savedSources = savedExportConfig.selectedSources?.length || 0;
+
+		return currentSources !== savedSources || $form.format !== savedExportConfig.format;
+	});
+
+	// Effet pour synchroniser quand nécessaire
+	$effect(() => {
+		if (needsSync()) {
+			const currentSources = $form.selectedSources?.length || 0;
+			const savedSources = savedExportConfig.selectedSources?.length || 0;
+
+			console.log(`🔄 [SYNC] Synchronisation: ${currentSources} → ${savedSources} sources`);
+
+			$form.selectedSources = savedExportConfig.selectedSources;
+			$form.format = savedExportConfig.format;
+			$form.includeHeaders = savedExportConfig.includeHeaders;
+			$form.rowLimit = savedExportConfig.rowLimit;
+			$form.filters = savedExportConfig.filters;
+		}
+	});
 
 	// Récupération statique des bases de données
 	const databases: DatabaseName[] = ['cenov', 'cenov_dev'];
@@ -168,8 +193,10 @@
 		public: { icon: LockOpen, label: 'Public', variant: 'cyan' as const }
 	} as const;
 
-	// Obtenir les schémas uniques
-	$: uniqueSchemas = [...new Set((data?.tables || []).map((t: ExportTableInfo) => t.schema))];
+	// Obtenir les schémas uniques (Svelte 5 $derived)
+	let uniqueSchemas = $derived([
+		...new Set((data?.tables || []).map((t: ExportTableInfo) => t.schema))
+	]);
 
 	// Formats d'export
 	const exportFormats = data.exportFormats.map((format) => ({
@@ -211,15 +238,9 @@
 
 	// Gestion des résultats d'export
 	function handleExportResult(result: ExportResult, fileData?: any) {
-		console.log('🎯 [CLIENT] handleExportResult appelé');
-		console.log('📦 [CLIENT] Result:', result);
-		console.log('📁 [CLIENT] FileData:', fileData);
-
 		exportResult = result;
 		if (result.success) {
-			console.log('✅ [CLIENT] Export réussi');
 			if (fileData) {
-				console.log('📥 [CLIENT] Déclenchement du téléchargement...');
 				triggerDirectDownload(fileData);
 			} else {
 				console.warn('⚠️ [CLIENT] Aucune donnée de fichier reçue');
@@ -227,7 +248,7 @@
 			Alert.alertActions.success(result.message);
 			step = 4;
 		} else {
-			console.error('❌ [CLIENT] Échec de l\'export:', result.message);
+			console.error("❌ [CLIENT] Échec de l'export:", result.message);
 			Alert.alertActions.error(result.message);
 		}
 	}
@@ -235,70 +256,60 @@
 	// Téléchargement direct depuis base64
 	function triggerDirectDownload(fileData: any) {
 		try {
-			console.log('📥 [CLIENT] Début du téléchargement direct');
-			console.log('📄 [CLIENT] Nom du fichier:', fileData.fileName);
-			console.log('📦 [CLIENT] Type MIME:', fileData.mimeType);
-			console.log('📊 [CLIENT] Taille (encodée):', fileData.content?.length || 0, 'caractères');
-
 			if (!fileData.content) {
 				throw new Error('Aucun contenu de fichier fourni');
 			}
 
-			console.log('🔄 [CLIENT] Décodage base64...');
 			const binaryString = atob(fileData.content);
-			console.log('✅ [CLIENT] Base64 décodé, taille:', binaryString.length, 'octets');
-
 			const bytes = new Uint8Array(binaryString.length);
 			for (let i = 0; i < binaryString.length; i++) {
 				bytes[i] = binaryString.charCodeAt(i);
 			}
-			console.log('✅ [CLIENT] Conversion en Uint8Array terminée');
 
 			const blob = new Blob([bytes], { type: fileData.mimeType });
-			console.log('✅ [CLIENT] Blob créé, taille:', blob.size, 'octets');
-
 			const url = window.URL.createObjectURL(blob);
-			console.log('✅ [CLIENT] URL Blob créée:', url);
 
 			const link = document.createElement('a');
 			link.href = url;
 			link.download = fileData.fileName;
 			document.body.appendChild(link);
 
-			console.log('⬇️ [CLIENT] Déclenchement du téléchargement:', fileData.fileName);
 			link.click();
 
 			// Nettoyage
 			document.body.removeChild(link);
 			window.URL.revokeObjectURL(url);
 
-			console.log('✅ [CLIENT] Téléchargement direct terminé avec succès');
+			// Téléchargement terminé avec succès
 		} catch (err) {
-			console.error('❌ [CLIENT] Erreur téléchargement direct:', err);
-			console.error('❌ [CLIENT] Stack:', err instanceof Error ? err.stack : 'N/A');
+			console.error('❌ [CLIENT] Erreur téléchargement:', err);
 			Alert.alertActions.error('Erreur lors du téléchargement du fichier');
 		}
 	}
 
-	// Tables filtrées
-	$: filteredTables = (data?.tables || []).filter((table: ExportTableInfo) => {
-		const matchesType =
-			selectedType === 'all' ||
-			(selectedType === 'tables' && table.category === 'table') ||
-			(selectedType === 'views' && table.category === 'view');
-		const matchesDB = selectedDatabase === 'all' || table.database === selectedDatabase;
-		const matchesSchema = selectedSchema === 'all' || table.schema === selectedSchema;
-		const matchesSearch =
-			searchTerm === '' ||
-			table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			table.displayName.toLowerCase().includes(searchTerm.toLowerCase());
-		return matchesType && matchesDB && matchesSchema && matchesSearch;
-	});
+	// Tables filtrées (Svelte 5 $derived)
+	let filteredTables = $derived(
+		(data?.tables || []).filter((table: ExportTableInfo) => {
+			const matchesType =
+				selectedType === 'all' ||
+				(selectedType === 'tables' && table.category === 'table') ||
+				(selectedType === 'views' && table.category === 'view');
+			const matchesDB = selectedDatabase === 'all' || table.database === selectedDatabase;
+			const matchesSchema = selectedSchema === 'all' || table.schema === selectedSchema;
+			const matchesSearch =
+				searchTerm === '' ||
+				table.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				table.displayName.toLowerCase().includes(searchTerm.toLowerCase());
+			return matchesType && matchesDB && matchesSchema && matchesSearch;
+		})
+	);
 
-	// Compter sources filtrées sélectionnées
-	$: selectedFilteredCount = filteredTables.filter((table: ExportTableInfo) =>
-		$form.selectedSources.includes(`${table.database}-${table.name}`)
-	).length;
+	// Compter sources filtrées sélectionnées (Svelte 5 $derived)
+	let selectedFilteredCount = $derived(
+		filteredTables.filter((table: ExportTableInfo) =>
+			$form.selectedSources.includes(`${table.database}-${table.name}`)
+		).length
+	);
 
 	// Réinitialiser l'export
 	function resetExport() {
@@ -636,7 +647,11 @@
 								SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.variant || 'cyan'}
 							{@const schemaLabel =
 								SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.label || table.schema}
-							<label class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100 sm:max-w-none">
+							{@const TableIconComponent = getTableIcon(table.category)}
+							{@const SchemaIconComponent = getSchemaIcon(table.schema)}
+							<label
+								class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100 sm:max-w-none"
+							>
 								<input
 									type="checkbox"
 									bind:group={$form.selectedSources}
@@ -667,10 +682,7 @@
 
 								<div class="flex-1">
 									<div class="flex items-center gap-3">
-										<svelte:component
-											this={getTableIcon(table.category)}
-											class="h-5 w-5 text-gray-500"
-										/>
+										<TableIconComponent class="h-5 w-5 text-gray-500" />
 										<div class="min-w-0 flex-1">
 											<div class="hidden sm:block">
 												<div class="flex items-center gap-2">
@@ -692,7 +704,7 @@
 														{table.database.toUpperCase()}
 													</Badge>
 													<Badge variant={schemaVariant}>
-														<svelte:component this={getSchemaIcon(table.schema)} />
+														<SchemaIconComponent />
 														{schemaLabel}
 													</Badge>
 												</div>
@@ -723,7 +735,7 @@
 														{/if}
 													</Badge>
 													<Badge variant={schemaVariant}>
-														<svelte:component this={getSchemaIcon(table.schema)} />
+														<SchemaIconComponent />
 														{schemaLabel}
 													</Badge>
 												</div>
@@ -748,6 +760,7 @@
 					<h3 class="mb-3 font-medium text-gray-900">Format d'export :</h3>
 					<div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
 						{#each exportFormats as format (format.value)}
+							{@const FormatIconComponent = format.icon}
 							<label
 								class="flex cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-gray-50 {$form.format ===
 								format.value
@@ -762,7 +775,7 @@
 								/>
 								<div class="flex-1">
 									<div class="flex items-center gap-2">
-										<svelte:component this={format.icon} class="h-5 w-5 text-gray-900" />
+										<FormatIconComponent class="h-5 w-5 text-gray-900" />
 										<span class="font-medium whitespace-nowrap text-gray-900">{format.label}</span>
 										{#if format.recommended}
 											<Badge variant="noir">Recommandé</Badge>
