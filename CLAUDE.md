@@ -39,11 +39,11 @@ pnpm test         # Exécuter les tests une fois
 **Base CENOV (Principale - Production) :**
 
 ```bash
-pnpm prisma:generate                        # Generate Prisma client (cenov)
-pnpm prisma:migrate                        # Run database migrations (cenov)
-pnpm prisma:studio                         # Open Prisma Studio (cenov)
-pnpm prisma:push                          # Push schema to database (cenov)
-pnpm prisma:pull                          # Pull schema from database (cenov)
+pnpm prisma:generate                        # Générer client Prisma (cenov)
+pnpm prisma:migrate                        # Exécuter migrations base de données (cenov)
+pnpm prisma:studio                         # Ouvrir Prisma Studio (cenov)
+pnpm prisma:push                          # Pousser schéma vers base de données (cenov)
+pnpm prisma:pull                          # Récupérer schéma depuis base de données (cenov)
 ```
 
 **Base CENOV_DEV (Développement) :**
@@ -107,7 +107,7 @@ _Exporte toutes les données Cenov en lecture seule vers des fichiers JSON dans 
 - **Frontend:** SvelteKit avec TypeScript
 - **Version Svelte:** **Svelte 5** (utiliser en priorité : `$state`, `$derived`, `$effect`, `$props`)
 - **Base de données:** PostgreSQL avec Prisma ORM
-- **Styles:** TailwindCSS avec composants Flowbite
+- **Styles:** TailwindCSS avec composants Flowbite et Shadcn Svelte
 - **Authentification:** Intégration Logto
 - **Traitement fichiers:** Capacités d'import XLSX
 - **Tests:** Vitest avec Testing Library
@@ -120,18 +120,26 @@ L'application utilise **DEUX bases de données séparées** :
 
 1. **Base CENOV** (`DATABASE_URL`) - Base principale de production
    - Système principal de gestion des produits, kits et pièces
-   - **12 tables** (568 lignes) : 7 schéma `produit` + 5 schéma `public`
+   - **12 tables** (568 lignes totales) : 7 schéma `produit` (368 lignes) + 5 schéma `public` (200 lignes)
    - **Schéma produit** : categorie, categorie_attribut, cross_ref, famille, produit, produit_categorie, tarif_achat
    - **Schéma public** : attribut, fournisseur, kit, kit_attribute, part_nc
-   - **6 vues** (1685 lignes) : v_produit_categorie_attribut, v_tarif_achat, mv_categorie, v_categorie, v_kit_caracteristique
+   - **6 vues** (1685 lignes totales) : 3 schéma `produit` (916 lignes) + 3 schéma `public` (769 lignes)
+   - **Vues produit** : v_produit_categorie_attribut, v_tarif_achat, mv_categorie
+   - **Vues public** : v_categorie, v_kit_caracteristique, v_produit_categorie_attribut
 
 2. **Base CENOV_DEV** (`CENOV_DEV_DATABASE_URL`) - Base développement étendue
-   - Catalogue produits et gestion fournisseurs
-   - Schémas: `produit` et `public`
-   - Tables: categorie, famille, produit, fournisseur, kit, attribut, etc.
-   - Vues: v_produit_categorie_attribut, v_tarif_achat, mv_categorie
+   - Catalogue produits étendu et gestion fournisseurs avancée
+   - **15 tables** (572 lignes totales) : 7 schéma `produit` (371 lignes) + 8 schéma `public` (201 lignes)
+   - **Schéma produit** : category, category_attribute, cross_ref, family, price_purchase, product, product_category
+   - **Schéma public** : attribute, attribute_value, document, document_link, kit, kit_attribute, part_nc, supplier
+   - **8 vues** (1791 lignes totales) : 4 schéma `produit` (1015 lignes) + 4 schéma `public` (776 lignes)
+   - **Vues produit** : import_name, v_produit_categorie_attribut, v_tarif_achat, mv_categorie
+   - **Vues public** : attribute_required, v_categorie, v_kit_caracteristique, v_produit_categorie_attribut
 
-**Export base de données:** Données complètes Cenov (12 tables, 4 vues) disponibles en JSON dans `scripts/BDD-IA/output/` pour analyse IA.
+**Export base de données:** Données complètes exportées en JSON dans `scripts/BDD-IA/output/` pour analyse IA :
+
+- **CENOV** : 12 tables (568 lignes), 6 vues (1685 lignes)
+- **CENOV_DEV** : 15 tables (572 lignes), 8 vues (1791 lignes)
 
 ## Principe Anti-Hardcoding avec Prisma DMMF
 
@@ -275,19 +283,19 @@ Les tests d'intégration couvrent :
 **Éviter le type `any`** - Préférer des types spécifiques pour éviter les erreurs @typescript-eslint/no-explicit-any :
 
 ```typescript
-// ❌ BAD - Using any
+// ❌ MAUVAIS - Utiliser any
 const data: any[] = [];
 const previewData: Record<string, any[]> = {};
 
-// ✅ GOOD - Using specific types
+// ✅ BON - Utiliser des types spécifiques
 const data: Record<string, unknown>[] = [];
 const previewData: Record<string, unknown[]> = {};
 
-// ✅ GOOD - Using interface definitions
+// ✅ BON - Utiliser des définitions d'interface
 interface TableData {
 	id: number;
 	name: string;
-	[key: string]: unknown; // For dynamic properties
+	[key: string]: unknown; // Pour propriétés dynamiques
 }
 const data: TableData[] = [];
 ```
@@ -559,7 +567,7 @@ let filteredData = $derived(data.filter((item) => item.active));
 **4. Effets de Bord :**
 
 ```typescript
-// ❌ Ancien - Hack réactif
+// ❌ Ancien
 $: {
 	if (condition) {
 		performSideEffect();
@@ -638,7 +646,7 @@ grep -n "console\.log" src/routes/export/*.svelte
 # Les logs restants doivent être soit :
 # - Dans des $effect (OK - informatif)
 # - Dans des fonctions (OK - informatif)
-# - Dans des handlers d'événements (OK - informatuf)
+# - Dans des handlers d'événements (OK - informatif)
 # - PAS dans des déclarations réactives directes
 ```
 

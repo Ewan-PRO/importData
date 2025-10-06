@@ -85,17 +85,35 @@ import { PrismaClient as CenovDevPrismaClient } from '../../prisma/cenov_dev/gen
 const cenovDevPrisma = new CenovDevPrismaClient();
 ```
 
+## Principe Anti-Hardcoding avec Prisma DMMF
+
+**RÈGLE :** Toujours vérifier si un hardcoding peut être remplacé par des métadonnées Prisma DMMF.
+
+```typescript
+// ❌ MAUVAIS - Hardcoding de données DB
+const databases = ['cenov', 'cenov_dev'];
+if (dbName !== 'cenov' && dbName !== 'cenov_dev') throw new Error('BDD inconnue');
+if (database === 'cenov') return 1;
+
+// ✅ BON - Utiliser Prisma DMMF
+const databases = await getAllDatabaseNames();
+if (!validDatabases.includes(dbName)) throw new Error(`BDD inconnue`);
+return a.database.localeCompare(b.database);
+
+// ✅ OK - Config UI acceptable
+export const DATABASE_CONFIG = { cenov: { icon: RocketIcon, variant: 'bleu' } };
+const schema = metadata.schema || 'public'; // Standard SQL
+```
+
+**Fonctions DMMF :** `getAllDatabaseNames()`, `getTableMetadata()`, `getAllDatabaseTables()`
+
+**Règle :** Données DB → Prisma DMMF | UI/Config → Fichier centralisé
+
 **Métadonnées Prisma :**
 
 - Utiliser `src/lib/prisma-meta.ts` pour métadonnées centralisées
 - Éviter valeurs hardcodées, utiliser Prisma DMMF
 - Fonctions : `getDatabases()`, `getTableMetadata()`, `getAllTables()`
-
-- Système hiérarchique kits/pièces
-- Tables : kits, attributes, parts, documents
-- Vues matérialisées : v_categories, v_kit_carac (+ variantes \_dev)
-- Support prod/dev avec tables séparées
-- **Données complètes disponibles** : Toutes les données Cenov (12 tables, 4 vues) exportées en JSON dans `scripts/BDD-IA/output/` pour analyse IA
 
 ## Conventions de code
 
@@ -169,6 +187,33 @@ const previewData: Record<string, unknown[]> = {};
 
 **Note:** `outline` variant n'existe pas pour badges - utiliser `blanc` pour style outline.
 
+### Intégration Icônes Badge
+
+**IMPORTANT:** Le composant Badge gère automatiquement les icônes SVG avec style intégré :
+
+```typescript
+// ✅ CORRECT - Laisser le composant gérer taille et espacement
+<Badge variant="vert">
+  <Eye />
+  Vues
+</Badge>
+
+// ❌ MAUVAIS - Ne pas ajouter manuellement classes taille/espacement
+<Badge variant="vert">
+  <Eye class="mr-1 h-3 w-3" />
+  Vues
+</Badge>
+```
+
+**Style Icône Badge Intégré :**
+
+- `[&>svg]:size-3` - Toutes icônes SVG obtiennent automatiquement `size-3` (12x12px)
+- `[&>svg]:pointer-events-none` - Icônes n'interfèrent pas avec événements clic
+- `gap-1` - Espacement automatique entre icône et texte
+- `items-center justify-center` - Alignement parfait
+
+**Bonne Pratique :** Toujours lire les classes CSS du composant avant d'ajouter style manuel. La plupart des composants UI gèrent les icônes nativement.
+
 ## Toast Notifications (Sonner)
 
 **Setup :** svelte-sonner installé, Toaster configuré dans +layout.svelte
@@ -193,11 +238,18 @@ toast('Message info');
 import { toast } from '$lib/components/ui/sonner';
 ```
 
-**Timing :**
+### Bonnes Pratiques Timing
 
-- Toasts au chargement : `setTimeout(() => toast.error('msg'), 100)` dans `onMount`
-- Handlers événements : appel direct sans délai
-- Après navigation : fonctionne immédiatement
+- **Toasts au chargement page :** Utiliser `setTimeout` avec petit délai (100ms) dans `onMount`
+- **Gestionnaires événements :** Appeler directement sans délai
+- **Après navigation :** Fonctionne immédiatement après redirections
+
+### Intégration Authentification
+
+Le projet a des toasts d'erreur auth intégrés :
+
+- Routes protégées affichent automatiquement toast si accès non autorisé
+- Géré via paramètres URL et `onMount` dans homepage
 
 ## Debugging Réactivité Svelte
 
@@ -274,26 +326,51 @@ grep -rn "\$:.*console" src/routes/          # Réactivité avec console
 - Montrer seulement lignes changées avec contexte minimal
 - Anticiper besoins et suggérer solutions
 
-## Bug Windows - Chemins de fichiers
+## Résolution Conflits Édition Fichiers
 
-**Contournement obligatoire pour les opérations sur fichiers :**
+**Lors d'erreurs "File has been unexpectedly modified" :**
 
-Lorsque Claude Code ne peut pas modifier un fichier sur Windows, utiliser TOUJOURS des chemins absolus Windows avec lettres de lecteur et barres obliques inverses :
+Cela se produit typiquement quand fichiers sont automatiquement formatés par linters/formatters (Prettier, ESLint) après lecture.
 
-```bash
-# ✅ CORRECT - Chemins absolus Windows
-C:\Users\EwanSenergous\OneDrive - jll.spear\Bureau\Projet\importData\file.js
+**Étapes de résolution :**
 
-# ❌ FAUX - Chemins relatifs ou Unix échouent
-./file.js
-/c/Users/.../file.js
-```
+1. **Utiliser chemins Windows absolus D'ABORD :** Toujours utiliser chemins Windows absolus avec lettres de lecteur et backslashes pour TOUTES opérations fichiers :
 
-**Appliquer à tous les outils :**
+   ```bash
+   # ✅ CORRECT - Utiliser chemins Windows absolus
+   C:\Users\EwanSenergous\OneDrive - jll.spear\Bureau\Projet\importData\file.js
 
-- Read : Toujours `C:\...`
-- Write : Toujours `C:\...`
-- Edit : Toujours `C:\...`
-- MultiEdit : Toujours `C:\...`
+   # ❌ MAUVAIS - Chemins relatifs ou style Unix peuvent échouer
+   ./file.js
+   /c/Users/.../file.js
+   ```
 
-Cette solution contourne les conflits de modification de fichiers sur Windows.
+2. **Git restore (si chemins absolus ne fonctionnent pas) :** Si conflits persistent, restaurer le fichier à son état original :
+
+   ```bash
+   git restore path/to/file.svelte
+   ```
+
+3. **Relire avant édition :** Toujours utiliser outil Read pour obtenir dernier état fichier avant édition
+
+4. **Comportement attendu :** Les linters peuvent formater automatiquement, c'est intentionnel et doit être préservé
+
+**Scénarios courants :**
+
+- Prettier reformate espacement et sauts de ligne
+- ESLint corrige automatiquement problèmes de style
+- Ces changements sont intentionnels et améliorent qualité du code
+
+**Bonnes pratiques :**
+
+- **TOUJOURS essayer chemins Windows absolus d'abord** avant d'utiliser git restore
+- Ne pas annuler changements linter sauf demande explicite
+- Utiliser git restore seulement quand chemins absolus et conflits bloquent progression
+- Relire fichiers après formatage pour obtenir état actuel
+
+**Appliquer chemins Windows absolus à tous les outils :**
+
+- Outil Read: Toujours utiliser chemins `C:\...`
+- Outil Write: Toujours utiliser chemins `C:\...`
+- Outil Edit: Toujours utiliser chemins `C:\...`
+- Outil MultiEdit: Toujours utiliser chemins `C:\...`
