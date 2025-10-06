@@ -16,7 +16,18 @@
 		AlertCircle
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
-	import { DATABASE_CONFIG, SCHEMA_CONFIG, Rocket, Settings, Package } from './export-client-utils';
+	import {
+		DATABASE_CONFIG,
+		SCHEMA_CONFIG,
+		Rocket,
+		Settings,
+		Package,
+		getDatabaseIcon,
+		getSchemaIcon,
+		getTableIcon,
+		getBadgeVariant,
+		getDatabaseBadgeInfo
+	} from './export-client-utils';
 
 	// Props avec $props() - Mode Runes Svelte 5
 	let {
@@ -73,50 +84,6 @@
 
 		// Laisser SuperForm gérer la soumission
 		// Le use:superEnhance s'en occupe
-	}
-
-	// Fonction pour obtenir l'icône d'une BDD
-	function getDatabaseIcon(database: string) {
-		return database.includes('dev') ? DATABASE_CONFIG.cenov_dev.icon : DATABASE_CONFIG.cenov.icon;
-	}
-
-	// Fonction pour obtenir l'icône d'un schéma
-	function getSchemaIcon(schema: string) {
-		return SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.icon || LockOpen;
-	}
-
-	// Icones pour les types de tables
-	function getTableIcon(category: string) {
-		switch (category) {
-			case 'views':
-				return Eye;
-			default:
-				return TableIcon;
-		}
-	}
-
-	// Couleur des badges selon la catégorie
-	function getBadgeVariant(category: string) {
-		switch (category) {
-			case 'table':
-				return 'noir';
-			case 'view':
-				return 'vert';
-			default:
-				return 'noir';
-		}
-	}
-
-	// Couleur et contenu des badges selon la base de données - DYNAMIQUE
-	function getDatabaseBadgeInfo(database: string): {
-		variant: 'bleu' | 'noir' | 'orange';
-		label: string;
-	} {
-		const config = database.includes('dev') ? DATABASE_CONFIG.cenov_dev : DATABASE_CONFIG.cenov;
-		return {
-			variant: config.variant,
-			label: `${config.emoji} ${database.toUpperCase()}`
-		};
 	}
 </script>
 

@@ -26,7 +26,19 @@
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
 	import type { DatabaseName } from '$lib/prisma-meta.js';
 	import ExportPreviewResult from './ExportPreviewResult.svelte';
-	import { DATABASE_CONFIG, SCHEMA_CONFIG, Rocket, Settings, LockOpen, Package } from './export-client-utils';
+	import {
+		DATABASE_CONFIG,
+		SCHEMA_CONFIG,
+		Rocket,
+		Settings,
+		LockOpen,
+		Package,
+		getDatabaseIcon,
+		getSchemaIcon,
+		getTableIcon,
+		getBadgeVariant,
+		getDatabaseBadgeInfo
+	} from './export-client-utils';
 
 	// Fonctions utilitaires locales
 	function formatNumber(num: number): string {
@@ -188,38 +200,6 @@
 		...format,
 		icon: format.value === 'xlsx' ? FileSpreadsheet : FileText
 	}));
-
-	// Fonction pour obtenir l'icône d'une BDD
-	function getDatabaseIcon(database: string) {
-		return database.includes('dev') ? DATABASE_CONFIG.cenov_dev.icon : DATABASE_CONFIG.cenov.icon;
-	}
-
-	// Fonction pour obtenir l'icône d'un schéma
-	function getSchemaIcon(schema: string) {
-		return SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.icon || LockOpen;
-	}
-
-	// Icones pour les types de tables
-	function getTableIcon(category: string) {
-		return category === 'views' ? Eye : Database;
-	}
-
-	// Couleur des badges
-	function getBadgeVariant(category: string) {
-		return category === 'view' ? 'vert' : 'noir';
-	}
-
-	// Couleur et contenu des badges selon la BDD
-	function getDatabaseBadgeInfo(database: string): {
-		variant: 'bleu' | 'noir' | 'orange';
-		label: string;
-	} {
-		const config = database.includes('dev') ? DATABASE_CONFIG.cenov_dev : DATABASE_CONFIG.cenov;
-		return {
-			variant: config.variant,
-			label: `${config.emoji} ${database.toUpperCase()}`
-		};
-	}
 
 	// Gestion des résultats d'export
 	function handleExportResult(result: ExportResult, fileData?: any) {
