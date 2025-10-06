@@ -6,6 +6,7 @@ import {
 	getClient,
 	getDatabases,
 	getAllDatabaseTables,
+	getAllDatabaseNames,
 	type DatabaseName
 } from '$lib/prisma-meta';
 import type { SharedExportData, ExtractionOptions, ExportConfig } from './+page.server';
@@ -57,9 +58,10 @@ export async function extractTableData(
 	if (tableId.includes('-')) {
 		const parts = tableId.split('-');
 		const dbName = parts[0];
-		// Validation du nom de base de données
-		if (dbName !== 'cenov' && dbName !== 'cenov_dev') {
-			throw new Error(`Base de données inconnue: ${dbName}`);
+		// Validation dynamique du nom de base de données
+		const validDatabases = await getAllDatabaseNames();
+		if (!validDatabases.includes(dbName as DatabaseName)) {
+			throw new Error(`Base de données inconnue: ${dbName}. Valides: ${validDatabases.join(', ')}`);
 		}
 		database = dbName as DatabaseName;
 		tableName = parts.slice(1).join('-');

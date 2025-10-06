@@ -187,8 +187,8 @@
 		}
 	});
 
-	// Récupération statique des bases de données
-	const databases: DatabaseName[] = ['cenov', 'cenov_dev'];
+	// Récupération dynamique des bases de données depuis le serveur
+	const databases = data.databases as DatabaseName[];
 
 	// Obtenir les schémas uniques (Svelte 5 $derived)
 	let uniqueSchemas = $derived([

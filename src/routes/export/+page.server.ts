@@ -8,6 +8,7 @@ import {
 	getAllDatabaseTables,
 	getTableMetadata,
 	countTableRows,
+	getAllDatabaseNames,
 	type TableInfo as PrismaTableInfo,
 	type FieldInfo,
 	type DatabaseName
@@ -194,10 +195,12 @@ export const load = (async (event) => {
 		};
 
 		const totalRows = tables.reduce((sum, table) => sum + (table.rowCount || 0), 0);
+		const databases = await getAllDatabaseNames();
 
 		return {
 			form,
 			tables,
+			databases, // Liste dynamique des bases de données
 			totalTables: tables.length,
 			totalRows,
 			formattedTotalRows: _formatNumber(totalRows), // Formatage côté serveur
