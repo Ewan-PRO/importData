@@ -122,22 +122,10 @@ const exportSchema = z.object({
 		.optional()
 });
 
-// Fonctions de formatage (centralisées pour éliminer duplication)
+// Fonction de formatage pour les nombres (utilisée côté serveur)
 export function _formatNumber(num: number): string {
 	return new Intl.NumberFormat('fr-FR').format(num);
 }
-
-export function _formatFileSize(bytes: number): string {
-	const units = ['B', 'KB', 'MB', 'GB'];
-	let size = bytes;
-	let unitIndex = 0;
-	while (size >= 1024 && unitIndex < units.length - 1) {
-		size /= 1024;
-		unitIndex++;
-	}
-	return `${size.toFixed(1)} ${units[unitIndex]}`;
-}
-
 
 // Génération des informations d'export à partir des métadonnées Prisma
 async function generateExportTables(): Promise<ExportTableInfo[]> {
