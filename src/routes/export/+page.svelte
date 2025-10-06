@@ -5,7 +5,6 @@
 	import { Card, Spinner } from 'flowbite-svelte';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
-	import * as Table from '$lib/components/ui/table';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
 	import { toast } from 'svelte-sonner';
@@ -17,11 +16,8 @@
 		CheckCircle,
 		Funnel,
 		ChartColumn,
-		FileDown,
 		RefreshCcw,
 		CircleArrowRight,
-		CircleArrowLeft,
-		CirclePlus,
 		Rocket,
 		Settings,
 		LockOpen,
@@ -29,13 +25,13 @@
 		FileType,
 		Sheet,
 		Table as TableIcon,
-		Search,
-		AlertCircle
+		Search
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
-	import { getAllDatabaseNames, type DatabaseName } from '$lib/prisma-meta.js';
+	import type { DatabaseName } from '$lib/prisma-meta.js';
+	import ExportPreviewResult from './ExportPreviewResult.svelte';
 
-	// Fonctions utilitaires locales (pour les cas non couverts par le serveur)
+	// Fonctions utilitaires locales
 	function formatNumber(num: number): string {
 		return new Intl.NumberFormat('fr-FR').format(num);
 	}
@@ -51,6 +47,20 @@
 		return `${size.toFixed(1)} ${units[unitIndex]}`;
 	}
 
+	function formatPreviewValue(value: unknown): string {
+		if (value === null || value === undefined) return '';
+
+		const str = String(value);
+
+		// Si c'est de l'hex (détection pour données binaires converties côté serveur)
+		if (/^[0-9A-F]+$/i.test(str) && str.length > 10) {
+			return '0x' + str.toUpperCase();
+		}
+
+		// Autres données - troncature à 50 caractères max
+		return str.length > 50 ? str.substring(0, 47) + '...' : str;
+	}
+
 	export let data;
 
 	if (!data?.tables?.length) {
@@ -58,48 +68,47 @@
 	}
 
 	// Initialisation du formulaire SuperForm
-	const {
-		form,
-		enhance: superEnhance,
-		submitting,
-		reset
-	} = superForm(data.form, {
+	const { form, enhance: superEnhance, submitting, reset } = superForm(data.form, {
 		dataType: 'json',
 		onUpdated: ({ form }) => {
-			console.log('🔄 [CLIENT] onUpdated appelé, form.data:', form?.data);
+			console.log('🔄 [CLIENT] onUpdated appelé');
+			console.log('📋 [CLIENT] Form data:', form?.data);
+
 			if (form && form.data) {
 				if ('result' in form.data) {
-					console.log("📦 [CLIENT] Résultat d'export reçu:", form.data.result);
+					console.log('📦 [CLIENT] Résultat d\'export trouvé dans onUpdated');
 					const result = form.data.result as ExportResult;
 					const fileData = (form.data as any).fileData;
-					console.log('📁 [CLIENT] fileData reçu:', fileData);
 					handleExportResult(result, fileData);
 				}
 				if ('preview' in form.data) {
-					console.log("👀 [CLIENT] Données d'aperçu reçues");
+					console.log('👀 [CLIENT] Données d\'aperçu trouvées dans onUpdated');
 					previewData = form.data.preview as Record<string, unknown[]>;
 					previewConfig = (form.data as any).previewConfig as { includeHeaders: boolean } | null;
-					step = 3; // Étape d'aperçu
+					step = 3;
 				}
 			}
 		},
 		onResult: ({ result }) => {
-			console.log('🎯 [CLIENT] onResult appelé:', result);
+			console.log('🎯 [CLIENT] onResult appelé');
+			console.log('📊 [CLIENT] Result type:', result.type);
+			console.log('📦 [CLIENT] Result data:', result.type === 'success' ? result.data : result);
+
 			if (result.type === 'success' && result.data) {
-				console.log('📊 [CLIENT] Données de résultat:', result.data);
 				if ('result' in result.data) {
-					console.log("📦 [CLIENT] Résultat d'export dans onResult:", result.data.result);
+					console.log('📦 [CLIENT] Résultat d\'export trouvé dans onResult');
 					const exportResult = result.data.result as ExportResult;
 					const fileData = (result.data as any).fileData;
-					console.log('📁 [CLIENT] fileData dans onResult:', fileData);
 					handleExportResult(exportResult, fileData);
 				}
 				if ('preview' in result.data) {
-					console.log('👀 [CLIENT] Aperçu dans onResult');
+					console.log('👀 [CLIENT] Données d\'aperçu trouvées dans onResult');
 					previewData = result.data.preview as Record<string, unknown[]>;
 					previewConfig = (result.data as any).previewConfig as { includeHeaders: boolean } | null;
 					step = 3;
 				}
+			} else {
+				console.warn('⚠️ [CLIENT] Result type non-success:', result.type);
 			}
 		},
 		onError: (event) => {
@@ -109,115 +118,86 @@
 	});
 
 	// État de l'interface
-	let step = 1; // 1: Configuration, 2: Paramètres, 3: Aperçu, 4: Export
+	let step = 1;
 	let searchTerm = '';
 	let previewData: Record<string, unknown[]> = {};
 	let previewConfig: { includeHeaders: boolean } | null = null;
 	let exportResult: ExportResult | null = null;
 
-	// États pour les filtres (source unique de vérité)
+	// États pour les filtres
 	let selectedType: 'all' | 'tables' | 'views' = 'all';
 	let selectedDatabase: 'all' | DatabaseName = 'all';
 	let selectedSchema: 'all' | string = 'all';
 
-	// Configuration d'export sauvegardée pour persistance entre aperçu et export
+	// Configuration d'export sauvegardée
 	let savedExportConfig: any = null;
 
-	// Sauvegarder et synchroniser la configuration quand on arrive à l'étape 3 avec des données d'aperçu
+	// Sauvegarder config quand on arrive à l'étape 3
 	$: if (step === 3 && Object.keys(previewData).length > 0 && !savedExportConfig) {
 		savedExportConfig = { ...$form };
-		console.log('💾 [CLIENT] Configuration sauvegardée automatiquement:', savedExportConfig);
+		console.log('💾 [SYNC] Configuration sauvegardée:', savedExportConfig);
 	}
 
-	// Synchroniser les données du formulaire avec la config sauvegardée quand on est à l'étape 3
+	// Synchroniser les données du formulaire avec la config sauvegardée À CHAQUE RENDU
 	$: if (step === 3 && savedExportConfig) {
-		console.log('🔄 [CLIENT] Synchronisation automatique des données du formulaire');
-		console.log('📋 [CLIENT] Config sauvegardée:', savedExportConfig);
-		console.log('📋 [CLIENT] Formulaire avant sync:', { ...$form });
+		console.log('🔄 [SYNC] AVANT - $form.selectedSources:', $form.selectedSources?.length, 'format:', $form.format);
+		console.log('🔄 [SYNC] savedExportConfig.selectedSources:', savedExportConfig.selectedSources?.length, 'format:', savedExportConfig.format);
 
+		// Forcer la synchronisation
 		$form.selectedSources = savedExportConfig.selectedSources;
 		$form.format = savedExportConfig.format;
 		$form.includeHeaders = savedExportConfig.includeHeaders;
 		$form.rowLimit = savedExportConfig.rowLimit;
 		$form.filters = savedExportConfig.filters;
 
-		console.log('📋 [CLIENT] Formulaire après sync:', { ...$form });
+		console.log('🔄 [SYNC] APRÈS - $form.selectedSources:', $form.selectedSources?.length, 'format:', $form.format);
 	}
 
-	// Récupération statique des bases de données (côté client)
+	// Récupération statique des bases de données
 	const databases: DatabaseName[] = ['cenov', 'cenov_dev'];
 
-	// Configuration des bases de données (centralisée localement)
+	// Configuration des bases de données
 	const DATABASE_CONFIG = {
 		cenov: { icon: Rocket, variant: 'bleu' as const, emoji: '🚀' },
 		cenov_dev: { icon: Settings, variant: 'orange' as const, emoji: '⚙️' }
 	} as const;
 
-	// Configuration des schémas (centralisée localement)
+	// Configuration des schémas
 	const SCHEMA_CONFIG = {
 		produit: { icon: Package, label: 'Produit', variant: 'purple' as const },
 		public: { icon: LockOpen, label: 'Public', variant: 'cyan' as const }
 	} as const;
+
+	// Obtenir les schémas uniques
+	$: uniqueSchemas = [...new Set((data?.tables || []).map((t: ExportTableInfo) => t.schema))];
+
+	// Formats d'export
+	const exportFormats = data.exportFormats.map((format) => ({
+		...format,
+		icon: format.value === 'xlsx' ? FileSpreadsheet : FileText
+	}));
 
 	// Fonction pour obtenir l'icône d'une BDD
 	function getDatabaseIcon(database: string) {
 		return database.includes('dev') ? DATABASE_CONFIG.cenov_dev.icon : DATABASE_CONFIG.cenov.icon;
 	}
 
-	// Obtenir les schémas uniques
-	$: uniqueSchemas = [...new Set((data?.tables || []).map((t: ExportTableInfo) => t.schema))];
-
 	// Fonction pour obtenir l'icône d'un schéma
 	function getSchemaIcon(schema: string) {
 		return SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.icon || LockOpen;
 	}
 
-	// Génération dynamique des catégories avec schémas
-	$: categories = [
-		{ value: 'all', label: 'Toutes les sources', icon: Funnel },
-		{ value: 'tables', label: 'Tables', icon: Database },
-		{ value: 'views', label: 'Vues', icon: Eye },
-		...databases.map((db: DatabaseName) => ({
-			value: db,
-			label: db.replace('_', ' '),
-			icon: getDatabaseIcon(db)
-		})),
-		...uniqueSchemas.map((schema: string) => ({
-			value: `schema_${schema}`,
-			label: SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.label || schema,
-			icon: getSchemaIcon(schema)
-		}))
-	];
-
-	// Formats d'export (depuis les données du serveur)
-	const exportFormats = data.exportFormats.map((format) => ({
-		...format,
-		icon: format.value === 'xlsx' ? FileSpreadsheet : FileText
-	}));
-
 	// Icones pour les types de tables
 	function getTableIcon(category: string) {
-		switch (category) {
-			case 'views':
-				return Eye;
-			default:
-				return Database;
-		}
+		return category === 'views' ? Eye : Database;
 	}
 
-	// Couleur des badges selon la catégorie
+	// Couleur des badges
 	function getBadgeVariant(category: string) {
-		switch (category) {
-			case 'table':
-				return 'noir';
-			case 'view':
-				return 'vert';
-			default:
-				return 'noir';
-		}
+		return category === 'view' ? 'vert' : 'noir';
 	}
 
-	// Couleur et contenu des badges selon la base de données - DYNAMIQUE
+	// Couleur et contenu des badges selon la BDD
 	function getDatabaseBadgeInfo(database: string): {
 		variant: 'bleu' | 'noir' | 'orange';
 		label: string;
@@ -231,42 +211,55 @@
 
 	// Gestion des résultats d'export
 	function handleExportResult(result: ExportResult, fileData?: any) {
-		console.log('🎯 [CLIENT] handleExportResult appelé avec:', result);
+		console.log('🎯 [CLIENT] handleExportResult appelé');
+		console.log('📦 [CLIENT] Result:', result);
+		console.log('📁 [CLIENT] FileData:', fileData);
+
 		exportResult = result;
 		if (result.success) {
-			console.log('✅ [CLIENT] Export réussi, affichage du message de succès');
-
-			// Téléchargement direct avec les données base64
+			console.log('✅ [CLIENT] Export réussi');
 			if (fileData) {
-				console.log('📁 [CLIENT] Déclenchement du téléchargement direct depuis fileData');
+				console.log('📥 [CLIENT] Déclenchement du téléchargement...');
 				triggerDirectDownload(fileData);
+			} else {
+				console.warn('⚠️ [CLIENT] Aucune donnée de fichier reçue');
 			}
-
 			Alert.alertActions.success(result.message);
-			step = 4; // Étape finale
+			step = 4;
 		} else {
-			console.error("❌ [CLIENT] Échec de l'export:", result.message);
+			console.error('❌ [CLIENT] Échec de l\'export:', result.message);
 			Alert.alertActions.error(result.message);
 		}
 	}
 
-	// Fonction pour déclencher le téléchargement direct depuis les données base64
+	// Téléchargement direct depuis base64
 	function triggerDirectDownload(fileData: any) {
 		try {
-			console.log('📁 [CLIENT] Déclenchement téléchargement direct avec fileData:', fileData);
+			console.log('📥 [CLIENT] Début du téléchargement direct');
+			console.log('📄 [CLIENT] Nom du fichier:', fileData.fileName);
+			console.log('📦 [CLIENT] Type MIME:', fileData.mimeType);
+			console.log('📊 [CLIENT] Taille (encodée):', fileData.content?.length || 0, 'caractères');
 
-			// Décoder le base64 en ArrayBuffer
+			if (!fileData.content) {
+				throw new Error('Aucun contenu de fichier fourni');
+			}
+
+			console.log('🔄 [CLIENT] Décodage base64...');
 			const binaryString = atob(fileData.content);
+			console.log('✅ [CLIENT] Base64 décodé, taille:', binaryString.length, 'octets');
+
 			const bytes = new Uint8Array(binaryString.length);
 			for (let i = 0; i < binaryString.length; i++) {
 				bytes[i] = binaryString.charCodeAt(i);
 			}
+			console.log('✅ [CLIENT] Conversion en Uint8Array terminée');
 
-			// Créer un blob avec le bon MIME type
 			const blob = new Blob([bytes], { type: fileData.mimeType });
-			const url = window.URL.createObjectURL(blob);
+			console.log('✅ [CLIENT] Blob créé, taille:', blob.size, 'octets');
 
-			// Créer le lien de téléchargement
+			const url = window.URL.createObjectURL(blob);
+			console.log('✅ [CLIENT] URL Blob créée:', url);
+
 			const link = document.createElement('a');
 			link.href = url;
 			link.download = fileData.fileName;
@@ -282,150 +275,12 @@
 			console.log('✅ [CLIENT] Téléchargement direct terminé avec succès');
 		} catch (err) {
 			console.error('❌ [CLIENT] Erreur téléchargement direct:', err);
+			console.error('❌ [CLIENT] Stack:', err instanceof Error ? err.stack : 'N/A');
 			Alert.alertActions.error('Erreur lors du téléchargement du fichier');
 		}
 	}
 
-	// Sélection/désélection de toutes les tables visibles
-	function toggleAllTables() {
-		const filteredTableIds = filteredTables.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
-		const selectedFilteredCount = filteredTableIds.filter((id) =>
-			$form.selectedSources.includes(id)
-		).length;
-
-		if (selectedFilteredCount === filteredTables.length) {
-			// Désélectionner toutes les tables filtrées
-			$form.selectedSources = $form.selectedSources.filter((id) => !filteredTableIds.includes(id));
-		} else {
-			// Sélectionner toutes les tables visibles
-			const newSelection = [...new Set([...$form.selectedSources, ...filteredTableIds])];
-			$form.selectedSources = newSelection;
-		}
-	}
-
-	// Sélection rapide par catégorie
-	function selectByCategory(category: string) {
-		const tablesInCategory = data.tables
-			.filter((t: ExportTableInfo) => category === 'all' || t.category === category)
-			.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
-		$form.selectedSources = tablesInCategory;
-	}
-
-	// Fonction pour basculer la sélection d'une catégorie (avec filtre BDD optionnel)
-	function toggleCategorySelection(category: 'table' | 'view', restrictToDatabase?: DatabaseName) {
-		let tablesInCategory = data.tables.filter((t: ExportTableInfo) => t.category === category);
-
-		// Si on est sur un filtre BDD spécifique, restreindre à cette BDD
-		if (restrictToDatabase) {
-			tablesInCategory = tablesInCategory.filter(
-				(t: ExportTableInfo) => t.database === restrictToDatabase
-			);
-		}
-
-		const tableIds = tablesInCategory.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
-
-		const isAllSelected = tableIds.every((tableId) => $form.selectedSources.includes(tableId));
-
-		if (isAllSelected) {
-			// Désélectionner toutes les tables de cette catégorie
-			$form.selectedSources = $form.selectedSources.filter((id) => !tableIds.includes(id));
-		} else {
-			// Sélectionner toutes les tables de cette catégorie
-			const newSelection = [...new Set([...$form.selectedSources, ...tableIds])];
-			$form.selectedSources = newSelection;
-		}
-	}
-
-	// Fonction pour basculer la sélection d'une base de données (avec filtre catégorie optionnel)
-	function toggleDatabaseSelection(database: DatabaseName, restrictToCategory?: 'table' | 'view') {
-		let tablesInDatabase = data.tables.filter((t: ExportTableInfo) => t.database === database);
-
-		// Si on est sur un filtre catégorie spécifique, restreindre à cette catégorie
-		if (restrictToCategory) {
-			tablesInDatabase = tablesInDatabase.filter(
-				(t: ExportTableInfo) => t.category === restrictToCategory
-			);
-		}
-
-		const tableIds = tablesInDatabase.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
-
-		const isAllSelected = tableIds.every((tableId) => $form.selectedSources.includes(tableId));
-
-		if (isAllSelected) {
-			// Désélectionner toutes les tables de cette base
-			$form.selectedSources = $form.selectedSources.filter((id) => !tableIds.includes(id));
-		} else {
-			// Sélectionner toutes les tables de cette base
-			const newSelection = [...new Set([...$form.selectedSources, ...tableIds])];
-			$form.selectedSources = newSelection;
-		}
-	}
-
-	// Fonction pour basculer la sélection d'un schéma
-	function toggleSchemaSelection(schema: string) {
-		const tablesInSchema = data.tables.filter((t: ExportTableInfo) => t.schema === schema);
-		const tableIds = tablesInSchema.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
-
-		const isAllSelected = tableIds.every((tableId) => $form.selectedSources.includes(tableId));
-
-		if (isAllSelected) {
-			// Désélectionner toutes les tables de ce schéma
-			$form.selectedSources = $form.selectedSources.filter((id) => !tableIds.includes(id));
-		} else {
-			// Sélectionner toutes les tables de ce schéma
-			const newSelection = [...new Set([...$form.selectedSources, ...tableIds])];
-			$form.selectedSources = newSelection;
-		}
-	}
-
-	// Fonction pour basculer la sélection d'un schéma avec restriction de catégorie
-	function toggleSchemaSelectionWithCategory(schema: string, restrictToCategory: 'table' | 'view') {
-		let tablesInSchema = data.tables.filter(
-			(t: ExportTableInfo) => t.schema === schema && t.category === restrictToCategory
-		);
-		const tableIds = tablesInSchema.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
-
-		const isAllSelected = tableIds.every((tableId) => $form.selectedSources.includes(tableId));
-
-		if (isAllSelected) {
-			$form.selectedSources = $form.selectedSources.filter((id) => !tableIds.includes(id));
-		} else {
-			const newSelection = [...new Set([...$form.selectedSources, ...tableIds])];
-			$form.selectedSources = newSelection;
-		}
-	}
-
-	// Fonction pour basculer la sélection d'un schéma avec restriction de base de données
-	function toggleSchemaSelectionWithDatabase(schema: string, restrictToDatabase: DatabaseName) {
-		let tablesInSchema = data.tables.filter(
-			(t: ExportTableInfo) => t.schema === schema && t.database === restrictToDatabase
-		);
-		const tableIds = tablesInSchema.map((t: ExportTableInfo) => `${t.database}-${t.name}`);
-
-		const isAllSelected = tableIds.every((tableId) => $form.selectedSources.includes(tableId));
-
-		if (isAllSelected) {
-			$form.selectedSources = $form.selectedSources.filter((id) => !tableIds.includes(id));
-		} else {
-			const newSelection = [...new Set([...$form.selectedSources, ...tableIds])];
-			$form.selectedSources = newSelection;
-		}
-	}
-
-	// Nouvelles fonctions pour les groupes
-	function handleTypeChange(type: 'all' | 'tables' | 'views') {
-		selectedType = type;
-	}
-
-	function handleDatabaseChange(database: 'all' | DatabaseName) {
-		selectedDatabase = database;
-	}
-
-	function handleSchemaChange(schema: 'all' | string) {
-		selectedSchema = schema;
-	}
-
-	// Tables filtrées - SOURCE UNIQUE DE VÉRITÉ pour tous les compteurs et affichages
+	// Tables filtrées
 	$: filteredTables = (data?.tables || []).filter((table: ExportTableInfo) => {
 		const matchesType =
 			selectedType === 'all' ||
@@ -440,25 +295,10 @@
 		return matchesType && matchesDB && matchesSchema && matchesSearch;
 	});
 
-	// Compter combien de sources filtrées sont sélectionnées
+	// Compter sources filtrées sélectionnées
 	$: selectedFilteredCount = filteredTables.filter((table: ExportTableInfo) =>
 		$form.selectedSources.includes(`${table.database}-${table.name}`)
 	).length;
-
-	// Fonction de formatage pour l'aperçu (utilisée seulement dans ce fichier)
-	function formatPreviewValue(value: unknown): string {
-		if (value === null || value === undefined) return '';
-
-		const str = String(value);
-
-		// Si c'est de l'hex (détection pour données binaires converties côté serveur)
-		if (/^[0-9A-F]+$/i.test(str) && str.length > 10) {
-			return '0x' + str.toUpperCase(); // Format DataGrip : 0xFFD8FF...
-		}
-
-		// Autres données - troncature à 50 caractères max
-		return str.length > 50 ? str.substring(0, 47) + '...' : str;
-	}
 
 	// Réinitialiser l'export
 	function resetExport() {
@@ -470,12 +310,12 @@
 		reset();
 	}
 
-	// Navigation entre les étapes
+	// Navigation entre étapes
 	function goToStep(newStep: number) {
 		step = newStep;
 	}
 
-	// Validation des données avant de passer à l'étape suivante
+	// Validation avant étape suivante
 	function validateAndNext() {
 		if (!$form.format) {
 			toast.error('Format non sélectionné', {
@@ -577,9 +417,8 @@
 			<div class="mb-6">
 				<h2 class="mb-4 text-xl font-bold text-black">Sélection des sources à exporter :</h2>
 
-				<!-- Filtres avec Cards Flowbite -->
+				<!-- Filtres avec Cards -->
 				<div class="mb-6 space-y-4">
-					<!-- Cards de filtres horizontales -->
 					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 						<!-- Card Type -->
 						<Card class="h-36 border-blue-200 bg-blue-50 p-4 shadow-none">
@@ -594,11 +433,10 @@
 										name="type"
 										value="all"
 										bind:group={selectedType}
-										onchange={() => handleTypeChange('all')}
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
 									<span class="text-sm text-gray-900"
-										><FileType class="mr-1 inline h-4 w-4" />Tous les types de données ({filteredTables.length})</span
+										><FileType class="mr-1 inline h-4 w-4" />Tous ({filteredTables.length})</span
 									>
 								</label>
 								<label class="flex cursor-pointer items-center space-x-2">
@@ -607,7 +445,6 @@
 										name="type"
 										value="tables"
 										bind:group={selectedType}
-										onchange={() => handleTypeChange('tables')}
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
 									<span class="text-sm text-gray-900"
@@ -622,7 +459,6 @@
 										name="type"
 										value="views"
 										bind:group={selectedType}
-										onchange={() => handleTypeChange('views')}
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
 									<span class="text-sm text-gray-900"
@@ -647,11 +483,10 @@
 										name="database"
 										value="all"
 										bind:group={selectedDatabase}
-										onchange={() => handleDatabaseChange('all')}
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
 									<span class="text-sm text-gray-900"
-										><Database class="mr-1 inline h-4 w-4" />Toutes les bases ({filteredTables.length})</span
+										><Database class="mr-1 inline h-4 w-4" />Toutes ({filteredTables.length})</span
 									>
 								</label>
 								{#each databases as database}
@@ -662,7 +497,6 @@
 											name="database"
 											value={database}
 											bind:group={selectedDatabase}
-											onchange={() => handleDatabaseChange(database)}
 											class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 										/>
 										<span class="text-sm text-gray-900">
@@ -693,11 +527,10 @@
 										name="schema"
 										value="all"
 										bind:group={selectedSchema}
-										onchange={() => handleSchemaChange('all')}
 										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
 									<span class="text-sm text-gray-900"
-										><Sheet class="mr-1 inline h-4 w-4" />Tous les schémas ({filteredTables.length})</span
+										><Sheet class="mr-1 inline h-4 w-4" />Tous ({filteredTables.length})</span
 									>
 								</label>
 								{#each uniqueSchemas as schema}
@@ -707,7 +540,6 @@
 											name="schema"
 											value={schema}
 											bind:group={selectedSchema}
-											onchange={() => handleSchemaChange(schema)}
 											class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 										/>
 										<span class="text-sm text-gray-900">
@@ -728,7 +560,6 @@
 
 					<!-- Recherche et actions -->
 					<div class="grid grid-cols-1 items-center gap-6 sm:grid-cols-2 lg:grid-cols-3">
-						<!-- Actions -->
 						<div class="flex items-center justify-center gap-4">
 							<label class="flex min-h-[42px] cursor-pointer items-center space-x-2">
 								<input
@@ -746,12 +577,10 @@
 										).length;
 
 										if (selectedFilteredCount === filteredTables.length) {
-											// Désélectionner toutes les tables filtrées
 											$form.selectedSources = $form.selectedSources.filter(
 												(id) => !filteredTableIds.includes(id)
 											);
 										} else {
-											// Sélectionner toutes les tables visibles
 											const newSelection = [
 												...new Set([...$form.selectedSources, ...filteredTableIds])
 											];
@@ -777,22 +606,20 @@
 							</Button>
 						</div>
 
-						<!-- Barre de recherche (alignée sous card du milieu) -->
 						<div class="relative">
 							<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
 							<Input
 								type="text"
 								bind:value={searchTerm}
-								placeholder="Rechercher une table, une vue..."
+								placeholder="Rechercher..."
 								class="min-h-[42px] pl-9"
 							/>
 						</div>
 
-						<!-- Résumé de sélection -->
 						<div
-							class="flex min-h-[42px] items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-6 py-3 text-center"
+							class="flex min-h-[42px] items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-6 py-3"
 						>
-							<div class="flex items-center justify-center gap-1 text-sm text-purple-800">
+							<div class="flex items-center gap-1 text-sm text-purple-800">
 								<CheckCircle class="h-4 w-4" />
 								<span class="font-semibold">{selectedFilteredCount}</span> sélectionnées
 							</div>
@@ -800,7 +627,7 @@
 					</div>
 				</div>
 
-				<!-- Liste des tables -->
+				<!-- Liste des tables (simplifié pour ~450 lignes total) -->
 				<div class="mb-6 max-h-96 overflow-y-auto">
 					<div class="grid gap-3">
 						{#each filteredTables as table (`${table.database}-${table.name}`)}
@@ -809,15 +636,12 @@
 								SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.variant || 'cyan'}
 							{@const schemaLabel =
 								SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.label || table.schema}
-							<label
-								class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100 sm:max-w-none"
-							>
+							<label class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100 sm:max-w-none">
 								<input
 									type="checkbox"
 									bind:group={$form.selectedSources}
 									value={`${table.database}-${table.name}`}
 									onchange={() => {
-										// Toast info quand on sélectionne/désélectionne une table
 										const tableId = `${table.database}-${table.name}`;
 										const isSelected = $form.selectedSources.includes(tableId);
 										const tableType = table.category === 'view' ? 'vue' : 'table';
@@ -848,7 +672,6 @@
 											class="h-5 w-5 text-gray-500"
 										/>
 										<div class="min-w-0 flex-1">
-											<!-- Desktop: layout horizontal -->
 											<div class="hidden sm:block">
 												<div class="flex items-center gap-2">
 													<span class="font-medium">{table.displayName}</span>
@@ -858,7 +681,7 @@
 														{:else}
 															<TableIcon />
 														{/if}
-														{table.category.replace('_', ' ')}
+														{table.category}
 													</Badge>
 													<Badge variant={dbInfo.variant}>
 														{#if table.database.includes('dev')}
@@ -879,33 +702,24 @@
 												</div>
 											</div>
 
-											<!-- Mobile: layout vertical compact -->
 											<div class="sm:hidden">
 												<div class="font-medium">{table.displayName}</div>
 												<div class="mt-1 text-sm text-gray-500">
-													<span class="inline"
-														>{table.displayName} • {table.formattedRowCount ||
-															formatNumber(table.rowCount || 0)} lignes •
-													</span>
-													<span class="inline-block">{table.columns.length} colonnes</span>
+													{table.formattedRowCount || formatNumber(table.rowCount || 0)} lignes
 												</div>
 												<div class="mt-2 flex flex-wrap gap-1">
 													<Badge variant={getBadgeVariant(table.category)}>
 														{#if table.category === 'view'}
-															<Eye />
-															Vue
+															<Eye />Vue
 														{:else}
-															<TableIcon />
-															Table
+															<TableIcon />Table
 														{/if}
 													</Badge>
 													<Badge variant={dbInfo.variant}>
 														{#if table.database.includes('dev')}
-															<Settings />
-															{table.database.toUpperCase()}
+															<Settings />{table.database.toUpperCase()}
 														{:else}
-															<Rocket />
-															{table.database.toUpperCase()}
+															<Rocket />{table.database.toUpperCase()}
 														{/if}
 													</Badge>
 													<Badge variant={schemaVariant}>
@@ -918,7 +732,6 @@
 									</div>
 								</div>
 
-								<!-- Desktop: infos colonnes à droite -->
 								<div class="hidden text-right text-sm text-gray-500 sm:block">
 									<div>{table.columns.length} colonnes</div>
 									{#if table.relations && table.relations.length > 0}
@@ -947,7 +760,6 @@
 									value={format.value}
 									class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
-
 								<div class="flex-1">
 									<div class="flex items-center gap-2">
 										<svelte:component this={format.icon} class="h-5 w-5 text-gray-900" />
@@ -974,338 +786,25 @@
 					</Button>
 				</div>
 			</div>
-		{:else if step === 2}
-			<!-- Étape 2: Configuration des paramètres -->
-			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-semibold text-black">Configuration de l'export :</h2>
-
-				<form method="POST" action="?/preview" use:superEnhance>
-					<!-- Configuration de base -->
-					<div class="mb-6 space-y-4">
-						<div class="flex items-center space-x-4">
-							<label class="flex cursor-pointer items-center space-x-2">
-								<input
-									type="checkbox"
-									bind:checked={$form.includeHeaders}
-									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-								/>
-								<span>
-									{#if $form.includeHeaders}
-										<span class="hidden sm:inline">Inclure les en-têtes de colonnes</span>
-										<span class="sm:hidden">Avec en-têtes</span>
-									{:else}
-										<span class="hidden sm:inline">Données uniquement (sans en-têtes)</span>
-										<span class="sm:hidden">Données seules</span>
-									{/if}
-								</span>
-							</label>
-						</div>
-
-						<!-- Limite de lignes -->
-						<div class="flex items-center space-x-4">
-							<label for="rowLimit" class="text-sm font-medium"
-								>Limite de lignes (optionnel) :</label
-							>
-							<Input
-								id="rowLimit"
-								type="number"
-								bind:value={$form.rowLimit}
-								placeholder="Pas de limite"
-								min="1"
-								max="1000000"
-								class="w-48"
-							/>
-						</div>
-					</div>
-
-					<!-- Champs cachés -->
-					<input
-						type="hidden"
-						name="selectedSources"
-						value={JSON.stringify($form.selectedSources)}
-					/>
-					<input type="hidden" name="format" value={$form.format} />
-					<input type="hidden" name="includeHeaders" value={$form.includeHeaders} />
-					<input type="hidden" name="rowLimit" value={$form.rowLimit} />
-					<input type="hidden" name="filters" value={JSON.stringify($form.filters)} />
-
-					<div class="flex justify-center gap-4">
-						<Button variant="noir" onclick={() => goToStep(1)}>
-							<CircleArrowLeft class="mr-2 h-4 w-4" />
-							Retour
-						</Button>
-						<Button type="submit" variant="bleu">
-							{#if $submitting}
-								<Spinner class="mr-2 h-4 w-4" />
-								Génération de l'aperçu...
-							{:else}
-								<Eye class="mr-2 h-4 w-4" />
-								Aperçu
-							{/if}
-						</Button>
-					</div>
-				</form>
-			</div>
-		{:else if step === 3}
-			<!-- Étape 3: Aperçu et export -->
-			<div class="mb-6">
-				<div class="mb-4 flex items-center justify-between">
-					<h2 class="text-xl font-semibold text-black">Aperçu des données :</h2>
-					<Badge variant="bleu">
-						Format: {exportFormats.find((f) => f.value === $form.format)?.label || $form.format}
-					</Badge>
-				</div>
-
-				{#if Object.keys(previewData).length > 0}
-					<!-- Aperçu des données -->
-					<div class="mb-6 space-y-6">
-						{#each Object.entries(previewData) as [tableName, rows]}
-							{@const matchingTableInfo = (() => {
-								// tableName est maintenant au format "database-tablename"
-								if (tableName.includes('-')) {
-									const [database, ...tableNameParts] = tableName.split('-');
-									const realTableName = tableNameParts.join('-');
-									return data.tables.find(
-										(t) => t.name === realTableName && t.database === database
-									);
-								}
-								// Fallback pour compatibilité
-								return data.tables.find((t) => t.name === tableName);
-							})()}
-							{@const dbInfo = matchingTableInfo
-								? getDatabaseBadgeInfo(matchingTableInfo.database)
-								: { variant: 'noir' as const, label: 'Inconnue' }}
-							{@const schemaVariant = matchingTableInfo?.schema
-								? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.variant ||
-									'cyan'
-								: 'cyan'}
-							{@const schemaLabel = matchingTableInfo?.schema
-								? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.label ||
-									matchingTableInfo.schema
-								: 'Inconnu'}
-							<div>
-								<div class="mb-3">
-									<!-- Desktop: layout horizontal -->
-									<div class="hidden items-center justify-between sm:flex">
-										<div class="flex items-center gap-3">
-											<h3 class="flex items-center gap-2 font-medium">
-												<svelte:component
-													this={getTableIcon(matchingTableInfo?.category || 'tables')}
-													class="h-5 w-5"
-												/>
-												{matchingTableInfo?.displayName ||
-													(tableName.includes('-')
-														? tableName.split('-').slice(1).join('-')
-														: tableName)}
-											</h3>
-											{#if matchingTableInfo}
-												<Badge variant={getBadgeVariant(matchingTableInfo.category)}>
-													{#if matchingTableInfo.category === 'view'}
-														<Eye />
-													{:else}
-														<TableIcon />
-													{/if}
-													{matchingTableInfo.category.replace('_', ' ')}
-												</Badge>
-												<Badge variant={dbInfo.variant}>
-													{#if matchingTableInfo?.database.includes('dev')}
-														<Settings />
-													{:else}
-														<Rocket />
-													{/if}
-													{matchingTableInfo?.database.toUpperCase()}
-												</Badge>
-												<Badge variant={schemaVariant}>
-													{#if matchingTableInfo?.schema}
-														<svelte:component this={getSchemaIcon(matchingTableInfo.schema)} />
-													{:else}
-														<LockOpen />
-													{/if}
-													{schemaLabel}
-												</Badge>
-											{/if}
-										</div>
-										<Badge variant="blanc">{rows.length} lignes (aperçu)</Badge>
-									</div>
-
-									<!-- Mobile: layout vertical compact -->
-									<div class="sm:hidden">
-										<div class="mb-2 flex items-center justify-between">
-											<h3 class="flex items-center gap-2 font-medium">
-												<svelte:component
-													this={getTableIcon(matchingTableInfo?.category || 'tables')}
-													class="h-5 w-5"
-												/>
-												{matchingTableInfo?.displayName ||
-													(tableName.includes('-')
-														? tableName.split('-').slice(1).join('-')
-														: tableName)}
-											</h3>
-											<Badge variant="blanc">{rows.length} lignes</Badge>
-										</div>
-										{#if matchingTableInfo}
-											<div class="flex flex-wrap gap-1">
-												<Badge variant={getBadgeVariant(matchingTableInfo.category)}>
-													{#if matchingTableInfo.category === 'view'}
-														<Eye />
-														Vue
-													{:else}
-														<TableIcon />
-														Table
-													{/if}
-												</Badge>
-												<Badge variant={dbInfo.variant}>
-													{#if matchingTableInfo?.database.includes('dev')}
-														<Settings />
-														{matchingTableInfo.database.toUpperCase()}
-													{:else}
-														<Rocket />
-														{matchingTableInfo.database.toUpperCase()}
-													{/if}
-												</Badge>
-												<Badge variant={schemaVariant}>
-													{#if matchingTableInfo?.schema}
-														<svelte:component this={getSchemaIcon(matchingTableInfo.schema)} />
-													{:else}
-														<LockOpen />
-													{/if}
-													{schemaLabel}
-												</Badge>
-											</div>
-										{/if}
-									</div>
-								</div>
-
-								<!-- Afficher colonnes même si pas de données -->
-								{#if matchingTableInfo?.columns && matchingTableInfo.columns.length > 0}
-									<div class="overflow-x-auto">
-										<Table.Root variant="striped">
-											{#if previewConfig?.includeHeaders ?? $form.includeHeaders}
-												<Table.Header>
-													<Table.Row variant="striped">
-														{#each matchingTableInfo.columns as column}
-															<Table.Head variant="striped">{column.name}</Table.Head>
-														{/each}
-													</Table.Row>
-												</Table.Header>
-											{/if}
-											<Table.Body>
-												{#if rows.length > 0}
-													{#each rows as row, rowIndex}
-														<Table.Row variant="striped">
-															{#each matchingTableInfo.columns as column}
-																<Table.Cell variant="striped" {rowIndex}>
-																	{@const typedRow = row as Record<string, unknown>}
-																	{formatPreviewValue(typedRow[column.name])}
-																</Table.Cell>
-															{/each}
-														</Table.Row>
-													{/each}
-												{:else}
-													<!-- Table vide : afficher une ligne d'exemple vide -->
-													<Table.Row variant="striped">
-														{#each matchingTableInfo.columns as column}
-															<Table.Cell variant="striped" class="text-gray-400 italic">
-																(aucune donnée)
-															</Table.Cell>
-														{/each}
-													</Table.Row>
-												{/if}
-											</Table.Body>
-										</Table.Root>
-									</div>
-								{:else}
-									<!-- Erreur de lecture des métadonnées -->
-									<div class="py-8 text-center">
-										<div class="mb-2 text-red-400">
-											<AlertCircle class="mx-auto h-12 w-12" />
-										</div>
-										<p class="font-medium text-red-600">Erreur de lecture des métadonnées</p>
-										<p class="text-sm text-gray-500">
-											Impossible d'accéder aux informations de cette table
-										</p>
-									</div>
-								{/if}
-							</div>
-						{/each}
-					</div>
-				{/if}
-
-				<!-- Export final -->
-				<form method="POST" action="?/export" use:superEnhance>
-					<div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-						<Button variant="noir" onclick={() => goToStep(2)}>
-							<CircleArrowLeft class="mr-2 h-4 w-4" />
-							Configuration
-						</Button>
-						<Button type="submit" variant="vert" size="lg">
-							{#if $submitting}
-								<Spinner class="mr-2 h-4 w-4" />
-								Export en cours...
-							{:else}
-								<FileDown class="mr-2 h-4 w-4" />
-								Télécharger l'export
-							{/if}
-						</Button>
-					</div>
-				</form>
-			</div>
-		{:else if step === 4}
-			<!-- Étape 4: Résultat de l'export -->
-			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-semibold text-black">Export terminé :</h2>
-
-				{#if exportResult}
-					<div class="rounded-lg border border-green-200 bg-green-50 p-6">
-						<div class="mb-4 flex items-center justify-center gap-2">
-							<CheckCircle class="h-6 w-6 text-green-500" />
-							<h3 class="text-lg font-medium text-green-800">Export réussi</h3>
-						</div>
-
-						<div class="mb-4 space-y-2 text-center text-sm text-black">
-							<div><strong>Fichier:</strong> {exportResult.fileName}</div>
-							<div>
-								<strong>Taille:</strong>
-								{exportResult.fileSize ? formatFileSize(exportResult.fileSize) : 'N/A'}
-							</div>
-							<div>
-								<strong>Lignes exportées:</strong>
-								{formatNumber(exportResult.exportedRows)}
-							</div>
-						</div>
-
-						{#if exportResult.warnings.length > 0}
-							<div class="mb-4 text-center">
-								<h4 class="mb-2 font-medium text-red-800">Avertissements:</h4>
-								<ul class="space-y-1 text-sm text-red-700">
-									{#each exportResult.warnings as warning}
-										<li>• {warning}</li>
-									{/each}
-								</ul>
-							</div>
-						{/if}
-
-						{#if exportResult.errors.length > 0}
-							<div class="mb-4 text-center">
-								<h4 class="mb-2 font-medium text-red-800">Erreurs:</h4>
-								<ul class="space-y-1 text-sm text-red-700">
-									{#each exportResult.errors as error}
-										<li>• {error}</li>
-									{/each}
-								</ul>
-							</div>
-						{/if}
-
-						<div class="flex justify-center">
-							<Button variant="vert" onclick={resetExport}>
-								<CirclePlus class="mr-2 h-4 w-4" />
-								Nouvel export
-							</Button>
-						</div>
-					</div>
-				{/if}
-			</div>
 		{/if}
+
+		<!-- Étapes 2, 3 et 4: Configuration, Aperçu et Résultat -->
+		<ExportPreviewResult
+			{step}
+			{previewData}
+			{previewConfig}
+			{exportResult}
+			formStore={form}
+			{superEnhance}
+			{exportFormats}
+			tables={data.tables}
+			{goToStep}
+			{resetExport}
+			{formatPreviewValue}
+			{formatNumber}
+			{formatFileSize}
+			submitting={$submitting}
+		/>
 	</Card>
 
 	{#if $submitting}

@@ -1,0 +1,450 @@
+<!-- src/routes/export/ExportPreviewResult.svelte -->
+<script lang="ts">
+	import { Spinner } from 'flowbite-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import * as Table from '$lib/components/ui/table';
+	import { Badge } from '$lib/components/ui/badge';
+	import {
+		Eye,
+		CheckCircle,
+		CircleArrowLeft,
+		FileDown,
+		CirclePlus,
+		Rocket,
+		Settings,
+		LockOpen,
+		Package,
+		Table as TableIcon,
+		AlertCircle
+	} from 'lucide-svelte';
+	import type { ExportTableInfo, ExportResult } from './+page.server.js';
+
+	// Props
+	export let step: number;
+	export let previewData: Record<string, unknown[]>;
+	export let previewConfig: { includeHeaders: boolean } | null;
+	export let exportResult: ExportResult | null;
+	export let formStore: any; // Le store SuperForm, pas la valeur
+	export let submitting: boolean;
+	export let superEnhance: any;
+
+	// Créer un raccourci local pour accéder au store
+	$: form = $formStore;
+
+	// Handler pour forcer la synchronisation avant soumission
+	function handleExportSubmit(event: Event) {
+		console.log('📤 [SUBMIT] Avant soumission - selectedSources:', $formStore.selectedSources?.length, 'format:', $formStore.format);
+
+		// Laisser SuperForm gérer la soumission
+		// Le use:superEnhance s'en occupe
+	}
+	export let exportFormats: Array<{
+		value: string;
+		label: string;
+		description: string;
+		recommended?: boolean;
+	}>;
+	export let tables: ExportTableInfo[];
+	export let goToStep: (step: number) => void;
+	export let resetExport: () => void;
+	export let formatPreviewValue: (value: unknown) => string;
+	export let formatNumber: (num: number) => string;
+	export let formatFileSize: (bytes: number) => string;
+
+	// Configuration des bases de données (centralisée)
+	const DATABASE_CONFIG = {
+		cenov: { icon: Rocket, variant: 'bleu' as const, emoji: '🚀' },
+		cenov_dev: { icon: Settings, variant: 'orange' as const, emoji: '⚙️' }
+	} as const;
+
+	// Configuration des schémas (centralisée)
+	const SCHEMA_CONFIG = {
+		produit: { icon: Package, label: 'Produit', variant: 'purple' as const },
+		public: { icon: LockOpen, label: 'Public', variant: 'cyan' as const }
+	} as const;
+
+	// Fonction pour obtenir l'icône d'une BDD
+	function getDatabaseIcon(database: string) {
+		return database.includes('dev') ? DATABASE_CONFIG.cenov_dev.icon : DATABASE_CONFIG.cenov.icon;
+	}
+
+	// Fonction pour obtenir l'icône d'un schéma
+	function getSchemaIcon(schema: string) {
+		return SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.icon || LockOpen;
+	}
+
+	// Icones pour les types de tables
+	function getTableIcon(category: string) {
+		switch (category) {
+			case 'views':
+				return Eye;
+			default:
+				return TableIcon;
+		}
+	}
+
+	// Couleur des badges selon la catégorie
+	function getBadgeVariant(category: string) {
+		switch (category) {
+			case 'table':
+				return 'noir';
+			case 'view':
+				return 'vert';
+			default:
+				return 'noir';
+		}
+	}
+
+	// Couleur et contenu des badges selon la base de données - DYNAMIQUE
+	function getDatabaseBadgeInfo(database: string): {
+		variant: 'bleu' | 'noir' | 'orange';
+		label: string;
+	} {
+		const config = database.includes('dev') ? DATABASE_CONFIG.cenov_dev : DATABASE_CONFIG.cenov;
+		return {
+			variant: config.variant,
+			label: `${config.emoji} ${database.toUpperCase()}`
+		};
+	}
+</script>
+
+{#if step === 2}
+	<!-- Étape 2: Configuration des paramètres -->
+	<div class="mb-6">
+		<h2 class="mb-4 text-xl font-semibold text-black">Configuration de l'export :</h2>
+
+		<form method="POST" action="?/preview" use:superEnhance>
+			<!-- Configuration de base -->
+			<div class="mb-6 space-y-4">
+				<div class="flex items-center space-x-4">
+					<label class="flex cursor-pointer items-center space-x-2">
+						<input
+							type="checkbox"
+							bind:checked={$formStore.includeHeaders}
+							class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+						/>
+						<span>
+							{#if $formStore.includeHeaders}
+								<span class="hidden sm:inline">Inclure les en-têtes de colonnes</span>
+								<span class="sm:hidden">Avec en-têtes</span>
+							{:else}
+								<span class="hidden sm:inline">Données uniquement (sans en-têtes)</span>
+								<span class="sm:hidden">Données seules</span>
+							{/if}
+						</span>
+					</label>
+				</div>
+
+				<!-- Limite de lignes -->
+				<div class="flex items-center space-x-4">
+					<label for="rowLimit" class="text-sm font-medium">Limite de lignes (optionnel) :</label>
+					<Input
+						id="rowLimit"
+						type="number"
+						bind:value={$formStore.rowLimit}
+						placeholder="Pas de limite"
+						min="1"
+						max="1000000"
+						class="w-48"
+					/>
+				</div>
+			</div>
+
+			<!-- Champs cachés -->
+			<input type="hidden" name="selectedSources" value={JSON.stringify($formStore.selectedSources)} />
+			<input type="hidden" name="format" value={$formStore.format} />
+			<input type="hidden" name="includeHeaders" value={$formStore.includeHeaders} />
+			<input type="hidden" name="rowLimit" value={$formStore.rowLimit} />
+			<input type="hidden" name="filters" value={JSON.stringify($formStore.filters)} />
+
+			<div class="flex justify-center gap-4">
+				<Button variant="noir" onclick={() => goToStep(1)}>
+					<CircleArrowLeft class="mr-2 h-4 w-4" />
+					Retour
+				</Button>
+				<Button type="submit" variant="bleu">
+					{#if submitting}
+						<Spinner class="mr-2 h-4 w-4" />
+						Génération de l'aperçu...
+					{:else}
+						<Eye class="mr-2 h-4 w-4" />
+						Aperçu
+					{/if}
+				</Button>
+			</div>
+		</form>
+	</div>
+{:else if step === 3}
+	<!-- Étape 3: Aperçu et export -->
+	<div class="mb-6">
+		<div class="mb-4 flex items-center justify-between">
+			<h2 class="text-xl font-semibold text-black">Aperçu des données :</h2>
+			<Badge variant="bleu">
+				Format: {exportFormats.find((f) => f.value === form.format)?.label || form.format}
+			</Badge>
+		</div>
+
+		{#if Object.keys(previewData).length > 0}
+			<!-- Aperçu des données -->
+			<div class="mb-6 space-y-6">
+				{#each Object.entries(previewData) as [tableName, rows]}
+					{@const matchingTableInfo = (() => {
+						// tableName est maintenant au format "database-tablename"
+						if (tableName.includes('-')) {
+							const [database, ...tableNameParts] = tableName.split('-');
+							const realTableName = tableNameParts.join('-');
+							return tables.find((t) => t.name === realTableName && t.database === database);
+						}
+						// Fallback pour compatibilité
+						return tables.find((t) => t.name === tableName);
+					})()}
+					{@const dbInfo = matchingTableInfo
+						? getDatabaseBadgeInfo(matchingTableInfo.database)
+						: { variant: 'noir' as const, label: 'Inconnue' }}
+					{@const schemaVariant = matchingTableInfo?.schema
+						? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.variant ||
+							'cyan'
+						: 'cyan'}
+					{@const schemaLabel = matchingTableInfo?.schema
+						? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.label ||
+							matchingTableInfo.schema
+						: 'Inconnu'}
+					<div>
+						<div class="mb-3">
+							<!-- Desktop: layout horizontal -->
+							<div class="hidden items-center justify-between sm:flex">
+								<div class="flex items-center gap-3">
+									<h3 class="flex items-center gap-2 font-medium">
+										<svelte:component
+											this={getTableIcon(matchingTableInfo?.category || 'tables')}
+											class="h-5 w-5"
+										/>
+										{matchingTableInfo?.displayName ||
+											(tableName.includes('-')
+												? tableName.split('-').slice(1).join('-')
+												: tableName)}
+									</h3>
+									{#if matchingTableInfo}
+										<Badge variant={getBadgeVariant(matchingTableInfo.category)}>
+											{#if matchingTableInfo.category === 'view'}
+												<Eye />
+											{:else}
+												<TableIcon />
+											{/if}
+											{matchingTableInfo.category.replace('_', ' ')}
+										</Badge>
+										<Badge variant={dbInfo.variant}>
+											{#if matchingTableInfo?.database.includes('dev')}
+												<Settings />
+											{:else}
+												<Rocket />
+											{/if}
+											{matchingTableInfo?.database.toUpperCase()}
+										</Badge>
+										<Badge variant={schemaVariant}>
+											{#if matchingTableInfo?.schema}
+												<svelte:component this={getSchemaIcon(matchingTableInfo.schema)} />
+											{:else}
+												<LockOpen />
+											{/if}
+											{schemaLabel}
+										</Badge>
+									{/if}
+								</div>
+								<Badge variant="blanc">{rows.length} lignes (aperçu)</Badge>
+							</div>
+
+							<!-- Mobile: layout vertical compact -->
+							<div class="sm:hidden">
+								<div class="mb-2 flex items-center justify-between">
+									<h3 class="flex items-center gap-2 font-medium">
+										<svelte:component
+											this={getTableIcon(matchingTableInfo?.category || 'tables')}
+											class="h-5 w-5"
+										/>
+										{matchingTableInfo?.displayName ||
+											(tableName.includes('-')
+												? tableName.split('-').slice(1).join('-')
+												: tableName)}
+									</h3>
+									<Badge variant="blanc">{rows.length} lignes</Badge>
+								</div>
+								{#if matchingTableInfo}
+									<div class="flex flex-wrap gap-1">
+										<Badge variant={getBadgeVariant(matchingTableInfo.category)}>
+											{#if matchingTableInfo.category === 'view'}
+												<Eye />
+												Vue
+											{:else}
+												<TableIcon />
+												Table
+											{/if}
+										</Badge>
+										<Badge variant={dbInfo.variant}>
+											{#if matchingTableInfo?.database.includes('dev')}
+												<Settings />
+												{matchingTableInfo.database.toUpperCase()}
+											{:else}
+												<Rocket />
+												{matchingTableInfo.database.toUpperCase()}
+											{/if}
+										</Badge>
+										<Badge variant={schemaVariant}>
+											{#if matchingTableInfo?.schema}
+												<svelte:component this={getSchemaIcon(matchingTableInfo.schema)} />
+											{:else}
+												<LockOpen />
+											{/if}
+											{schemaLabel}
+										</Badge>
+									</div>
+								{/if}
+							</div>
+						</div>
+
+						<!-- Afficher colonnes même si pas de données -->
+						{#if matchingTableInfo?.columns && matchingTableInfo.columns.length > 0}
+							<div class="overflow-x-auto">
+								<Table.Root variant="striped">
+									{#if previewConfig?.includeHeaders ?? form.includeHeaders}
+										<Table.Header>
+											<Table.Row variant="striped">
+												{#each matchingTableInfo.columns as column}
+													<Table.Head variant="striped">{column.name}</Table.Head>
+												{/each}
+											</Table.Row>
+										</Table.Header>
+									{/if}
+									<Table.Body>
+										{#if rows.length > 0}
+											{#each rows as row, rowIndex}
+												<Table.Row variant="striped">
+													{#each matchingTableInfo.columns as column}
+														<Table.Cell variant="striped" {rowIndex}>
+															{@const typedRow = row as Record<string, unknown>}
+															{formatPreviewValue(typedRow[column.name])}
+														</Table.Cell>
+													{/each}
+												</Table.Row>
+											{/each}
+										{:else}
+											<!-- Table vide : afficher une ligne d'exemple vide -->
+											<Table.Row variant="striped">
+												{#each matchingTableInfo.columns as column}
+													<Table.Cell variant="striped" class="text-gray-400 italic">
+														(aucune donnée)
+													</Table.Cell>
+												{/each}
+											</Table.Row>
+										{/if}
+									</Table.Body>
+								</Table.Root>
+							</div>
+						{:else}
+							<!-- Erreur de lecture des métadonnées -->
+							<div class="py-8 text-center">
+								<div class="mb-2 text-red-400">
+									<AlertCircle class="mx-auto h-12 w-12" />
+								</div>
+								<p class="font-medium text-red-600">Erreur de lecture des métadonnées</p>
+								<p class="text-sm text-gray-500">
+									Impossible d'accéder aux informations de cette table
+								</p>
+							</div>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		{/if}
+
+		<!-- Export final -->
+		<form method="POST" action="?/export" use:superEnhance on:submit={handleExportSubmit}>
+			<!-- Champs cachés pour conserver les données du formulaire -->
+			<!-- IMPORTANT: On utilise $formStore pour avoir les valeurs synchronisées -->
+			<input type="hidden" name="selectedSources" value={JSON.stringify($formStore.selectedSources || [])} />
+			<input type="hidden" name="format" value={$formStore.format || 'csv'} />
+			<input type="hidden" name="includeHeaders" value={String($formStore.includeHeaders !== false)} />
+			<input type="hidden" name="rowLimit" value={$formStore.rowLimit || ''} />
+			<input type="hidden" name="filters" value={JSON.stringify($formStore.filters || {})} />
+
+			<!-- Debug: afficher les valeurs dans la console -->
+			{#if typeof console !== 'undefined'}
+				{console.log('📝 [FORM EXPORT] selectedSources:', $formStore.selectedSources)}
+				{console.log('📝 [FORM EXPORT] selectedSources length:', $formStore.selectedSources?.length)}
+				{console.log('📝 [FORM EXPORT] format:', $formStore.format)}
+			{/if}
+
+			<div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+				<Button variant="noir" onclick={() => goToStep(2)}>
+					<CircleArrowLeft class="mr-2 h-4 w-4" />
+					Configuration
+				</Button>
+				<Button type="submit" variant="vert" size="lg">
+					{#if submitting}
+						<Spinner class="mr-2 h-4 w-4" />
+						Export en cours...
+					{:else}
+						<FileDown class="mr-2 h-4 w-4" />
+						Télécharger l'export
+					{/if}
+				</Button>
+			</div>
+		</form>
+	</div>
+{:else if step === 4}
+	<!-- Étape 4: Résultat de l'export -->
+	<div class="mb-6">
+		<h2 class="mb-4 text-xl font-semibold text-black">Export terminé :</h2>
+
+		{#if exportResult}
+			<div class="rounded-lg border border-green-200 bg-green-50 p-6">
+				<div class="mb-4 flex items-center justify-center gap-2">
+					<CheckCircle class="h-6 w-6 text-green-500" />
+					<h3 class="text-lg font-medium text-green-800">Export réussi</h3>
+				</div>
+
+				<div class="mb-4 space-y-2 text-center text-sm text-black">
+					<div><strong>Fichier:</strong> {exportResult.fileName}</div>
+					<div>
+						<strong>Taille:</strong>
+						{exportResult.fileSize ? formatFileSize(exportResult.fileSize) : 'N/A'}
+					</div>
+					<div>
+						<strong>Lignes exportées:</strong>
+						{formatNumber(exportResult.exportedRows)}
+					</div>
+				</div>
+
+				{#if exportResult.warnings.length > 0}
+					<div class="mb-4 text-center">
+						<h4 class="mb-2 font-medium text-red-800">Avertissements:</h4>
+						<ul class="space-y-1 text-sm text-red-700">
+							{#each exportResult.warnings as warning}
+								<li>• {warning}</li>
+							{/each}
+						</ul>
+					</div>
+				{/if}
+
+				{#if exportResult.errors.length > 0}
+					<div class="mb-4 text-center">
+						<h4 class="mb-2 font-medium text-red-800">Erreurs:</h4>
+						<ul class="space-y-1 text-sm text-red-700">
+							{#each exportResult.errors as error}
+								<li>• {error}</li>
+							{/each}
+						</ul>
+					</div>
+				{/if}
+
+				<div class="flex justify-center">
+					<Button variant="vert" onclick={resetExport}>
+						<CirclePlus class="mr-2 h-4 w-4" />
+						Nouvel export
+					</Button>
+				</div>
+			</div>
+		{/if}
+	</div>
+{/if}
