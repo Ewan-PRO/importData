@@ -1,42 +1,42 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Ce fichier fournit des instructions à Claude Code (claude.ai/code) pour travailler sur ce dépôt.
 
-## Development Commands
+## Commandes de Développement
 
-**Package Manager:** This project uses pnpm by default. Use `pnpm` instead of `npm` for all commands:
+**Gestionnaire de paquets :** Ce projet utilise pnpm par défaut. Utiliser `pnpm` au lieu de `npm` :
 
-**Development server:**
+**Serveur de développement :**
 
 ```bash
 pnpm dev
 ```
 
-**Build and preview:**
+**Build et aperçu :**
 
 ```bash
 pnpm build
 pnpm preview
 ```
 
-**Code quality:**
+**Qualité du code :**
 
 ```bash
-pnpm lint      # Prettier + ESLint check
-pnpm format    # Format with Prettier
-pnpm check     # Type checking with Svelte
+pnpm lint      # Vérification Prettier + ESLint
+pnpm format    # Formatage avec Prettier
+pnpm check     # Type checking avec Svelte
 ```
 
-**Testing:**
+**Tests :**
 
 ```bash
-pnpm test:unit    # Run Vitest tests
-pnpm test         # Run tests once
+pnpm test:unit    # Exécuter les tests Vitest
+pnpm test         # Exécuter les tests une fois
 ```
 
-**Database operations:**
+**Opérations base de données :**
 
-**CENOV Database (Main - Production):**
+**Base CENOV (Principale - Production) :**
 
 ```bash
 pnpm prisma:generate                        # Generate Prisma client (cenov)
@@ -46,23 +46,23 @@ pnpm prisma:push                          # Push schema to database (cenov)
 pnpm prisma:pull                          # Pull schema from database (cenov)
 ```
 
-**CENOV_DEV Database (Development):**
+**Base CENOV_DEV (Développement) :**
 
 ```bash
-pnpm prisma:generate-dev                   # Generate Prisma client (cenov_dev)
-pnpm prisma:migrate-dev                    # Run database migrations (cenov_dev)
-pnpm prisma:studio-dev                     # Open Prisma Studio (cenov_dev)
-pnpm prisma:push-dev                       # Push schema to database (cenov_dev)
-pnpm prisma:pull-dev                       # Pull schema from database (cenov_dev)
+pnpm prisma:generate-dev                   # Générer client Prisma (cenov_dev)
+pnpm prisma:migrate-dev                    # Exécuter migrations (cenov_dev)
+pnpm prisma:studio-dev                     # Ouvrir Prisma Studio (cenov_dev)
+pnpm prisma:push-dev                       # Pousser schéma vers BDD (cenov_dev)
+pnpm prisma:pull-dev                       # Récupérer schéma depuis BDD (cenov_dev)
 ```
 
-**Generate both clients:**
+**Générer les deux clients :**
 
 ```bash
-pnpm prisma:generate-all                   # Generate both clients (runs automatically on pnpm install)
+pnpm prisma:generate-all                   # Générer les deux clients (automatique au pnpm install)
 ```
 
-**Manual commands (if needed):**
+**Commandes manuelles (si nécessaire) :**
 
 ```bash
 # CENOV:
@@ -82,170 +82,197 @@ npx prisma migrate dev --schema prisma/cenov_dev/schema.prisma
 npx prisma migrate deploy --schema prisma/cenov_dev/schema.prisma
 ```
 
-**Installing dependencies:**
+**Installation des dépendances :**
 
 ```bash
-pnpm install              # Install all dependencies
-pnpm add <package>        # Add new dependency
-pnpm add -D <package>     # Add dev dependency
+pnpm install              # Installer toutes les dépendances
+pnpm add <package>        # Ajouter une dépendance
+pnpm add -D <package>     # Ajouter une dépendance de dev
 ```
 
-**BDD-IA Scripts (Database Export):**
+**Scripts BDD-IA (Export base de données) :**
 
 ```bash
-node scripts/BDD-IA/fetch-all-tables.mjs    # Export all tables
-node scripts/BDD-IA/fetch-all-views.mjs     # Export all views
-node scripts/BDD-IA/fetch-cenov-data.mjs    # Export everything (recommended)
+node scripts/BDD-IA/fetch-all-tables.mjs    # Exporter toutes les tables
+node scripts/BDD-IA/fetch-all-views.mjs     # Exporter toutes les vues
+node scripts/BDD-IA/fetch-cenov-data.mjs    # Tout exporter (recommandé)
 ```
 
-_Exports all Cenov database data in read-only mode to JSON files in `scripts/BDD-IA/output/`_
+_Exporte toutes les données Cenov en lecture seule vers des fichiers JSON dans `scripts/BDD-IA/output/`_
 
-## Architecture Overview
+## Vue d'Ensemble de l'Architecture
 
-### Tech Stack
+### Stack Technique
 
-- **Frontend:** SvelteKit with TypeScript
-- **Database:** PostgreSQL with Prisma ORM
-- **Styling:** TailwindCSS with Flowbite components
-- **Authentication:** Logto integration
-- **File processing:** XLSX import capabilities
-- **Testing:** Vitest with Testing Library
+- **Frontend:** SvelteKit avec TypeScript
+- **Version Svelte:** **Svelte 5** (utiliser en priorité : `$state`, `$derived`, `$effect`, `$props`)
+- **Base de données:** PostgreSQL avec Prisma ORM
+- **Styles:** TailwindCSS avec composants Flowbite
+- **Authentification:** Intégration Logto
+- **Traitement fichiers:** Capacités d'import XLSX
+- **Tests:** Vitest avec Testing Library
 
-### Database Design
+### Architecture Base de Données
 
-**Dual Database Architecture:**
+**Architecture Double Base :**
 
-The application uses **TWO separate databases**:
+L'application utilise **DEUX bases de données séparées** :
 
-1. **CENOV Database** (`DATABASE_URL`) - Main production database
-   - Primary kit and parts management system
-   - Tables: attribute, document, kit, kit_attribute, kit_document, kit_kit, part, supplier
-   - Views: v_categories, v_kit_carac with dev variants
+1. **Base CENOV** (`DATABASE_URL`) - Base principale de production
+   - Système principal de gestion des produits, kits et pièces
+   - **12 tables** (568 lignes) : 7 schéma `produit` + 5 schéma `public`
+   - **Schéma produit** : categorie, categorie_attribut, cross_ref, famille, produit, produit_categorie, tarif_achat
+   - **Schéma public** : attribut, fournisseur, kit, kit_attribute, part_nc
+   - **6 vues** (1685 lignes) : v_produit_categorie_attribut, v_tarif_achat, mv_categorie, v_categorie, v_kit_caracteristique
 
-2. **CENOV_DEV Database** (`CENOV_DEV_DATABASE_URL`) - Extended development database
-   - Product catalog and supplier management
-   - Schemas: `produit` and `public`
+2. **Base CENOV_DEV** (`CENOV_DEV_DATABASE_URL`) - Base développement étendue
+   - Catalogue produits et gestion fournisseurs
+   - Schémas: `produit` et `public`
    - Tables: categorie, famille, produit, fournisseur, kit, attribut, etc.
-   - Views: v_produit_categorie_attribut, v_tarif_achat, mv_categorie
+   - Vues: v_produit_categorie_attribut, v_tarif_achat, mv_categorie
 
-**Database Export:** Complete Cenov database data (12 tables, 4 views) available as JSON files in `scripts/BDD-IA/output/` for AI analysis and consultation.
+**Export base de données:** Données complètes Cenov (12 tables, 4 vues) disponibles en JSON dans `scripts/BDD-IA/output/` pour analyse IA.
 
-### Prisma Client Usage
+## Principe Anti-Hardcoding avec Prisma DMMF
 
-**Import the correct client:**
+**RÈGLE :** Toujours vérifier si un hardcoding peut être remplacé par des métadonnées Prisma DMMF.
 
 ```typescript
-// For CENOV database (main):
+// ❌ MAUVAIS - Hardcoding de données DB
+const databases = ['cenov', 'cenov_dev'];
+if (dbName !== 'cenov' && dbName !== 'cenov_dev') throw new Error('BDD inconnue');
+if (database === 'cenov') return 1;
+
+// ✅ BON - Utiliser Prisma DMMF
+const databases = await getAllDatabaseNames();
+if (!validDatabases.includes(dbName)) throw new Error(`BDD inconnue`);
+return a.database.localeCompare(b.database);
+
+// ✅ OK - Config UI acceptable
+export const DATABASE_CONFIG = { cenov: { icon: RocketIcon, variant: 'bleu' } };
+const schema = metadata.schema || 'public'; // Standard SQL
+```
+
+**Fonctions DMMF :** `getAllDatabaseNames()`, `getTableMetadata()`, `getAllDatabaseTables()`
+
+**Règle :** Données DB → Prisma DMMF | UI/Config → Fichier centralisé
+
+### Utilisation Client Prisma
+
+**Importer le bon client :**
+
+```typescript
+// Pour la base CENOV (principale):
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
-// For CENOV_DEV database:
+// Pour la base CENOV_DEV:
 import { PrismaClient as CenovDevPrismaClient } from '../../prisma/cenov_dev/generated';
 const cenovDevPrisma = new CenovDevPrismaClient();
 
-// Usage examples:
-const kits = await prisma.kit.findMany(); // CENOV database
-const products = await cenovDevPrisma.produit.findMany(); // CENOV_DEV database
+// Exemples d'utilisation:
+const kits = await prisma.kit.findMany(); // Base CENOV
+const products = await cenovDevPrisma.produit.findMany(); // Base CENOV_DEV
 ```
 
-**Database Connection Management:**
+**Gestion des Connexions :**
 
-- CENOV: Standard Prisma client for main operations
-- CENOV_DEV: Separate client for product catalog features
-- Both databases can be used simultaneously in the same application
+- CENOV: Client Prisma standard pour opérations principales
+- CENOV_DEV: Client séparé pour fonctionnalités catalogue produits
+- Les deux bases peuvent être utilisées simultanément
 
-### Key Files Structure
+### Structure des Fichiers Clés
 
-- `src/routes/` - SvelteKit pages (categories, kits, import, products)
-- `src/lib/components/` - Reusable Svelte components including UI library
-- `src/lib/schemas/dbSchema.ts` - Zod validation schemas for all database entities
-- `src/lib/prisma-meta.ts` - Centralized Prisma metadata utilities
-- `prisma/cenov/schema.prisma` - Main database schema
+- `src/routes/` - Pages SvelteKit (categories, kits, import, products)
+- `src/lib/components/` - Composants Svelte réutilisables incluant bibliothèque UI
+- `src/lib/schemas/dbSchema.ts` - Schémas de validation Zod pour toutes les entités
+- `src/lib/prisma-meta.ts` - Utilitaires centralisés métadonnées Prisma
+- `prisma/cenov/schema.prisma` - Schéma base de données principal
 
-### Prisma Meta Utilities
+### Utilitaires Prisma Meta
 
-**`src/lib/prisma-meta.ts`** provides centralized database metadata functions using Prisma DMMF (Data Model Meta Format):
+**`src/lib/prisma-meta.ts`** fournit des fonctions centralisées de métadonnées via Prisma DMMF (Data Model Meta Format) :
 
-**Core Functions:**
+**Fonctions Principales :**
 
-- `getDatabases()` - Access to both database clients and metadata
-- `getTableMetadata(database, tableName)` - Schema detection via DMMF
-- `getAllTables(database)` - Tables with automatic schema detection
-- `getAllDatabaseTables()` - Combined tables from both databases
+- `getDatabases()` - Accès aux clients et métadonnées des deux bases
+- `getTableMetadata(database, tableName)` - Détection schéma via DMMF
+- `getAllTables(database)` - Tables avec détection automatique du schéma
+- `getAllDatabaseTables()` - Tables combinées des deux bases
 
-**Best Practices:**
+**Bonnes Pratiques :**
 
-- **Avoid hardcoding** - Use Prisma DMMF metadata instead of hardcoded values
-- Schema detection: Use `metadata.schema` from `getTableMetadata()`
-- Table lists: Use `getAllTables()` instead of hardcoded table names
-- Database info: Use DMMF properties instead of string matching
-- Dynamic detection preferred over static lists for maintainability
+- **Éviter le hardcoding** - Utiliser métadonnées Prisma DMMF au lieu de valeurs hardcodées
+- Détection schéma: Utiliser `metadata.schema` depuis `getTableMetadata()`
+- Listes de tables: Utiliser `getAllTables()` au lieu de noms hardcodés
+- Infos base: Utiliser propriétés DMMF au lieu de comparaisons de chaînes
+- Détection dynamique préférée aux listes statiques pour la maintenabilité
 
-### Prisma Workflow
+### Workflow Prisma
 
-**Dual Schema Workflow:**
+**Workflow Double Schéma :**
 
-**For CENOV Database (main):**
+**Pour la base CENOV (principale) :**
 
-1. Edit `prisma/cenov/schema.prisma`
-2. Run: `npx prisma generate --schema prisma/cenov/schema.prisma`
-3. Run: `npx prisma db push --schema prisma/cenov/schema.prisma` (or migrate)
+1. Éditer `prisma/cenov/schema.prisma`
+2. Exécuter: `npx prisma generate --schema prisma/cenov/schema.prisma`
+3. Exécuter: `npx prisma db push --schema prisma/cenov/schema.prisma` (ou migrate)
 
-**For CENOV_DEV Database:**
+**Pour la base CENOV_DEV :**
 
-1. Edit `prisma/cenov_dev/schema.prisma`
-2. Run: `npx prisma generate --schema prisma/cenov_dev/schema.prisma`
-3. Run: `npx prisma db push --schema prisma/cenov_dev/schema.prisma` (or migrate)
+1. Éditer `prisma/cenov_dev/schema.prisma`
+2. Exécuter: `npx prisma generate --schema prisma/cenov_dev/schema.prisma`
+3. Exécuter: `npx prisma db push --schema prisma/cenov_dev/schema.prisma` (ou migrate)
 
-**⚠️ Common Issues & Solutions:**
+**⚠️ Problèmes Courants & Solutions :**
 
-- **"Model already exists" error:** Always specify `--schema` flag to avoid conflicts
-- **Generation conflicts:** Never run `prisma generate` without `--schema` flag
-- **Wrong client imported:** Check import paths - use generated clients from correct output directories
+- **Erreur "Model already exists":** Toujours spécifier le flag `--schema` pour éviter les conflits
+- **Conflits de génération:** Ne jamais exécuter `prisma generate` sans flag `--schema`
+- **Mauvais client importé:** Vérifier les chemins d'import - utiliser les clients générés depuis les bons répertoires
 
-**Quick fixes:**
+**Corrections rapides :**
 
 ```bash
-# Clear and regenerate both clients:
+# Nettoyer et régénérer les deux clients:
 rm -rf prisma/generated/ node_modules/.prisma/
 npx prisma generate --schema prisma/cenov/schema.prisma
 npx prisma generate --schema prisma/cenov_dev/schema.prisma
 ```
 
-### Authentication
+### Authentification
 
-Uses Logto for authentication with:
+Utilise Logto pour l'authentification avec :
 
-- Protected routes via `src/lib/auth/protect.ts`
-- User session management in layouts
-- Callback handling for OAuth flow
+- Routes protégées via `src/lib/auth/protect.ts`
+- Gestion session utilisateur dans les layouts
+- Gestion callback pour flux OAuth
 
-### Import System
+### Système d'Import
 
-Excel file import functionality for:
+Fonctionnalité d'import de fichiers Excel pour :
 
-- Categories and attributes
-- Kit hierarchies and characteristics
-- Located in `/import` and `/products/import` routes
+- Catégories et attributs
+- Hiérarchies de kits et caractéristiques
+- Localisé dans les routes `/import` et `/products/import`
 
-### Testing
+### Tests
 
-Integration tests cover:
+Les tests d'intégration couvrent :
 
-- CRUD operations for categories and kits
-- Import functionality
-- Located in `tests/integration/`
+- Opérations CRUD pour catégories et kits
+- Fonctionnalité d'import
+- Localisés dans `tests/integration/`
 
-## Development Notes
+## Notes de Développement
 
-- Uses pnpm as package manager
-- Supports both production and development database schemas (\_dev tables/views)
-- Custom UI components built on bits-ui and Flowbite
-- Form validation with Zod schemas and SvelteKit Superforms
+- Utilise pnpm comme gestionnaire de paquets
+- Support des schémas de production et développement (tables/vues \_dev)
+- Composants UI personnalisés construits sur bits-ui et Flowbite
+- Validation de formulaires avec schémas Zod et SvelteKit Superforms
 
-## TypeScript Best Practices
+## Bonnes Pratiques TypeScript
 
-**Avoid using `any` type** - Prefer specific types to avoid @typescript-eslint/no-explicit-any errors:
+**Éviter le type `any`** - Préférer des types spécifiques pour éviter les erreurs @typescript-eslint/no-explicit-any :
 
 ```typescript
 // ❌ BAD - Using any
@@ -265,170 +292,170 @@ interface TableData {
 const data: TableData[] = [];
 ```
 
-**Common TypeScript replacements:**
+**Remplacements TypeScript courants :**
 
-- `any[]` → `unknown[]` or `Record<string, unknown>[]`
-- `any` → `unknown` or specific interface
+- `any[]` → `unknown[]` ou `Record<string, unknown>[]`
+- `any` → `unknown` ou interface spécifique
 - `Record<string, any>` → `Record<string, unknown>`
-- For Prisma results: use generated types or `Record<string, unknown>`
+- Pour résultats Prisma: utiliser types générés ou `Record<string, unknown>`
 
-**When to use `unknown`:**
+**Quand utiliser `unknown` :**
 
-- External API responses
-- Dynamic data from databases
-- User input that needs validation
-- Generic data structures
+- Réponses API externes
+- Données dynamiques depuis bases de données
+- Entrées utilisateur nécessitant validation
+- Structures de données génériques
 
-## UI Component Guidelines
+## Guide Composants UI
 
-**Button variants available:**
+**Variantes de boutons disponibles :**
 
-- `bleu` (default) - Primary blue button
-- `vert` - Success/confirmation actions
-- `rouge` - Danger/delete actions
-- `jaune` - Warning actions
-- `noir` - Secondary dark actions
-- `blanc` - Alternative/outline style
-- `link` - Text link style
+- `bleu` (défaut) - Bouton bleu principal
+- `vert` - Actions succès/confirmation
+- `rouge` - Actions danger/suppression
+- `jaune` - Actions avertissement
+- `noir` - Actions secondaires sombres
+- `blanc` - Style alternatif/outline
+- `link` - Style lien texte
 
-**Note:** `outline` variant does not exist - use `blanc` instead for outline-style buttons.
+**Note:** La variante `outline` n'existe pas - utiliser `blanc` pour les boutons style outline.
 
-**Badge variants available:**
+**Variantes de badges disponibles :**
 
-- `default` (default) - Primary badge style
-- `bleu` - Blue informational badge
-- `vert` - Success/positive badge
-- `rouge` - Error/danger badge
-- `noir` - Secondary/neutral badge
-- `blanc` - Alternative/outline style badge
-- `orange` - Modification badge
+- `default` (défaut) - Style badge principal
+- `bleu` - Badge informatif bleu
+- `vert` - Badge succès/positif
+- `rouge` - Badge erreur/danger
+- `noir` - Badge secondaire/neutre
+- `blanc` - Style alternatif/outline
+- `orange` - Badge modification
 
-**Note:** `outline` variant does not exist for badges - use `blanc` instead for outline-style badges.
+**Note:** La variante `outline` n'existe pas pour les badges - utiliser `blanc` pour style outline.
 
-### Badge Icon Integration
+### Intégration Icônes Badge
 
-**IMPORTANT:** The Badge component automatically handles SVG icons with built-in styling:
+**IMPORTANT:** Le composant Badge gère automatiquement les icônes SVG avec style intégré :
 
 ```typescript
-// ✅ CORRECT - Let the component handle icon sizing and spacing
+// ✅ CORRECT - Laisser le composant gérer taille et espacement
 <Badge variant="vert">
   <Eye />
   Vues
 </Badge>
 
-// ❌ WRONG - Don't manually add size or spacing classes
+// ❌ MAUVAIS - Ne pas ajouter manuellement classes taille/espacement
 <Badge variant="vert">
   <Eye class="mr-1 h-3 w-3" />
   Vues
 </Badge>
 ```
 
-**Built-in Badge Icon Styling:**
+**Style Icône Badge Intégré :**
 
-- `[&>svg]:size-3` - All SVG icons automatically get `size-3` (12x12px)
-- `[&>svg]:pointer-events-none` - Icons don't interfere with click events
-- `gap-1` - Automatic spacing between icon and text
-- `items-center justify-center` - Perfect alignment
+- `[&>svg]:size-3` - Toutes icônes SVG obtiennent automatiquement `size-3` (12x12px)
+- `[&>svg]:pointer-events-none` - Icônes n'interfèrent pas avec événements clic
+- `gap-1` - Espacement automatique entre icône et texte
+- `items-center justify-center` - Alignement parfait
 
-**Best Practice:** Always read the component's CSS classes before adding manual styling. Most UI components have built-in icon handling.
+**Bonne Pratique :** Toujours lire les classes CSS du composant avant d'ajouter style manuel. La plupart des composants UI gèrent les icônes nativement.
 
-## Toast Notifications (Sonner)
+## Notifications Toast (Sonner)
 
-This project uses **svelte-sonner** for toast notifications.
+Ce projet utilise **svelte-sonner** pour les notifications toast.
 
-### Setup Requirements
+### Prérequis
 
-1. **Installation:** Already installed as dependency
-2. **Toaster Component:** Must be placed in root layout (`+layout.svelte`)
-3. **Import:** Always import directly from `'svelte-sonner'`
+1. **Installation :** Déjà installé comme dépendance
+2. **Composant Toaster :** Doit être placé dans layout racine (`+layout.svelte`)
+3. **Import :** Toujours importer directement depuis `'svelte-sonner'`
 
-### Correct Usage
+### Utilisation Correcte
 
 ```typescript
 // ✅ CORRECT Import
 import { toast } from 'svelte-sonner';
 
-// ✅ CORRECT Toaster setup (already in +layout.svelte)
+// ✅ CORRECT Configuration Toaster (déjà dans +layout.svelte)
 import { Toaster } from 'svelte-sonner';
 <Toaster position="top-center" richColors={true} />
 
-// ✅ CORRECT Usage
-toast.error('Error message');
-toast.success('Success message');
-toast('Info message');
+// ✅ CORRECT Utilisation
+toast.error('Message erreur');
+toast.success('Message succès');
+toast('Message info');
 ```
 
-### Common Mistakes to Avoid
+### Erreurs Courantes à Éviter
 
 ```typescript
-// ❌ WRONG - Don't import from UI components
+// ❌ MAUVAIS - Ne pas importer depuis composants UI
 import { toast } from '$lib/components/ui/sonner';
 
-// ❌ WRONG - Don't use custom wrapper component for basic toasts
+// ❌ MAUVAIS - Ne pas utiliser wrapper personnalisé pour toasts basiques
 import { Toaster } from '$lib/components/ui/sonner/sonner.svelte';
 ```
 
-### Timing Best Practices
+### Bonnes Pratiques Timing
 
-- **Page load toasts:** Use `setTimeout` with small delay (100ms) in `onMount`
-- **Event handlers:** Call directly without delay
-- **After navigation:** Works immediately after redirects
+- **Toasts au chargement page :** Utiliser `setTimeout` avec petit délai (100ms) dans `onMount`
+- **Gestionnaires événements :** Appeler directement sans délai
+- **Après navigation :** Fonctionne immédiatement après redirections
 
-### Authentication Integration
+### Intégration Authentification
 
-The project has built-in auth error toasts:
+Le projet a des toasts d'erreur auth intégrés :
 
-- Protected routes automatically show toast on unauthorized access
-- Handled via URL params and `onMount` in homepage
+- Routes protégées affichent automatiquement toast si accès non autorisé
+- Géré via paramètres URL et `onMount` dans homepage
 
-## File Editing Conflict Resolution
+## Résolution Conflits Édition Fichiers
 
-**When encountering "File has been unexpectedly modified" errors:**
+**Lors d'erreurs "File has been unexpectedly modified" :**
 
-This typically occurs when files are automatically formatted by linters/formatters (Prettier, ESLint) after reading them.
+Cela se produit typiquement quand fichiers sont automatiquement formatés par linters/formatters (Prettier, ESLint) après lecture.
 
-**Solution steps:**
+**Étapes de résolution :**
 
-1. **Use absolute Windows paths FIRST:** Always use absolute Windows paths with drive letters and backslashes for ALL file operations:
+1. **Utiliser chemins Windows absolus D'ABORD :** Toujours utiliser chemins Windows absolus avec lettres de lecteur et backslashes pour TOUTES opérations fichiers :
 
    ```bash
-   # ✅ CORRECT - Use absolute Windows paths
+   # ✅ CORRECT - Utiliser chemins Windows absolus
    C:\Users\EwanSenergous\OneDrive - jll.spear\Bureau\Projet\importData\file.js
 
-   # ❌ WRONG - Relative or Unix-style paths may fail
+   # ❌ MAUVAIS - Chemins relatifs ou style Unix peuvent échouer
    ./file.js
    /c/Users/.../file.js
    ```
 
-2. **Git restore (if absolute paths don't work):** If editing conflicts persist, restore the file to its original state:
+2. **Git restore (si chemins absolus ne fonctionnent pas) :** Si conflits persistent, restaurer le fichier à son état original :
 
    ```bash
    git restore path/to/file.svelte
    ```
 
-3. **Re-read before editing:** Always use the Read tool to get the latest file state before making edits
+3. **Relire avant édition :** Toujours utiliser outil Read pour obtenir dernier état fichier avant édition
 
-4. **Expected behavior:** Linters may automatically format files, this is intentional and should be preserved
+4. **Comportement attendu :** Les linters peuvent formater automatiquement, c'est intentionnel et doit être préservé
 
-**Common scenarios:**
+**Scénarios courants :**
 
-- Prettier reformats spacing and line breaks
-- ESLint auto-fixes code style issues
-- These changes are intentional and improve code quality
+- Prettier reformate espacement et sauts de ligne
+- ESLint corrige automatiquement problèmes de style
+- Ces changements sont intentionnels et améliorent qualité du code
 
-**Best practices:**
+**Bonnes pratiques :**
 
-- **ALWAYS try absolute Windows paths first** before using git restore
-- Don't revert linter changes unless explicitly requested
-- Use git restore only when absolute paths and edit conflicts prevent progress
-- Re-read files after any formatting to get current state
+- **TOUJOURS essayer chemins Windows absolus d'abord** avant d'utiliser git restore
+- Ne pas annuler changements linter sauf demande explicite
+- Utiliser git restore seulement quand chemins absolus et conflits bloquent progression
+- Relire fichiers après formatage pour obtenir état actuel
 
-**Apply absolute Windows paths to all tools:**
+**Appliquer chemins Windows absolus à tous les outils :**
 
-- Read tool: Always use `C:\...` paths
-- Write tool: Always use `C:\...` paths
-- Edit tool: Always use `C:\...` paths
-- MultiEdit tool: Always use `C:\...` paths
+- Outil Read: Toujours utiliser chemins `C:\...`
+- Outil Write: Toujours utiliser chemins `C:\...`
+- Outil Edit: Toujours utiliser chemins `C:\...`
+- Outil MultiEdit: Toujours utiliser chemins `C:\...`
 
 ## Debugging Problèmes de Réactivité Svelte
 

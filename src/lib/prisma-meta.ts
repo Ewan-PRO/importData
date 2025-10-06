@@ -360,41 +360,24 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 
 	// Tri uniforme : par database → par schéma → par type (tables avant vues) → par nom
 	const sortedTables = allTables.sort((a, b) => {
-		// Définir la priorité des databases
-		const getDatabaseOrder = (database: string) => {
-			if (database === 'cenov') return 1;
-			if (database === 'cenov_dev') return 2;
-			return 3;
-		};
-
-		// Définir la priorité des schémas
-		const getSchemaOrder = (schema: string) => {
-			if (schema === 'produit') return 1;
-			if (schema === 'public') return 2;
-			return 3;
-		};
-
 		// Définir la priorité du type (table avant vue)
 		const getTypeOrder = (category: 'table' | 'view') => (category === 'table' ? 1 : 2);
 
-		const aDatabaseOrder = getDatabaseOrder(a.database);
-		const bDatabaseOrder = getDatabaseOrder(b.database);
-		const aSchemaOrder = getSchemaOrder(a.schema);
-		const bSchemaOrder = getSchemaOrder(b.schema);
-		const aTypeOrder = getTypeOrder(a.category);
-		const bTypeOrder = getTypeOrder(b.category);
-
-		// 1. Comparer par database
-		if (aDatabaseOrder !== bDatabaseOrder) {
-			return aDatabaseOrder - bDatabaseOrder;
+		// 1. Comparer par database (tri alphabétique)
+		const databaseCompare = a.database.localeCompare(b.database);
+		if (databaseCompare !== 0) {
+			return databaseCompare;
 		}
 
-		// 2. Comparer par schéma dans la même database
-		if (aSchemaOrder !== bSchemaOrder) {
-			return aSchemaOrder - bSchemaOrder;
+		// 2. Comparer par schéma dans la même database (tri alphabétique)
+		const schemaCompare = a.schema.localeCompare(b.schema);
+		if (schemaCompare !== 0) {
+			return schemaCompare;
 		}
 
 		// 3. Comparer par type dans le même schéma (tables avant vues)
+		const aTypeOrder = getTypeOrder(a.category);
+		const bTypeOrder = getTypeOrder(b.category);
 		if (aTypeOrder !== bTypeOrder) {
 			return aTypeOrder - bTypeOrder;
 		}
