@@ -305,16 +305,6 @@ view v_kit_caracteristique {
   @@schema("public")
 }
 
-view v_tarif_achat_ {
-  fk_produit      Int
-  taa_date        DateTime @cenov_dev_db.Date
-  taa_montant     Float
-  taa_remise      Float?
-  taa_montant_net Float?
-
-  @@schema("produit")
-}
-
 view attribute_required {
   cat_id           Int?
   cat_label        String?  @cenov_dev_db.VarChar(100)
@@ -348,6 +338,19 @@ view import_name {
   type_file_source     String?   @cenov_dev_db.VarChar(50)
   link_source          String?   @cenov_dev_db.VarChar(200)
   modification_date    DateTime? @cenov_dev_db.Timestamp(6)
+
+  @@schema("produit")
+}
+
+view v_price_purchase {
+  fk_product    Int?
+  pp_date       DateTime? @cenov_dev_db.Date
+  pp_amount     Float?
+  pp_discount   Float?
+  pp_net_amount Float?
+  pro_cenov_id  String?   @cenov_dev_db.VarChar(100)
+  sup_id        Int?
+  fk_document   Int?
 
   @@schema("produit")
 }
