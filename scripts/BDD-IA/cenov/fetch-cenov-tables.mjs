@@ -24,11 +24,12 @@ const prisma = new PrismaClient({
 });
 
 /**
- * Convertit les BigInt en Number pour eviter les erreurs de serialisation JSON
+ * Convertit les BigInt en Number et les Date en ISO string pour eviter les erreurs de serialisation JSON
  */
 function convertBigIntToNumber(obj) {
 	if (obj === null || obj === undefined) return obj;
 	if (typeof obj === 'bigint') return Number(obj);
+	if (obj instanceof Date) return obj.toISOString();
 	if (Array.isArray(obj)) return obj.map(convertBigIntToNumber);
 	if (typeof obj === 'object') {
 		const converted = {};
