@@ -68,7 +68,7 @@ model part_nc {
 }
 
 model category {
-  cat_id             Int                  @id(map: "categorie_pkey") @default(autoincrement())
+  cat_id             Int                  @id @default(autoincrement())
   fk_parent          Int?
   cat_code           String?              @cenov_dev_db.VarChar(60)
   cat_label          String               @cenov_dev_db.VarChar(100)
@@ -77,12 +77,12 @@ model category {
   cat_wp_name        String?              @cenov_dev_db.VarChar(255)
   created_at         DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at         DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
-  category           category?            @relation("categoryTocategory", fields: [fk_parent], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_categorie_fk_parent_fkey")
+  category           category?            @relation("categoryTocategory", fields: [fk_parent], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "category_fk_parent_fkey")
   other_category     category[]           @relation("categoryTocategory")
   category_attribute category_attribute[]
   product_category   product_category[]
 
-  @@unique([fk_parent, cat_code], map: "produit_categorie_prc_code_index")
+  @@unique([fk_parent, cat_code])
   @@schema("produit")
 }
 
@@ -92,10 +92,10 @@ model category_attribute {
   cat_atr_required Boolean?  @default(false)
   created_at       DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at       DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
-  attribute        attribute @relation(fields: [fk_attribute], references: [atr_id], onDelete: NoAction, onUpdate: NoAction, map: "categorie_attribute_fk_attribute_fkey")
-  category         category  @relation(fields: [fk_category], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "categorie_attribute_fk_categorie_fkey")
+  attribute        attribute @relation(fields: [fk_attribute], references: [atr_id], onDelete: NoAction, onUpdate: NoAction, map: "category_attribute_fk_attribute_fkey")
+  category         category  @relation(fields: [fk_category], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "category_attribute_fk_category_fkey")
 
-  @@id([fk_category, fk_attribute], map: "categorie_attribut_pkey")
+  @@id([fk_category, fk_attribute])
   @@schema("produit")
 }
 
@@ -135,7 +135,7 @@ model price_purchase {
 }
 
 model product {
-  pro_id           Int                @id(map: "produit_pkey") @default(autoincrement())
+  pro_id           Int                @id @default(autoincrement())
   pro_code         String?            @cenov_dev_db.VarChar(20)
   fk_supplier      Int?
   fk_kit           Int?
@@ -149,8 +149,8 @@ model product {
   fk_sfamily       Int?
   cross_ref        cross_ref[]
   price_purchase   price_purchase[]
-  kit              kit?               @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_fk_kit_fkey")
-  supplier         supplier?          @relation(fields: [fk_supplier], references: [sup_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_supplier_sup_id_fk")
+  kit              kit?               @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction, map: "product_fk_kit_fkey")
+  supplier         supplier?          @relation(fields: [fk_supplier], references: [sup_id], onDelete: NoAction, onUpdate: NoAction, map: "product_fk_supplier_fkey")
   product_category product_category[]
 
   @@schema("produit")
@@ -161,10 +161,10 @@ model product_category {
   fk_category Int
   created_at  DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at  DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
-  category    category  @relation(fields: [fk_category], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_categorie_categorie_prc_id_fk")
-  product     product   @relation(fields: [fk_product], references: [pro_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_categorie_produit_pro_id_fk")
+  category    category  @relation(fields: [fk_category], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "product_category_fk_category_fkey")
+  product     product   @relation(fields: [fk_product], references: [pro_id], onDelete: NoAction, onUpdate: NoAction, map: "product_category_fk_product_fkey")
 
-  @@id([fk_product, fk_category], map: "produit_categorie_pkey")
+  @@id([fk_product, fk_category])
   @@schema("produit")
 }
 
@@ -209,16 +209,16 @@ model supplier {
 }
 
 model attribute_value {
-  av_id          Int       @id(map: "attribute_values_pkey")
+  av_id          Int       @id
   av_value_id    String    @cenov_dev_db.VarChar(50)
   av_atr_id      Int
   av_value_code  String    @cenov_dev_db.VarChar(50)
   av_value_label String    @cenov_dev_db.VarChar(100)
   created_at     DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at     DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
-  attribute      attribute @relation(fields: [av_atr_id], references: [atr_id], onDelete: Cascade, onUpdate: NoAction, map: "attribute_values_attribute_id_fkey")
+  attribute      attribute @relation(fields: [av_atr_id], references: [atr_id], onDelete: Cascade, onUpdate: NoAction, map: "attribute_value_av_atr_id_fkey")
 
-  @@unique([av_atr_id, av_value_code], map: "attribute_values_attribute_id_value_code_key")
+  @@unique([av_atr_id, av_value_code])
   @@schema("public")
 }
 
