@@ -110,8 +110,9 @@ export async function extractTableData(
 	// Construire le nom qualifié de la table avec le schéma
 	const qualifiedTableName = `"${schema.replace(/"/g, '""')}"."${realTableName.replace(/"/g, '""')}"`;
 
-	// Identifier les colonnes timestamp pour formatage spécial
-	const timestampColumns = metadata?.fields.filter((f) => f.isTimestamp) ?? [];
+	// Identifier les colonnes datetime (Date + Timestamp) pour formatage spécial
+	const timestampColumns =
+		metadata?.fields.filter((f) => f.type === 'DateTime' || f.isTimestamp) ?? [];
 
 	// Identifier les colonnes binaires
 	const tableFields = metadata?.fields || [];
