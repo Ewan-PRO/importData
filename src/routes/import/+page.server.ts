@@ -25,6 +25,10 @@ type ColumnMap = Record<string, number>;
 // ========== CACHE GLOBAL POUR TYPES PRISMA ==========
 // Cache global: Map<"database:table", Map<"fieldName", "PrismaType">>
 const globalFieldTypes = new Map<string, Map<string, string>>();
+// Cache nativeTypes: Map<"database:table", Map<"fieldName", "NativeType">> (ex: "Date", "Timestamp")
+const globalNativeTypes = new Map<string, Map<string, string>>();
+// Cache primary keys: Map<"database:table", string[]> (ex: ["fk_product", "pp_date"])
+const globalPrimaryKeys = new Map<string, string[]>();
 
 // Fonction pour pré-charger TOUS les types de TOUS les champs de TOUTES les tables
 async function preloadAllFieldTypes(): Promise<void> {
@@ -37,16 +41,40 @@ async function preloadAllFieldTypes(): Promise<void> {
 			for (const model of db.dmmf.datamodel.models) {
 				const tableKey = `${dbName}:${model.name}`;
 				const fieldTypes = new Map<string, string>();
+				const nativeTypes = new Map<string, string>();
 
 				// Extraire tous les champs scalaires avec leurs types
 				model.fields
 					.filter((field: { kind: string; name: string; type: string }) => field.kind === 'scalar')
-					.forEach((field: { name: string; type: string }) => {
+					.forEach((field: { name: string; type: string; nativeType?: [string, string[]] }) => {
 						fieldTypes.set(field.name, field.type);
+
+						// Capturer nativeType si disponible (ex: @db.Date, @db.Timestamp)
+						if (field.nativeType && field.nativeType[0]) {
+							nativeTypes.set(field.name, field.nativeType[0]);
+						}
+
 						totalFields++;
 					});
 
+				// Extraire la clé primaire (simple ou composite)
+				const modelWithPK = model as { primaryKey?: { fields?: string[] } | null };
+				const primaryKeyFields: string[] = [];
+
+				// 1. Clé primaire composite (@@id)
+				if (modelWithPK.primaryKey?.fields && modelWithPK.primaryKey.fields.length > 0) {
+					primaryKeyFields.push(...modelWithPK.primaryKey.fields);
+				} else {
+					// 2. Clé primaire simple (@id)
+					const singlePK = model.fields.find((f: { isId: boolean }) => f.isId);
+					if (singlePK) {
+						primaryKeyFields.push(singlePK.name);
+					}
+				}
+
 				globalFieldTypes.set(tableKey, fieldTypes);
+				globalNativeTypes.set(tableKey, nativeTypes);
+				globalPrimaryKeys.set(tableKey, primaryKeyFields);
 				totalTables++;
 			}
 		}
@@ -168,6 +196,10 @@ function formatValueForDatabase(field: string, value: unknown, tableIdentifier: 
 	const tableTypes = globalFieldTypes.get(tableIdentifier);
 	const prismaType = tableTypes?.get(field) || 'String';
 
+	// Lookup nativeType (ex: "Date", "Timestamp") via cache
+	// const tableNativeTypes = globalNativeTypes.get(tableIdentifier);
+	// const nativeType = tableNativeTypes?.get(field); // TODO: utiliser pour conversion avancée
+
 	const stringValue = String(value).trim();
 
 	// Conversion selon le type Prisma réel
@@ -193,14 +225,25 @@ function formatValueForDatabase(field: string, value: unknown, tableIdentifier: 
 
 		case 'DateTime': {
 			if (typeof value === 'string') {
-				const stringValue = value.trim();
+				const trimmedValue = value.trim();
 
-				// Format ISO date seule → ajouter T00:00:00Z pour JavaScript
-				if (/^\d{4}-\d{2}-\d{2}$/.test(stringValue)) {
-					return `${stringValue}T00:00:00Z`;
+				// Format ISO date seule (YYYY-MM-DD) → Prisma exige toujours ISO DateTime complet
+				if (/^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) {
+					return `${trimmedValue}T00:00:00.000Z`;
 				}
 
-				return stringValue; // Autres formats inchangés
+				// Format PostgreSQL: "2025-09-26 15:23:14.943538" → ISO-8601
+				if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d+)?$/.test(trimmedValue)) {
+					return trimmedValue.replace(' ', 'T') + 'Z';
+				}
+
+				// Format ISO DateTime déjà correct → ajouter Z si absent
+				if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(trimmedValue)) {
+					return trimmedValue.endsWith('Z') ? trimmedValue : `${trimmedValue}Z`;
+				}
+
+				// Fallback: retourner tel quel
+				return trimmedValue;
 			}
 			return value;
 		}
@@ -659,43 +702,15 @@ async function updateTableData(
 		const row = config.data[rowIndex];
 
 		try {
-			// 1. Essayer de trouver UNE clé primaire simple (_id)
-			const singlePrimaryKeyField = Object.values(config.mappedFields).find(
-				(field) => field.includes('_id') || field === 'id'
-			);
+			// Utiliser la clé primaire du cache DMMF (dynamique, pas de hardcoding)
+			const primaryKeyFields = globalPrimaryKeys.get(tableIdentifier) || [];
 
-			let whereCondition: Record<string, unknown> = {};
+			const whereCondition: Record<string, unknown> = {};
 			let existingRecord = null;
 
-			if (singlePrimaryKeyField) {
-				// CAS 1: Clé primaire simple (famille, produit, etc.)
-				const colIndex = Object.entries(config.mappedFields).find(
-					([, f]) => f === singlePrimaryKeyField
-				)?.[0];
-
-				if (colIndex !== undefined) {
-					const primaryKeyValue = row[parseInt(colIndex)];
-					whereCondition = { [singlePrimaryKeyField]: primaryKeyValue };
-
-					// DEBUG pour famille fam_id = 1
-					if (tableName === 'famille' && primaryKeyValue === 1) {
-						console.log(`🔍 [FAMILLE-1-SIMPLE] primaryKeyField:`, singlePrimaryKeyField);
-						console.log(`🔍 [FAMILLE-1-SIMPLE] primaryKeyValue:`, primaryKeyValue);
-					}
-
-					existingRecord = await findRecord(database, tableName, whereCondition);
-
-					if (tableName === 'famille' && primaryKeyValue === 1) {
-						console.log(`🔍 [FAMILLE-1-SIMPLE] existingRecord trouvé:`, !!existingRecord);
-					}
-				}
-			} else {
-				// CAS 2: Clé primaire composite (categorie_attribut, etc.) - Utiliser TOUTES les contraintes
-				const validationRules = await getTableValidationRules(database, tableName);
-				const uniqueFields = validationRules.uniqueFields;
-
-				// Construire condition avec TOUS les champs uniques (clé composite)
-				uniqueFields.forEach((field) => {
+			if (primaryKeyFields.length > 0) {
+				// Construire condition avec TOUS les champs de la clé primaire (simple ou composite)
+				primaryKeyFields.forEach((field) => {
 					const colIndex = Object.entries(config.mappedFields).find(([, f]) => f === field)?.[0];
 					if (colIndex !== undefined) {
 						const rawValue = row[parseInt(colIndex)];
@@ -704,8 +719,21 @@ async function updateTableData(
 					}
 				});
 
+				// Debug pour price_purchase
+				if (tableName === 'price_purchase') {
+					console.log(`🔑 [PRICE_PURCHASE-KEY] PK fields (DMMF):`, primaryKeyFields);
+					console.log(
+						`🔑 [PRICE_PURCHASE-KEY] Where condition:`,
+						JSON.stringify(whereCondition, null, 2)
+					);
+				}
+
 				if (Object.keys(whereCondition).length > 0) {
 					existingRecord = await findRecord(database, tableName, whereCondition);
+
+					if (tableName === 'price_purchase') {
+						console.log(`🔑 [PRICE_PURCHASE-KEY] Existing record found:`, !!existingRecord);
+					}
 				}
 			}
 
@@ -729,8 +757,8 @@ async function updateTableData(
 					updated++;
 					if (
 						tableName === 'famille' &&
-						singlePrimaryKeyField &&
-						whereCondition[singlePrimaryKeyField] === 1
+						primaryKeyFields.length === 1 &&
+						whereCondition[primaryKeyFields[0]] === 1
 					) {
 						console.log(`✅ [FAMILLE-1-SIMPLE] UPDATE réussi`);
 					}
@@ -747,6 +775,19 @@ async function updateTableData(
 						);
 					}
 				});
+
+				// Debug pour price_purchase
+				if (tableName === 'price_purchase') {
+					console.log(`💾 [PRICE_PURCHASE-INSERT] Table: ${tableName}`);
+					console.log(
+						`💾 [PRICE_PURCHASE-INSERT] Insert Data:`,
+						JSON.stringify(insertData, null, 2)
+					);
+					console.log(
+						`💾 [PRICE_PURCHASE-INSERT] Types:`,
+						Object.entries(insertData).map(([k, v]) => `${k}: ${typeof v}`)
+					);
+				}
 
 				await createRecord(database, tableName, insertData);
 				inserted++;

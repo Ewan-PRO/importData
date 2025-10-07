@@ -282,6 +282,53 @@ export async function getTableMetadata(database: DatabaseName, tableName: string
 	};
 }
 
+// Obtenir le nativeType d'un champ via DMMF (ex: "Date", "Timestamp", etc.)
+export async function getFieldNativeType(
+	database: DatabaseName,
+	tableName: string,
+	fieldName: string
+): Promise<string | null> {
+	if (browser) return null;
+
+	const databases = await getDatabases();
+	const model = databases[database].dmmf.datamodel.models.find((m) => m.name === tableName);
+	if (!model) return null;
+
+	const field = model.fields.find((f) => f.name === fieldName);
+	if (!field || !('nativeType' in field)) return null;
+
+	// nativeType est un tableau: ["Date", []] ou ["Timestamp", ["6"]]
+	const nativeType = (field as { nativeType?: [string, string[]] }).nativeType;
+	return nativeType ? nativeType[0] : null;
+}
+
+// Obtenir les champs de la clé primaire (simple ou composite) via DMMF
+export async function getPrimaryKeyFields(
+	database: DatabaseName,
+	tableName: string
+): Promise<string[]> {
+	if (browser) return [];
+
+	const databases = await getDatabases();
+	const model = databases[database].dmmf.datamodel.models.find((m) => m.name === tableName);
+	if (!model) return [];
+
+	const modelWithPK = model as DMMFModelFromPrisma & { primaryKey?: { fields?: string[] } | null };
+
+	// 1. Clé primaire composite (@@id)
+	if (modelWithPK.primaryKey?.fields && modelWithPK.primaryKey.fields.length > 0) {
+		return modelWithPK.primaryKey.fields;
+	}
+
+	// 2. Clé primaire simple (@id)
+	const singlePK = model.fields.find((f) => f.isId);
+	if (singlePK) {
+		return [singlePK.name];
+	}
+
+	return [];
+}
+
 // Obtenir toutes les tables d'une base (côté serveur uniquement)
 export async function getAllTables(database: DatabaseName): Promise<TableInfo[]> {
 	if (browser) {
