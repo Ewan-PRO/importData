@@ -100,7 +100,7 @@ model category_attribute {
 }
 
 model family {
-  fam_id       Int       @id(map: "produit_famille_pkey") @default(autoincrement())
+  fam_id       Int       @id @default(autoincrement())
   fk_parent    Int?
   fam_code     String    @cenov_dev_db.VarChar(60)
   fam_label    String    @cenov_dev_db.VarChar(100)
@@ -108,11 +108,11 @@ model family {
   fk_category  Int?
   created_at   DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at   DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
-  supplier     supplier  @relation(fields: [fk_supplier], references: [sup_id], onDelete: NoAction, onUpdate: NoAction, map: "famille_supplier_sup_id_fk")
-  family       family?   @relation("familyTofamily", fields: [fk_parent], references: [fam_id], onDelete: NoAction, onUpdate: NoAction, map: "produit_famille_fk_parent_fkey")
+  family       family?   @relation("familyTofamily", fields: [fk_parent], references: [fam_id], onDelete: NoAction, onUpdate: NoAction, map: "family_fk_parent_fkey")
   other_family family[]  @relation("familyTofamily")
+  supplier     supplier  @relation(fields: [fk_supplier], references: [sup_id], onDelete: NoAction, onUpdate: NoAction, map: "family_fk_supplier_fkey")
 
-  @@unique([fk_parent, fam_code], map: "produit_famille_prf_code_index")
+  @@unique([fk_parent, fam_code])
   @@schema("produit")
 }
 
@@ -127,10 +127,10 @@ model price_purchase {
   created_at    DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at    DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   fk_document   Int?
-  product       product   @relation(fields: [fk_product], references: [pro_id], onDelete: NoAction, onUpdate: NoAction, map: "cross_ref_produit_pro_id_fk")
+  product       product   @relation(fields: [fk_product], references: [pro_id], onDelete: NoAction, onUpdate: NoAction, map: "price_purchase_fk_product_fkey")
 
-  @@id([fk_product, pp_date], map: "tarif_achat_pkey")
-  @@index([fk_product, pp_date], map: "tarif_achat_taa_date_fk_produit_index")
+  @@id([fk_product, pp_date])
+  @@index([fk_product, pp_date])
   @@schema("produit")
 }
 

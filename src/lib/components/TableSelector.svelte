@@ -542,7 +542,7 @@
 											{/if}
 										</div>
 										<div class="text-sm text-gray-500">
-											{table.displayName || table.name} • {formatNumber(table.rowCount || 0)} lignes
+											{table.displayName || table.name} • {formatNumber(table.rowCount || 0)} lignes BDD
 										</div>
 									</div>
 
@@ -550,7 +550,7 @@
 									<div class="sm:hidden">
 										<div class="font-medium">{table.displayName || table.name}</div>
 										<div class="mt-1 text-sm text-gray-500">
-											{formatNumber(table.rowCount || 0)} lignes • {table.columns?.length || 0} colonnes
+											{formatNumber(table.rowCount || 0)} lignes BDD • {table.columns?.length || 0} colonnes
 										</div>
 										<div class="mt-2 flex flex-wrap gap-1">
 											{#if badges.tableBadge}
