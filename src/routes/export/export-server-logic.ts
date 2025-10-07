@@ -96,15 +96,12 @@ export async function extractTableData(
 
 	if (model) {
 		const modelWithMeta = model as { dbName?: string };
-		// Si un nom @@map existe, l'utiliser
+		// Si un nom @@map existe, l'utiliser (c'est le vrai nom de table en BDD)
 		if (modelWithMeta.dbName) {
 			realTableName = modelWithMeta.dbName;
-		} else {
-			// Nettoyer les préfixes de schéma dynamiquement (ex: "public_", "produit_")
-			if (schema && tableName.startsWith(`${schema}_`)) {
-				realTableName = tableName.substring(schema.length + 1); // +1 pour le '_'
-			}
 		}
+		// Sinon, utiliser le nom Prisma tel quel (pas de nettoyage de préfixe)
+		// car si pas de @@map, alors le nom Prisma = nom de table réel en BDD
 	}
 
 	// Construire le nom qualifié de la table avec le schéma
