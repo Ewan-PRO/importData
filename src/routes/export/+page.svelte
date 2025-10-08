@@ -785,7 +785,7 @@
 	{#if $submitting}
 		<div
 			transition:fade
-			class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
+			class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-rose-100"
 		>
 			<div class="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
 				<Spinner class="mx-auto mb-4" size="xl" />
