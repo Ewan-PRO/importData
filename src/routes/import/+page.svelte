@@ -250,7 +250,37 @@
 				const workbook = read(result, { type: 'array' });
 				const firstSheetName = workbook.SheetNames[0];
 				const worksheet = workbook.Sheets[firstSheetName];
-				rawData = utils.sheet_to_json(worksheet, { header: 1 });
+				// 🔥 SOLUTION DATES EXCEL : raw: true pour obtenir numéros Excel + conversion manuelle
+				rawData = utils.sheet_to_json(worksheet, {
+					header: 1,
+					raw: true, // Obtenir valeurs brutes (nombres pour dates)
+					dateNF: 'yyyy-mm-dd' // Format si conversion string
+				});
+
+				// 🔥 POST-TRAITEMENT : Convertir numéros de série Excel en ISO strings
+				rawData = rawData.map((row) =>
+					row.map((cell) => {
+						// 1️⃣ Si nombre > 25569 → probable numéro de série Excel (25569 = 1970-01-01)
+						if (typeof cell === 'number' && cell > 25569 && cell < 70000) {
+							// Convertir numéro Excel en Date JavaScript
+							const excelEpoch = new Date(Date.UTC(1899, 11, 30)); // Base Excel
+							const jsDate = new Date(excelEpoch.getTime() + cell * 86400000);
+
+							const year = jsDate.getUTCFullYear();
+							const month = String(jsDate.getUTCMonth() + 1).padStart(2, '0');
+							const day = String(jsDate.getUTCDate()).padStart(2, '0');
+							return `${year}-${month}-${day}`; // ✅ "2025-09-23"
+						}
+
+						// 2️⃣ Si string déjà au format ISO → garder tel quel
+						if (typeof cell === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(cell.trim())) {
+							return cell.trim();
+						}
+
+						// 3️⃣ Autres valeurs → retourner tel quel
+						return cell;
+					})
+				);
 
 				if (rawData.length < 1) {
 					throw new Error('Le fichier ne contient pas de données');
