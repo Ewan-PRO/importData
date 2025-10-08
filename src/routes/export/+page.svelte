@@ -38,7 +38,7 @@
 		getTableIcon,
 		getBadgeVariant,
 		getDatabaseBadgeInfo
-	} from './export-client-utils';
+	} from '$lib/components/ui-database-config';
 
 	// Fonctions utilitaires locales
 	function formatNumber(num: number): string {

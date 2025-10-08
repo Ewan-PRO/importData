@@ -22,11 +22,20 @@
 		CircleX,
 		Download
 	} from 'lucide-svelte';
+	import {
+		DATABASE_CONFIG,
+		SCHEMA_CONFIG,
+		getDatabaseBadgeInfo,
+		getTableIcon,
+		getBadgeVariant,
+		type DatabaseName
+	} from '$lib/components/ui-database-config';
 
 	// Props avec runes Svelte 5
 	let {
 		availableTables = $bindable([]),
 		selectedTables = $bindable([]),
+		databases = [],
 		mode = 'import',
 		title = 'Sélection des tables',
 		totalTables = $bindable(0),
@@ -46,6 +55,7 @@
 			columns?: any[];
 		}[];
 		selectedTables: string[];
+		databases: DatabaseName[];
 		mode?: 'export' | 'import';
 		title?: string;
 		totalTables: number;
@@ -65,19 +75,7 @@
 	let selectedDatabase = $state<'all' | 'cenov' | 'cenov_dev'>('all');
 	let selectedSchema = $state<'all' | 'produit' | 'public'>('all');
 
-	// Configuration des couleurs et icônes
-	const SCHEMA_CONFIG = {
-		produit: { icon: Package, label: 'Produit', variant: 'purple' as const },
-		public: { icon: LockOpen, label: 'Public', variant: 'cyan' as const }
-	} as const;
-
-	const DATABASE_CONFIG = {
-		cenov: { icon: Rocket, variant: 'bleu' as const, emoji: '🚀' },
-		cenov_dev: { icon: Settings, variant: 'orange' as const, emoji: '⚙️' }
-	} as const;
-
 	// Calculs réactifs avec runes
-	let databases = $derived(['cenov', 'cenov_dev']);
 	let uniqueSchemas = $derived([...new Set(availableTables.map((t) => t.category))]);
 
 	// Tables filtrées
@@ -169,21 +167,8 @@
 		dispatch('selectionChange');
 	}
 
-	function getTableIcon(table: any) {
-		return table.tableType === 'view' ? Eye : TableIcon;
-	}
-
-	function getBadgeVariant(table: any) {
-		return table.tableType === 'view' ? 'vert' : 'noir';
-	}
-
-	function getDatabaseBadgeInfo(database: string) {
-		const config = database.includes('dev') ? DATABASE_CONFIG.cenov_dev : DATABASE_CONFIG.cenov;
-		return {
-			variant: config.variant,
-			label: `${config.emoji} ${database.toUpperCase()}`
-		};
-	}
+	// Utiliser les fonctions importées depuis ui-database-config
+	// getTableIcon, getBadgeVariant, getDatabaseBadgeInfo sont déjà importés
 
 	function formatNumber(num: number): string {
 		return new Intl.NumberFormat('fr-FR').format(num);
@@ -503,7 +488,7 @@
 						<div class="flex-1">
 							<div class="flex items-center gap-3">
 								{#if true}
-									{@const IconComponent = getTableIcon(table)}
+									{@const IconComponent = getTableIcon(table.tableType)}
 									<IconComponent class="h-5 w-5 text-gray-500" />
 								{/if}
 

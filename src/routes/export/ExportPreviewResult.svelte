@@ -22,13 +22,11 @@
 		Rocket,
 		Settings,
 		Package,
-		getDatabaseIcon,
-		getSchemaIcon,
+		getDatabaseBadgeInfo,
 		getTableIcon,
 		getBadgeVariant,
-		getDatabaseBadgeInfo,
 		parseTableName
-	} from './export-client-utils';
+	} from '$lib/components/ui-database-config';
 
 	// Props avec $props() - Mode Runes Svelte 5
 	let {
@@ -195,7 +193,7 @@
 						: 'Inconnu'}
 					{@const TableIconComponent = getTableIcon(matchingTableInfo?.category || 'tables')}
 					{@const SchemaIconComponent = matchingTableInfo?.schema
-						? getSchemaIcon(matchingTableInfo.schema)
+						? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.icon
 						: LockOpen}
 					<div>
 						<div class="mb-3">

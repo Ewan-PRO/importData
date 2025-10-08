@@ -17,6 +17,7 @@ import {
 	getDatabases,
 	type ValidationRules
 } from '$lib/prisma-meta';
+import { getAllDatabaseNames } from '$lib/components/ui-database-config';
 
 const prisma = new PrismaClient();
 
@@ -969,6 +970,9 @@ export const load: ServerLoad = async (event) => {
 		const rawTableFields = await getImportableTableFields();
 		const rawTableRequiredFields = await getImportableTableRequiredFields();
 
+		// Obtenir les databases disponibles dynamiquement
+		const databases = await getAllDatabaseNames();
+
 		// Transformer les données pour le frontend
 		const formattedTables = availableTables.map((table) => ({
 			value: `${table.database}:${table.name}`, // Inclure database pour unicité
@@ -989,7 +993,8 @@ export const load: ServerLoad = async (event) => {
 			form,
 			availableTables: formattedTables,
 			tableFields,
-			tableRequiredFields
+			tableRequiredFields,
+			databases
 		};
 	} catch (err) {
 		throw new Error(`Erreur lors du chargement de la page import: ${formatError(err)}`);

@@ -29,6 +29,7 @@
 	} from 'lucide-svelte';
 	import type { UserInfoResponse } from '@logto/node';
 	import type { SuperValidated } from 'sveltekit-superforms';
+	import type { DatabaseName } from '$lib/components/ui-database-config';
 	// Types intégrés directement - plus besoin d'importer depuis shared.ts
 	interface ValidationResult {
 		totalRows: number;
@@ -73,6 +74,7 @@
 		}[];
 		tableFields: Record<string, string[]>;
 		tableRequiredFields: Record<string, string[]>;
+		databases: DatabaseName[];
 	};
 
 	// Type pour le formulaire multi-tables
@@ -675,6 +677,7 @@
 						bind:totalTables
 						bind:totalRows
 						bind:filteredCount
+						databases={data.databases}
 						{tableRequiredFields}
 						fileHeaders={headers}
 						title="Tables de destination :"
