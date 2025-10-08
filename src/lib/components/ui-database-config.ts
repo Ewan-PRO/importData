@@ -86,29 +86,10 @@ export function getBadgeVariant(category?: string): 'vert' | 'noir' {
 	return category === 'view' ? 'vert' : 'noir';
 }
 
-// Parser "database:tableName" (import)
-export function parseTableIdentifier(tableIdentifier: string): {
-	database: DatabaseName;
-	tableName: string;
-} {
-	const [database, tableName] = tableIdentifier.split(':');
-	return { database: database as DatabaseName, tableName };
-}
-
 // Parser "database-tableName" (export)
 export function parseTableName(tableName: string): string {
 	if (tableName.includes('-')) {
 		return tableName.split('-').slice(1).join('-');
 	}
 	return tableName;
-}
-
-// Obtenir dynamiquement les databases disponibles (côté serveur)
-export async function getAllDatabaseNames(): Promise<DatabaseName[]> {
-	if (typeof window === 'undefined') {
-		const { getAllDatabaseNames: getDatabases } = await import('$lib/prisma-meta');
-		return await getDatabases();
-	}
-	// Fallback côté client
-	return ['cenov', 'cenov_dev'];
 }

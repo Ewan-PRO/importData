@@ -25,10 +25,8 @@
 		CheckCircle,
 		CircleX
 	} from 'lucide-svelte';
-	import {
-		getDatabaseBadgeInfo,
-		parseTableIdentifier
-	} from '$lib/components/ui-database-config';
+	import { getDatabaseBadgeInfo } from '$lib/components/ui-database-config';
+	import { parseTableIdentifier } from '$lib/prisma-meta';
 	import type { UserInfoResponse } from '@logto/node';
 	import type { SuperValidated } from 'sveltekit-superforms';
 	import type { DatabaseName } from '$lib/components/ui-database-config';

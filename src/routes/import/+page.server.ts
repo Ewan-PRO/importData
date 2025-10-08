@@ -15,9 +15,9 @@ import {
 	findRecord,
 	parseTableIdentifier,
 	getDatabases,
+	getAllDatabaseNames,
 	type ValidationRules
 } from '$lib/prisma-meta';
-import { getAllDatabaseNames } from '$lib/components/ui-database-config';
 
 const prisma = new PrismaClient();
 
