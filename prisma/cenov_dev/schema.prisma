@@ -354,3 +354,11 @@ view v_price_purchase {
 
   @@schema("produit")
 }
+
+view mv_categorie {
+  cat_id       Int
+  fk_parent    Int
+  parent_level Int
+
+  @@schema("produit")
+}

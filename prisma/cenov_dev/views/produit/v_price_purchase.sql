@@ -24,4 +24,6 @@ FROM
         AND (pp.pp_date = pp_latest.max_pp_date)
       )
     )
-  );
+  )
+ORDER BY
+  pp.fk_product;

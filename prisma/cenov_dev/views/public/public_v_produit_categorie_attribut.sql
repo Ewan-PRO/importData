@@ -42,4 +42,6 @@ WHERE
           )
       )
     )
-  );
+  )
+ORDER BY
+  p.pro_id;
