@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Script d'extraction complète des métadonnées Prisma DMMF (Data Model Meta Format)
- * Extrait TOUTES les métadonnées disponibles pour analyse et utilisation dans l'import
+ * Extrait TOUTES les métadonnées disponibles pour analyse
  *
  * Utilisation :
  *   node scripts/Script\ DMMF/extract-dmmf-metadata.mjs
@@ -423,8 +423,12 @@ function generateQuickStats(models, enums, relationGraph, statistics) {
 	const bySchema = {};
 	for (const schema of ['produit', 'public']) {
 		const schemaModels = models.filter((m) => (m.schema || 'public') === schema);
-		const schemaTables = schemaModels.filter((m) => !m.name.startsWith('v_') && !m.name.includes('_v_'));
-		const schemaViews = schemaModels.filter((m) => m.name.startsWith('v_') || m.name.includes('_v_'));
+		const schemaTables = schemaModels.filter(
+			(m) => !m.name.startsWith('v_') && !m.name.includes('_v_')
+		);
+		const schemaViews = schemaModels.filter(
+			(m) => m.name.startsWith('v_') || m.name.includes('_v_')
+		);
 		const schemaRelations = relationGraph.relations.filter((r) => r.sourceSchema === schema);
 
 		bySchema[schema] = {
@@ -496,7 +500,8 @@ function generateModelsIndex(models, relationGraph, importOrder) {
 						composite: model.primaryKey.fields.length > 1
 					}
 				: null,
-			hasUniqueConstraints: (model.uniqueFields?.length || 0) + (model.uniqueIndexes?.length || 0) > 0,
+			hasUniqueConstraints:
+				(model.uniqueFields?.length || 0) + (model.uniqueIndexes?.length || 0) > 0,
 			hasSelfReference: dependencies.includes(modelName),
 			importLevel: modelLevels[modelName] ?? null,
 			dependencies,
@@ -550,7 +555,13 @@ function generateRelationsGraph(relationGraph) {
 			targetSchema: r.targetSchema || 'public',
 			targetField: r.targetField,
 			type: r.type,
-			cardinality: r.type.includes('N:1') ? 'many-to-one' : r.type.includes('1:N') ? 'one-to-many' : r.type.includes('1:1') ? 'one-to-one' : 'many-to-many',
+			cardinality: r.type.includes('N:1')
+				? 'many-to-one'
+				: r.type.includes('1:N')
+					? 'one-to-many'
+					: r.type.includes('1:1')
+						? 'one-to-one'
+						: 'many-to-many',
 			isRequired: r.isRequired,
 			isList: r.isList,
 			foreignKeyFields: r.foreignKeyFields,
@@ -594,7 +605,8 @@ function generateImportOrderFile(models, importOrder) {
 			selfReferencing: importOrder.selfReferencingTables.map((table) => ({
 				table,
 				field: 'parent_id ou origine',
-				strategy: 'Import parents first, then children (topological sort by hierarchy) or allow null on insert'
+				strategy:
+					'Import parents first, then children (topological sort by hierarchy) or allow null on insert'
 			}))
 		},
 		views: {
@@ -810,7 +822,16 @@ async function extractDmmfMetadata() {
 
 		console.log(`\n📂 Répertoire de sortie: ${outputDir}`);
 
-		return { fullDmmf, summary, quickStats, modelsIndex, relationsGraph, importOrderFile, nativeTypesFile, validationRules };
+		return {
+			fullDmmf,
+			summary,
+			quickStats,
+			modelsIndex,
+			relationsGraph,
+			importOrderFile,
+			nativeTypesFile,
+			validationRules
+		};
 	} catch (error) {
 		console.error("❌ Erreur lors de l'extraction DMMF:", error);
 		throw error;
