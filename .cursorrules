@@ -53,6 +53,16 @@ node scripts/BDD-IA/fetch-all-views.mjs     # Export toutes les vues
 node scripts/BDD-IA/fetch-cenov-data.mjs    # Export complet (recommandé)
 ```
 
+**Scripts DMMF (Métadonnées Prisma) :**
+
+```bash
+node scripts/Script\ DMMF/extract-dmmf-metadata.mjs    # Extraire métadonnées DMMF
+```
+
+_Extrait métadonnées Prisma DMMF de CENOV_DEV : 8 fichiers (quick-stats, models-index, relations-graph, import-order, validation-rules, native-types, summary, full-dmmf)_
+
+**📖 Documentation complète :** `scripts/Script DMMF/output/README.md` - Guide détaillé, cas d'usage et exemples
+
 ## Architecture et fichiers clés
 
 - `src/routes/` : Pages SvelteKit (categories, kits, import, products)

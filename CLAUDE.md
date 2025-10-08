@@ -100,6 +100,27 @@ node scripts/BDD-IA/fetch-cenov-data.mjs    # Tout exporter (recommandé)
 
 _Exporte toutes les données Cenov en lecture seule vers des fichiers JSON dans `scripts/BDD-IA/output/`_
 
+**Scripts DMMF (Métadonnées Prisma) :**
+
+```bash
+node scripts/Script\ DMMF/extract-dmmf-metadata.mjs    # Extraire métadonnées DMMF
+```
+
+_Extrait les métadonnées Prisma DMMF (Data Model Meta Format) de CENOV_DEV vers `scripts/Script DMMF/output/` - 8 fichiers optimisés pour différents usages_
+
+**Fichiers DMMF générés :**
+
+1. **quick-stats.json** (~60 lignes) - Aperçu rapide structure DB
+2. **models-index.json** (~150 lignes) - Navigation modèles avec dépendances
+3. **relations-graph.json** (~200 lignes) - Graphe complet relations FK
+4. **import-order.json** (~120 lignes) - Ordre d'import optimal (tri topologique)
+5. **validation-rules.json** (~400 lignes) - Règles validation par champ
+6. **native-types.json** (~80 lignes) - Mapping Prisma ↔ PostgreSQL
+7. **summary-dmmf.json** (~100 lignes) - Statistiques essentielles
+8. **full-dmmf.json** (~13 580 lignes) - DMMF complet brut (référence technique)
+
+**📖 Documentation complète :** Voir `scripts/Script DMMF/output/README.md` pour guide d'utilisation détaillé, cas d'usage et exemples
+
 ## Vue d'Ensemble de l'Architecture
 
 ### Stack Technique

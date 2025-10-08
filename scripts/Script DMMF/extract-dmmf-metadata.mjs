@@ -6,15 +6,44 @@
  * Utilisation :
  *   node scripts/Script\ DMMF/extract-dmmf-metadata.mjs
  *
- * Génère 8 fichiers JSON optimisés :
- *   - full-dmmf.json : DMMF complet brut avec toutes les données (~13 580 lignes)
- *   - summary-dmmf.json : Statistiques essentielles uniquement (~100 lignes)
- *   - quick-stats.json : Vue d'ensemble numérique (~60 lignes)
- *   - models-index.json : Index rapide des modèles avec dépendances (~150 lignes)
- *   - relations-graph.json : Graphe complet des relations (~200 lignes)
- *   - import-order.json : Ordre d'import optimal avec stratégies (~120 lignes)
- *   - validation-rules.json : Règles de validation par champ (~400 lignes)
- *   - native-types.json : Mapping Prisma ↔ PostgreSQL (~80 lignes)
+ * Génère 8 fichiers JSON optimisés pour différents usages :
+ *
+ * 📊 FICHIERS PRINCIPAUX (usage quotidien) :
+ *   1. quick-stats.json (~60 lignes)
+ *      → Aperçu rapide de la structure DB (compteurs, types, contraintes)
+ *      → Usage : Vue d'ensemble rapide sans détails techniques
+ *
+ *   2. models-index.json (~150 lignes)
+ *      → Index de navigation avec dépendances et niveaux d'import
+ *      → Usage : Comprendre les relations entre modèles, ordre d'import
+ *
+ *   3. relations-graph.json (~200 lignes)
+ *      → Graphe complet des relations FK avec cardinalités
+ *      → Usage : Visualiser dépendances, analyser cascades de suppression
+ *
+ *   4. import-order.json (~120 lignes)
+ *      → Ordre d'import optimal (tri topologique par niveaux)
+ *      → Usage : Planifier imports de données sans erreurs FK
+ *
+ * 🔧 FICHIERS UTILITAIRES (développement) :
+ *   5. validation-rules.json (~400 lignes)
+ *      → Règles de validation complètes par modèle/champ
+ *      → Usage : Générer schémas Zod, valider données avant import
+ *
+ *   6. native-types.json (~80 lignes)
+ *      → Mapping types Prisma ↔ PostgreSQL
+ *      → Usage : Migrations SQL, génération DDL, conversions de types
+ *
+ * 📈 FICHIERS STATISTIQUES :
+ *   7. summary-dmmf.json (~100 lignes)
+ *      → Statistiques essentielles globales
+ *      → Usage : Rapport statistique de la base
+ *
+ *   8. full-dmmf.json (~13 580 lignes)
+ *      → DMMF complet brut + analyses détaillées
+ *      → Usage : Référence technique complète, développement d'outils
+ *
+ * 💡 Voir scripts/Script DMMF/output/README.md pour guide d'utilisation complet
  */
 
 import { PrismaClient as CenovDevClient } from '../../prisma/cenov_dev/generated/index.js';
