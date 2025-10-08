@@ -16,6 +16,7 @@ import {
 	parseTableIdentifier,
 	getDatabases,
 	getAllDatabaseNames,
+	getPrimaryKeyFields,
 	type ValidationRules
 } from '$lib/prisma-meta';
 
@@ -434,19 +435,24 @@ function validateRow(
 	return true;
 }
 
-// Version simple pour chercher par TOUTES les contraintes uniques (INSERT)
+// Vérifier si un enregistrement existe via la clé primaire
 async function checkExistingRecord(
 	tableIdentifier: string,
 	mappedFields: Record<string, string>,
 	row: unknown[]
 ): Promise<string | null> {
-	const whereCondition: Record<string, unknown> = {};
 	const { database, tableName } = parseTableIdentifier(tableIdentifier);
-	const validationRules = await getTableValidationRules(database, tableName);
-	const uniqueFields = validationRules.uniqueFields;
 
-	// Construction de la condition avec les champs uniques
-	uniqueFields.forEach((field) => {
+	// Utiliser directement getPrimaryKeyFields de prisma-meta
+	const primaryKeyFields = await getPrimaryKeyFields(database, tableName);
+
+	if (primaryKeyFields.length === 0) {
+		return null; // Pas de clé primaire = impossible de vérifier
+	}
+
+	// Construction de la condition WHERE avec les champs de la clé primaire
+	const whereCondition: Record<string, unknown> = {};
+	primaryKeyFields.forEach((field) => {
 		const colIndex = Object.entries(mappedFields).find(([, f]) => f === field)?.[0];
 		if (colIndex !== undefined) {
 			const rawValue = row[parseInt(colIndex)];
@@ -455,22 +461,18 @@ async function checkExistingRecord(
 		}
 	});
 
-	// Si aucun champ unique trouvé, on ne peut pas vérifier
-	if (Object.keys(whereCondition).length === 0) {
+	// Si tous les champs de la clé primaire ne sont pas mappés, on ne peut pas vérifier
+	if (Object.keys(whereCondition).length !== primaryKeyFields.length) {
 		return null;
 	}
 
 	try {
-		// Recherche dans la table appropriée via DMMF générique
 		const existingRecord = await findRecord(database, tableName, whereCondition);
 
-		// Retourner une représentation textuelle de l'enregistrement trouvé
 		if (existingRecord) {
-			const result = uniqueFields
-				.map((field) => {
-					const value = existingRecord?.[field];
-					return formatDisplayValue(value);
-				})
+			// Retourner une représentation textuelle des champs de la clé primaire
+			const result = primaryKeyFields
+				.map((field) => formatDisplayValue(existingRecord[field]))
 				.join(', ');
 			return result;
 		}
