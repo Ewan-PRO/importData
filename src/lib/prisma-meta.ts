@@ -337,7 +337,9 @@ export async function getAllTables(database: DatabaseName): Promise<TableInfo[]>
 
 	const databases = await getDatabases();
 	const tables = databases[database].dmmf.datamodel.models.map((model) => {
-		const modelWithMeta = model as DMMFModelFromPrisma & { primaryKey?: { fields?: string[] } | null };
+		const modelWithMeta = model as DMMFModelFromPrisma & {
+			primaryKey?: { fields?: string[] } | null;
+		};
 
 		// Utiliser le nom @@map si disponible, sinon le nom du modèle
 		const realTableName = modelWithMeta.dbName || model.name;
@@ -355,8 +357,7 @@ export async function getAllTables(database: DatabaseName): Promise<TableInfo[]>
 			model.fields.some((f) => f.isId);
 
 		// Une vue = pas de clé primaire OU suit la convention de nommage
-		const category: 'table' | 'view' =
-			!hasPrimaryKey || hasNamePattern ? 'view' : 'table';
+		const category: 'table' | 'view' = !hasPrimaryKey || hasNamePattern ? 'view' : 'table';
 
 		// Utiliser le nom mappé (@@map) comme displayName par défaut
 		let displayName = realTableName;
@@ -692,9 +693,7 @@ export async function getImportableTables(): Promise<TableInfo[]> {
 	const allTables = await getAllDatabaseTables();
 
 	// Inclure uniquement les tables pour l'import (les vues sont exclues)
-	const importableTables = allTables.filter(
-		(table) => table.category === 'table'
-	);
+	const importableTables = allTables.filter((table) => table.category === 'table');
 
 	// Ajouter le comptage des lignes comme dans l'export
 	const tablesWithCounts = await Promise.all(
@@ -759,7 +758,6 @@ export async function getImportableTableRequiredFields(): Promise<Record<string,
 	return result;
 }
 
-
 // ========== FONCTIONS CRUD GÉNÉRIQUES ==========
 
 // Créer un enregistrement de manière générique (côté serveur uniquement)
@@ -771,7 +769,6 @@ export async function createRecord(
 	if (browser) {
 		throw new Error('[PRISMA-META] createRecord ne peut être appelé côté client');
 	}
-
 
 	const client = await getClient(database);
 	const model = client[tableName] as {
@@ -804,7 +801,6 @@ export async function updateRecord(
 	if (!model || !model.updateMany) {
 		throw new Error(`Table ${tableName} not found in database ${database}`);
 	}
-
 
 	return await model.updateMany({ where, data });
 }

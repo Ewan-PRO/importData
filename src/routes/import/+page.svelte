@@ -75,7 +75,6 @@
 		tableRequiredFields: Record<string, string[]>;
 	};
 
-
 	// Type pour le formulaire multi-tables
 	type MultiTableFormData = {
 		data: unknown[][];
@@ -93,7 +92,6 @@
 	} = superForm(data.form, {
 		dataType: 'json',
 		onUpdated: ({ form }) => {
-
 			if (form && form.data && 'result' in form.data) {
 				const result = form.data.result as ValidationResult;
 				updateFormWithResult(result);
@@ -111,9 +109,8 @@
 						operations.push(`${result.updated} modifié${result.updated > 1 ? 's' : ''}`);
 					}
 
-					const message = totalOperations > 0
-						? `Import réussi : ${operations.join(', ')}`
-						: 'Import terminé';
+					const message =
+						totalOperations > 0 ? `Import réussi : ${operations.join(', ')}` : 'Import terminé';
 
 					toast.success(message);
 
@@ -402,7 +399,6 @@
 			selectedTables,
 			mappedFields
 		} as any;
-
 	}
 
 	function formatNumber(num: number): string {
@@ -440,8 +436,6 @@
 			guessFieldMapping();
 		}
 	}
-
-
 
 	// Variable réactive pour les champs requis (union de tous les champs requis des tables sélectionnées)
 	$: requiredFields = getRequiredFieldsForTables(selectedTables);
@@ -585,7 +579,7 @@
 				<div
 					role="button"
 					tabindex="0"
-					class={`mb-4 rounded-lg border-2 border-dashed p-8 text-center transition-colors hover:border-blue-400 hover:bg-blue-50 cursor-pointer ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
+					class={`mb-4 cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors hover:border-blue-400 hover:bg-blue-50 ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
 					on:dragenter|preventDefault={handleDragEnter}
 					on:dragleave|preventDefault={handleDragLeave}
 					on:dragover|preventDefault={handleDragOver}
@@ -625,7 +619,6 @@
 						</div>
 					</div>
 				</div>
-
 			</div>
 		{:else if step === 2}
 			<form method="POST" action="?/validate" use:superEnhance>
@@ -652,7 +645,7 @@
 						bind:totalTables
 						bind:totalRows
 						bind:filteredCount
-						tableRequiredFields={tableRequiredFields}
+						{tableRequiredFields}
 						fileHeaders={headers}
 						title="Tables de destination :"
 						on:selectionChange={handleTableChange}
@@ -826,12 +819,14 @@
 								{ key: 'value', label: 'Valeur' },
 								{ key: 'error', label: 'Erreur' }
 							]}
-							data={validationResults.invalidData.map((error: { row: number; field: string; value: string; error: string }) => ({
-								row: error.row + 1,
-								field: error.field,
-								value: error.value || '',
-								error: error.error
-							}))}
+							data={validationResults.invalidData.map(
+								(error: { row: number; field: string; value: string; error: string }) => ({
+									row: error.row + 1,
+									field: error.field,
+									value: error.value || '',
+									error: error.error
+								})
+							)}
 						/>
 					{/if}
 
@@ -840,7 +835,10 @@
 						{@const validData = (hasHeaders ? rawData.slice(1) : rawData)
 							.map((row, index) => {
 								// Vérifier si cette ligne a des erreurs
-								const hasError = validationResults.invalidData.some((error: { row: number; field: string; value: string; error: string }) => error.row === index);
+								const hasError = validationResults.invalidData.some(
+									(error: { row: number; field: string; value: string; error: string }) =>
+										error.row === index
+								);
 								if (hasError) return null;
 
 								// Créer un objet avec les champs mappés

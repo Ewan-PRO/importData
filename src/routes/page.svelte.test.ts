@@ -17,7 +17,8 @@ describe('/+page.svelte', () => {
 	test('should render h1', () => {
 		// Fournir les données nécessaires au composant
 		const mockData = {
-			user: null // Simuler un utilisateur non connecté
+			user: null, // Simuler un utilisateur non connecté
+			authError: null
 		};
 
 		render(Page, { props: { data: mockData } });
@@ -26,7 +27,8 @@ describe('/+page.svelte', () => {
 
 	test('should render login form when user is not connected', () => {
 		const mockData = {
-			user: null
+			user: null,
+			authError: null
 		};
 
 		render(Page, { props: { data: mockData } });
@@ -39,7 +41,8 @@ describe('/+page.svelte', () => {
 				id: '1',
 				name: 'Test User',
 				email: 'test@example.com'
-			}
+			},
+			authError: null
 		};
 
 		render(Page, { props: { data: mockData } });

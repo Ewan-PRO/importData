@@ -55,7 +55,6 @@
 		fileHeaders: string[];
 	} = $props();
 
-
 	// Events
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -159,7 +158,7 @@
 
 	// Calculer le nombre de tables compatibles
 	let compatibleCount = $derived(
-		availableTables.filter(table => {
+		availableTables.filter((table) => {
 			const requiredStatus = getRequiredFieldsStatus(table.value);
 			return requiredStatus?.allMapped === true;
 		}).length
@@ -212,7 +211,6 @@
 		};
 	}
 
-
 	function getRequiredFieldsStatus(tableIdentifier: string) {
 		const requiredFields = tableRequiredFields[tableIdentifier] || [];
 		const totalCount = requiredFields.length;
@@ -220,15 +218,17 @@
 		if (totalCount === 0) return null;
 
 		// Normalisation des en-têtes du fichier pour comparaison
-		const normalizedFileHeaders = fileHeaders.map(header =>
-			String(header).toLowerCase().replace(/[^a-z0-9]/g, '')
+		const normalizedFileHeaders = fileHeaders.map((header) =>
+			String(header)
+				.toLowerCase()
+				.replace(/[^a-z0-9]/g, '')
 		);
 
 		// Vérification si chaque champ requis est présent dans les en-têtes du fichier
-		const foundCount = requiredFields.filter(field => {
+		const foundCount = requiredFields.filter((field) => {
 			const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
-			return normalizedFileHeaders.some(header =>
-				header.includes(normalizedField) || normalizedField.includes(header)
+			return normalizedFileHeaders.some(
+				(header) => header.includes(normalizedField) || normalizedField.includes(header)
 			);
 		}).length;
 
@@ -542,7 +542,8 @@
 											{/if}
 										</div>
 										<div class="text-sm text-gray-500">
-											{table.displayName || table.name} • {formatNumber(table.rowCount || 0)} lignes BDD
+											{table.displayName || table.name} • {formatNumber(table.rowCount || 0)} lignes
+											BDD
 										</div>
 									</div>
 

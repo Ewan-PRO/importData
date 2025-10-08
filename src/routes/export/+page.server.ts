@@ -67,7 +67,6 @@ export interface ExportResult {
 	needsClientDownload?: boolean;
 }
 
-
 // Configuration des formats d'export (centralisé pour éliminer duplication)
 const EXPORT_FORMATS_CONFIG = {
 	csv: {
@@ -174,7 +173,6 @@ async function getTablesInfo(): Promise<ExportTableInfo[]> {
 
 	return tablesWithCounts;
 }
-
 
 export const load = (async (event) => {
 	await protect(event);

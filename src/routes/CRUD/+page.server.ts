@@ -247,8 +247,8 @@ async function getFirstAvailableView(): Promise<{ database: DatabaseName; tableN
 	const availableModels = databases[database].dmmf.datamodel.models;
 
 	// Trouver la première vue (nom contenant 'v_')
-	const firstView = availableModels.find(model =>
-		model.name.includes('v_') || model.name.includes('_v_')
+	const firstView = availableModels.find(
+		(model) => model.name.includes('v_') || model.name.includes('_v_')
 	);
 
 	if (firstView) {
@@ -268,8 +268,8 @@ async function getFirstAvailableTable(): Promise<{ database: DatabaseName; table
 	const availableModels = databases[database].dmmf.datamodel.models;
 
 	// Trouver la première table (nom ne contenant pas 'v_')
-	const firstTable = availableModels.find(model =>
-		!model.name.includes('v_') && !model.name.includes('_v_')
+	const firstTable = availableModels.find(
+		(model) => !model.name.includes('v_') && !model.name.includes('_v_')
 	);
 
 	if (firstTable) {
