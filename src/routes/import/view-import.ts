@@ -5,6 +5,7 @@ import {
 	getPrimaryKeyFields,
 	createRecord,
 	findRecord,
+	getAllTables,
 	type DatabaseName
 } from '$lib/prisma-meta';
 import fs from 'fs/promises';
@@ -152,9 +153,13 @@ function topologicalSort(dependencies: Record<string, Set<string>>): string[][] 
 	return levels;
 }
 
-// Extrait tables depuis SQL (regex simple, pas de hardcoding)
-function extractTablesFromSql(sql: string): string[] {
+// Extrait tables depuis SQL en validant contre DMMF (pas de hardcoding)
+async function extractTablesFromSql(sql: string, database: DatabaseName): Promise<string[]> {
 	const tables = new Set<string>();
+
+	// Récupérer liste des vraies tables via DMMF
+	const allTables = await getAllTables(database);
+	const realTableNames = allTables.filter((t) => t.category === 'table').map((t) => t.name);
 
 	// Regex pour capturer : schema.table ou table
 	const regex = /(?:FROM|JOIN)\s+(?:\w+\.)?(\w+)\s+/gi;
@@ -162,8 +167,8 @@ function extractTablesFromSql(sql: string): string[] {
 
 	while ((match = regex.exec(sql)) !== null) {
 		const tableName = match[1];
-		// Filtrer alias courts (1-2 caractères) et vues (commencent par v_)
-		if (tableName.length > 2 && !tableName.startsWith('v_')) {
+		// Valider contre DMMF (au lieu de hardcoding)
+		if (realTableNames.includes(tableName)) {
 			tables.add(tableName);
 		}
 	}
@@ -196,7 +201,7 @@ export async function analyzeViewDependencies(
 	const viewSql = await fs.readFile(viewSqlPath, 'utf-8');
 
 	// 4. Extraire les tables du SQL
-	const tables = extractTablesFromSql(viewSql);
+	const tables = await extractTablesFromSql(viewSql, database);
 
 	// 5. Calculer ordre d'import DYNAMIQUEMENT
 	const importOrder = await calculateTableImportOrder(database, tables);
