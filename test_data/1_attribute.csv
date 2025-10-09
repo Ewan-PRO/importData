@@ -1,4 +1,0 @@
-atr_nature,atr_label,atr_code,atr_symbol_intl,atr_description
-CARACTERISTIQUE,Puissance,PWR,kW,Puissance nominale en kilowatts
-CARACTERISTIQUE,Débit,FLOW,m³/h,Débit volumique
-CARACTERISTIQUE,Pression,PRESS,bar,Pression maximale

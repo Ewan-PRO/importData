@@ -1,339 +1,467 @@
-// src/lib/import/view-import.ts
-import {
-	getDatabases,
-	getTableMetadata,
-	getPrimaryKeyFields,
-	createRecord,
-	findRecord,
-	getAllTables,
-	type DatabaseName
-} from '$lib/prisma-meta';
-import fs from 'fs/promises';
-import path from 'path';
+// ============================================================================
+// MODULE VIEW-IMPORT : Cache Session + Enrichissement Foreign Keys
+// ============================================================================
+//
+// Ce module g�re l'import intelligent de donn�es avec r�solution automatique
+// des Foreign Keys via un cache session.
+//
+// PRINCIPE :
+// 1. Import fichier 1 (attribute) � IDs g�n�r�s � Stock�s dans cache
+// 2. Import fichier 4 (category_attribute) � Lit cache � Enrichit FK auto
+//
+// FEATURES :
+//  100% dynamique via Prisma DMMF (z�ro hardcoding)
+//  Cache session avec TTL (1h)
+//  Fallback DB si cache miss
+//  Support cl�s composites
+//  Detection automatique champs uniques
+//
+// ============================================================================
+
+import type { DatabaseName } from '$lib/prisma-meta';
+import { getDatabases, findRecord } from '$lib/prisma-meta';
 
 // ========== TYPES ==========
-interface ViewDependency {
-	tables: string[];
-	importOrder: string[][];
-	relations: Record<
-		string,
-		Array<{
-			field: string;
-			targetTable: string;
-			targetField: string;
-			required: boolean;
-		}>
-	>;
+
+/**
+ * Type étendu pour les champs DMMF Prisma
+ * Inclut les propriétés non typées dans les interfaces de base
+ */
+interface DMMFField {
+	name: string;
+	type: string;
+	isRequired: boolean;
+	isId: boolean;
+	kind: string;
+	isUnique?: boolean;
+	hasDefaultValue?: boolean;
+	relationName?: string;
+	relationFromFields?: string[];
+	relationToFields?: string[];
 }
 
-// ========== FONCTIONS UTILITAIRES DYNAMIQUES ==========
-
-// Récupère le schéma d'une vue/table DYNAMIQUEMENT via DMMF
-async function getTableSchema(database: DatabaseName, tableName: string): Promise<string> {
-	const databases = await getDatabases();
-	const model = databases[database].dmmf.datamodel.models.find((m) => m.name === tableName);
-
-	// Retourner le schéma depuis DMMF (@@schema)
-	return (model as { schema?: string })?.schema || 'public';
+/**
+ * Type étendu pour les modèles DMMF
+ */
+interface DMMFModel {
+	name: string;
+	fields: DMMFField[];
 }
 
-// Calcule l'ordre d'import pour un sous-ensemble de tables DYNAMIQUEMENT
-async function calculateTableImportOrder(
+/**
+ * Structure d'une entr�e de cache
+ */
+interface ImportCacheEntry {
+	id: number; // ID g�n�r� (ex: 378)
+	uniqueValue: string; // Valeur unique (ex: "PWR-Test")
+	timestamp: number; // Timestamp cr�ation (pour TTL)
+}
+
+/**
+ * Mapping FK d�tect� via DMMF
+ */
+interface ForeignKeyMapping {
+	fkField: string; // Nom colonne FK (ex: "fk_kit")
+	targetTable: string; // Table cible (ex: "kit")
+	lookupField: string; // Champ lookup (ex: "kit_label")
+}
+
+// ========== CACHE GLOBAL ==========
+
+/**
+ * Cache session des IDs g�n�r�s pendant l'import
+ * Structure: Map<"database:tableName", Map<uniqueValue, CacheEntry>>
+ *
+ * Exemple:
+ * {
+ *   "cenov_dev:attribute": Map {
+ *     "PWR-Test" => { id: 378, uniqueValue: "PWR-Test", timestamp: ... }
+ *   }
+ * }
+ */
+const importSessionCache = new Map<string, Map<string, ImportCacheEntry>>();
+
+/**
+ * TTL du cache : 1 heure
+ * Evite la saturation m�moire sur imports longs
+ */
+const CACHE_TTL_MS = 60 * 60 * 1000;
+
+// ========== FONCTIONS PUBLIQUES ==========
+
+/**
+ * Ajoute un enregistrement au cache apr�s insertion
+ *
+ * D�tection automatique :
+ * - Champ unique (via detectUniqueField)
+ * - Champ ID (via detectIdField)
+ *
+ * @param database - Base de donn�es (cenov/cenov_dev)
+ * @param tableName - Nom de la table (ex: "attribute")
+ * @param insertedRecord - Enregistrement ins�r� avec tous les champs
+ */
+export async function addToCache(
 	database: DatabaseName,
-	tableNames: string[]
-): Promise<string[][]> {
-	const databases = await getDatabases();
-	const allModels = databases[database].dmmf.datamodel.models;
+	tableName: string,
+	insertedRecord: Record<string, unknown>
+): Promise<void> {
+	const cacheKey = `${database}:${tableName}`;
 
-	// Construire graphe de dépendances
-	const dependencies: Record<string, Set<string>> = {};
-
-	for (const tableName of tableNames) {
-		const model = allModels.find((m) => m.name === tableName);
-		if (!model) continue;
-
-		dependencies[tableName] = new Set();
-
-		// Trouver les relations FK
-		for (const field of model.fields) {
-			if (field.kind === 'object') {
-				const fieldWithRelation = field as {
-					relationFromFields?: string[];
-					type: string;
-				};
-
-				if (
-					fieldWithRelation.relationFromFields &&
-					fieldWithRelation.relationFromFields.length > 0
-				) {
-					const targetTable = fieldWithRelation.type;
-					if (tableNames.includes(targetTable) && targetTable !== tableName) {
-						dependencies[tableName].add(targetTable);
-					}
-				}
-			}
-		}
+	// Initialiser cache pour cette table si n�cessaire
+	if (!importSessionCache.has(cacheKey)) {
+		importSessionCache.set(cacheKey, new Map());
 	}
 
-	// Tri topologique par niveaux
-	return topologicalSort(dependencies);
-}
-
-// Trouve les relations FK d'une table DYNAMIQUEMENT
-async function getTableRelations(
-	database: DatabaseName,
-	tableName: string
-): Promise<
-	Array<{
-		field: string;
-		targetTable: string;
-		targetField: string;
-		required: boolean;
-	}>
-> {
-	const databases = await getDatabases();
-	const model = databases[database].dmmf.datamodel.models.find((m) => m.name === tableName);
-
-	if (!model) return [];
-
-	const relations: Array<{
-		field: string;
-		targetTable: string;
-		targetField: string;
-		required: boolean;
-	}> = [];
-
-	for (const field of model.fields) {
-		if (field.kind === 'object') {
-			const fieldWithRelation = field as {
-				relationFromFields?: string[];
-				relationToFields?: string[];
-				type: string;
-				isRequired: boolean;
-			};
-
-			if (fieldWithRelation.relationFromFields && fieldWithRelation.relationFromFields.length > 0) {
-				relations.push({
-					field: fieldWithRelation.relationFromFields[0],
-					targetTable: fieldWithRelation.type,
-					targetField: fieldWithRelation.relationToFields?.[0] || 'id',
-					required: fieldWithRelation.isRequired
-				});
-			}
-		}
-	}
-
-	return relations;
-}
-
-// Tri topologique (helper interne)
-function topologicalSort(dependencies: Record<string, Set<string>>): string[][] {
-	const visited = new Set<string>();
-	const levels: string[][] = [];
-
-	while (visited.size < Object.keys(dependencies).length) {
-		const currentLevel: string[] = [];
-
-		for (const [table, deps] of Object.entries(dependencies)) {
-			if (visited.has(table)) continue;
-
-			const allDepsVisited = Array.from(deps).every((dep) => visited.has(dep));
-
-			if (allDepsVisited) {
-				currentLevel.push(table);
-			}
-		}
-
-		if (currentLevel.length === 0) break; // Cycle détecté
-
-		currentLevel.forEach((table) => visited.add(table));
-		levels.push(currentLevel);
-	}
-
-	return levels;
-}
-
-// Extrait tables depuis SQL en validant contre DMMF (pas de hardcoding)
-async function extractTablesFromSql(sql: string, database: DatabaseName): Promise<string[]> {
-	const tables = new Set<string>();
-
-	// Récupérer liste des vraies tables via DMMF
-	const allTables = await getAllTables(database);
-	const realTableNames = allTables.filter((t) => t.category === 'table').map((t) => t.name);
-
-	// Regex pour capturer : schema.table ou table
-	const regex = /(?:FROM|JOIN)\s+(?:\w+\.)?(\w+)\s+/gi;
-	let match;
-
-	while ((match = regex.exec(sql)) !== null) {
-		const tableName = match[1];
-		// Valider contre DMMF (au lieu de hardcoding)
-		if (realTableNames.includes(tableName)) {
-			tables.add(tableName);
-		}
-	}
-
-	return Array.from(tables);
-}
-
-// ========== FONCTIONS PRINCIPALES ==========
-
-// Analyse les dépendances d'une vue DYNAMIQUEMENT
-
-export async function analyzeViewDependencies(
-	database: DatabaseName,
-	viewName: string
-): Promise<ViewDependency> {
-	// 1. Récupérer le schéma DYNAMIQUEMENT via DMMF
-	const schema = await getTableSchema(database, viewName);
-
-	// 2. Construire le chemin DYNAMIQUEMENT
-	const viewSqlPath = path.join(
-		process.cwd(),
-		'prisma',
-		database, // ✅ Pas de ternaire, utilise directement le nom
-		'views',
-		schema, // ✅ Dynamique depuis DMMF
-		`${viewName}.sql`
-	);
-
-	// 3. Lire le fichier SQL
-	const viewSql = await fs.readFile(viewSqlPath, 'utf-8');
-
-	// 4. Extraire les tables du SQL
-	const tables = await extractTablesFromSql(viewSql, database);
-
-	// 5. Calculer ordre d'import DYNAMIQUEMENT
-	const importOrder = await calculateTableImportOrder(database, tables);
-
-	// 6. Récupérer relations DYNAMIQUEMENT
-	const relations: Record<
-		string,
-		Array<{
-			field: string;
-			targetTable: string;
-			targetField: string;
-			required: boolean;
-		}>
-	> = {};
-	for (const table of tables) {
-		relations[table] = await getTableRelations(database, table);
-	}
-
-	return {
-		tables,
-		importOrder,
-		relations
-	};
-}
-
-// Mappe colonnes vue → tables DYNAMIQUEMENT
-export async function mapViewColumnsToTables(
-	database: DatabaseName,
-	viewColumns: Record<string, unknown>,
-	dependencies: ViewDependency
-): Promise<Record<string, Record<string, unknown>>> {
-	const mapping: Record<string, Record<string, unknown>> = {};
-
-	for (const level of dependencies.importOrder) {
-		for (const tableName of level) {
-			// Récupérer métadonnées DYNAMIQUEMENT
-			const metadata = await getTableMetadata(database, tableName);
-			if (!metadata) continue;
-
-			mapping[tableName] = {};
-
-			// Mapper colonnes disponibles
-			for (const field of metadata.fields) {
-				if (viewColumns[field.name] !== undefined) {
-					mapping[tableName][field.name] = viewColumns[field.name];
-				}
-			}
-		}
-	}
-
-	return mapping;
-}
-
-// FONCTION PRINCIPALE : Import intelligent depuis vue
-export async function importFromView(
-	database: DatabaseName,
-	viewName: string,
-	data: Record<string, unknown>[]
-): Promise<{
-	success: boolean;
-	inserted: Record<string, number>;
-	updated: Record<string, number>;
-	errors: string[];
-}> {
-	const result = {
-		success: true,
-		inserted: {} as Record<string, number>,
-		updated: {} as Record<string, number>,
-		errors: [] as string[]
-	};
+	const cache = importSessionCache.get(cacheKey)!;
 
 	try {
-		// 1. Analyser vue DYNAMIQUEMENT
-		const deps = await analyzeViewDependencies(database, viewName);
+		// D�tecter automatiquement le champ unique via DMMF
+		const uniqueField = await detectUniqueField(database, tableName);
+		const idField = await detectIdField(database, tableName);
 
-		// 2. Pour chaque ligne de données
-		for (const row of data) {
-			// 3. Mapper colonnes DYNAMIQUEMENT
-			const mapping = await mapViewColumnsToTables(database, row, deps);
+		if (!uniqueField || !idField) {
+			console.warn(
+				`� [CACHE] ${cacheKey}: Impossible de d�tecter unique/id field, skip cache`
+			);
+			return;
+		}
 
-			// 4. Insérer dans l'ordre calculé DYNAMIQUEMENT
-			const createdIds: Record<string, unknown> = {};
+		const uniqueValue = String(insertedRecord[uniqueField]);
+		const generatedId = Number(insertedRecord[idField]);
 
-			for (const level of deps.importOrder) {
-				for (const tableName of level) {
-					if (!mapping[tableName] || Object.keys(mapping[tableName]).length === 0) {
-						continue;
-					}
+		if (!uniqueValue || isNaN(generatedId)) {
+			console.warn(`� [CACHE] ${cacheKey}: Valeur unique ou ID invalide, skip cache`);
+			return;
+		}
 
-					const insertData = { ...mapping[tableName] };
+		// Ajouter au cache
+		cache.set(uniqueValue, {
+			id: generatedId,
+			uniqueValue,
+			timestamp: Date.now()
+		});
 
-					// Résoudre FK DYNAMIQUEMENT
-					const relations = deps.relations[tableName] || [];
-					for (const rel of relations) {
-						if (createdIds[rel.targetTable]) {
-							insertData[rel.field] = createdIds[rel.targetTable];
-						}
-					}
+		console.log(`=� [CACHE-ADD] ${cacheKey}: "${uniqueValue}" � ${generatedId}`);
+	} catch (error) {
+		console.error(`L [CACHE-ADD] ${cacheKey} erreur:`, error);
+	}
+}
 
-					// Upsert DYNAMIQUE
-					const pks = await getPrimaryKeyFields(database, tableName);
-					const whereCondition: Record<string, unknown> = {};
+/**
+ * Cherche un ID dans le cache
+ *
+ * @param database - Base de donn�es
+ * @param tableName - Nom de la table source
+ * @param uniqueValue - Valeur unique � chercher (ex: "PWR-Test")
+ * @returns ID trouv� ou null si absent/expir�
+ */
+export function lookupInCache(
+	database: DatabaseName,
+	tableName: string,
+	uniqueValue: string
+): number | null {
+	const cacheKey = `${database}:${tableName}`;
+	const cache = importSessionCache.get(cacheKey);
 
-					for (const pk of pks) {
-						if (insertData[pk]) {
-							whereCondition[pk] = insertData[pk];
-						}
-					}
+	if (!cache) {
+		console.warn(`� [CACHE-MISS] ${cacheKey}: Cache non initialis�`);
+		return null;
+	}
 
-					let recordId;
+	const entry = cache.get(uniqueValue);
 
-					if (Object.keys(whereCondition).length > 0) {
-						const existing = await findRecord(database, tableName, whereCondition);
-						if (existing) {
-							recordId = existing[pks[0]];
-							result.updated[tableName] = (result.updated[tableName] || 0) + 1;
-							continue; // Skip insert, déjà existe
-						}
-					}
+	if (!entry) {
+		console.warn(`� [CACHE-MISS] ${cacheKey}: "${uniqueValue}" absent`);
+		return null;
+	}
 
-					// Créer nouvel enregistrement
-					const created = await createRecord(database, tableName, insertData);
-					recordId = created[pks[0]];
-					createdIds[tableName] = recordId;
-					result.inserted[tableName] = (result.inserted[tableName] || 0) + 1;
+	// V�rifier TTL
+	const isExpired = Date.now() - entry.timestamp > CACHE_TTL_MS;
+	if (isExpired) {
+		console.warn(`� [CACHE-EXPIRED] ${cacheKey}: "${uniqueValue}" expir� (TTL d�pass�)`);
+		cache.delete(uniqueValue);
+		return null;
+	}
+
+	console.log(` [CACHE-HIT] ${cacheKey}: "${uniqueValue}" � ${entry.id}`);
+	return entry.id;
+}
+
+/**
+ * Enrichit les donn�es avec les Foreign Keys manquantes
+ *
+ * PRINCIPE :
+ * 1. D�tecte toutes les FK de la table via DMMF
+ * 2. Pour chaque FK :
+ *    - Si d�j� fournie : skip
+ *    - Sinon : cherche valeur lookup dans les donn�es
+ *    - Lookup dans cache (rapide)
+ *    - Fallback DB si cache miss (lent)
+ *    - Ajoute FK si trouv�e
+ *
+ * @param database - Base de donn�es
+ * @param tableName - Nom de la table cible
+ * @param rowData - Donn�es de la ligne (d�j� format�es)
+ * @returns Donn�es enrichies avec FK
+ */
+export async function enrichWithForeignKeys(
+	database: DatabaseName,
+	tableName: string,
+	rowData: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+	const enrichedData = { ...rowData };
+
+	try {
+		// D�tecter toutes les FK de cette table via DMMF
+		const fkMappings = await detectForeignKeyMappings(database, tableName);
+
+		if (fkMappings.length === 0) {
+			// Pas de FK d�tect�es, retourner tel quel
+			return enrichedData;
+		}
+
+		console.log(`= [FK-ENRICH] ${tableName}: ${fkMappings.length} FK d�tect�es`);
+
+		for (const fkMapping of fkMappings) {
+			const { fkField, targetTable, lookupField } = fkMapping;
+
+			// V�rifier si la FK est d�j� fournie dans les donn�es
+			if (enrichedData[fkField] !== undefined && enrichedData[fkField] !== null) {
+				console.log(` [FK-SKIP] ${fkField}: D�j� fourni (${enrichedData[fkField]})`);
+				continue;
+			}
+
+			// Chercher le champ lookup dans les donn�es
+			const lookupValue = enrichedData[lookupField];
+
+			if (!lookupValue || typeof lookupValue !== 'string') {
+				console.warn(`� [FK-SKIP] ${fkField}: Lookup field "${lookupField}" absent/invalide`);
+				continue;
+			}
+
+			// 1. Essayer le cache (rapide - O(1))
+			const cachedId = lookupInCache(database, targetTable, lookupValue);
+
+			if (cachedId !== null) {
+				enrichedData[fkField] = cachedId;
+				console.log(`= [FK-CACHE] ${fkField}: "${lookupValue}" � ${cachedId}`);
+				continue;
+			}
+
+			// 2. Fallback : Lookup en base de donn�es (lent mais fiable)
+			console.warn(`� [FK-FALLBACK-DB] ${fkField}: Lookup DB pour "${lookupValue}"`);
+
+			const uniqueFieldTarget = await detectUniqueField(database, targetTable);
+			if (!uniqueFieldTarget) {
+				console.error(`L [FK-ERROR] ${fkField}: Impossible de d�tecter unique field`);
+				continue;
+			}
+
+			const record = await findRecord(database, targetTable, {
+				[uniqueFieldTarget]: lookupValue
+			});
+
+			if (record) {
+				const idField = await detectIdField(database, targetTable);
+				if (idField && record[idField]) {
+					enrichedData[fkField] = record[idField];
+					console.log(` [FK-DB-FOUND] ${fkField}: "${lookupValue}" � ${record[idField]}`);
 				}
+			} else {
+				console.error(`L [FK-NOT-FOUND] ${fkField}: "${lookupValue}" introuvable`);
 			}
 		}
 	} catch (error) {
-		result.success = false;
-		result.errors.push(error instanceof Error ? error.message : String(error));
+		console.error(`L [FK-ENRICH] ${tableName} erreur globale:`, error);
 	}
 
-	return result;
+	return enrichedData;
+}
+
+/**
+ * Vide compl�tement le cache
+ * Utile pour debugging ou nettoyage manuel
+ */
+export function clearImportCache(): void {
+	const sizeBefore = importSessionCache.size;
+	importSessionCache.clear();
+	console.log(`=� [CACHE-CLEAR] ${sizeBefore} tables vid�es`);
+}
+
+/**
+ * Statistiques du cache (debugging)
+ */
+export function getCacheStats(): Record<
+	string,
+	{ entries: number; oldestEntry: number; newestEntry: number }
+> {
+	const stats: Record<string, { entries: number; oldestEntry: number; newestEntry: number }> = {};
+
+	importSessionCache.forEach((cache, key) => {
+		let oldest = Infinity;
+		let newest = 0;
+
+		cache.forEach((entry) => {
+			if (entry.timestamp < oldest) oldest = entry.timestamp;
+			if (entry.timestamp > newest) newest = entry.timestamp;
+		});
+
+		stats[key] = {
+			entries: cache.size,
+			oldestEntry: oldest === Infinity ? 0 : oldest,
+			newestEntry: newest
+		};
+	});
+
+	return stats;
+}
+
+// ========== FONCTIONS PRIV�ES (DMMF) ==========
+
+/**
+ * D�tecte automatiquement les mappings FK via DMMF Prisma
+ *
+ * LOGIQUE :
+ * 1. Lire le mod�le DMMF de la table
+ * 2. Trouver tous les champs de type "object" (relations)
+ * 3. Extraire relationFromFields (champ FK r�el)
+ * 4. D�tecter le champ lookup dans la table cible
+ *
+ * @returns Array de mappings { fkField, targetTable, lookupField }
+ */
+async function detectForeignKeyMappings(
+	database: DatabaseName,
+	tableName: string
+): Promise<ForeignKeyMapping[]> {
+	try {
+		const databases = await getDatabases();
+		const model = databases[database].dmmf.datamodel.models.find((m) => m.name === tableName) as
+			| DMMFModel
+			| undefined;
+
+		if (!model) {
+			console.warn(`� [FK-DETECT] Table "${tableName}" introuvable dans DMMF`);
+			return [];
+		}
+
+		const mappings: ForeignKeyMapping[] = [];
+
+		for (const field of model.fields) {
+			// Chercher les relations (@relation)
+			if (field.kind === 'object' && field.relationName) {
+				// Extraire le champ FK r�el
+				const relationFromFields = field.relationFromFields || [];
+				const actualFkField = relationFromFields[0]; // Ex: "fk_kit"
+
+				if (!actualFkField) {
+					continue;
+				}
+
+				const targetTable = field.type; // Ex: "kit"
+
+				// D�tecter le champ lookup dans la table cible
+				const lookupField = await detectUniqueField(database, targetTable);
+
+				if (lookupField) {
+					mappings.push({
+						fkField: actualFkField,
+						targetTable,
+						lookupField
+					});
+
+					console.log(
+						`= [FK-DETECT] ${tableName}.${actualFkField} � ${targetTable}.${lookupField}`
+					);
+				}
+			}
+		}
+
+		return mappings;
+	} catch (error) {
+		console.error(`L [FK-DETECT] ${tableName} erreur:`, error);
+		return [];
+	}
+}
+
+/**
+ * D�tecte le champ unique d'une table via DMMF
+ *
+ * PRIORIT� :
+ * 1. Champ avec @unique
+ * 2. Champ @id non auto-increment
+ * 3. Pattern *_code ou *_label
+ * 4. Fallback : premier champ string
+ *
+ * @returns Nom du champ unique ou null
+ */
+async function detectUniqueField(
+	database: DatabaseName,
+	tableName: string
+): Promise<string | null> {
+	try {
+		const databases = await getDatabases();
+		const model = databases[database].dmmf.datamodel.models.find((m) => m.name === tableName) as
+			| DMMFModel
+			| undefined;
+
+		if (!model) return null;
+
+		// 1. Chercher @unique
+		const uniqueField = model.fields.find((f) => f.isUnique === true);
+		if (uniqueField) return uniqueField.name;
+
+		// 2. Chercher @id non auto-increment
+		const idField = model.fields.find((f) => f.isId && f.hasDefaultValue === false);
+		if (idField) return idField.name;
+
+		// 3. Patterns courants : *_code, *_label, *_name
+		const patternField = model.fields.find(
+			(f) =>
+				f.kind === 'scalar' &&
+				(f.name.endsWith('_code') || f.name.endsWith('_label') || f.name.endsWith('_name'))
+		);
+		if (patternField) return patternField.name;
+
+		// 4. Fallback : premier champ string non-FK
+		const stringField = model.fields.find(
+			(f) => f.kind === 'scalar' && f.type === 'String' && !f.name.startsWith('fk_')
+		);
+		if (stringField) return stringField.name;
+
+		console.warn(`� [UNIQUE-DETECT] ${tableName}: Aucun champ unique d�tect�`);
+		return null;
+	} catch (error) {
+		console.error(`L [UNIQUE-DETECT] ${tableName} erreur:`, error);
+		return null;
+	}
+}
+
+/**
+ * D�tecte le champ ID d'une table via DMMF
+ *
+ * @returns Nom du champ ID ou null
+ */
+async function detectIdField(database: DatabaseName, tableName: string): Promise<string | null> {
+	try {
+		const databases = await getDatabases();
+		const model = databases[database].dmmf.datamodel.models.find((m) => m.name === tableName) as
+			| DMMFModel
+			| undefined;
+
+		if (!model) return null;
+
+		// Chercher @id
+		const idField = model.fields.find((f) => f.isId === true);
+		if (idField) return idField.name;
+
+		// Fallback : pattern *_id en premier
+		const patternIdField = model.fields.find((f) => f.name.endsWith('_id'));
+		if (patternIdField) return patternIdField.name;
+
+		console.warn(`� [ID-DETECT] ${tableName}: Aucun champ ID d�tect�`);
+		return null;
+	} catch (error) {
+		console.error(`L [ID-DETECT] ${tableName} erreur:`, error);
+		return null;
+	}
 }

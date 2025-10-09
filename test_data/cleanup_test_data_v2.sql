@@ -170,29 +170,3 @@ SELECT
   'Nettoyage terminé' AS status,
   'Toutes les données avec suffixe -Test ont été supprimées' AS details,
   'Aucune donnée réelle ne peut être affectée' AS securite;
-
--- ========================================
--- Avantages de cette approche
--- ========================================
---
--- ✅ SÉCURITÉ MAXIMALE:
---    - IMPOSSIBLE de supprimer des données réelles
---    - Pattern LIKE '%-Test' très spécifique
---    - Pas de dépendance aux timestamps
---
--- ✅ VISIBILITÉ:
---    - Données de test identifiables immédiatement
---    - Facile à filtrer dans requêtes
---    - Pas de confusion possible
---
--- ✅ MAINTENABILITÉ:
---    - Script simple et lisible
---    - Pas de logique temporelle complexe
---    - Fonctionne quelle que soit la structure des tables
---
--- ✅ TRAÇABILITÉ:
---    - Statistiques avant/après
---    - RETURNING clauses pour audit
---    - Vérification automatique de la vue
---
--- ========================================
