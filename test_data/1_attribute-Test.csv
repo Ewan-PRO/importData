@@ -1,4 +1,3 @@
-atr_nature,atr_label,atr_code,atr_symbol_intl,atr_description
-CARACTERISTIQUE,Puissance-Test,PWR-Test,kW,Puissance nominale en kilowatts (TEST)
-CARACTERISTIQUE,Debit-Test,FLOW-Test,m3/h,Debit volumique (TEST)
-CARACTERISTIQUE,Pression-Test,PRESS-Test,bar,Pression maximale (TEST)
+CARACTERISTIQUE,,Puissance-Test,PWR-Test,kW,Puissance nominale en kilowatts (TEST),,,,,
+CARACTERISTIQUE,,Débit-Test,FLOW-Test,m³/h,Débit volumique (TEST),,,,,
+CARACTERISTIQUE,,Pression-Test,PRESS-Test,bar,Pression maximale (TEST),,,,,

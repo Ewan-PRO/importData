@@ -11,7 +11,7 @@
  * ✅ Exécutable automatiquement : node scripts/import/import-test-data.mjs
  * ✅ Récupération automatique des IDs générés (pas besoin de les deviner)
  * ✅ Scriptable et intégrable dans CI/CD
- * ✅ Gestion d'erreurs intégrée
+ * ✅ Gestion d'erreurs intégrée,
  * ✅ Logs détaillés de ce qui se passe
  * ✅ Données séparées dans fichier JSON (facile à modifier)
  *
@@ -76,7 +76,7 @@ async function importTestData(dataFilePath = './data/test-data.json') {
 		console.log('📊 Étape 1/7 : Insertion des attributs...');
 		const insertedAttributes = [];
 
-		for (const attr of TEST_DATA.attributes) {
+		for (const attr of TEST_DATA.attribute) {
 			const inserted = await prisma.attribute.upsert({
 				where: {
 					// Clé unique composite (atr_nature, atr_value)
@@ -98,14 +98,16 @@ async function importTestData(dataFilePath = './data/test-data.json') {
 			});
 
 			insertedAttributes.push(inserted);
-			console.log(`   ✅ Attribut créé: ${inserted.atr_id} - ${inserted.atr_code} (${inserted.atr_label})`);
+			console.log(
+				`   ✅ Attribut créé: ${inserted.atr_id} - ${inserted.atr_code} (${inserted.atr_label})`
+			);
 		}
 
 		// ========== 2. INSÉRER LES KITS ==========
 		console.log('\n📊 Étape 2/7 : Insertion des kits...');
 		const insertedKits = [];
 
-		for (const kitData of TEST_DATA.kits) {
+		for (const kitData of TEST_DATA.kit) {
 			// Vérifier si le kit existe déjà
 			const existing = await prisma.kit.findFirst({
 				where: { kit_label: kitData.kit_label }
@@ -129,7 +131,7 @@ async function importTestData(dataFilePath = './data/test-data.json') {
 		console.log('\n📊 Étape 3/7 : Insertion des catégories...');
 		const insertedCategories = [];
 
-		for (const catData of TEST_DATA.categories) {
+		for (const catData of TEST_DATA.category) {
 			const inserted = await prisma.category.upsert({
 				where: {
 					// Clé unique composite (fk_parent, cat_code)
@@ -146,14 +148,16 @@ async function importTestData(dataFilePath = './data/test-data.json') {
 			});
 
 			insertedCategories.push(inserted);
-			console.log(`   ✅ Catégorie créée: ${inserted.cat_id} - ${inserted.cat_code} (${inserted.cat_label})`);
+			console.log(
+				`   ✅ Catégorie créée: ${inserted.cat_id} - ${inserted.cat_code} (${inserted.cat_label})`
+			);
 		}
 
 		// ========== 4. LIER CATÉGORIES ET ATTRIBUTS ==========
 		console.log('\n📊 Étape 4/7 : Liaison catégories ↔ attributs...');
 
 		let linksCreated = 0;
-		for (const link of TEST_DATA.categoryAttributeLinks) {
+		for (const link of TEST_DATA.category_attribute) {
 			const category = insertedCategories.find((c) => c.cat_code === link.cat_code);
 			const attribute = insertedAttributes.find((a) => a.atr_code === link.atr_code);
 
@@ -188,7 +192,7 @@ async function importTestData(dataFilePath = './data/test-data.json') {
 		console.log('\n📊 Étape 5/7 : Insertion des produits...');
 
 		const insertedProducts = [];
-		for (const prodData of TEST_DATA.products) {
+		for (const prodData of TEST_DATA.product) {
 			const kit = insertedKits.find((k) => k.kit_label === prodData.kit_label);
 
 			if (!kit) {
@@ -223,7 +227,7 @@ async function importTestData(dataFilePath = './data/test-data.json') {
 		console.log('\n📊 Étape 6/7 : Liaison produits ↔ catégories...');
 
 		let productLinksCreated = 0;
-		for (const link of TEST_DATA.productCategoryLinks) {
+		for (const link of TEST_DATA.product_category) {
 			const product = insertedProducts.find((p) => p.pro_code === link.pro_code);
 
 			if (!product) {
@@ -307,7 +311,7 @@ async function importTestData(dataFilePath = './data/test-data.json') {
 			duration
 		};
 	} catch (error) {
-		console.error('\n❌ ERREUR LORS DE L\'IMPORT:', error);
+		console.error("\n❌ ERREUR LORS DE L'IMPORT:", error);
 		throw error;
 	} finally {
 		await prisma.$disconnect();

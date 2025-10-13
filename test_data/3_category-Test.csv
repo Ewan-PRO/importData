@@ -1,3 +1,2 @@
-cat_code,cat_label,fk_parent,cat_wp_name
-CAT001-Test,Pompes Industrielles-Test,,pompes-industrielles-test
-CAT002-Test,Pompes Electriques-Test,,pompes-electriques-test
+,CAT001-Test,Pompes Industrielles-Test,,,pompes-industrielles-test
+,CAT002-Test,Pompes Electriques-Test,,,pompes-electriques-test

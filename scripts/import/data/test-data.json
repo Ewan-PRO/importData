@@ -1,5 +1,5 @@
 {
-  "attributes": [
+  "attribute": [
     {
       "atr_nature": "CARACTERISTIQUE",
       "atr_label": "Puissance-Test",
@@ -22,12 +22,12 @@
       "atr_description": "Pression maximale (TEST)"
     }
   ],
-  "kits": [
+  "kit": [
     { "kit_label": "Pompe Centrifuge Électrique-Test" },
     { "kit_label": "Pompe Immergée-Test" },
     { "kit_label": "Pompe Manuelle-Test" }
   ],
-  "categories": [
+  "category": [
     {
       "cat_code": "CAT001-Test",
       "cat_label": "Pompes Industrielles-Test",
@@ -41,7 +41,7 @@
       "cat_wp_name": "pompes-electriques-test"
     }
   ],
-  "categoryAttributeLinks": [
+  "category_attribute": [
     {
       "cat_code": "CAT001-Test",
       "atr_code": "PWR-Test",
@@ -68,7 +68,7 @@
       "cat_atr_required": false
     }
   ],
-  "products": [
+  "product": [
     {
       "pro_code": "PUMP001-Test",
       "kit_label": "Pompe Centrifuge Électrique-Test",
@@ -85,7 +85,7 @@
       "pro_cenov_id": "CEN003-Test"
     }
   ],
-  "productCategoryLinks": [
+  "product_category": [
     {
       "pro_code": "PUMP001-Test",
       "cat_codes": ["CAT001-Test"]
