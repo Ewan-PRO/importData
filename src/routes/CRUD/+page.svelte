@@ -61,8 +61,8 @@
 		label: column.header
 	}));
 
-	// SuperForm pour la création
-	const { form, enhance: formEnhance } = superForm(data.form, {
+	// SuperForm pour la création (callback onResult uniquement)
+	superForm(data.form, {
 		onResult: ({ result }) => {
 			if (result.type === 'success') {
 				addFormOpen = false;
@@ -80,18 +80,6 @@
 
 	// Type pour les champs de formulaire
 	type FormFieldType = 'text' | 'number' | 'select' | 'textarea' | 'email';
-
-	// Interface pour les champs de formulaire
-	interface FormField {
-		key: string;
-		label: string;
-		type: FormFieldType;
-		required?: boolean;
-		placeholder?: string;
-		options?: Array<{ value: string; label: string }>;
-		value?: any;
-		allowCustom?: boolean;
-	}
 
 	// Génération dynamique des champs de formulaire depuis les métadonnées du serveur
 	$: formFields =

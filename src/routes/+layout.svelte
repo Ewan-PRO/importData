@@ -77,7 +77,7 @@
 			{#if isAuthenticated(user)}
 				<nav class="hidden border-t border-gray-200 md:block">
 					<div class="flex space-x-8 py-3">
-						{#each navItems as item}
+						{#each navItems as item (item.href)}
 							<a
 								href={item.href}
 								class="text-sm font-medium transition-colors hover:text-[#e31206] {$page.url
@@ -103,7 +103,7 @@
 
 					<!-- Navigation links -->
 					<div class="py-2">
-						{#each navItems as item}
+						{#each navItems as item (item.href)}
 							<a
 								href={item.href}
 								class="block px-4 py-3 text-sm font-medium transition-colors hover:bg-blue-200 {$page

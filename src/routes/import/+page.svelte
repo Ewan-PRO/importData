@@ -171,7 +171,8 @@
 	let filteredCount = 0;
 
 	// Données provenant du serveur via DMMF (remplace le hardcodage)
-	$: availableTables = data.availableTables || [];
+	// availableTables doit être une variable d'état normale car elle est bindée au composant TableSelector
+	let availableTables = data.availableTables || [];
 	$: tableFields = data.tableFields || {};
 	$: tableRequiredFields = data.tableRequiredFields || {};
 
@@ -337,7 +338,7 @@
 		const secondRow = data[1];
 
 		// Vérifier si la première ligne contient des chaînes qui ressemblent à des noms de champs
-		const hasStringHeaders = firstRow.every((cell, index) => {
+		const hasStringHeaders = firstRow.every((cell) => {
 			if (typeof cell !== 'string') return false;
 
 			// Vérifier si c'est un nom de champ connu dans toutes les tables
@@ -454,11 +455,8 @@
 	// Variable réactive pour les champs requis (union de tous les champs requis des tables sélectionnées)
 	$: requiredFields = getRequiredFieldsForTables(selectedTables);
 
-	// Variable réactive pour l'état du bouton de validation (dépend explicitement de mappedFields)
+	// Variable réactive pour l'état du bouton de validation (dépend de mappedFields via isFieldMapped)
 	$: buttonDisabled = (() => {
-		// Forcer la dépendance à mappedFields
-		const _ = mappedFields;
-
 		const noTablesSelected = selectedTables.length === 0;
 		const someRequiredFieldsNotMapped = requiredFields.some((field) => !isFieldMapped(field));
 		const isSubmitting = $submitting;
@@ -725,7 +723,7 @@
 							<Table.Body>
 								{#each previewData as row, rowIndex (rowIndex)}
 									<Table.Row variant="striped">
-										{#each headers as _, i (i)}
+										{#each [...Array(headers.length).keys()] as i (i)}
 											<Table.Cell variant="striped" {rowIndex}>
 												{row[i] !== undefined ? row[i] : ''}
 											</Table.Cell>

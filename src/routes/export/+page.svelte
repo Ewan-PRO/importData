@@ -81,13 +81,6 @@
 	} = superForm(data.form, {
 		dataType: 'json',
 		onUpdated: ({ form }) => {
-			// ✅ Évaluation réactive explicite sans console.log
-			const formData = form?.data;
-			if (formData && typeof formData === 'object') {
-				// Cette évaluation maintient la réactivité
-				const hasFormData = Object.keys(formData).length > 0;
-			}
-
 			if (form && form.data) {
 				if ('result' in form.data) {
 					const result = form.data.result as ExportResult;

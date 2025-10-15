@@ -418,11 +418,13 @@ const data: TableData[] = [];
 **Priorité de choix :** ID unique > Propriété unique > Valeur primitive > Index
 
 **Éviter ce problème à l'avenir :**
+
 - Toujours ajouter la clé dès la création de la boucle : `{#each items as item (item.id)}`
 - Vérifier avec `/quality-check` avant de commit
 - Si hésitation, utiliser l'index : `{#each items as item, i (i)}`
 
 **Correction en masse :**
+
 ```bash
 # Corriger ligne spécifique avec sed
 sed -i '113s/{#each columns as column}/{#each columns as column (column.key)}/' src/file.svelte

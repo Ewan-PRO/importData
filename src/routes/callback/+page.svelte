@@ -4,7 +4,6 @@
 	import { logtoClient } from '$lib/auth';
 
 	let error = '';
-	let loading = true;
 
 	onMount(async () => {
 		try {
@@ -13,7 +12,6 @@
 
 			goto('/');
 		} catch (err) {
-			loading = false;
 			error = err instanceof Error ? err.message : 'Erreur inconnue';
 		}
 	});
