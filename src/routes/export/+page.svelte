@@ -14,7 +14,6 @@
 		FileText,
 		Eye,
 		CheckCircle,
-		Funnel,
 		ChartColumn,
 		RefreshCcw,
 		CircleArrowRight,

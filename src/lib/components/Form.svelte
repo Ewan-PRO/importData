@@ -266,7 +266,6 @@
 										: modifiedFields[field.key]
 											? 'bg-orange-100'
 											: ''}
-									hasValue={!!(formData[field.key] && formData[field.key] !== '')}
 								>
 									{formData[field.key]
 										? field.options?.find((opt) => opt.value === formData[field.key])?.label ||

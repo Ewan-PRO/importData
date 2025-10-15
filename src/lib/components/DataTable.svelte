@@ -136,7 +136,7 @@
 								/>
 							</td>
 						{/if}
-						{#each columns as column}
+						{#each columns as column (column.key)}
 							<td
 								class="w-14 border-x border-black px-4 py-3 {i % 2 === 0
 									? 'bg-white'
@@ -176,7 +176,7 @@
 
 	<!-- Affichage mobile sous forme de cartes -->
 	<div class="sm:hidden">
-		{#each data as item}
+		{#each data as item (item.id || item.atr_0_label || JSON.stringify(item))}
 			<div class="mb-4 rounded-lg border border-gray-200 bg-white p-4">
 				<div class="mb-2 flex justify-between">
 					{#if selectable}

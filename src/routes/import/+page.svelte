@@ -704,9 +704,6 @@
 											>
 												<Select.SelectTrigger
 													class="min-w-[12rem] text-sm"
-													hasValue={!!(
-														mappedFields[i.toString()] && mappedFields[i.toString()] !== ''
-													)}
 												>
 													{mappedFields[i.toString()] || 'Ne pas importer'}
 												</Select.SelectTrigger>
