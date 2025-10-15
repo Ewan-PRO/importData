@@ -27,6 +27,14 @@ pnpm format    # Formatage avec Prettier
 pnpm check     # Type checking avec Svelte
 ```
 
+**Vérification qualité complète :**
+
+```bash
+/quality-check  # Commande slash : Lint + Format + Check en une seule fois
+```
+
+La commande `/quality-check` exécute les 3 vérifications (`lint`, `format`, `check`) et génère un rapport structuré des erreurs.
+
 **Tests :**
 
 ```bash
@@ -388,6 +396,38 @@ const data: TableData[] = [];
 
 **Bonne Pratique :** Toujours lire les classes CSS du composant avant d'ajouter style manuel. La plupart des composants UI gèrent les icônes nativement.
 
+## Bonnes Pratiques Svelte - Clés dans les Boucles {#each}
+
+### Problème : Erreur `svelte/require-each-key`
+
+**⚠️ Symptôme :** ESLint signale "Each block should have a key" - cause bugs d'affichage et problèmes de performance.
+
+**✅ Solution :** Toujours ajouter une clé unique
+
+```svelte
+<!-- ✅ CORRECT -->
+{#each items as item (item.id)}           <!-- ID unique (meilleur) -->
+{#each columns as column (column.key)}    <!-- Propriété unique -->
+{#each databases as db (db)}              <!-- Valeur primitive unique -->
+{#each rows as row, i (i)}                <!-- Index (dernier recours) -->
+
+<!-- ❌ MAUVAIS -->
+{#each items as item}                     <!-- Sans clé -->
+```
+
+**Priorité de choix :** ID unique > Propriété unique > Valeur primitive > Index
+
+**Éviter ce problème à l'avenir :**
+- Toujours ajouter la clé dès la création de la boucle : `{#each items as item (item.id)}`
+- Vérifier avec `/quality-check` avant de commit
+- Si hésitation, utiliser l'index : `{#each items as item, i (i)}`
+
+**Correction en masse :**
+```bash
+# Corriger ligne spécifique avec sed
+sed -i '113s/{#each columns as column}/{#each columns as column (column.key)}/' src/file.svelte
+```
+
 ## Notifications Toast (Sonner)
 
 Ce projet utilise **svelte-sonner** pour les notifications toast.
@@ -456,15 +496,21 @@ Cela se produit typiquement quand fichiers sont automatiquement formatés par li
    /c/Users/.../file.js
    ```
 
-2. **Git restore (si chemins absolus ne fonctionnent pas) :** Si conflits persistent, restaurer le fichier à son état original :
+2. **Formater avec Prettier (si conflits persistent) :** Les erreurs viennent souvent du formatage automatique Prettier/TypeScript. Relancer le formatage :
 
    ```bash
-   git restore path/to/file.svelte
+   pnpm format
    ```
 
-3. **Relire avant édition :** Toujours utiliser outil Read pour obtenir dernier état fichier avant édition
+3. **Relire avant édition :** Toujours utiliser outil Read pour obtenir dernier état fichier après formatage
 
 4. **Comportement attendu :** Les linters peuvent formater automatiquement, c'est intentionnel et doit être préservé
+
+5. **Git restore (dernière option seulement) :** Si tous les autres essais échouent, restaurer le fichier à son état original :
+
+   ```bash
+   git restore src/path/to/file.svelte
+   ```
 
 **Scénarios courants :**
 
@@ -474,9 +520,10 @@ Cela se produit typiquement quand fichiers sont automatiquement formatés par li
 
 **Bonnes pratiques :**
 
-- **TOUJOURS essayer chemins Windows absolus d'abord** avant d'utiliser git restore
+- **TOUJOURS essayer chemins Windows absolus d'abord** avant toute autre solution
+- **Utiliser `pnpm format` ensuite** pour synchroniser le formatage
 - Ne pas annuler changements linter sauf demande explicite
-- Utiliser git restore seulement quand chemins absolus et conflits bloquent progression
+- **Git restore est la DERNIÈRE option** - à utiliser seulement si tout le reste échoue
 - Relire fichiers après formatage pour obtenir état actuel
 
 **Appliquer chemins Windows absolus à tous les outils :**
