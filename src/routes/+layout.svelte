@@ -7,9 +7,10 @@
 	import { Toaster } from 'svelte-sonner';
 	import { Menu, X } from 'lucide-svelte';
 	import { resolve } from '$app/paths';
+	import type { UserInfoResponse } from '@logto/node';
 
 	interface PageData {
-		user?: any;
+		user?: UserInfoResponse | null;
 	}
 
 	export let data: PageData;
@@ -22,8 +23,8 @@
 		loaded = true;
 	});
 
-	// Navigation items
-	const navItems = [
+	// Navigation items avec types stricts pour resolve
+	const navItems: Array<{ href: '/' | '/CRUD' | '/import' | '/export'; label: string }> = [
 		{ href: '/', label: 'Accueil' },
 		{ href: '/CRUD', label: 'CRUD' },
 		{ href: '/import', label: 'Import' },
@@ -49,7 +50,7 @@
 				<!-- Desktop user info & auth -->
 				<div class="hidden items-center space-x-4 md:flex">
 					{#if isAuthenticated(user)}
-						<span class="text-sm text-gray-700">Bonjour, {user.name || 'Client'}</span>
+						<span class="text-sm text-gray-700">Bonjour, {user?.name || 'Client'}</span>
 					{/if}
 					<AuthButton {user} />
 				</div>
@@ -99,7 +100,7 @@
 					<!-- User info in mobile -->
 					<div class="border-b border-gray-200 px-4 py-3">
 						<p class="text-sm font-medium text-gray-900">Bonjour,</p>
-						<p class="truncate text-sm text-gray-600">{user.name || 'Client'}</p>
+						<p class="truncate text-sm text-gray-600">{user?.name || 'Client'}</p>
 					</div>
 
 					<!-- Navigation links -->

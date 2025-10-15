@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { LogOut, LogIn } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
-	export let user: any;
+	export let user: unknown;
 </script>
 
 <form method="POST" action="/auth?/{user ? 'signOut' : 'signIn'}">

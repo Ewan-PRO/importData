@@ -35,6 +35,20 @@
 		getDatabaseBadgeInfo
 	} from '$lib/components/ui-database-config';
 
+	interface FileData {
+		content: string;
+		mimeType: string;
+		fileName: string;
+	}
+
+	interface ExportFormData {
+		selectedSources: string[];
+		format: 'xlsx' | 'csv' | 'xml' | 'json';
+		includeHeaders: boolean;
+		rowLimit?: number;
+		filters: Record<string, unknown>;
+	}
+
 	// Fonctions utilitaires locales
 	function formatNumber(num: number): string {
 		return new Intl.NumberFormat('fr-FR').format(num);
@@ -84,12 +98,14 @@
 			if (form && form.data) {
 				if ('result' in form.data) {
 					const result = form.data.result as ExportResult;
-					const fileData = (form.data as any).fileData;
+					const formData = form.data as Record<string, unknown>;
+					const fileData = formData.fileData as FileData | undefined;
 					handleExportResult(result, fileData);
 				}
 				if ('preview' in form.data) {
 					previewData = form.data.preview as Record<string, unknown[]>;
-					previewConfig = (form.data as any).previewConfig as { includeHeaders: boolean } | null;
+					const formData = form.data as Record<string, unknown>;
+					previewConfig = formData.previewConfig as { includeHeaders: boolean } | null;
 					step = 3;
 				}
 			}
@@ -98,12 +114,14 @@
 			if (result.type === 'success' && result.data) {
 				if ('result' in result.data) {
 					const exportResult = result.data.result as ExportResult;
-					const fileData = (result.data as any).fileData;
+					const resultData = result.data as Record<string, unknown>;
+					const fileData = resultData.fileData as FileData | undefined;
 					handleExportResult(exportResult, fileData);
 				}
 				if ('preview' in result.data) {
 					previewData = result.data.preview as Record<string, unknown[]>;
-					previewConfig = (result.data as any).previewConfig as { includeHeaders: boolean } | null;
+					const resultData = result.data as Record<string, unknown>;
+					previewConfig = resultData.previewConfig as { includeHeaders: boolean } | null;
 					step = 3;
 				}
 			} else {
@@ -129,7 +147,7 @@
 	let selectedSchema = $state<'all' | string>('all');
 
 	// Configuration d'export sauvegardée (Svelte 5 $state)
-	let savedExportConfig = $state<any>(null);
+	let savedExportConfig = $state<ExportFormData | null>(null);
 
 	// Valeur dérivée pour détecter quand sauvegarder la config
 	let shouldSaveConfig = $derived(
@@ -139,7 +157,7 @@
 	// Effet pour sauvegarder la config quand nécessaire
 	$effect(() => {
 		if (shouldSaveConfig) {
-			savedExportConfig = { ...$form };
+			savedExportConfig = { ...$form } as ExportFormData;
 			// Log informatif (pas pour la réactivité)
 			console.log(
 				'💾 [SYNC] Configuration sauvegardée avec',
@@ -161,7 +179,7 @@
 
 	// Effet pour synchroniser quand nécessaire
 	$effect(() => {
-		if (needsSync()) {
+		if (needsSync() && savedExportConfig) {
 			const currentSources = $form.selectedSources?.length || 0;
 			const savedSources = savedExportConfig.selectedSources?.length || 0;
 
@@ -190,7 +208,7 @@
 	}));
 
 	// Gestion des résultats d'export
-	function handleExportResult(result: ExportResult, fileData?: any) {
+	function handleExportResult(result: ExportResult, fileData?: FileData) {
 		exportResult = result;
 		if (result.success) {
 			if (fileData) {
@@ -207,7 +225,7 @@
 	}
 
 	// Téléchargement direct depuis base64
-	function triggerDirectDownload(fileData: any) {
+	function triggerDirectDownload(fileData: FileData) {
 		try {
 			if (!fileData.content) {
 				throw new Error('Aucun contenu de fichier fourni');

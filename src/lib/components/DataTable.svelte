@@ -4,14 +4,22 @@
 	import { Button } from '$lib/components/ui/button';
 	import { SquarePen, Trash2, CheckSquare, Square } from 'lucide-svelte';
 
-	export let data: any[] = [];
-	export let columns: { key: string; header: string; formatter?: (value: any) => string }[] = [];
+	interface ColumnDef {
+		key: string;
+		header: string;
+		formatter?: (value: unknown) => string;
+	}
+
+	type DataItem = Record<string, unknown>;
+
+	export let data: DataItem[] = [];
+	export let columns: ColumnDef[] = [];
 	export let selectable = false;
 	export let multiSelect = false;
 	export let actions = true;
 
 	const dispatch = createEventDispatcher();
-	let selectedItems: any[] = multiSelect ? [] : [];
+	let selectedItems: DataItem[] = multiSelect ? [] : [];
 	let selectAll = false;
 
 	$: selectedCount = selectedItems.length;
@@ -27,7 +35,7 @@
 		dispatch('select', { selected: selectedItems });
 	}
 
-	function handleSelect(item: any) {
+	function handleSelect(item: DataItem) {
 		if (multiSelect) {
 			if (selectedItems.includes(item)) {
 				selectedItems = selectedItems.filter((i) => i !== item);
@@ -41,11 +49,11 @@
 		dispatch('select', { selected: selectedItems });
 	}
 
-	function handleEdit(item: any) {
+	function handleEdit(item: DataItem) {
 		dispatch('edit', { item });
 	}
 
-	function handleDelete(item: any) {
+	function handleDelete(item: DataItem) {
 		dispatch('delete', { item });
 	}
 
@@ -55,7 +63,7 @@
 		selectAll = false;
 	}
 
-	function formatValue(item: any, column: any) {
+	function formatValue(item: DataItem, column: ColumnDef) {
 		const value = item[column.key];
 		return column.formatter ? column.formatter(value) : value;
 	}

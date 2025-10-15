@@ -20,7 +20,7 @@
 			isRequired: boolean;
 			isPrimaryKey: boolean;
 		}>;
-		form: any;
+		form: any; // SuperValidated de superforms, any nécessaire pour compatibilité
 	}
 
 	export let data: ServerData;
@@ -76,7 +76,7 @@
 	let editFormOpen = false;
 	let deleteConfirmOpen = false;
 	let selectedRecord: DataRecord | null = null;
-	let formData: Record<string, any> = {};
+	let formData: Record<string, unknown> = {};
 
 	// Type pour les champs de formulaire
 	type FormFieldType = 'text' | 'number' | 'select' | 'textarea' | 'email';
@@ -517,7 +517,8 @@
 					selectedRecord = null;
 					await invalidateAll();
 				} else if (result.type === 'failure') {
-					const errorMsg = (result.data as any)?.error || 'Une erreur est survenue';
+					const errorData = result.data as Record<string, unknown>;
+					const errorMsg = (errorData?.error as string) || 'Une erreur est survenue';
 					Alert.alertActions.error(errorMsg);
 				}
 
@@ -544,7 +545,8 @@
 					selectedRecord = null;
 					await invalidateAll();
 				} else if (result.type === 'failure') {
-					const errorMsg = (result.data as any)?.error || 'Erreur lors de la suppression';
+					const errorData = result.data as Record<string, unknown>;
+					const errorMsg = (errorData?.error as string) || 'Erreur lors de la suppression';
 					Alert.alertActions.error(errorMsg);
 				}
 

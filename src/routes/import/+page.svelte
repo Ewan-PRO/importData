@@ -55,7 +55,7 @@
 		user: UserInfoResponse | undefined;
 		form: SuperValidated<
 			{ data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[] },
-			any,
+			unknown,
 			{ data: unknown[][]; mappedFields: Record<string, string>; selectedTables: string[] }
 		>;
 		availableTables: {
@@ -66,7 +66,7 @@
 			tableType?: string;
 			database?: string;
 			rowCount?: number;
-			columns?: any[];
+			columns?: Record<string, unknown>[];
 		}[];
 		tableFields: Record<string, string[]>;
 		tableRequiredFields: Record<string, string[]>;
@@ -296,12 +296,12 @@
 						);
 					}
 					headers = rawData[0] as string[];
-					previewData = rawData.slice(1, Math.min(rawData.length, 6)) as any[];
+					previewData = rawData.slice(1, Math.min(rawData.length, 6));
 				} else {
 					// Mode sans en-têtes - générer des en-têtes génériques
-					const firstRow = rawData[0] as any[];
+					const firstRow = rawData[0];
 					headers = firstRow.map((_, index) => `Colonne ${index + 1}`);
-					previewData = rawData.slice(0, Math.min(rawData.length, 5)) as any[];
+					previewData = rawData.slice(0, Math.min(rawData.length, 5));
 				}
 
 				// Mise à jour du formulaire SuperForms (le mapping se fait automatiquement via variable réactive)
@@ -310,7 +310,7 @@
 					mappedFields,
 					selectedTables
 				};
-				$form = formData as any;
+				$form = formData;
 
 				step = 2;
 			} catch (err) {
@@ -331,7 +331,7 @@
 	}
 
 	// Nouvelle fonction pour détecter automatiquement les en-têtes
-	function detectHeaders(data: any[][]): boolean {
+	function detectHeaders(data: unknown[][]): boolean {
 		if (data.length < 2) return false;
 
 		const firstRow = data[0];
@@ -426,7 +426,7 @@
 			...$form,
 			selectedTables,
 			mappedFields
-		} as any;
+		};
 	}
 
 	// Fonction pour calculer les champs requis basée sur les données DMMF du serveur
@@ -496,7 +496,7 @@
 			data: hasHeaders ? rawData.slice(1) : rawData,
 			mappedFields,
 			selectedTables
-		} as any;
+		};
 	}
 </script>
 
@@ -846,7 +846,7 @@
 								if (hasError) return null;
 
 								// Créer un objet avec les champs mappés
-								const mappedRow: Record<string, any> = {};
+								const mappedRow: Record<string, unknown> = {};
 								Object.entries(mappedFields).forEach(([colIndex, fieldName]) => {
 									if (fieldName) {
 										const rawValue = row[parseInt(colIndex)];

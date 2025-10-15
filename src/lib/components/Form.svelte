@@ -11,18 +11,20 @@
 	import { toast } from 'svelte-sonner';
 	import { Badge } from '$lib/components/ui/badge';
 
-	export let fields: {
+	interface FieldDef {
 		key: string;
 		label: string;
 		type: 'text' | 'number' | 'email' | 'textarea' | 'select';
 		placeholder?: string;
 		required?: boolean;
 		options?: Array<{ value: string; label: string }>;
-		value?: any;
+		value?: unknown;
 		disabled?: boolean;
 		allowCustom?: boolean;
-	}[] = [];
-	export let data: any = {};
+	}
+
+	export let fields: FieldDef[] = [];
+	export let data: Record<string, unknown> = {};
 	export let title = 'Formulaire';
 	export let submitLabel = 'Enregistrer';
 	export let cancelLabel = 'Annuler';
@@ -31,12 +33,12 @@
 	export let isDelete = false; // Nouvelle propriété pour les modals de suppression
 
 	const dispatch = createEventDispatcher();
-	let formData: Record<string, any> = { ...data };
+	let formData: Record<string, unknown> = { ...data };
 	let errors: Record<string, string> = {};
 	let isInitialized = false;
 	let searchTerms: Record<string, string> = {}; // Pour stocker les termes de recherche par champ
 	let deleteConfirmationText = ''; // Pour la confirmation de suppression
-	let originalData: Record<string, any> = {}; // Pour stocker les valeurs initiales
+	let originalData: Record<string, unknown> = {}; // Pour stocker les valeurs initiales
 	let modifiedFields: Record<string, boolean> = {}; // Pour tracker les champs modifiés
 
 	// Variable réactive pour l'état du bouton supprimer
@@ -60,7 +62,7 @@
 	}
 
 	// Fonction pour filtrer les options basée sur le terme de recherche
-	function getFilteredOptions(field: any): Array<{ value: string; label: string }> {
+	function getFilteredOptions(field: FieldDef): Array<{ value: string; label: string }> {
 		const searchTerm = searchTerms[field.key]?.toLowerCase() || '';
 		if (!searchTerm || !field.options) {
 			return field.options || [];
@@ -73,7 +75,7 @@
 		);
 	}
 
-	function updateFormData(key: string, value: any) {
+	function updateFormData(key: string, value: unknown) {
 		formData = { ...formData, [key]: value };
 
 		// Vérifier si la valeur a été modifiée par rapport à l'original
@@ -242,7 +244,11 @@
 							id={field.key}
 							placeholder={field.placeholder || ''}
 							required={field.required}
-							bind:value={formData[field.key]}
+							value={String(formData[field.key] || '')}
+							oninput={(e) => {
+								const target = e.target as HTMLTextAreaElement;
+								updateFormData(field.key, target.value);
+							}}
 							class={errors[field.key]
 								? 'border-red-500'
 								: modifiedFields[field.key]
@@ -253,7 +259,7 @@
 						<div class="relative">
 							<Select.Select
 								type="single"
-								value={formData[field.key] || ''}
+								value={String(formData[field.key] || '')}
 								onValueChange={(value: string) => {
 									if (value) {
 										updateFormData(field.key, value);

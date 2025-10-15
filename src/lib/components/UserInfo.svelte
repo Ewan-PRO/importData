@@ -1,5 +1,11 @@
 <script lang="ts">
-	export let user: any;
+	interface User {
+		name?: string;
+		email?: string;
+		roles?: string[];
+	}
+
+	export let user: User | null;
 </script>
 
 {#if user}

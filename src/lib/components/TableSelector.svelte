@@ -49,7 +49,7 @@
 			tableType?: string;
 			database?: string;
 			rowCount?: number;
-			columns?: any[];
+			columns?: Array<Record<string, unknown>>;
 		}[];
 		selectedTables: string[];
 		databases: DatabaseName[];
@@ -165,10 +165,14 @@
 		return new Intl.NumberFormat('fr-FR').format(num);
 	}
 
-	function renderBadges(table: any, dbInfo: any, schemaConfig: any) {
+	function renderBadges(
+		table: { tableType?: string; database?: string },
+		dbInfo: { variant: string },
+		schemaConfig: { variant: string; icon: any; label: string } | undefined
+	) {
 		return {
 			tableBadge: {
-				variant: getBadgeVariant(table) as 'vert' | 'noir',
+				variant: getBadgeVariant(table.tableType || 'table') as 'vert' | 'noir',
 				icon: table.tableType === 'view' ? Eye : TableIcon,
 				label: table.tableType === 'view' ? 'Vue' : 'Table'
 			},

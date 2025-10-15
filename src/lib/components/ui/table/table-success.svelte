@@ -19,7 +19,7 @@
 		...restProps
 	}: WithElementRef<HTMLTableAttributes> & {
 		headers?: Array<{ key: string; label: string; class?: string }>;
-		data?: Array<Record<string, any>>;
+		data?: Array<Record<string, unknown>>;
 		title?: string;
 	} = $props();
 </script>

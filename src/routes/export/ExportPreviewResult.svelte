@@ -25,6 +25,15 @@
 		getBadgeVariant,
 		parseTableName
 	} from '$lib/components/ui-database-config';
+	import type { Writable } from 'svelte/store';
+
+	interface ExportFormData {
+		selectedSources: string[];
+		format: string;
+		includeHeaders: boolean;
+		rowLimit?: number;
+		filters: Record<string, unknown>;
+	}
 
 	// Props avec $props() - Mode Runes Svelte 5
 	let {
@@ -47,9 +56,9 @@
 		previewData: Record<string, unknown[]>;
 		previewConfig: { includeHeaders: boolean } | null;
 		exportResult: ExportResult | null;
-		formStore: any; // Le store SuperForm, pas la valeur
+		formStore: Writable<ExportFormData>;
 		submitting: boolean;
-		superEnhance: any;
+		superEnhance: any; // Type complexe de SuperForm, any nécessaire pour use:superEnhance
 		exportFormats: Array<{
 			value: string;
 			label: string;
