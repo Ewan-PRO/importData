@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { logtoClient } from '$lib/auth';
 
 	let error = '';
@@ -10,7 +11,7 @@
 			// Passer une URL de redirection comme argument
 			await logtoClient.handleSignInCallback(window.location.href);
 
-			goto('/');
+			goto(resolve('/'));
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Erreur inconnue';
 		}
@@ -23,7 +24,7 @@
 			<p class="font-bold">Erreur lors de l'authentification</p>
 			<p class="text-sm">{error}</p>
 			<p class="mt-4">
-				<a href="/" class="text-blue-600 underline">Retourner à l'accueil</a> et réessayer.
+				<a href={resolve('/')} class="text-blue-600 underline">Retourner à l'accueil</a> et réessayer.
 			</p>
 		</div>
 	</div>

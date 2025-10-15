@@ -6,6 +6,7 @@
 	import { page } from '$app/stores';
 	import { Toaster } from 'svelte-sonner';
 	import { Menu, X } from 'lucide-svelte';
+	import { resolve } from '$app/paths';
 
 	interface PageData {
 		user?: any;
@@ -43,7 +44,7 @@
 		<div class="container mx-auto px-4">
 			<!-- Desktop & Mobile Top bar -->
 			<div class="flex items-center justify-between py-4">
-				<a href="/" class="text-xl font-bold text-[#e31206]">CenovDistribution</a>
+				<a href={resolve('/')} class="text-xl font-bold text-[#e31206]">CenovDistribution</a>
 
 				<!-- Desktop user info & auth -->
 				<div class="hidden items-center space-x-4 md:flex">
@@ -79,7 +80,7 @@
 					<div class="flex space-x-8 py-3">
 						{#each navItems as item (item.href)}
 							<a
-								href={item.href}
+								href={resolve(item.href)}
 								class="text-sm font-medium transition-colors hover:text-[#e31206] {$page.url
 									.pathname === item.href
 									? 'border-b-2 border-[#e31206] pb-3 text-[#e31206]'
@@ -105,7 +106,7 @@
 					<div class="py-2">
 						{#each navItems as item (item.href)}
 							<a
-								href={item.href}
+								href={resolve(item.href)}
 								class="block px-4 py-3 text-sm font-medium transition-colors hover:bg-blue-200 {$page
 									.url.pathname === item.href
 									? 'border-r-4 border-[#e31206] bg-red-50 text-[#e31206]'

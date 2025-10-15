@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 
 	onMount(() => {
 		console.log("Page d'erreur chargée");
@@ -40,7 +41,7 @@
 
 		<div class="flex justify-center">
 			<a
-				href="/"
+				href={resolve('/')}
 				class="mr-2 rounded bg-gray-200 px-4 py-2 transition-colors duration-300 hover:bg-gray-300"
 			>
 				Retour à l'accueil
