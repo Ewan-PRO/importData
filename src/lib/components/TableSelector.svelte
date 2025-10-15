@@ -5,7 +5,6 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
 	import { toast } from 'svelte-sonner';
-	import { type ComponentType } from 'svelte';
 	import {
 		Database,
 		Package,
@@ -21,7 +20,7 @@
 		CircleCheck,
 		CircleX,
 		Download,
-		type Icon
+		type Icon as IconType
 	} from 'lucide-svelte';
 	import {
 		SCHEMA_CONFIG,
@@ -170,7 +169,7 @@
 	function renderBadges(
 		table: { tableType?: string; database?: string },
 		dbInfo: { variant: string },
-		schemaConfig: { variant: string; icon: ComponentType<Icon>; label: string } | undefined
+		schemaConfig: { variant: string; icon: typeof IconType; label: string } | undefined
 	) {
 		return {
 			tableBadge: {

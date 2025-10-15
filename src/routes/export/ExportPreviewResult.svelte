@@ -26,6 +26,7 @@
 		parseTableName
 	} from '$lib/components/ui-database-config';
 	import type { Writable } from 'svelte/store';
+	import type { Action } from 'svelte/action';
 
 	interface ExportFormData {
 		selectedSources: string[];
@@ -58,7 +59,7 @@
 		exportResult: ExportResult | null;
 		formStore: Writable<ExportFormData>;
 		submitting: boolean;
-		superEnhance: any; // Type complexe de SuperForm, any nécessaire pour use:superEnhance
+		superEnhance: Action<HTMLFormElement>;
 		exportFormats: Array<{
 			value: string;
 			label: string;
