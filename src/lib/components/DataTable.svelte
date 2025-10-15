@@ -110,7 +110,7 @@
 							{/if}
 						</th>
 					{/if}
-					{#each columns as column}
+					{#each columns as column (column.key)}
 						<th scope="col" class="w-14 border-x border-black px-4 py-3 whitespace-nowrap">
 							{column.header}
 						</th>
@@ -123,7 +123,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each data as item, i}
+				{#each data as item, i (item.id || JSON.stringify(item))}
 					<tr class="group border-b" class:bg-blue-100={selectedItems.includes(item)}>
 						{#if selectable}
 							<td class="w-14 px-4 py-3 {i % 2 === 0 ? 'bg-white' : 'bg-gray-100'}">
@@ -212,7 +212,7 @@
 				</div>
 
 				<!-- Affichage des données par niveau -->
-				{#each columns as column, colIndex}
+				{#each columns as column, colIndex (column.key)}
 					{#if item[column.key] && column.key !== 'atr_0_label' && colIndex > 0}
 						<div class="mb-2">
 							<div class="font-medium">

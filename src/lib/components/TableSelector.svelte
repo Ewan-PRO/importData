@@ -315,7 +315,7 @@
 								Toutes les bases ({filteredCount})
 							</span>
 						</label>
-						{#each databases as database}
+						{#each databases as database (database)}
 							{@const dbInfo = getDatabaseBadgeInfo(database)}
 							<label class="flex cursor-pointer items-center space-x-2">
 								<input
@@ -364,7 +364,7 @@
 								Tous les schémas ({filteredCount})
 							</span>
 						</label>
-						{#each uniqueSchemas as schema}
+						{#each uniqueSchemas as schema (schema)}
 							<label class="flex cursor-pointer items-center space-x-2">
 								<input
 									type="radio"

@@ -670,7 +670,7 @@
 					<div class="mb-6">
 						<h3 class="mb-2 font-medium text-black">Champs requis :</h3>
 						<div class="flex flex-wrap gap-2">
-							{#each requiredFields as field}
+							{#each requiredFields as field (field)}
 								{@const fieldMapped = isFieldMapped(field)}
 								<Badge variant={fieldMapped ? 'vert' : 'rouge'}>
 									{#if fieldMapped}
@@ -691,7 +691,7 @@
 						<Table.Root variant="striped">
 							<Table.Header>
 								<Table.Row variant="striped">
-									{#each headers as header, i}
+									{#each headers as header, i (i)}
 										<Table.Head variant="striped">
 											<div class="mb-2">{header}</div>
 											<Select.Select
@@ -702,9 +702,7 @@
 													$form.mappedFields = mappedFields;
 												}}
 											>
-												<Select.SelectTrigger
-													class="min-w-[12rem] text-sm"
-												>
+												<Select.SelectTrigger class="min-w-[12rem] text-sm">
 													{mappedFields[i.toString()] || 'Ne pas importer'}
 												</Select.SelectTrigger>
 												<Select.SelectContent>
@@ -715,7 +713,7 @@
 															if (!acc.includes(field)) acc.push(field);
 														});
 														return acc;
-													}, [] as string[]) as field}
+													}, [] as string[]) as field (field)}
 														<Select.SelectItem value={field}>{field}</Select.SelectItem>
 													{/each}
 												</Select.SelectContent>
@@ -725,9 +723,9 @@
 								</Table.Row>
 							</Table.Header>
 							<Table.Body>
-								{#each previewData as row, rowIndex}
+								{#each previewData as row, rowIndex (rowIndex)}
 									<Table.Row variant="striped">
-										{#each headers as _, i}
+										{#each headers as _, i (i)}
 											<Table.Cell variant="striped" {rowIndex}>
 												{row[i] !== undefined ? row[i] : ''}
 											</Table.Cell>
@@ -792,7 +790,7 @@
 						<div class="mb-6">
 							<h3 class="mb-3 font-medium">Détail par table de destination</h3>
 							<div class="space-y-2">
-								{#each selectedTables as table}
+								{#each selectedTables as table (table)}
 									{@const tableResult = validationResults.resultsByTable[table]}
 									{@const tableName =
 										availableTables.find(
@@ -911,7 +909,7 @@
 						<!-- Détail par table -->
 						{#if validationResults.resultsByTable && selectedTables.length > 1}
 							<div class="mb-4 space-y-3">
-								{#each selectedTables as table}
+								{#each selectedTables as table (table)}
 									{@const tableResult = validationResults.resultsByTable[table]}
 									{@const tableName =
 										availableTables.find(

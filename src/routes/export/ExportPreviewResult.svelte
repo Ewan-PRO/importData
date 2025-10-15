@@ -167,7 +167,7 @@
 		{#if Object.keys(previewData).length > 0}
 			<!-- Aperçu des données -->
 			<div class="mb-6 space-y-6">
-				{#each Object.entries(previewData) as [tableName, rows]}
+				{#each Object.entries(previewData) as [tableName, rows] (tableName)}
 					{@const matchingTableInfo = (() => {
 						// tableName est maintenant au format "database-tablename"
 						if (tableName.includes('-')) {
@@ -273,7 +273,7 @@
 									{#if previewConfig?.includeHeaders ?? form.includeHeaders}
 										<Table.Header>
 											<Table.Row variant="striped">
-												{#each matchingTableInfo.columns as column}
+												{#each matchingTableInfo.columns as column (column.name)}
 													<Table.Head variant="striped">{column.name}</Table.Head>
 												{/each}
 											</Table.Row>
@@ -281,9 +281,9 @@
 									{/if}
 									<Table.Body>
 										{#if rows.length > 0}
-											{#each rows as row, rowIndex}
+											{#each rows as row, rowIndex (rowIndex)}
 												<Table.Row variant="striped">
-													{#each matchingTableInfo.columns as column}
+													{#each matchingTableInfo.columns as column (column.name)}
 														<Table.Cell variant="striped" {rowIndex}>
 															{@const typedRow = row as Record<string, unknown>}
 															{formatPreviewValue(typedRow[column.name])}
@@ -294,7 +294,7 @@
 										{:else}
 											<!-- Table vide : afficher une ligne d'exemple vide -->
 											<Table.Row variant="striped">
-												{#each matchingTableInfo.columns as column}
+												{#each matchingTableInfo.columns as column (column.name)}
 													<Table.Cell variant="striped" class="text-gray-400 italic">
 														(aucune donnée)
 													</Table.Cell>
@@ -376,7 +376,7 @@
 					<div class="mb-4 text-center">
 						<h4 class="mb-2 font-medium text-red-800">Avertissements:</h4>
 						<ul class="space-y-1 text-sm text-red-700">
-							{#each exportResult.warnings as warning}
+							{#each exportResult.warnings as warning, i (i)}
 								<li>• {warning}</li>
 							{/each}
 						</ul>
@@ -387,7 +387,7 @@
 					<div class="mb-4 text-center">
 						<h4 class="mb-2 font-medium text-red-800">Erreurs:</h4>
 						<ul class="space-y-1 text-sm text-red-700">
-							{#each exportResult.errors as error}
+							{#each exportResult.errors as error, i (i)}
 								<li>• {error}</li>
 							{/each}
 						</ul>

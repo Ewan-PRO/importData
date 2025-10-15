@@ -44,7 +44,7 @@
 					<Head variant="success" class="w-12">
 						<Check class="h-4 w-4 text-white" />
 					</Head>
-					{#each headers as header}
+					{#each headers as header (header.key)}
 						<Head variant="success" class={header.class}>
 							{header.label}
 						</Head>
@@ -52,12 +52,12 @@
 				</Row>
 			</Header>
 			<Body>
-				{#each data as row, rowIndex}
+				{#each data as row, rowIndex (rowIndex)}
 					<Row variant="success">
 						<Cell variant="success" {rowIndex}>
 							<Check class="h-4 w-4 text-green-600" />
 						</Cell>
-						{#each headers as header}
+						{#each headers as header (header.key)}
 							<Cell variant="success" {rowIndex}>
 								{row[header.key] !== undefined && row[header.key] !== null ? row[header.key] : ''}
 							</Cell>

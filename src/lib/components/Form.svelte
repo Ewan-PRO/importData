@@ -224,7 +224,7 @@
 			</div>
 		{:else}
 			<!-- Interface normale pour création/édition -->
-			{#each fields as field}
+			{#each fields as field (field.key)}
 				<div>
 					<div class="mb-2 flex items-center justify-between">
 						<Label for={field.key}>{field.label}</Label>
@@ -310,7 +310,7 @@
 										</div>
 										<Select.SelectSeparator />
 									{/if}
-									{#each getFilteredOptions(field) as option}
+									{#each getFilteredOptions(field) as option (option.value)}
 										<Select.SelectItem value={option.value}>{option.label}</Select.SelectItem>
 									{/each}
 								</Select.SelectContent>

@@ -44,7 +44,7 @@
 					<Head variant="error" class="w-12">
 						<X class="h-4 w-4 text-white" />
 					</Head>
-					{#each headers as header}
+					{#each headers as header (header.key)}
 						<Head variant="error" class={header.class}>
 							{header.label}
 						</Head>
@@ -52,12 +52,12 @@
 				</Row>
 			</Header>
 			<Body>
-				{#each data as row, rowIndex}
+				{#each data as row, rowIndex (rowIndex)}
 					<Row variant="error">
 						<Cell variant="error" {rowIndex}>
 							<X class="h-4 w-4 text-red-600" />
 						</Cell>
-						{#each headers as header}
+						{#each headers as header (header.key)}
 							<Cell variant="error" {rowIndex}>
 								{row[header.key] !== undefined && row[header.key] !== null ? row[header.key] : ''}
 							</Cell>

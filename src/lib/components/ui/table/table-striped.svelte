@@ -25,7 +25,7 @@
 	<Root variant="striped" bind:ref class={className} {...restProps}>
 		<Header>
 			<Row variant="striped">
-				{#each headers as header}
+				{#each headers as header (header.key)}
 					<Head variant="striped" class={header.class}>
 						{header.label}
 					</Head>
@@ -33,9 +33,9 @@
 			</Row>
 		</Header>
 		<Body>
-			{#each data as row, rowIndex}
+			{#each data as row, rowIndex (rowIndex)}
 				<Row variant="striped">
-					{#each headers as header}
+					{#each headers as header (header.key)}
 						<Cell variant="striped" {rowIndex}>
 							{row[header.key] || ''}
 						</Cell>

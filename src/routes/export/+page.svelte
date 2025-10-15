@@ -460,7 +460,7 @@
 										><Database class="mr-1 inline h-4 w-4" />Toutes ({filteredTables.length})</span
 									>
 								</label>
-								{#each databases as database}
+								{#each databases as database (database)}
 									{@const dbInfo = getDatabaseBadgeInfo(database)}
 									<label class="flex cursor-pointer items-center space-x-2">
 										<input
@@ -504,7 +504,7 @@
 										><Sheet class="mr-1 inline h-4 w-4" />Tous ({filteredTables.length})</span
 									>
 								</label>
-								{#each uniqueSchemas as schema}
+								{#each uniqueSchemas as schema (schema)}
 									{@const SchemaIcon = getSchemaIcon(schema)}
 									<label class="flex cursor-pointer items-center space-x-2">
 										<input
