@@ -41,5 +41,11 @@ export default ts.config(
 				svelteConfig
 			}
 		}
+	},
+	{
+		files: ['**/button/button.svelte'],
+		rules: {
+			'svelte/no-navigation-without-resolve': 'off'
+		}
 	}
 );

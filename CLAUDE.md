@@ -2,6 +2,54 @@
 
 Ce fichier fournit des instructions à Claude Code (claude.ai/code) pour travailler sur ce dépôt.
 
+## 🔍 Bonnes Pratiques de Résolution de Problèmes
+
+**IMPORTANT : Rechercher sur le web quand bloqué**
+
+Si une solution ne fonctionne pas après **2-3 tentatives**, **ARRÊTER** et utiliser la recherche web :
+
+```
+✅ BON WORKFLOW :
+1. Essayer solution initiale
+2. Si échec → essayer 1-2 variantes
+3. Si toujours bloqué → WebSearch pour trouver la vraie solution
+4. Appliquer la solution trouvée
+
+❌ MAUVAIS WORKFLOW :
+1. Essayer solution
+2. Échec → essayer variante 1
+3. Échec → essayer variante 2
+4. Échec → essayer variante 3
+5. Échec → essayer variante 4...
+→ Perte de temps et frustration utilisateur
+```
+
+**Exemples de situations nécessitant WebSearch :**
+
+- Erreurs de configuration d'outils (ESLint, Prettier, TypeScript, Vite)
+- Problèmes spécifiques à un framework/bibliothèque (SvelteKit, Prisma...)
+- Messages d'erreur obscurs ou inattendus (erreurs de build cryptiques)
+- Comportements contre-intuitifs (réactivité Svelte qui casse)
+- Problèmes de compatibilité entre versions de packages
+- Erreurs TypeScript complexes avec types génériques/conditionnels
+- Problèmes qui fonctionnent en dev mais échouent en build
+- Erreurs Prisma generate/migrate mystérieuses
+- Conflits entre outils (Prettier vs ESLint, TypeScript vs Svelte)
+- Problèmes de chemins relatifs/absolus qui ne se résolvent pas
+- Erreurs de permissions ou accès fichiers sur Windows
+- Gitqui bloquent sans raison claire
+- Migration framework (Svelte 4 → 5, SvelteKit v1 → v2)
+
+**Règle d'or :** Ne pas s'acharner. La recherche web est là pour ça.
+
+**Indicateurs qu'il faut rechercher :**
+
+- ❌ Même type d'erreur après 3 tentatives différentes
+- ❌ Solution "qui devrait marcher" selon la doc mais ne marche pas
+- ❌ Erreur qui semble être un bug du framework/outil
+- ❌ Comportement différent entre environnements (local vs CI, dev vs build)
+- ❌ Sentiment de frustration ou de tourner en rond
+
 ## Commandes de Développement
 
 **Gestionnaire de paquets :** Ce projet utilise pnpm par défaut. Utiliser `pnpm` au lieu de `npm` :

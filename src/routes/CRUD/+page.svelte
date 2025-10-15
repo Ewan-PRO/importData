@@ -7,6 +7,7 @@
 	import Filter from '$lib/components/Filter.svelte';
 	import Form from '$lib/components/Form.svelte';
 	import { superForm } from 'sveltekit-superforms/client';
+	import type { SuperValidated } from 'sveltekit-superforms';
 	import { toast } from 'svelte-sonner';
 
 	console.log('Script de la page CRUD chargé');
@@ -20,7 +21,7 @@
 			isRequired: boolean;
 			isPrimaryKey: boolean;
 		}>;
-		form: any; // SuperValidated de superforms, any nécessaire pour compatibilité
+		form: SuperValidated<Record<string, unknown>>;
 	}
 
 	export let data: ServerData;
