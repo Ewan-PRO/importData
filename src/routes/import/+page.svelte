@@ -12,12 +12,8 @@
 	import { toast } from 'svelte-sonner';
 	import {
 		Upload,
-		FileCheck,
 		AlertCircle,
-		ArrowRight,
-		CornerDownRight,
 		Check,
-		X,
 		CircleArrowLeft,
 		CircleCheck,
 		CirclePlus,
@@ -89,7 +85,6 @@
 		form,
 		enhance: superEnhance,
 		submitting,
-		errors,
 		reset
 	} = superForm(data.form, {
 		dataType: 'json',
@@ -431,10 +426,6 @@
 			selectedTables,
 			mappedFields
 		} as any;
-	}
-
-	function formatNumber(num: number): string {
-		return new Intl.NumberFormat('fr-FR').format(num);
 	}
 
 	// Fonction pour calculer les champs requis basée sur les données DMMF du serveur

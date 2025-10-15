@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn, type WithElementRef } from '$lib/utils.js';
+	import type { WithElementRef } from '$lib/utils.js';
 	import type { HTMLTableAttributes } from 'svelte/elements';
 	import Root from './table.svelte';
 	import Header from './table-header.svelte';

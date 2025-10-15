@@ -20,14 +20,14 @@ Après l'import des 6 fichiers CSV, la vue `v_produit_categorie_attribut` devrai
 
 ## 📂 Fichiers CSV Créés
 
-| Fichier | Table Cible | Dépendances | Ordre |
-|---------|-------------|-------------|-------|
-| `1_attribute-Test.csv` | `public.attribute` | Aucune | **1** |
-| `2_kit-Test.csv` | `public.kit` | Aucune | **2** |
-| `3_category-Test.csv` | `produit.category` | Aucune | **3** |
+| Fichier                         | Table Cible                  | Dépendances          | Ordre |
+| ------------------------------- | ---------------------------- | -------------------- | ----- |
+| `1_attribute-Test.csv`          | `public.attribute`           | Aucune               | **1** |
+| `2_kit-Test.csv`                | `public.kit`                 | Aucune               | **2** |
+| `3_category-Test.csv`           | `produit.category`           | Aucune               | **3** |
 | `4_category_attribute-Test.csv` | `produit.category_attribute` | category + attribute | **4** |
-| `5_product-Test.csv` | `produit.product` | kit | **5** |
-| `6_product_category-Test.csv` | `produit.product_category` | product + category | **6** |
+| `5_product-Test.csv`            | `produit.product`            | kit                  | **5** |
+| `6_product_category-Test.csv`   | `produit.product_category`   | product + category   | **6** |
 
 ---
 
@@ -38,12 +38,14 @@ Après l'import des 6 fichiers CSV, la vue `v_produit_categorie_attribut` devrai
 **Problème:** Les fichiers CSV **4, 5 et 6** utilisent des **références textuelles** (ex: `kit_label`, `cat_code`) au lieu des **IDs numériques** requis par la base de données.
 
 **Exemple problématique dans `5_product-Test.csv`:**
+
 ```csv
 pro_code,kit_label,pro_cenov_id
 PUMP001-Test,Pompe Centrifuge Électrique-Test,CEN001-Test
 ```
 
 **Ce que la base attend:**
+
 ```csv
 pro_code,fk_kit,pro_cenov_id
 PUMP001-Test,68,CEN001-Test  # 68 = ID du kit créé à l'étape 2
@@ -96,6 +98,7 @@ SELECT cat_id, cat_code FROM produit.category WHERE cat_code LIKE '%-Test';
 **3. Modifier les CSV avec les IDs réels:**
 
 **Fichier: `4_category_attribute-Test-IDs.csv`**
+
 ```csv
 fk_category,fk_attribute,cat_atr_required
 223,375,true
@@ -106,6 +109,7 @@ fk_category,fk_attribute,cat_atr_required
 ```
 
 **Fichier: `5_product-Test-IDs.csv`**
+
 ```csv
 pro_code,fk_kit,pro_cenov_id
 PUMP001-Test,68,CEN001-Test
@@ -114,6 +118,7 @@ PUMP003-Test,69,CEN003-Test
 ```
 
 **Fichier: `6_product_category-Test-IDs.csv`**
+
 ```csv
 fk_product,fk_category
 <ID_PUMP001>,223
@@ -187,12 +192,14 @@ ORDER BY pro_id, atr_id;
 ### Via Interface `/import` (après étape 3)
 
 ✅ **Validation** affiche:
+
 - **Lignes totales:** 3 (pour chaque fichier)
 - **Lignes valides:** 3
 - **Doublons:** 0
 - **Erreurs:** 0
 
 ✅ **Import réussi** affiche:
+
 - "3 lignes ont été importées dans la table : attribute"
 
 ---
@@ -227,9 +234,9 @@ Pour simplifier l'import via interface, il faudrait implémenter un **lookup aut
 ```typescript
 // Dans formatValueForDatabase()
 if (fieldName === 'fk_kit' && typeof value === 'string') {
-  // Si l'utilisateur fournit un label au lieu d'un ID
-  const kit = await findRecord('cenov_dev', 'kit', { kit_label: value });
-  return kit ? kit.kit_id : null;
+	// Si l'utilisateur fournit un label au lieu d'un ID
+	const kit = await findRecord('cenov_dev', 'kit', { kit_label: value });
+	return kit ? kit.kit_id : null;
 }
 ```
 
@@ -239,6 +246,7 @@ if (fieldName === 'fk_kit' && typeof value === 'string') {
 ---
 
 **Fichiers créés:**
+
 - ✅ `1_attribute-Test.csv` (prêt)
 - ✅ `2_kit-Test.csv` (prêt)
 - ✅ `3_category-Test.csv` (prêt)

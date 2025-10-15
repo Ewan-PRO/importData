@@ -4,7 +4,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
-	import * as Table from '$lib/components/ui/table';
 	import { toast } from 'svelte-sonner';
 	import {
 		Database,
@@ -23,7 +22,6 @@
 		Download
 	} from 'lucide-svelte';
 	import {
-		DATABASE_CONFIG,
 		SCHEMA_CONFIG,
 		getDatabaseBadgeInfo,
 		getTableIcon,
@@ -36,7 +34,6 @@
 		availableTables = $bindable([]),
 		selectedTables = $bindable([]),
 		databases = [],
-		mode = 'import',
 		title = 'Sélection des tables',
 		totalTables = $bindable(0),
 		totalRows = $bindable(0),
@@ -56,7 +53,6 @@
 		}[];
 		selectedTables: string[];
 		databases: DatabaseName[];
-		mode?: 'export' | 'import';
 		title?: string;
 		totalTables: number;
 		totalRows: number;
@@ -161,11 +157,6 @@
 			return requiredStatus?.allMapped === true;
 		}).length
 	);
-
-	function resetSelection() {
-		selectedTables = [];
-		dispatch('selectionChange');
-	}
 
 	// Utiliser les fonctions importées depuis ui-database-config
 	// getTableIcon, getBadgeVariant, getDatabaseBadgeInfo sont déjà importés

@@ -120,9 +120,7 @@ export async function addToCache(
 		const idField = await detectIdField(database, tableName);
 
 		if (!uniqueField || !idField) {
-			console.warn(
-				`� [CACHE] ${cacheKey}: Impossible de d�tecter unique/id field, skip cache`
-			);
+			console.warn(`� [CACHE] ${cacheKey}: Impossible de d�tecter unique/id field, skip cache`);
 			return;
 		}
 
@@ -220,7 +218,8 @@ export async function enrichWithForeignKeys(
 			return enrichedData;
 		}
 
-		console.log(`= [FK-ENRICH] ${tableName}: ${fkMappings.length} FK d�tect�es`);
+		console.log(`=
+ [FK-ENRICH] ${tableName}: ${fkMappings.length} FK d�tect�es`);
 
 		for (const fkMapping of fkMappings) {
 			const { fkField, targetTable, lookupField } = fkMapping;
@@ -370,7 +369,8 @@ async function detectForeignKeyMappings(
 					});
 
 					console.log(
-						`= [FK-DETECT] ${tableName}.${actualFkField} � ${targetTable}.${lookupField}`
+						`=
+ [FK-DETECT] ${tableName}.${actualFkField} � ${targetTable}.${lookupField}`
 					);
 				}
 			}

@@ -97,7 +97,9 @@ async function importSupplierWithProducts() {
 		const kit = await upsertRecord(
 			'kit',
 			// Pas de contrainte unique sur kit → vérifier par kit_label manuellement
-			{ kit_id: (await findByUniqueValue('kit', 'kit_label', 'Pompe CR Grundfos-Test'))?.kit_id || 0 },
+			{
+				kit_id: (await findByUniqueValue('kit', 'kit_label', 'Pompe CR Grundfos-Test'))?.kit_id || 0
+			},
 			{
 				kit_label: 'Pompe CR Grundfos-Test'
 			}
@@ -125,8 +127,7 @@ async function importSupplierWithProducts() {
 			const product = await prisma.product.upsert({
 				where: {
 					// Pas de contrainte unique sur product → chercher par pro_code manuellement
-					pro_id:
-						(await findByUniqueValue('product', 'pro_code', prodData.pro_code))?.pro_id || 0
+					pro_id: (await findByUniqueValue('product', 'pro_code', prodData.pro_code))?.pro_id || 0
 				},
 				create: {
 					pro_code: prodData.pro_code,
@@ -146,7 +147,7 @@ async function importSupplierWithProducts() {
 		}
 
 		// ========== 4. CRÉER DES TARIFS D'ACHAT ==========
-		console.log('\n📦 Étape 4 : Création des tarifs d\'achat...');
+		console.log("\n📦 Étape 4 : Création des tarifs d'achat...");
 
 		const prices = [
 			{
@@ -219,7 +220,7 @@ async function importSupplierWithProducts() {
 			prices: pricesCreated
 		};
 	} catch (error) {
-		console.error('\n❌ ERREUR LORS DE L\'IMPORT:', error);
+		console.error("\n❌ ERREUR LORS DE L'IMPORT:", error);
 		throw error;
 	} finally {
 		await prisma.$disconnect();

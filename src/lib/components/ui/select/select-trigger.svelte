@@ -10,11 +10,9 @@
 		class: className,
 		children,
 		size = 'md',
-		hasValue = false,
 		...restProps
 	}: WithoutChild<SelectPrimitive.TriggerProps> & {
 		size?: SelectSize;
-		hasValue?: boolean;
 	} = $props();
 
 	const sizeClasses = {

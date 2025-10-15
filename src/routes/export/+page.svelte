@@ -27,13 +27,9 @@
 	import type { DatabaseName } from '$lib/prisma-meta.js';
 	import ExportPreviewResult from './ExportPreviewResult.svelte';
 	import {
-		DATABASE_CONFIG,
 		SCHEMA_CONFIG,
 		Rocket,
 		Settings,
-		LockOpen,
-		Package,
-		getDatabaseIcon,
 		getSchemaIcon,
 		getTableIcon,
 		getBadgeVariant,

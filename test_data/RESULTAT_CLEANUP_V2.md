@@ -17,18 +17,18 @@ Toutes les requêtes ont été exécutées **sans erreur**.
 
 ### Étapes Réussies
 
-| Étape | Temps (ms) | Statut |
-|-------|-----------|--------|
-| **Statistiques AVANT** | 258-276 | ✅ |
-| **Suppression liens produit-catégorie** | 278 | ✅ |
-| **Suppression produits** | 284 | ✅ |
-| **Suppression liens catégorie-attribut** | 312 | ✅ |
-| **Suppression catégories** | 294 | ✅ |
-| **Suppression kits** | 291 | ✅ |
-| **Vérification kit_attribute** | 31 | ✅ |
-| **Suppression attributs** | 211 | ✅ |
-| **Statistiques APRÈS** | 299-336 | ✅ |
-| **Vérification vue** | 334 | ✅ |
+| Étape                                    | Temps (ms) | Statut |
+| ---------------------------------------- | ---------- | ------ |
+| **Statistiques AVANT**                   | 258-276    | ✅     |
+| **Suppression liens produit-catégorie**  | 278        | ✅     |
+| **Suppression produits**                 | 284        | ✅     |
+| **Suppression liens catégorie-attribut** | 312        | ✅     |
+| **Suppression catégories**               | 294        | ✅     |
+| **Suppression kits**                     | 291        | ✅     |
+| **Vérification kit_attribute**           | 31         | ✅     |
+| **Suppression attributs**                | 211        | ✅     |
+| **Statistiques APRÈS**                   | 299-336    | ✅     |
+| **Vérification vue**                     | 334        | ✅     |
 
 ### Observations Importantes
 
@@ -61,12 +61,12 @@ Toutes les requêtes ont été exécutées **sans erreur**.
 
 ## 📈 Comparaison avec V1
 
-| Critère | V1 (PUMP/CAT) | V2 (-Test) |
-|---------|---------------|------------|
-| **Kits supprimés** | ❌ Commenté (risque) | ✅ Supprimé (3 kits) |
-| **Attributs supprimés** | ❌ Commenté (risque) | ✅ Supprimé (3 attributs) |
-| **Sécurité** | ⚠️ Risque doublons | ✅ 100% sûr |
-| **Erreurs** | ⚠️ Possible si doublons | ✅ Aucune |
+| Critère                 | V1 (PUMP/CAT)           | V2 (-Test)                |
+| ----------------------- | ----------------------- | ------------------------- |
+| **Kits supprimés**      | ❌ Commenté (risque)    | ✅ Supprimé (3 kits)      |
+| **Attributs supprimés** | ❌ Commenté (risque)    | ✅ Supprimé (3 attributs) |
+| **Sécurité**            | ⚠️ Risque doublons      | ✅ 100% sûr               |
+| **Erreurs**             | ⚠️ Possible si doublons | ✅ Aucune                 |
 
 ---
 
@@ -119,6 +119,7 @@ WHERE pro_id IN (
 ### 🎓 Leçon Apprise
 
 **Le suffixe "-Test" est LA solution idéale pour :**
+
 - Tests d'intégration répétables
 - Environnements de développement
 - Démonstrations client

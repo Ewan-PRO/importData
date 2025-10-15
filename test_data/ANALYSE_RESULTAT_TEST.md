@@ -31,16 +31,18 @@ SELECT 'Attributs créés:' AS info, atr_id, atr_code, atr_label FROM inserted_a
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:54] 3 rows retrieved starting from 1 in 267 ms
 ```
 
 **Données créées :**
+
 ```json
 [
-  {"info": "Attributs créés:", "atr_id": 375, "atr_code": "PWR", "atr_label": "Puissance"},
-  {"info": "Attributs créés:", "atr_id": 376, "atr_code": "FLOW", "atr_label": "Débit"},
-  {"info": "Attributs créés:", "atr_id": 377, "atr_code": "PRESS", "atr_label": "Pression"}
+	{ "info": "Attributs créés:", "atr_id": 375, "atr_code": "PWR", "atr_label": "Puissance" },
+	{ "info": "Attributs créés:", "atr_id": 376, "atr_code": "FLOW", "atr_label": "Débit" },
+	{ "info": "Attributs créés:", "atr_id": 377, "atr_code": "PRESS", "atr_label": "Pression" }
 ]
 ```
 
@@ -64,16 +66,18 @@ SELECT 'Kits créés:' AS info, kit_id, kit_label FROM inserted_kits
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:54] 3 rows retrieved starting from 1 in 267 ms
 ```
 
 **Données créées :**
+
 ```json
 [
-  {"info": "Kits créés:", "kit_id": 68, "kit_label": "Pompe Centrifuge Électrique"},
-  {"info": "Kits créés:", "kit_id": 69, "kit_label": "Pompe Immergée"},
-  {"info": "Kits créés:", "kit_id": 70, "kit_label": "Pompe Manuelle"}
+	{ "info": "Kits créés:", "kit_id": 68, "kit_label": "Pompe Centrifuge Électrique" },
+	{ "info": "Kits créés:", "kit_id": 69, "kit_label": "Pompe Immergée" },
+	{ "info": "Kits créés:", "kit_id": 70, "kit_label": "Pompe Manuelle" }
 ]
 ```
 
@@ -96,15 +100,27 @@ SELECT 'Catégories créées:' AS info, cat_id, cat_code, cat_label FROM inserte
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:55] 2 rows retrieved starting from 1 in 266 ms
 ```
 
 **Données créées :**
+
 ```json
 [
-  {"info": "Catégories créées:", "cat_id": 223, "cat_code": "CAT001", "cat_label": "Pompes Industrielles"},
-  {"info": "Catégories créées:", "cat_id": 224, "cat_code": "CAT002", "cat_label": "Pompes Électriques"}
+	{
+		"info": "Catégories créées:",
+		"cat_id": 223,
+		"cat_code": "CAT001",
+		"cat_label": "Pompes Industrielles"
+	},
+	{
+		"info": "Catégories créées:",
+		"cat_id": 224,
+		"cat_code": "CAT002",
+		"cat_label": "Pompes Électriques"
+	}
 ]
 ```
 
@@ -123,6 +139,7 @@ ORDER BY atr_id
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:55] 3 rows retrieved starting from 1 in 280 ms
 ```
@@ -136,6 +153,7 @@ ORDER BY kit_id
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:56] 54 rows retrieved starting from 1 in 279 ms
 ```
@@ -151,6 +169,7 @@ ORDER BY cat_id
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:56] 208 rows retrieved starting from 1 in 285 ms
 ```
@@ -187,11 +206,13 @@ SET cat_atr_required = EXCLUDED.cat_atr_required
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:56] 5 rows affected in 34 ms
 ```
 
 **Détail des liens créés :**
+
 - CAT001 (Pompes Industrielles) → PWR (requis)
 - CAT001 (Pompes Industrielles) → FLOW (requis)
 - CAT001 (Pompes Industrielles) → PRESS (optionnel)
@@ -206,6 +227,7 @@ WHERE c.cat_code IN ('CAT001', 'CAT002')
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:57] 1 row retrieved starting from 1 in 182 ms
 {"info": "Liens catégorie-attribut créés:", "count": 5}
@@ -235,16 +257,18 @@ SELECT 'Produits créés:' AS info, pro_id, pro_code FROM inserted_products
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:57] 3 rows retrieved starting from 1 in 291 ms
 ```
 
 **Données créées :**
+
 ```json
 [
-  {"info": "Produits créés:", "pro_id": 375, "pro_code": "PUMP001"},
-  {"info": "Produits créés:", "pro_id": 376, "pro_code": "PUMP002"},
-  {"info": "Produits créés:", "pro_id": 377, "pro_code": "PUMP003"}
+	{ "info": "Produits créés:", "pro_id": 375, "pro_code": "PUMP001" },
+	{ "info": "Produits créés:", "pro_id": 376, "pro_code": "PUMP002" },
+	{ "info": "Produits créés:", "pro_id": 377, "pro_code": "PUMP003" }
 ]
 ```
 
@@ -256,6 +280,7 @@ ORDER BY pro_id
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:57] 3 rows retrieved starting from 1 in 305 ms
 ```
@@ -282,11 +307,13 @@ ON CONFLICT (fk_product, fk_category) DO NOTHING
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:57] 4 rows affected in 34 ms
 ```
 
 **Détail des liens créés :**
+
 - PUMP001 (pro_id 375) → CAT001 (Pompes Industrielles)
 - PUMP002 (pro_id 376) → CAT001 (Pompes Industrielles)
 - PUMP002 (pro_id 376) → CAT002 (Pompes Électriques)
@@ -300,6 +327,7 @@ WHERE p.pro_code LIKE 'PUMP%'
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:58] 1 row retrieved starting from 1 in 198 ms
 {"info": "Liens produit-catégorie créés:", "count": 4}
@@ -326,6 +354,7 @@ ORDER BY pro_id, atr_id
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:59] 10 rows retrieved starting from 1 in 311 ms
 ```
@@ -334,20 +363,21 @@ ORDER BY pro_id, atr_id
 
 **Détail des 10 lignes :**
 
-| pro_id | kit_label | atr_id | atr_label | cat_label |
-|--------|-----------|--------|-----------|-----------|
-| 375 | Pompe Centrifuge Électrique | 375 | Puissance | Pompes Industrielles |
-| 375 | Pompe Centrifuge Électrique | 376 | Débit | Pompes Industrielles |
-| 375 | Pompe Centrifuge Électrique | 377 | Pression | Pompes Industrielles |
-| 376 | Pompe Centrifuge Électrique | 375 | Puissance | Pompes Industrielles |
-| 376 | Pompe Centrifuge Électrique | 376 | Débit | Pompes Industrielles |
-| 376 | Pompe Centrifuge Électrique | 377 | Pression | Pompes Industrielles |
-| 376 | Pompe Centrifuge Électrique | 375 | Puissance | Pompes Électriques |
-| 376 | Pompe Centrifuge Électrique | 376 | Débit | Pompes Électriques |
-| 377 | Pompe Immergée | 375 | Puissance | Pompes Électriques |
-| 377 | Pompe Immergée | 376 | Débit | Pompes Électriques |
+| pro_id | kit_label                   | atr_id | atr_label | cat_label            |
+| ------ | --------------------------- | ------ | --------- | -------------------- |
+| 375    | Pompe Centrifuge Électrique | 375    | Puissance | Pompes Industrielles |
+| 375    | Pompe Centrifuge Électrique | 376    | Débit     | Pompes Industrielles |
+| 375    | Pompe Centrifuge Électrique | 377    | Pression  | Pompes Industrielles |
+| 376    | Pompe Centrifuge Électrique | 375    | Puissance | Pompes Industrielles |
+| 376    | Pompe Centrifuge Électrique | 376    | Débit     | Pompes Industrielles |
+| 376    | Pompe Centrifuge Électrique | 377    | Pression  | Pompes Industrielles |
+| 376    | Pompe Centrifuge Électrique | 375    | Puissance | Pompes Électriques   |
+| 376    | Pompe Centrifuge Électrique | 376    | Débit     | Pompes Électriques   |
+| 377    | Pompe Immergée              | 375    | Puissance | Pompes Électriques   |
+| 377    | Pompe Immergée              | 376    | Débit     | Pompes Électriques   |
 
 **Analyse :**
+
 - **PUMP001 (pro_id 375)** : Lié à CAT001 (3 attributs) → **3 lignes**
 - **PUMP002 (pro_id 376)** : Lié à CAT001 (3 attributs) + CAT002 (2 attributs) → **5 lignes**
 - **PUMP003 (pro_id 377)** : Lié à CAT002 (2 attributs) → **2 lignes**
@@ -364,6 +394,7 @@ WHERE pro_id IN (
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:30:59] 1 row retrieved starting from 1 in 306 ms
 {"info": "Nombre de lignes dans la vue pour produits PUMP", "count": 10}
@@ -389,6 +420,7 @@ SELECT 'Nouveau produit créé:' AS info, pro_id, pro_code FROM new_product
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:31:00] 1 row retrieved starting from 1 in 342 ms
 {"info": "Nouveau produit créé:", "pro_id": 378, "pro_code": "PUMP004"}
@@ -406,6 +438,7 @@ ON CONFLICT (fk_product, fk_category) DO NOTHING
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:31:00] 1 row affected in 31 ms
 ```
@@ -422,6 +455,7 @@ ORDER BY atr_id
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:31:01] 3 rows retrieved starting from 1 in 359 ms
 ```
@@ -430,11 +464,11 @@ ORDER BY atr_id
 
 **Détail des 3 lignes :**
 
-| pro_id | kit_label | atr_id | atr_label | cat_label |
-|--------|-----------|--------|-----------|-----------|
-| 378 | Pompe Manuelle | 375 | Puissance | Pompes Industrielles |
-| 378 | Pompe Manuelle | 376 | Débit | Pompes Industrielles |
-| 378 | Pompe Manuelle | 377 | Pression | Pompes Industrielles |
+| pro_id | kit_label      | atr_id | atr_label | cat_label            |
+| ------ | -------------- | ------ | --------- | -------------------- |
+| 378    | Pompe Manuelle | 375    | Puissance | Pompes Industrielles |
+| 378    | Pompe Manuelle | 376    | Débit     | Pompes Industrielles |
+| 378    | Pompe Manuelle | 377    | Pression  | Pompes Industrielles |
 
 **🎉 PREUVE IRRÉFUTABLE : La vue s'est mise à jour automatiquement sans aucune action supplémentaire !**
 
@@ -459,16 +493,18 @@ WHERE pro_id IN (
 ```
 
 **Résultat :**
+
 ```
 [2025-10-09 14:31:02] 2 rows retrieved starting from 1 in 382 ms
 ```
 
-| metrique | valeur |
-|----------|--------|
-| Total produits PUMP | 4 |
-| Total lignes dans vue | 13 |
+| metrique              | valeur |
+| --------------------- | ------ |
+| Total produits PUMP   | 4      |
+| Total lignes dans vue | 13     |
 
 **Évolution des lignes dans la vue :**
+
 - Après PUMP001-003 : **10 lignes**
 - Après ajout PUMP004 : **13 lignes** (+3)
 
@@ -481,6 +517,7 @@ WHERE pro_id IN (
 ### 1. Nature de la Vue PostgreSQL Standard
 
 **Définition de `v_produit_categorie_attribut` :**
+
 ```sql
 CREATE VIEW produit.v_produit_categorie_attribut AS
 SELECT
@@ -505,12 +542,14 @@ ORDER BY p.pro_id;
 ```
 
 **Type : Vue Standard (VIEW)**
+
 - ✅ Stocke uniquement la **définition de la requête SQL**
 - ✅ Ne stocke **aucune donnée**
 - ✅ Chaque `SELECT` **ré-exécute la requête** sur les tables sources
 - ✅ **Toujours synchronisée** avec les tables sources
 
 **vs Vue Matérialisée (MATERIALIZED VIEW) :**
+
 - ❌ Stocke les **résultats de la requête** (cache)
 - ❌ Nécessite `REFRESH MATERIALIZED VIEW` pour mettre à jour
 - ❌ Peut contenir des **données obsolètes**
@@ -575,6 +614,7 @@ ORDER BY p.pro_id;
 ```
 
 **Timing observé :**
+
 - Insertions : 14:30:54 - 14:30:58 (4 secondes)
 - Lecture vue : 14:30:59 (1 seconde après dernière insertion)
 - **Résultat : Données à jour instantanément !**
@@ -611,6 +651,7 @@ ORDER BY p.pro_id;
    - **Résultat : 3 lignes incluant PUMP004**
 
 **Aucune action intermédiaire nécessaire :**
+
 - ❌ Pas de `REFRESH MATERIALIZED VIEW`
 - ❌ Pas de cache à vider
 - ❌ Pas de trigger à déclencher
@@ -637,12 +678,14 @@ ORDER BY p.pro_id;
 ```
 
 **Problèmes des vues matérialisées :**
+
 - ❌ Nécessite maintenance manuelle ou automatisée
 - ❌ Fenêtre de désynchronisation (données obsolètes)
 - ❌ Coût de refresh (peut être long sur grosses tables)
 - ❌ Complexité supplémentaire (triggers, jobs cron, etc.)
 
 **Avantages de la vue standard :**
+
 - ✅ Toujours synchronisée
 - ✅ Zéro maintenance
 - ✅ Zéro configuration
@@ -727,18 +770,18 @@ inserted++;
 
 ### Récapitulatif des Attentes
 
-| Métrique | Attendu | Obtenu | Status |
-|----------|---------|--------|--------|
-| **Attributs créés** | 3 | 3 | ✅ |
-| **Kits créés** | 3 | 3 | ✅ |
-| **Catégories créées** | 2 | 2 | ✅ |
-| **Liens catégorie-attribut** | 5 | 5 | ✅ |
-| **Produits créés (PUMP001-003)** | 3 | 3 | ✅ |
-| **Liens produit-catégorie** | 4 | 4 | ✅ |
-| **Lignes vue (PUMP001-003)** | ~10 | 10 | ✅ |
-| **Produit PUMP004** | 1 | 1 | ✅ |
-| **Lignes vue (PUMP004)** | 3 | 3 | ✅ |
-| **Total lignes vue finale** | 13 | 13 | ✅ |
+| Métrique                         | Attendu | Obtenu | Status |
+| -------------------------------- | ------- | ------ | ------ |
+| **Attributs créés**              | 3       | 3      | ✅     |
+| **Kits créés**                   | 3       | 3      | ✅     |
+| **Catégories créées**            | 2       | 2      | ✅     |
+| **Liens catégorie-attribut**     | 5       | 5      | ✅     |
+| **Produits créés (PUMP001-003)** | 3       | 3      | ✅     |
+| **Liens produit-catégorie**      | 4       | 4      | ✅     |
+| **Lignes vue (PUMP001-003)**     | ~10     | 10     | ✅     |
+| **Produit PUMP004**              | 1       | 1      | ✅     |
+| **Lignes vue (PUMP004)**         | 3       | 3      | ✅     |
+| **Total lignes vue finale**      | 13      | 13     | ✅     |
 
 **Tous les résultats correspondent EXACTEMENT aux attentes !**
 
@@ -747,22 +790,26 @@ inserted++;
 ### Détail des Lignes dans la Vue
 
 **PUMP001 (pro_id 375) :**
+
 - Lié à : CAT001 (Pompes Industrielles)
 - Attributs de CAT001 : PWR (requis), FLOW (requis), PRESS (optionnel)
 - **Lignes générées : 3**
 
 **PUMP002 (pro_id 376) :**
+
 - Lié à : CAT001 (Pompes Industrielles) + CAT002 (Pompes Électriques)
 - Attributs de CAT001 : PWR, FLOW, PRESS
 - Attributs de CAT002 : PWR (requis), FLOW (optionnel)
 - **Lignes générées : 5** (3 + 2, mais dédoublonnées si attributs identiques)
 
 **PUMP003 (pro_id 377) :**
+
 - Lié à : CAT002 (Pompes Électriques)
 - Attributs de CAT002 : PWR, FLOW
 - **Lignes générées : 2**
 
 **PUMP004 (pro_id 378) :**
+
 - Lié à : CAT001 (Pompes Industrielles)
 - Attributs de CAT001 : PWR, FLOW, PRESS
 - **Lignes générées : 3**
@@ -813,6 +860,7 @@ inserted++;
 ## 📚 Ressources
 
 **Fichiers créés pour ce test :**
+
 - ✅ `test_vue_SAFE.sql` - Script SQL adaptatif
 - ✅ `test_data/1_attribute.csv` - Données attributs
 - ✅ `test_data/2_kit.csv` - Données kits
@@ -822,6 +870,7 @@ inserted++;
 - ✅ `test_data/ANALYSE_RESULTAT_TEST.md` - Ce fichier
 
 **Documentation PostgreSQL :**
+
 - [Views vs Materialized Views](https://www.postgresql.org/docs/current/rules-materializedviews.html)
 - [CREATE VIEW](https://www.postgresql.org/docs/current/sql-createview.html)
 

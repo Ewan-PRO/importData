@@ -176,7 +176,7 @@
 
 	<!-- Affichage mobile sous forme de cartes -->
 	<div class="sm:hidden">
-		{#each data as item, i}
+		{#each data as item}
 			<div class="mb-4 rounded-lg border border-gray-200 bg-white p-4">
 				<div class="mb-2 flex justify-between">
 					{#if selectable}

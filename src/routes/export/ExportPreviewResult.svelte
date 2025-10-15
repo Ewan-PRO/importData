@@ -17,11 +17,9 @@
 	} from 'lucide-svelte';
 	import type { ExportTableInfo, ExportResult } from './+page.server.js';
 	import {
-		DATABASE_CONFIG,
 		SCHEMA_CONFIG,
 		Rocket,
 		Settings,
-		Package,
 		getDatabaseBadgeInfo,
 		getTableIcon,
 		getBadgeVariant,
@@ -78,7 +76,7 @@
 	let filtersData = $derived($formStore.filters || {});
 
 	// Handler pour la soumission - utilise les variables dérivées
-	function handleExportSubmit(event: Event) {
+	function handleExportSubmit() {
 		console.log('📤 [SUBMIT] Export:', selectedSourcesData.length, 'sources - Format:', formatData);
 
 		// Laisser SuperForm gérer la soumission
