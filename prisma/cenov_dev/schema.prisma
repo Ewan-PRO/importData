@@ -176,6 +176,7 @@ model attribute {
   created_at                                                         DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at                                                         DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
   atr_code                                                           String?              @cenov_dev_db.VarChar(50)
+  fk_default_unit                                                    Int?
   atr_symbol_intl                                                    String?              @cenov_dev_db.VarChar(50)
   atr_description                                                    String?
   atr_wp_name                                                        String?              @cenov_dev_db.VarChar(255)
@@ -187,6 +188,8 @@ model attribute {
   attribute_value                                                    attribute_value[]
   kit_attribute_kit_attribute_fk_attribute_characteristicToattribute kit_attribute[]      @relation("kit_attribute_fk_attribute_characteristicToattribute")
   kit_attribute_kit_attribute_fk_attribute_uniteToattribute          kit_attribute[]      @relation("kit_attribute_fk_attribute_uniteToattribute")
+  default_unit                                                       attribute?           @relation("attribute_default_unit", fields: [fk_default_unit], references: [atr_id], onDelete: SetNull, onUpdate: NoAction)
+  attributes_using_as_default                                        attribute[]          @relation("attribute_default_unit")
 
   @@unique([atr_nature, atr_value], map: "idx_attribute")
   @@schema("public")

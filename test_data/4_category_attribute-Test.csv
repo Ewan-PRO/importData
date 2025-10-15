@@ -1,6 +1,0 @@
-cat_code,atr_code,cat_atr_required
-CAT001-Test,PWR-Test,true
-CAT001-Test,FLOW-Test,true
-CAT001-Test,PRESS-Test,false
-CAT002-Test,PWR-Test,true
-CAT002-Test,FLOW-Test,false
