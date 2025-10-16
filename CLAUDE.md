@@ -83,6 +83,31 @@ pnpm check     # Type checking avec Svelte
 
 La commande `/quality-check` exécute les 3 vérifications (`lint`, `format`, `check`) et génère un rapport structuré des erreurs.
 
+**Workflow Git avec Gitmoji :**
+
+```bash
+/quick-push  # Commande slash : Add, Diff, Commit avec gitmoji, et Push
+```
+
+La commande `/quick-push` automatise le workflow Git complet :
+
+1. Stage tous les fichiers (`git add -A`)
+2. Affiche un résumé des changements (`git diff --cached --stat`)
+3. Analyse et propose le bon gitmoji selon les changements
+4. Crée un commit avec message < 72 caractères (SANS signature Claude Code)
+5. Push vers main (`git push origin main`)
+
+**Gitmojis principaux utilisés :**
+
+- `:bug:` - Corrections de bugs
+- `:sparkles:` - Nouvelles fonctionnalités
+- `:recycle:` - Refactoring de code
+- `:fire:` - Suppression de code/fichiers
+- `:lipstick:` - Mise à jour UI/styles
+- `:art:` - Amélioration structure/format
+- `:zap:` - Amélioration performance
+- `:memo:` - Mise à jour documentation
+
 **Tests :**
 
 ```bash
