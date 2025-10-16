@@ -92,6 +92,7 @@ model category_attribute {
   cat_atr_required Boolean?  @default(false)
   created_at       DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at       DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
+  fk_atr_id        Int?
   attribute        attribute @relation(fields: [fk_attribute], references: [atr_id], onDelete: NoAction, onUpdate: NoAction, map: "category_attribute_fk_attribute_fkey")
   category         category  @relation(fields: [fk_category], references: [cat_id], onDelete: NoAction, onUpdate: NoAction, map: "category_attribute_fk_category_fkey")
 
@@ -147,6 +148,7 @@ model product {
   pro_cenov_id     String?            @cenov_dev_db.VarChar(50)
   fk_ssfamily      Int?
   fk_sfamily       Int?
+  cat_code         String?            @cenov_dev_db.VarChar(20)
   cross_ref        cross_ref[]
   price_purchase   price_purchase[]
   kit              kit?               @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction, map: "product_fk_kit_fkey")
@@ -176,7 +178,6 @@ model attribute {
   created_at                                                         DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at                                                         DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
   atr_code                                                           String?              @cenov_dev_db.VarChar(50)
-  fk_default_unit                                                    Int?
   atr_symbol_intl                                                    String?              @cenov_dev_db.VarChar(50)
   atr_description                                                    String?
   atr_wp_name                                                        String?              @cenov_dev_db.VarChar(255)
@@ -188,8 +189,6 @@ model attribute {
   attribute_value                                                    attribute_value[]
   kit_attribute_kit_attribute_fk_attribute_characteristicToattribute kit_attribute[]      @relation("kit_attribute_fk_attribute_characteristicToattribute")
   kit_attribute_kit_attribute_fk_attribute_uniteToattribute          kit_attribute[]      @relation("kit_attribute_fk_attribute_uniteToattribute")
-  default_unit                                                       attribute?           @relation("attribute_default_unit", fields: [fk_default_unit], references: [atr_id], onDelete: SetNull, onUpdate: NoAction)
-  attributes_using_as_default                                        attribute[]          @relation("attribute_default_unit")
 
   @@unique([atr_nature, atr_value], map: "idx_attribute")
   @@schema("public")
