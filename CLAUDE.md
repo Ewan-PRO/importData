@@ -174,9 +174,9 @@ pnpm add -D <package>     # Ajouter une dépendance de dev
 **Scripts BDD-IA (Export base de données) :**
 
 ```bash
-node scripts/BDD-IA/fetch-all-tables.mjs    # Exporter toutes les tables
-node scripts/BDD-IA/fetch-all-views.mjs     # Exporter toutes les vues
-node scripts/BDD-IA/fetch-cenov-data.mjs    # Tout exporter (recommandé)
+node scripts/BDD-IA/cenov_dev/fetch-dev-tables.mjs    # Exporter toutes les tables
+node scripts/BDD-IA/cenov_dev/fetch-dev-views.mjs    # Exporter toutes les vues
+node scripts/BDD-IA/cenov_dev/fetch-dev-data.mjs   # Tout exporter (recommandé)
 ```
 
 _Exporte toutes les données Cenov en lecture seule vers des fichiers JSON dans `scripts/BDD-IA/output/`_

@@ -44,6 +44,7 @@ const CONFIG = {
 	fieldMapping: {
 		pro_cenov_id: { table: 'product', field: 'pro_cenov_id' },
 		pro_code: { table: 'product', field: 'pro_code' },
+		cat_code: { table: 'product', field: 'cat_code' },
 		sup_code: { table: 'supplier', field: 'sup_code' },
 		sup_label: { table: 'supplier', field: 'sup_label' },
 		cat_label: { table: 'category', field: 'cat_label' },
@@ -94,6 +95,7 @@ const prisma = new CenovDevPrismaClient({
 const FIELD_MAX_LENGTHS = {
 	'product.pro_cenov_id': 50,
 	'product.pro_code': 20,
+	'product.cat_code': 20,
 	'product.sup_code': 100,
 	'product.sup_label': 70,
 	'supplier.sup_code': 10,
@@ -364,6 +366,7 @@ async function importCSV() {
 				const productData = {
 					pro_cenov_id: row.pro_cenov_id,
 					pro_code: row.pro_code,
+					cat_code: row.cat_code || null,
 					sup_code: row.sup_code,
 					fk_supplier: supplierResult.entity.sup_id,
 					fk_kit: kitResult.entity.kit_id
