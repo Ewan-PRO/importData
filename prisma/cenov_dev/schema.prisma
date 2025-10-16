@@ -31,7 +31,7 @@ model cross_ref {
 
 model kit {
   kit_id        Int             @id @default(autoincrement())
-  kit_label     String          @cenov_dev_db.VarChar(100)
+  kit_label     String          @unique @cenov_dev_db.VarChar(100)
   created_at    DateTime?       @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at    DateTime?       @default(now()) @cenov_dev_db.Timestamp(6)
   product       product[]
@@ -73,7 +73,7 @@ model category {
   cat_code           String?              @cenov_dev_db.VarChar(60)
   cat_label          String               @cenov_dev_db.VarChar(100)
   cat_picture        String?              @cenov_dev_db.VarChar(255)
-  cat_wp_id          Int?
+  cat_wp_id          Int?                 @unique
   cat_wp_name        String?              @cenov_dev_db.VarChar(255)
   created_at         DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at         DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
@@ -141,11 +141,11 @@ model product {
   fk_supplier      Int?
   fk_kit           Int?
   fk_family        Int?
-  sup_label        Int?
+  sup_label        String?            @cenov_dev_db.VarChar(70)
   sup_code         String?            @cenov_dev_db.VarChar(100)
   created_at       DateTime?          @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at       DateTime?          @default(now()) @cenov_dev_db.Timestamp(6)
-  pro_cenov_id     String?            @cenov_dev_db.VarChar(50)
+  pro_cenov_id     String?            @unique @cenov_dev_db.VarChar(50)
   fk_ssfamily      Int?
   fk_sfamily       Int?
   cat_code         String?            @cenov_dev_db.VarChar(20)
@@ -155,6 +155,7 @@ model product {
   supplier         supplier?          @relation(fields: [fk_supplier], references: [sup_id], onDelete: NoAction, onUpdate: NoAction, map: "product_fk_supplier_fkey")
   product_category product_category[]
 
+  @@unique([fk_supplier, pro_code])
   @@schema("produit")
 }
 
@@ -177,11 +178,11 @@ model attribute {
   atr_label                                                          String               @cenov_dev_db.VarChar(100)
   created_at                                                         DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at                                                         DateTime?            @default(now()) @cenov_dev_db.Timestamp(6)
-  atr_code                                                           String?              @cenov_dev_db.VarChar(50)
+  atr_code                                                           String?              @unique @cenov_dev_db.VarChar(50)
   atr_symbol_intl                                                    String?              @cenov_dev_db.VarChar(50)
   atr_description                                                    String?
   atr_wp_name                                                        String?              @cenov_dev_db.VarChar(255)
-  atr_wp_id                                                          Int?
+  atr_wp_id                                                          Int?                 @unique
   atr_imposed_value                                                  String?              @cenov_dev_db.VarChar(255)
   atr_check                                                          Boolean?
   atr_symbol_fr                                                      String?              @cenov_dev_db.VarChar(50)
@@ -196,7 +197,7 @@ model attribute {
 
 model supplier {
   sup_id          Int       @id(map: "supplier_pk") @default(autoincrement())
-  sup_code        String    @cenov_dev_db.VarChar(10)
+  sup_code        String    @unique @cenov_dev_db.VarChar(10)
   sup_label       String    @cenov_dev_db.VarChar(70)
   sup_parent_name String?   @cenov_dev_db.VarChar(70)
   sup_brand_name  String?   @cenov_dev_db.VarChar(70)
@@ -206,13 +207,12 @@ model supplier {
   family          family[]
   product         product[]
 
-  @@index([sup_code], map: "supplier_sup_code_index")
   @@schema("public")
 }
 
 model attribute_value {
   av_id          Int       @id
-  av_value_id    String    @cenov_dev_db.VarChar(50)
+  av_value_id    String    @unique @cenov_dev_db.VarChar(50)
   av_atr_id      Int
   av_value_code  String    @cenov_dev_db.VarChar(50)
   av_value_label String    @cenov_dev_db.VarChar(100)
@@ -248,7 +248,6 @@ model document_link {
   updated_at  DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   document    document  @relation(fields: [fk_document], references: [doc_id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@unique([fk_document, entity_type, entity_id])
   @@unique([fk_document, entity_type, entity_id], map: "unique_document_entity")
   @@index([fk_document], map: "idx_doc_link_document")
   @@index([entity_type, entity_id], map: "idx_doc_link_entity")
