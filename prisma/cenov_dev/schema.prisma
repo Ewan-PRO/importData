@@ -137,7 +137,7 @@ model price_purchase {
 
 model product {
   pro_id           Int                @id
-  pro_code         String?            @cenov_dev_db.VarChar(20)
+  pro_code         String?            @cenov_dev_db.VarChar(50)
   fk_supplier      Int?
   fk_kit           Int?
   fk_family        Int?
@@ -148,7 +148,7 @@ model product {
   pro_cenov_id     String?            @unique @cenov_dev_db.VarChar(50)
   fk_ssfamily      Int?
   fk_sfamily       Int?
-  cat_code         String?            @cenov_dev_db.VarChar(20)
+  cat_code         String?            @cenov_dev_db.VarChar(50)
   cross_ref        cross_ref[]
   price_purchase   price_purchase[]
   kit              kit?               @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction, map: "product_fk_kit_fkey")
@@ -197,7 +197,7 @@ model attribute {
 
 model supplier {
   sup_id          Int       @id(map: "supplier_pk") @default(autoincrement())
-  sup_code        String    @unique @cenov_dev_db.VarChar(10)
+  sup_code        String    @unique @cenov_dev_db.VarChar(50)
   sup_label       String    @cenov_dev_db.VarChar(70)
   sup_parent_name String?   @cenov_dev_db.VarChar(70)
   sup_brand_name  String?   @cenov_dev_db.VarChar(70)
@@ -316,9 +316,9 @@ view attribute_required {
 view import_name {
   pro_id               Int?
   cenov_id             String?   @cenov_dev_db.VarChar(50)
-  pro_code             String?   @cenov_dev_db.VarChar(20)
+  pro_code             String?   @cenov_dev_db.VarChar(50)
   supplier_id          Int?
-  supplier_code        String?   @cenov_dev_db.VarChar(10)
+  supplier_code        String?   @cenov_dev_db.VarChar(50)
   supplier_name        String?   @cenov_dev_db.VarChar(70)
   famille              String?   @cenov_dev_db.VarChar(100)
   sous_famille         String?   @cenov_dev_db.VarChar(100)
