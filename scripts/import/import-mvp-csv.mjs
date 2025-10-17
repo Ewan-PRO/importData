@@ -115,6 +115,39 @@ function getFieldMaxLength(modelName, fieldName) {
 }
 
 // ============================================================================
+// FONCTIONS UTILITAIRES
+// ============================================================================
+
+/**
+ * Convertit une date DD/MM/YYYY vers YYYY-MM-DD (ISO)
+ * Accepte aussi directement le format ISO
+ * @param {string} dateStr - Date au format DD/MM/YYYY ou YYYY-MM-DD
+ * @returns {string|null} Date au format ISO (YYYY-MM-DD) ou null si invalide
+ */
+function convertToISODate(dateStr) {
+	if (!dateStr || dateStr.trim() === '') return null;
+
+	const trimmed = dateStr.trim();
+
+	// Format ISO (YYYY-MM-DD) - déjà bon
+	const isoRegex = /^\d{4}-\d{2}-\d{2}$/;
+	if (isoRegex.test(trimmed)) {
+		return trimmed;
+	}
+
+	// Format français (DD/MM/YYYY) - convertir
+	const frenchRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+	const match = trimmed.match(frenchRegex);
+
+	if (match) {
+		const [, day, month, year] = match;
+		return `${year}-${month}-${day}`;
+	}
+
+	return null; // Format non reconnu
+}
+
+// ============================================================================
 // FONCTIONS DE VALIDATION (sans hardcoding, DMMF-based)
 // ============================================================================
 
@@ -154,7 +187,7 @@ function validateRow(row, lineNumber) {
 		}
 	}
 
-	// 3. Verifier format dates ISO (YYYY-MM-DD)
+	// 3. Verifier et convertir format dates (ISO ou français)
 	for (const field of CONFIG.dateFields) {
 		const value = row[field];
 
@@ -165,20 +198,24 @@ function validateRow(row, lineNumber) {
 			continue;
 		}
 
-		// Regex format ISO: YYYY-MM-DD
-		const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-		if (!isoDateRegex.test(value)) {
+		// Convertir au format ISO (accepte ISO et DD/MM/YYYY)
+		const isoDate = convertToISODate(value);
+		if (!isoDate) {
 			errors.push(
-				`Ligne ${lineNumber}: "${field}" doit etre au format ISO (YYYY-MM-DD), valeur: "${value}"`
+				`Ligne ${lineNumber}: "${field}" format invalide (accepte: YYYY-MM-DD ou DD/MM/YYYY), valeur: "${value}"`
 			);
 			continue;
 		}
 
 		// Verifier que c'est une date valide
-		const date = new Date(value);
+		const date = new Date(isoDate);
 		if (isNaN(date.getTime())) {
 			errors.push(`Ligne ${lineNumber}: "${field}" n'est pas une date valide: "${value}"`);
+			continue;
 		}
+
+		// Remplacer la valeur dans row par le format ISO pour l'import
+		row[field] = isoDate;
 	}
 
 	// 4. Verifier longueurs max (DMMF-based, sans hardcoding)
