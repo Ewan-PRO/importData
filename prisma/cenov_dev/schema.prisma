@@ -11,7 +11,7 @@ datasource cenov_dev_db {
 }
 
 model cross_ref {
-  crf_id                Int
+  crf_id                Int       @default(autoincrement())
   fk_product            Int
   crf_code              String?   @cenov_dev_db.VarChar(100)
   sup_id                Int?
@@ -70,7 +70,7 @@ model part_nc {
 model category {
   cat_id             Int                  @id @default(autoincrement())
   fk_parent          Int?
-  cat_code           String?              @cenov_dev_db.VarChar(60)
+  cat_code           String?              @cenov_dev_db.VarChar(100)
   cat_label          String               @cenov_dev_db.VarChar(100)
   cat_picture        String?              @cenov_dev_db.VarChar(255)
   cat_wp_id          Int?                 @unique
@@ -103,7 +103,7 @@ model category_attribute {
 model family {
   fam_id       Int       @id @default(autoincrement())
   fk_parent    Int?
-  fam_code     String    @cenov_dev_db.VarChar(60)
+  fam_code     String    @cenov_dev_db.VarChar(100)
   fam_label    String    @cenov_dev_db.VarChar(100)
   fk_supplier  Int
   fk_category  Int?
@@ -211,7 +211,7 @@ model supplier {
 }
 
 model attribute_value {
-  av_id          Int       @id
+  av_id          Int       @id @default(autoincrement())
   av_atr_id      Int
   av_value_label String    @cenov_dev_db.VarChar(100)
   created_at     DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
@@ -324,7 +324,7 @@ view import_name {
   sous_famille         String?   @cenov_dev_db.VarChar(100)
   sous_sous_famille    String?   @cenov_dev_db.VarChar(100)
   category_label       String?   @cenov_dev_db.VarChar(100)
-  category_id          String?   @cenov_dev_db.VarChar(60)
+  category_id          String?   @cenov_dev_db.VarChar(100)
   nom_commercial       String?   @cenov_dev_db.VarChar(100)
   pression_limite_mbar String?
   puissance_kw         String?
