@@ -112,6 +112,7 @@ model family {
   other_family family[]  @relation("familyTofamily")
   supplier     supplier  @relation(fields: [fk_supplier], references: [sup_id], onDelete: NoAction, onUpdate: NoAction, map: "family_fk_supplier_fkey")
 
+  @@unique([fam_label, fk_parent, fk_supplier])
   @@schema("produit")
 }
 
@@ -211,7 +212,7 @@ model supplier {
 model attribute_value {
   av_id          Int       @id @default(autoincrement())
   av_atr_id      Int
-  av_value_label String    @cenov_dev_db.VarChar(100)
+  av_value_label String?   @cenov_dev_db.VarChar(100)
   created_at     DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at     DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   attribute      attribute @relation(fields: [av_atr_id], references: [atr_id], onDelete: Cascade, onUpdate: NoAction, map: "attribute_value_av_atr_id_fkey")

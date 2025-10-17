@@ -49,6 +49,9 @@ const CONFIG = {
 		sup_label: { table: 'supplier', field: 'sup_label' },
 		cat_label: { table: 'category', field: 'cat_label' },
 		kit_label: { table: 'kit', field: 'kit_label' },
+		famille: { table: 'family', field: 'fam_label' },
+		sous_famille: { table: 'family', field: 'fam_label' },
+		sous_sous_famille: { table: 'family', field: 'fam_label' },
 		pp_amount: { table: 'price_purchase', field: 'pp_amount' },
 		pp_discount: { table: 'price_purchase', field: 'pp_discount' },
 		pp_date: { table: 'price_purchase', field: 'pp_date' }
@@ -103,6 +106,7 @@ const FIELD_MAX_LENGTHS = {
 	'category.cat_label': 100,
 	'category.cat_code': 60,
 	'kit.kit_label': 100,
+	'family.fam_label': 100,
 	'price_purchase.pro_cenov_id': 100
 };
 
@@ -369,6 +373,67 @@ async function findOrCreateCategory(tx, cat_label, cat_code = null) {
 	return { entity: category, isNew: false };
 }
 
+/**
+ * Trouve ou cree une famille avec gestion hierarchique
+ * @param {PrismaTransaction} tx - Client de transaction Prisma
+ * @param {string} fam_label - Label de la famille
+ * @param {number|null} fk_parent - ID du parent (null pour niveau 1)
+ * @param {number} fk_supplier - ID du fournisseur
+ * @returns {{ entity: family, isNew: boolean } | null}
+ */
+async function findOrCreateFamily(tx, fam_label, fk_parent, fk_supplier) {
+	if (!fam_label || fam_label.trim() === '') return null;
+
+	// Chercher famille existante avec contrainte unique (fam_label, fk_parent, fk_supplier)
+	const whereClause = {
+		fam_label,
+		fk_parent: fk_parent || null,
+		fk_supplier
+	};
+
+	let family = await tx.family.findFirst({
+		where: whereClause
+	});
+
+	if (!family) {
+		// Si fk_parent est fourni et non-null, utiliser upsert pour profiter de la contrainte
+		if (fk_parent !== null) {
+			family = await tx.family.upsert({
+				where: {
+					fam_label_fk_parent_fk_supplier: {
+						fam_label,
+						fk_parent,
+						fk_supplier
+					}
+				},
+				create: {
+					fam_label,
+					fk_parent,
+					fk_supplier,
+					fk_category: null
+				},
+				update: {} // Pas de mise a jour si existe deja
+			});
+		} else {
+			// Pour fk_parent = null, utiliser create car upsert ne supporte pas null dans where
+			family = await tx.family.create({
+				data: {
+					fam_label,
+					fk_parent: null,
+					fk_supplier,
+					fk_category: null
+				}
+			});
+		}
+
+		const parentInfo = fk_parent ? `parent: ${fk_parent}` : 'racine';
+		console.log(`   [+] Famille creee: ${fam_label} (${parentInfo})`);
+		return { entity: family, isNew: true };
+	}
+
+	return { entity: family, isNew: false };
+}
+
 // ============================================================================
 // FONCTION PRINCIPALE D'IMPORT
 // ============================================================================
@@ -397,6 +462,7 @@ async function importCSV() {
 			suppliers: 0,
 			kits: 0,
 			categories: 0,
+			families: 0,
 			products: 0,
 			productsUpdated: 0,
 			prices: 0
@@ -421,6 +487,37 @@ async function importCSV() {
 				// Resolution FK: Category (nullable)
 				const categoryResult = await findOrCreateCategory(tx, row.cat_label, row.cat_code);
 				if (categoryResult && categoryResult.isNew) stats.categories++;
+
+				// Resolution Hierarchie Famille (3 niveaux)
+				if (row.famille) {
+					const familleResult = await findOrCreateFamily(
+						tx,
+						row.famille,
+						null, // Pas de parent (niveau 1)
+						supplierResult.entity.sup_id
+					);
+					if (familleResult?.isNew) stats.families++;
+
+					if (row.sous_famille && familleResult?.entity) {
+						const sousFamilleResult = await findOrCreateFamily(
+							tx,
+							row.sous_famille,
+							familleResult.entity.fam_id, // Parent = famille
+							supplierResult.entity.sup_id
+						);
+						if (sousFamilleResult?.isNew) stats.families++;
+
+						if (row.sous_sous_famille && sousFamilleResult?.entity) {
+							const sousSousFamilleResult = await findOrCreateFamily(
+								tx,
+								row.sous_sous_famille,
+								sousFamilleResult.entity.fam_id, // Parent = sous_famille
+								supplierResult.entity.sup_id
+							);
+							if (sousSousFamilleResult?.isNew) stats.families++;
+						}
+					}
+				}
 
 				// Upsert Product (utilise contrainte unique sur pro_cenov_id)
 				const productData = {
@@ -504,6 +601,7 @@ async function importCSV() {
 		console.log(`   - ${stats.suppliers} nouveaux fournisseurs`);
 		console.log(`   - ${stats.kits} nouveaux kits`);
 		console.log(`   - ${stats.categories} nouvelles categories`);
+		console.log(`   - ${stats.families} nouvelles familles`);
 		console.log(`   - ${stats.products} produits crees`);
 		console.log(`   - ${stats.productsUpdated} produits mis a jour`);
 		console.log(`   - ${stats.prices} prix enregistres`);
