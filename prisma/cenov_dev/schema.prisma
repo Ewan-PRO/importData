@@ -120,14 +120,14 @@ model family {
 model price_purchase {
   fk_product    Int
   pp_date       DateTime  @cenov_dev_db.Date
-  pp_amount     Float
-  pp_discount   Float?
-  pp_net_amount Float?    @default(dbgenerated("(pp_amount * ((1)::double precision - (pp_discount / (100)::double precision)))"))
+  pp_amount     Decimal   @cenov_dev_db.Decimal(10, 2)
+  pp_discount   Decimal?  @cenov_dev_db.Decimal(5, 2)
   pro_cenov_id  String?   @cenov_dev_db.VarChar(100)
   sup_id        Int?
   created_at    DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at    DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
   fk_document   Int?
+  pp_net_amount Decimal?  @default(dbgenerated("(pp_amount * ((1)::numeric - (pp_discount / (100)::numeric)))")) @cenov_dev_db.Decimal(10, 2)
   product       product   @relation(fields: [fk_product], references: [pro_id], onDelete: NoAction, onUpdate: NoAction, map: "price_purchase_fk_product_fkey")
 
   @@id([fk_product, pp_date])
@@ -340,23 +340,23 @@ view import_name {
   @@schema("produit")
 }
 
-view v_price_purchase {
-  fk_product    Int?
-  pp_date       DateTime? @cenov_dev_db.Date
-  pp_amount     Float?
-  pp_discount   Float?
-  pp_net_amount Float?
-  pro_cenov_id  String?   @cenov_dev_db.VarChar(100)
-  sup_id        Int?
-  fk_document   Int?
-
-  @@schema("produit")
-}
-
 view mv_categorie {
   cat_id       Int
   fk_parent    Int
   parent_level Int
+
+  @@schema("produit")
+}
+
+view v_price_purchase {
+  fk_product    Int?
+  pp_date       DateTime? @cenov_dev_db.Date
+  pp_amount     Decimal?  @cenov_dev_db.Decimal(10, 2)
+  pp_discount   Decimal?  @cenov_dev_db.Decimal(5, 2)
+  pp_net_amount Decimal?  @cenov_dev_db.Decimal(10, 2)
+  pro_cenov_id  String?   @cenov_dev_db.VarChar(100)
+  sup_id        Int?
+  fk_document   Int?
 
   @@schema("produit")
 }
