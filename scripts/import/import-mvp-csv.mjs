@@ -94,11 +94,11 @@ const prisma = new CenovDevPrismaClient({
  */
 const FIELD_MAX_LENGTHS = {
 	'product.pro_cenov_id': 50,
-	'product.pro_code': 20,
-	'product.cat_code': 20,
+	'product.pro_code': 50,
+	'product.cat_code': 50,
 	'product.sup_code': 100,
 	'product.sup_label': 70,
-	'supplier.sup_code': 10,
+	'supplier.sup_code': 50,
 	'supplier.sup_label': 70,
 	'category.cat_label': 100,
 	'category.cat_code': 60,
@@ -241,19 +241,24 @@ function validateAllRows(rows) {
  * @returns {{ entity: supplier, isNew: boolean }}
  */
 async function findOrCreateSupplier(tx, sup_code, sup_label) {
-	// Chercher par code unique
-	let supplier = await tx.supplier.findUnique({
+	// Verifier existence prealable pour stats
+	const existing = await tx.supplier.findUnique({
 		where: { sup_code }
 	});
 
-	if (!supplier) {
-		// Creer le fournisseur
-		supplier = await tx.supplier.create({
-			data: {
-				sup_code,
-				sup_label
-			}
-		});
+	// Upsert (create ou update)
+	const supplier = await tx.supplier.upsert({
+		where: { sup_code },
+		create: {
+			sup_code,
+			sup_label
+		},
+		update: {
+			sup_label
+		}
+	});
+
+	if (!existing) {
 		console.log(`   [+] Fournisseur cree: ${sup_code} - ${sup_label}`);
 		return { entity: supplier, isNew: true };
 	}
@@ -267,16 +272,19 @@ async function findOrCreateSupplier(tx, sup_code, sup_label) {
  * @returns {{ entity: kit, isNew: boolean }}
  */
 async function findOrCreateKit(tx, kit_label) {
-	// Chercher par label unique
-	let kit = await tx.kit.findUnique({
+	// Verifier existence prealable pour stats
+	const existing = await tx.kit.findUnique({
 		where: { kit_label }
 	});
 
-	if (!kit) {
-		// Creer le kit
-		kit = await tx.kit.create({
-			data: { kit_label }
-		});
+	// Upsert (create ou update)
+	const kit = await tx.kit.upsert({
+		where: { kit_label },
+		create: { kit_label },
+		update: {}
+	});
+
+	if (!existing) {
 		console.log(`   [+] Kit cree: ${kit_label}`);
 		return { entity: kit, isNew: true };
 	}
@@ -292,18 +300,27 @@ async function findOrCreateKit(tx, kit_label) {
 async function findOrCreateCategory(tx, cat_label) {
 	if (!cat_label || cat_label.trim() === '') return null;
 
-	// Chercher par label
+	// Chercher par label (non unique, mais suffisant pour MVP)
 	let category = await tx.category.findFirst({
 		where: { cat_label }
 	});
 
 	if (!category) {
 		// Creer la categorie (sans parent pour MVP)
-		category = await tx.category.create({
-			data: { cat_label }
-		});
-		console.log(`   [+] Categorie creee: ${cat_label}`);
-		return { entity: category, isNew: true };
+		// Note: cat_label n'est pas unique, donc on ne peut pas utiliser upsert ici
+		try {
+			category = await tx.category.create({
+				data: { cat_label }
+			});
+			console.log(`   [+] Categorie creee: ${cat_label}`);
+			return { entity: category, isNew: true };
+		} catch (error) {
+			// Si erreur de contrainte, re-chercher (race condition possible)
+			category = await tx.category.findFirst({
+				where: { cat_label }
+			});
+			if (!category) throw error; // Re-throw si vraiment une autre erreur
+		}
 	}
 
 	return { entity: category, isNew: false };
