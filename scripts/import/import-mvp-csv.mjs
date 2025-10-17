@@ -489,6 +489,10 @@ async function importCSV() {
 				if (categoryResult && categoryResult.isNew) stats.categories++;
 
 				// Resolution Hierarchie Famille (3 niveaux)
+				let famille = null;
+				let sous_famille = null;
+				let sous_sous_famille = null;
+
 				if (row.famille) {
 					const familleResult = await findOrCreateFamily(
 						tx,
@@ -497,6 +501,7 @@ async function importCSV() {
 						supplierResult.entity.sup_id
 					);
 					if (familleResult?.isNew) stats.families++;
+					famille = familleResult?.entity;
 
 					if (row.sous_famille && familleResult?.entity) {
 						const sousFamilleResult = await findOrCreateFamily(
@@ -506,6 +511,7 @@ async function importCSV() {
 							supplierResult.entity.sup_id
 						);
 						if (sousFamilleResult?.isNew) stats.families++;
+						sous_famille = sousFamilleResult?.entity;
 
 						if (row.sous_sous_famille && sousFamilleResult?.entity) {
 							const sousSousFamilleResult = await findOrCreateFamily(
@@ -515,6 +521,7 @@ async function importCSV() {
 								supplierResult.entity.sup_id
 							);
 							if (sousSousFamilleResult?.isNew) stats.families++;
+							sous_sous_famille = sousSousFamilleResult?.entity;
 						}
 					}
 				}
@@ -524,7 +531,10 @@ async function importCSV() {
 					pro_cenov_id: row.pro_cenov_id,
 					pro_code: row.pro_code,
 					fk_supplier: supplierResult.entity.sup_id,
-					fk_kit: kitResult.entity.kit_id
+					fk_kit: kitResult.entity.kit_id,
+					fk_family: famille?.fam_id || null,
+					fk_sfamily: sous_famille?.fam_id || null,
+					fk_ssfamily: sous_sous_famille?.fam_id || null
 				};
 
 				// Verifier si produit existe pour stats
