@@ -44,7 +44,7 @@ const CONFIG = {
 	fieldMapping: {
 		pro_cenov_id: { table: 'product', field: 'pro_cenov_id' },
 		pro_code: { table: 'product', field: 'pro_code' },
-		cat_code: { table: 'product', field: 'cat_code' },
+		cat_code: { table: 'category', field: 'cat_code' },
 		sup_code: { table: 'supplier', field: 'sup_code' },
 		sup_label: { table: 'supplier', field: 'sup_label' },
 		cat_label: { table: 'category', field: 'cat_label' },
@@ -332,29 +332,35 @@ async function findOrCreateKit(tx, kit_label) {
 /**
  * Trouve ou cree une categorie
  * @param {PrismaTransaction} tx - Client de transaction Prisma
+ * @param {string} cat_label - Label de la categorie
+ * @param {string|null} cat_code - Code de la categorie (optionnel)
  * @returns {{ entity: category, isNew: boolean } | null}
  */
-async function findOrCreateCategory(tx, cat_label) {
+async function findOrCreateCategory(tx, cat_label, cat_code = null) {
 	if (!cat_label || cat_label.trim() === '') return null;
 
-	// Chercher par label (non unique, mais suffisant pour MVP)
+	// Chercher par cat_code SI fourni, sinon par label
+	const whereClause = cat_code ? { cat_code } : { cat_label };
+
 	let category = await tx.category.findFirst({
-		where: { cat_label }
+		where: whereClause
 	});
 
 	if (!category) {
-		// Creer la categorie (sans parent pour MVP)
-		// Note: cat_label n'est pas unique, donc on ne peut pas utiliser upsert ici
+		// Creer la categorie avec cat_code si fourni
 		try {
 			category = await tx.category.create({
-				data: { cat_label }
+				data: {
+					cat_code: cat_code || null,
+					cat_label
+				}
 			});
-			console.log(`   [+] Categorie creee: ${cat_label}`);
+			console.log(`   [+] Categorie creee: ${cat_label}${cat_code ? ` (${cat_code})` : ''}`);
 			return { entity: category, isNew: true };
 		} catch (error) {
 			// Si erreur de contrainte, re-chercher (race condition possible)
 			category = await tx.category.findFirst({
-				where: { cat_label }
+				where: whereClause
 			});
 			if (!category) throw error; // Re-throw si vraiment une autre erreur
 		}
@@ -413,15 +419,13 @@ async function importCSV() {
 				if (kitResult.isNew) stats.kits++;
 
 				// Resolution FK: Category (nullable)
-				const categoryResult = await findOrCreateCategory(tx, row.cat_label);
+				const categoryResult = await findOrCreateCategory(tx, row.cat_label, row.cat_code);
 				if (categoryResult && categoryResult.isNew) stats.categories++;
 
 				// Upsert Product (utilise contrainte unique sur pro_cenov_id)
 				const productData = {
 					pro_cenov_id: row.pro_cenov_id,
 					pro_code: row.pro_code,
-					cat_code: row.cat_code || null,
-					sup_code: row.sup_code,
 					fk_supplier: supplierResult.entity.sup_id,
 					fk_kit: kitResult.entity.kit_id
 				};

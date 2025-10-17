@@ -103,7 +103,6 @@ model category_attribute {
 model family {
   fam_id       Int       @id @default(autoincrement())
   fk_parent    Int?
-  fam_code     String    @cenov_dev_db.VarChar(100)
   fam_label    String    @cenov_dev_db.VarChar(100)
   fk_supplier  Int
   fk_category  Int?
@@ -113,7 +112,6 @@ model family {
   other_family family[]  @relation("familyTofamily")
   supplier     supplier  @relation(fields: [fk_supplier], references: [sup_id], onDelete: NoAction, onUpdate: NoAction, map: "family_fk_supplier_fkey")
 
-  @@unique([fk_parent, fam_code])
   @@schema("produit")
 }
 
