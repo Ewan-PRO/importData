@@ -34,7 +34,7 @@ const CONFIG = {
 	// Options de parsing CSV
 	csvOptions: {
 		delimiter: ';',
-		columns: true,
+		columns: false, // IMPORTANT: false pour gérer headers dupliqués (atr_label x4)
 		skip_empty_lines: true,
 		trim: true,
 		bom: true // Support UTF-8 BOM
@@ -121,6 +121,28 @@ function getFieldMaxLength(modelName, fieldName) {
 // ============================================================================
 // FONCTIONS UTILITAIRES
 // ============================================================================
+
+/**
+ * Mappe une ligne CSV (array) en objet en utilisant les headers
+ * Gère les headers dupliqués en ignorant les colonnes "atr_label"
+ * @param {Array<string>} headers - Headers du CSV
+ * @param {Array<string>} line - Ligne de données
+ * @param {Array<number>} atrPositions - Positions des colonnes "atr_label" à ignorer
+ * @returns {Object} Objet avec les données mappées
+ */
+function mapRowToObject(headers, line, atrPositions = []) {
+	const row = {};
+
+	headers.forEach((header, index) => {
+		// Ignorer les colonnes "atr_label" (gérées séparément)
+		if (atrPositions.includes(index)) return;
+
+		// Mapper les autres colonnes
+		row[header] = line[index] || '';
+	});
+
+	return row;
+}
 
 /**
  * Convertit une date DD/MM/YYYY vers YYYY-MM-DD (ISO)
@@ -435,6 +457,285 @@ async function findOrCreateFamily(tx, fam_label, fk_parent, fk_supplier) {
 }
 
 // ============================================================================
+// FONCTIONS GESTION ATTRIBUTS
+// ============================================================================
+
+/**
+ * Charge tous les attributs de la DB dans une Map pour lookup rapide
+ * @returns {Promise<Map<string, {atr_id: number, atr_label: string}>>}
+ */
+async function loadAttributeReference(prisma) {
+	console.log('[>] Chargement du referentiel des attributs...');
+
+	const attributes = await prisma.attribute.findMany({
+		select: {
+			atr_id: true,
+			atr_label: true
+		}
+	});
+
+	const map = new Map();
+	for (const attr of attributes) {
+		map.set(attr.atr_label, attr);
+	}
+
+	console.log(`   [OK] ${attributes.length} attributs charges en reference\n`);
+	return map;
+}
+
+/** Detecte les colonnes d'attributs (header = "atr_label") dans le CSV
+ * Format vertical: ligne 2 = noms attributs, ligne 3 = valeurs
+ * @returns {{columnIndexes: number[]}} */
+function classifyColumns(csvHeaders) {
+	console.log('[>] Classification des colonnes CSV...');
+
+	const attributeColumnIndexes = [];
+
+	csvHeaders.forEach((header, index) => {
+		if (header === 'atr_label') {
+			attributeColumnIndexes.push(index);
+			console.log(`   [+] Colonne attribut detectee a la position ${index}`);
+		}
+	});
+
+	console.log(
+		`\n[i] Classification: ${attributeColumnIndexes.length} colonnes d'attributs detectees\n`
+	);
+
+	return { attributeColumnIndexes };
+}
+
+/**
+ * Extrait les paires nom-valeur d'attributs depuis les lignes CSV (format vertical)
+ * @param {Array} dataRow - Ligne 2 du CSV (donnees produit + noms attributs)
+ * @param {Array} valuesRow - Ligne 3 du CSV (valeurs attributs)
+ * @param {Array<number>} columnIndexes - Positions des colonnes atr_label
+ * @returns {Array<{atrLabel: string, atrValue: string}>}
+ */
+function extractAttributePairs(dataRow, valuesRow, columnIndexes) {
+	const attributes = [];
+
+	for (const colIndex of columnIndexes) {
+		const atrLabel = dataRow[colIndex]; // Ex: "Type d'alimentation"
+		const atrValue = valuesRow ? valuesRow[colIndex] : null; // Ex: "Triphasé"
+
+		if (atrLabel && atrLabel.trim() !== '') {
+			attributes.push({
+				atrLabel: atrLabel.trim(),
+				atrValue: atrValue ? atrValue.trim() : null
+			});
+		}
+	}
+
+	return attributes;
+}
+
+/**
+ * Charge les valeurs autorisees pour un ensemble d'attributs
+ * @returns {Promise<Map<number, Set<string>>>} Map<atr_id, Set<av_value_label>>
+ */
+async function loadAllowedValues(prisma, atrIds) {
+	if (atrIds.length === 0) return new Map();
+
+	console.log('[>] Chargement des valeurs autorisees pour validation...');
+
+	const attributeValues = await prisma.attribute_value.findMany({
+		where: {
+			av_atr_id: { in: atrIds }
+		},
+		select: {
+			av_atr_id: true,
+			av_value_label: true
+		}
+	});
+
+	// Creer Map<atr_id, Set<valeurs>>
+	const allowedValuesMap = new Map();
+
+	for (const av of attributeValues) {
+		if (!allowedValuesMap.has(av.av_atr_id)) {
+			allowedValuesMap.set(av.av_atr_id, new Set());
+		}
+		allowedValuesMap.get(av.av_atr_id).add(av.av_value_label);
+	}
+
+	console.log(`   [OK] Valeurs autorisees chargees pour ${atrIds.length} attributs\n`);
+	return allowedValuesMap;
+}
+
+/**
+ * Valide que les attributs existent et que leurs valeurs sont autorisees
+ * @returns {Array<string>} Tableau d'erreurs (vide si tout est valide)
+ */
+function validateAttributeValues(attributes, attributeMap, allowedValuesMap) {
+	const errors = [];
+
+	for (const { atrLabel, atrValue } of attributes) {
+		// Skip si pas de valeur (optionnel)
+		if (!atrValue || atrValue.trim() === '') continue;
+
+		// 1. Verifier que l'attribut existe
+		const attribute = attributeMap.get(atrLabel);
+		if (!attribute) {
+			errors.push(`Attribut "${atrLabel}" introuvable dans la base de donnees`);
+			continue;
+		}
+
+		// 2. Verifier que la valeur est autorisee
+		const allowedValues = allowedValuesMap.get(attribute.atr_id);
+		if (!allowedValues || !allowedValues.has(atrValue)) {
+			const allowedList = allowedValues ? Array.from(allowedValues).join(', ') : 'aucune';
+			errors.push(
+				`Attribut "${atrLabel}": valeur "${atrValue}" invalide. Valeurs autorisees: [${allowedList}]`
+			);
+		}
+	}
+
+	return errors;
+}
+
+/**
+ * Cree ou verifie la relation category-attribute (template)
+ * @param {PrismaTransaction} tx - Client de transaction Prisma
+ * @param {number} cat_id - ID de la categorie
+ * @param {number} atr_id - ID de l'attribut
+ * @param {string} atr_label - Label de l'attribut (pour logs)
+ * @returns {Promise<{isNew: boolean}>}
+ */
+async function upsertCategoryAttribute(tx, cat_id, atr_id, atr_label) {
+	// Verifier si relation existe deja
+	const existing = await tx.category_attribute.findFirst({
+		where: {
+			fk_category: cat_id,
+			fk_attribute: atr_id
+		}
+	});
+
+	if (!existing) {
+		// Creer la relation (template)
+		await tx.category_attribute.create({
+			data: {
+				fk_category: cat_id,
+				fk_attribute: atr_id,
+				cat_atr_required: false // Optionnel par defaut
+			}
+		});
+		console.log(`   [+] Categorie-Attribut lie: "${atr_label}" (optionnel)`);
+		return { isNew: true };
+	}
+
+	return { isNew: false };
+}
+
+/**
+ * Cree ou met a jour la valeur d'un attribut pour un kit (instance)
+ * @param {PrismaTransaction} tx - Client de transaction Prisma
+ * @param {number} kit_id - ID du kit
+ * @param {number} atr_id - ID de l'attribut
+ * @param {string} atr_value - Valeur de l'attribut
+ * @param {string} atr_label - Label de l'attribut (pour logs)
+ * @returns {Promise<{isNew: boolean}>}
+ */
+async function upsertKitAttribute(tx, kit_id, atr_id, atr_value, atr_label) {
+	// Verifier si attribut deja defini pour ce kit
+	const existing = await tx.kit_attribute.findFirst({
+		where: {
+			fk_kit: kit_id,
+			fk_attribute_characteristic: atr_id
+		}
+	});
+
+	if (existing) {
+		// Mettre a jour la valeur
+		await tx.kit_attribute.update({
+			where: { kat_id: existing.kat_id },
+			data: { kat_value: atr_value }
+		});
+		console.log(`   [↻] Kit-Attribut mis a jour: "${atr_label}" = "${atr_value}"`);
+		return { isNew: false };
+	} else {
+		// Creer l'enregistrement
+		await tx.kit_attribute.create({
+			data: {
+				fk_kit: kit_id,
+				fk_attribute_characteristic: atr_id,
+				fk_attribute_unite: null, // Pas d'unite pour valeurs predefinies
+				kat_value: atr_value
+			}
+		});
+		console.log(`   [+] Kit-Attribut cree: "${atr_label}" = "${atr_value}"`);
+		return { isNew: true };
+	}
+}
+
+/**
+ * Verifie que les attributs ont bien ete importes dans les tables
+ * @param {PrismaClient} prisma - Client Prisma
+ * @param {number} cat_id - ID de la categorie
+ * @param {number} kit_id - ID du kit
+ * @param {Array<{atrLabel: string, atrValue: string}>} attributes - Attributs importes
+ * @param {Map} attributeMap - Map des attributs
+ */
+async function verifyImportedAttributes(prisma, cat_id, kit_id, attributes, attributeMap) {
+	console.log('\n' + '='.repeat(60));
+	console.log("[>] VERIFICATION DES IMPORTS D'ATTRIBUTS");
+	console.log('='.repeat(60) + '\n');
+
+	const attributesWithValues = attributes.filter((a) => a.atrValue);
+
+	if (attributesWithValues.length === 0) {
+		console.log('[i] Aucun attribut a verifier\n');
+		return;
+	}
+
+	// Verification category_attribute
+	console.log('[>] Verification table category_attribute...');
+	for (const { atrLabel } of attributesWithValues) {
+		const attribute = attributeMap.get(atrLabel);
+		if (!attribute) continue;
+
+		const catAttr = await prisma.category_attribute.findFirst({
+			where: {
+				fk_category: cat_id,
+				fk_attribute: attribute.atr_id
+			}
+		});
+
+		if (catAttr) {
+			console.log(
+				`   [OK] cat_id=${cat_id}, atr_id=${attribute.atr_id}, atr_label="${atrLabel}", cat_atr_required=${catAttr.cat_atr_required}`
+			);
+		} else {
+			console.log(`   [X] MANQUANT: cat_id=${cat_id}, atr_label="${atrLabel}"`);
+		}
+	}
+
+	// Verification kit_attribute
+	console.log('\n[>] Verification table kit_attribute...');
+	for (const { atrLabel } of attributesWithValues) {
+		const attribute = attributeMap.get(atrLabel);
+		if (!attribute) continue;
+
+		const kitAttr = await prisma.kit_attribute.findFirst({
+			where: {
+				fk_kit: kit_id,
+				fk_attribute_characteristic: attribute.atr_id
+			}
+		});
+
+		if (kitAttr) {
+			console.log(
+				`   [OK] kit_id=${kit_id}, atr_id=${attribute.atr_id}, atr_label="${atrLabel}", kat_value="${kitAttr.kat_value}"`
+			);
+		} else {
+			console.log(`   [X] MANQUANT: kit_id=${kit_id}, atr_label="${atrLabel}"`);
+		}
+	}
+
+	console.log('');
+}
+
+// ============================================================================
 // FONCTION PRINCIPALE D'IMPORT
 // ============================================================================
 
@@ -443,16 +744,73 @@ async function importCSV() {
 	console.log(`[i] Fichier: ${CONFIG.csvFilePath}\n`);
 
 	try {
+		// ========== 0. CHARGEMENT REFERENTIEL ATTRIBUTS ==========
+		const attributeMap = await loadAttributeReference(prisma);
+
 		// ========== 1. LECTURE CSV ==========
 		console.log('[>] Lecture du fichier CSV...');
 		const fileContent = readFileSync(CONFIG.csvFilePath, 'utf-8');
-		const rows = parse(fileContent, CONFIG.csvOptions);
-		console.log(`   [OK] ${rows.length} lignes detectees\n`);
+		const rawData = parse(fileContent, CONFIG.csvOptions); // columns: false → array de arrays
+		console.log(`   [OK] ${rawData.length} lignes detectees (incluant header)\n`);
+
+		// ========== 1.5 EXTRACTION HEADERS ET CLASSIFICATION ==========
+		const headers = rawData[0]; // Ligne 1 = headers
+		const dataLines = rawData.slice(1); // Lignes 2+ = données
+
+		const { attributeColumnIndexes } = classifyColumns(headers);
+
+		// Extraire paires attribut nom-valeur (format vertical: ligne data + ligne valeurs)
+		let attributePairs = [];
+		let dataRows = []; // Lignes de données en format objet
+
+		if (attributeColumnIndexes.length > 0 && dataLines.length >= 2) {
+			// Format vertical détecté
+			const dataLine = dataLines[0]; // Ligne 2 CSV (données + noms attributs)
+			const valuesLine = dataLines[1]; // Ligne 3 CSV (valeurs attributs)
+
+			// Extraire attributs par index direct
+			attributePairs = extractAttributePairs(dataLine, valuesLine, attributeColumnIndexes);
+
+			console.log('[i] Attributs detectes:');
+			attributePairs.forEach((pair) => {
+				console.log(`   - "${pair.atrLabel}" = "${pair.atrValue || '(vide)'}"`);
+			});
+			console.log('');
+
+			// Mapper ligne 2 en objet (ignorer colonnes atr_label)
+			const row = mapRowToObject(headers, dataLine, attributeColumnIndexes);
+			dataRows = [row];
+
+			console.log('[i] Format vertical detecte: ligne de valeurs attributs ignoree\n');
+		} else {
+			// Format classique: toutes les lignes sont des données
+			dataRows = dataLines.map((line) => mapRowToObject(headers, line, attributeColumnIndexes));
+		}
 
 		// ========== 2. VALIDATION PREALABLE ==========
-		const isValid = validateAllRows(rows);
+		const isValid = validateAllRows(dataRows);
 		if (!isValid) {
 			throw new Error('Validation CSV echouee - Import annule');
+		}
+
+		// ========== 2.5 VALIDATION ATTRIBUTS ==========
+		if (attributePairs.length > 0) {
+			// Charger valeurs autorisees
+			const atrIds = attributePairs
+				.filter((p) => attributeMap.has(p.atrLabel))
+				.map((p) => attributeMap.get(p.atrLabel).atr_id);
+
+			const allowedValuesMap = await loadAllowedValues(prisma, atrIds);
+
+			// Valider
+			const attrErrors = validateAttributeValues(attributePairs, attributeMap, allowedValuesMap);
+			if (attrErrors.length > 0) {
+				console.error('[X] VALIDATION ATTRIBUTS ECHOUEE\n');
+				attrErrors.forEach((err) => console.error(`   ${err}`));
+				throw new Error('Validation attributs echouee - Import annule');
+			}
+
+			console.log('[OK] Validation attributs reussie\n');
 		}
 
 		// ========== 3. IMPORT LIGNE PAR LIGNE (TRANSACTION ATOMIQUE) ==========
@@ -465,16 +823,22 @@ async function importCSV() {
 			families: 0,
 			products: 0,
 			productsUpdated: 0,
-			prices: 0
+			prices: 0,
+			categoryAttributes: 0,
+			kitAttributes: 0
 		};
+
+		// Variables pour verification finale
+		let lastCatId = null;
+		let lastKitId = null;
 
 		// Transaction: si une erreur survient, TOUT est annule (rollback)
 		await prisma.$transaction(async (tx) => {
-			for (let i = 0; i < rows.length; i++) {
-				const row = rows[i];
+			for (let i = 0; i < dataRows.length; i++) {
+				const row = dataRows[i];
 				const lineNumber = i + 2;
 
-				console.log(`\n[>] Ligne ${lineNumber}/${rows.length + 1}: ${row.pro_cenov_id}`);
+				console.log(`\n[>] Ligne ${lineNumber}/${dataRows.length + 1}: ${row.pro_cenov_id}`);
 
 				// Resolution FK: Supplier
 				const supplierResult = await findOrCreateSupplier(tx, row.sup_code, row.sup_label);
@@ -600,6 +964,48 @@ async function importCSV() {
 				});
 				stats.prices++;
 				console.log(`   [OK] Prix enregistre: ${row.pp_amount} EUR (date: ${row.pp_date})`);
+
+				// ========== IMPORT ATTRIBUTS ==========
+				if (attributePairs.length > 0 && categoryResult) {
+					console.log('\n   [>] Import des attributs...');
+
+					for (const { atrLabel, atrValue } of attributePairs) {
+						// Skip si pas de valeur
+						if (!atrValue || atrValue.trim() === '') {
+							console.log(`   [i] Attribut "${atrLabel}": pas de valeur (skip)`);
+							continue;
+						}
+
+						const attribute = attributeMap.get(atrLabel);
+						if (!attribute) {
+							console.log(`   [!] Attribut "${atrLabel}": introuvable (skip)`);
+							continue;
+						}
+
+						// 1. Upsert category_attribute (template)
+						const catAttrResult = await upsertCategoryAttribute(
+							tx,
+							categoryResult.entity.cat_id,
+							attribute.atr_id,
+							atrLabel
+						);
+						if (catAttrResult.isNew) stats.categoryAttributes++;
+
+						// 2. Upsert kit_attribute (instance/valeur)
+						const kitAttrResult = await upsertKitAttribute(
+							tx,
+							kitResult.entity.kit_id,
+							attribute.atr_id,
+							atrValue,
+							atrLabel
+						);
+						if (kitAttrResult.isNew) stats.kitAttributes++;
+					}
+
+					// Sauvegarder IDs pour verification finale
+					lastCatId = categoryResult.entity.cat_id;
+					lastKitId = kitResult.entity.kit_id;
+				}
 			}
 		});
 
@@ -615,7 +1021,14 @@ async function importCSV() {
 		console.log(`   - ${stats.products} produits crees`);
 		console.log(`   - ${stats.productsUpdated} produits mis a jour`);
 		console.log(`   - ${stats.prices} prix enregistres`);
+		console.log(`   - ${stats.categoryAttributes} relations categorie-attribut creees`);
+		console.log(`   - ${stats.kitAttributes} attributs kit crees`);
 		console.log('');
+
+		// ========== VERIFICATION FINALE ==========
+		if (lastCatId && lastKitId && attributePairs.length > 0) {
+			await verifyImportedAttributes(prisma, lastCatId, lastKitId, attributePairs, attributeMap);
+		}
 
 		return { success: true, stats };
 	} catch (error) {

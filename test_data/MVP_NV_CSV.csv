@@ -1,2 +1,3 @@
-﻿ pro_cenov_id;pro_code;sup_code;sup_label;famille;sous_famille;sous_sous_famille;cat_code;cat_label;kit_label;TYPE_ALIMENTATION;INDICE_ENERGETIQUE;FILTRE_AIR_INTEGRE;VALVE_REGULATION;pp_amount;pp_date;pp_discount
-PROG051972-SUP00000010;G051972;SUP00000010;BECKER;U5;U 5.101;U 5.101 VARIAIR;CAT0000211;POMPE A PALETTES LUBRIFIEES;Pompe a palettes lubrifiees U 5.101 VARIAIR TRI 4 kW - G051972;triphase;IE2;;;150;20/08/2025;50
+﻿pro_cenov_id;pro_code;sup_code;sup_label;famille;sous_famille;sous_sous_famille;cat_code;cat_label;kit_label;PRESSION_LIMITE;PUISSANCE;TENSION_COUPLAGE_EXACTE;DEBIT_VOL_NOMINALE;atr_label;atr_label;atr_label;atr_label;NIVEAU_BRUIT;DEBIT_VOL_NOMINALE_60;pp_amount;pp_date;pp_discount
+PROG051972-SUP00000010;G051972;SUP00000010;BECKER;U5;U 5.101;U 5.101 VARIAIR;CAT0000211;POMPE A PALETTES LUBRIFIEES;Pompe a palettes lubrifiees U 5.101 VARIAIR TRI 4 kW - G051972;0.1;4;400/480 V;140;Type d'alimentation;Indice énergétique;Filtre à air intégré;Valve de régulation de vide intégré;48;150;150;20/08/2025;50
+;;;;;;;;;;;;;;Triphasé;IE2;Sans;Sans;;;;;
