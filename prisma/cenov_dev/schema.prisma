@@ -250,26 +250,14 @@ model document_link {
   @@schema("public")
 }
 
-view produit_v_produit_categorie_attribut {
+view v_produit_categorie_attribut {
   pro_id    Int
   kit_label String @cenov_dev_db.VarChar(100)
   atr_id    Int
   atr_label String @cenov_dev_db.VarChar(100)
   cat_label String @cenov_dev_db.VarChar(100)
 
-  @@map("v_produit_categorie_attribut")
   @@schema("produit")
-}
-
-view public_v_produit_categorie_attribut {
-  pro_id    Int
-  kit_label String @cenov_dev_db.VarChar(100)
-  atr_id    Int
-  atr_label String @cenov_dev_db.VarChar(100)
-  cat_label String @cenov_dev_db.VarChar(100)
-
-  @@map("v_produit_categorie_attribut")
-  @@schema("public")
 }
 
 view v_categorie {
