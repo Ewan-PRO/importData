@@ -24,10 +24,11 @@
 	});
 
 	// Navigation items avec types stricts pour resolve
-	const navItems: Array<{ href: '/' | '/CRUD' | '/import' | '/export'; label: string }> = [
+	const navItems: Array<{ href: '/' | '/CRUD' | '/import' | '/importV2' | '/export'; label: string }> = [
 		{ href: '/', label: 'Accueil' },
 		{ href: '/CRUD', label: 'CRUD' },
 		{ href: '/import', label: 'Import' },
+		{ href: '/importV2', label: 'Import MVP' },
 		{ href: '/export', label: 'Export' }
 	];
 </script>

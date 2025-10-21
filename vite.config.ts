@@ -7,13 +7,16 @@ export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	define: {
 		// Polyfills globaux pour Node.js
-		global: 'globalThis'
+		global: 'globalThis',
+		// Fix pour PapaParse en SSR
+		'this': 'globalThis'
 	},
 	ssr: {
 		// Forcer Prisma à rester externe
 		external: ['@prisma/client', '.prisma/client'],
 		// NOUVEAU: Forcer l'inclusion du 2ème client cenov_dev dans le bundle
-		noExternal: ['../../prisma/cenov_dev/generated']
+		// Forcer PapaParse à être bundlé pour éviter "exports is not defined"
+		noExternal: ['../../prisma/cenov_dev/generated', 'papaparse']
 	},
 	optimizeDeps: {
 		// Exclure Prisma de l'optimisation des dépendances
