@@ -483,6 +483,109 @@ async function loadAttributeReference(prisma) {
 	return map;
 }
 
+/**
+ * Charge les unites autorisees pour chaque attribut avec unite par defaut
+ * @returns {Promise<Map<number, {default_unit_id: number, units: Array<{unit_id: number, unit_value: string, unit_label: string}>}>>}
+ */
+async function loadAttributeUnitsEnriched(prisma) {
+	console.log('[>] Chargement du referentiel des unites...');
+
+	const attributeUnits = await prisma.attribute_unit.findMany({
+		include: {
+			attribute_attribute_unit_fk_unitToattribute: {
+				select: {
+					atr_id: true,
+					atr_value: true,
+					atr_label: true
+				}
+			}
+		},
+		orderBy: [{ fk_attribute: 'asc' }, { is_default: 'desc' }]
+	});
+
+	const map = new Map();
+
+	for (const au of attributeUnits) {
+		const atr_id = au.fk_attribute;
+		const unit = au.attribute_attribute_unit_fk_unitToattribute;
+
+		if (!map.has(atr_id)) {
+			map.set(atr_id, {
+				default_unit_id: null,
+				units: []
+			});
+		}
+
+		const entry = map.get(atr_id);
+
+		// Premier avec is_default=true devient le defaut
+		if (au.is_default && entry.default_unit_id === null) {
+			entry.default_unit_id = au.fk_unit;
+		}
+
+		// Ajouter toutes les unites possibles
+		entry.units.push({
+			unit_id: au.fk_unit,
+			unit_value: unit.atr_value,
+			unit_label: unit.atr_label
+		});
+	}
+
+	console.log(`   [OK] ${map.size} attributs avec unites charges\n`);
+	return map;
+}
+
+/**
+ * Parse une valeur brute pour extraire valeur numerique et unite
+ * @param {string} rawValue - Valeur brute ex: "4 kW", "140", "400/480 V"
+ * @returns {{value: string, unit: string|null}}
+ */
+function parseValueAndUnit(rawValue) {
+	if (!rawValue || typeof rawValue !== 'string') {
+		return { value: rawValue, unit: null };
+	}
+
+	// Regex: nombre (decimal, composite 400/480) + espace optionnel + texte
+	const regex = /^(\d+(?:\.\d+)?(?:\/\d+)?)\s*(.*)$/;
+	const match = rawValue.trim().match(regex);
+
+	if (!match) {
+		// Pas un pattern numerique, retourner tel quel (ex: "Triphase")
+		return { value: rawValue, unit: null };
+	}
+
+	const value = match[1]; // Partie numerique
+	const unit = match[2].trim() || null; // Partie unite (vide = null)
+
+	return { value, unit };
+}
+
+/**
+ * Trouve l'ID d'une unite depuis son symbole ou label
+ * @param {number} atr_id - ID de l'attribut
+ * @param {string} unit_string - Symbole ou label de l'unite ex: "kW", "W", "Watt"
+ * @param {Map} attributeUnitsMap - Map des unites
+ * @returns {number|null} unit_id ou null si pas trouve
+ */
+function findUnitId(atr_id, unit_string, attributeUnitsMap) {
+	const unitsData = attributeUnitsMap.get(atr_id);
+	if (!unitsData || !unitsData.units) return null;
+
+	const search = unit_string.toLowerCase();
+
+	// Chercher dans unit_value puis unit_label (case-insensitive)
+	for (const unit of unitsData.units) {
+		if (
+			unit.unit_value.toLowerCase() === search ||
+			unit.unit_label.toLowerCase() === search
+		) {
+			return unit.unit_id;
+		}
+	}
+
+	return null;
+}
+
 /** Detecte les colonnes d'attributs (header = "atr_label") dans le CSV
  * Format vertical: ligne 2 = noms attributs, ligne 3 = valeurs
  * @returns {{columnIndexes: number[]}} */
@@ -567,7 +670,7 @@ async function loadAllowedValues(prisma, atrIds) {
  * Valide que les attributs existent et que leurs valeurs sont autorisees
  * @returns {Array<string>} Tableau d'erreurs (vide si tout est valide)
  */
-function validateAttributeValues(attributes, attributeMap, allowedValuesMap) {
+function validateAttributeValues(attributes, attributeMap, allowedValuesMap, attributeUnitsMap) {
 	const errors = [];
 
 	for (const { atrLabel, atrValue } of attributes) {
@@ -581,13 +684,38 @@ function validateAttributeValues(attributes, attributeMap, allowedValuesMap) {
 			continue;
 		}
 
-		// 2. Verifier que la valeur est autorisee
+		// 2. Verifier si l'attribut a des valeurs predefinies
 		const allowedValues = allowedValuesMap.get(attribute.atr_id);
-		if (!allowedValues || !allowedValues.has(atrValue)) {
-			const allowedList = allowedValues ? Array.from(allowedValues).join(', ') : 'aucune';
-			errors.push(
-				`Attribut "${atrLabel}": valeur "${atrValue}" invalide. Valeurs autorisees: [${allowedList}]`
-			);
+
+		if (allowedValues && allowedValues.size > 0) {
+			// Attribut avec valeurs predefinies - valider contre la liste
+			if (!allowedValues.has(atrValue)) {
+				const allowedList = Array.from(allowedValues).join(', ');
+				errors.push(
+					`Attribut "${atrLabel}": valeur "${atrValue}" invalide. Valeurs autorisees: [${allowedList}]`
+				);
+			}
+		} else {
+			// Attribut sans valeurs predefinies - valeur libre, mais valider l'unite si specifiee
+			const { unit } = parseValueAndUnit(atrValue);
+
+			if (unit) {
+				// Une unite est specifiee - verifier qu'elle est autorisee
+				const unitsData = attributeUnitsMap.get(attribute.atr_id);
+
+				if (unitsData && unitsData.units.length > 0) {
+					// L'attribut a des unites definies - verifier que l'unite specifiee est valide
+					const unitId = findUnitId(attribute.atr_id, unit, attributeUnitsMap);
+
+					if (!unitId) {
+						// Unite invalide
+						const allowedUnits = unitsData.units.map((u) => u.unit_value).join(', ');
+						errors.push(
+							`Attribut "${atrLabel}": unite "${unit}" invalide. Unites acceptees: [${allowedUnits}]`
+						);
+					}
+				}
+			}
 		}
 	}
 
@@ -632,11 +760,12 @@ async function upsertCategoryAttribute(tx, cat_id, atr_id, atr_label) {
  * @param {PrismaTransaction} tx - Client de transaction Prisma
  * @param {number} kit_id - ID du kit
  * @param {number} atr_id - ID de l'attribut
- * @param {string} atr_value - Valeur de l'attribut
+ * @param {string} atr_value - Valeur de l'attribut (peut contenir l'unite)
  * @param {string} atr_label - Label de l'attribut (pour logs)
+ * @param {number|null} unit_id - ID de l'unite (null si pas d'unite)
  * @returns {Promise<{isNew: boolean}>}
  */
-async function upsertKitAttribute(tx, kit_id, atr_id, atr_value, atr_label) {
+async function upsertKitAttribute(tx, kit_id, atr_id, atr_value, atr_label, unit_id = null) {
 	// Verifier si attribut deja defini pour ce kit
 	const existing = await tx.kit_attribute.findFirst({
 		where: {
@@ -646,12 +775,16 @@ async function upsertKitAttribute(tx, kit_id, atr_id, atr_value, atr_label) {
 	});
 
 	if (existing) {
-		// Mettre a jour la valeur
+		// Mettre a jour la valeur et l'unite
 		await tx.kit_attribute.update({
 			where: { kat_id: existing.kat_id },
-			data: { kat_value: atr_value }
+			data: {
+				kat_value: atr_value,
+				fk_attribute_unite: unit_id
+			}
 		});
-		console.log(`   [↻] Kit-Attribut mis a jour: "${atr_label}" = "${atr_value}"`);
+		const unitInfo = unit_id ? ' (avec unite)' : '';
+		console.log(`   [↻] Kit-Attribut mis a jour: "${atr_label}" = "${atr_value}"${unitInfo}`);
 		return { isNew: false };
 	} else {
 		// Creer l'enregistrement
@@ -659,11 +792,12 @@ async function upsertKitAttribute(tx, kit_id, atr_id, atr_value, atr_label) {
 			data: {
 				fk_kit: kit_id,
 				fk_attribute_characteristic: atr_id,
-				fk_attribute_unite: null, // Pas d'unite pour valeurs predefinies
+				fk_attribute_unite: unit_id,
 				kat_value: atr_value
 			}
 		});
-		console.log(`   [+] Kit-Attribut cree: "${atr_label}" = "${atr_value}"`);
+		const unitInfo = unit_id ? ' (avec unite)' : '';
+		console.log(`   [+] Kit-Attribut cree: "${atr_label}" = "${atr_value}"${unitInfo}`);
 		return { isNew: true };
 	}
 }
@@ -746,6 +880,7 @@ async function importCSV() {
 	try {
 		// ========== 0. CHARGEMENT REFERENTIEL ATTRIBUTS ==========
 		const attributeMap = await loadAttributeReference(prisma);
+		const attributeUnitsMap = await loadAttributeUnitsEnriched(prisma);
 
 		// ========== 1. LECTURE CSV ==========
 		console.log('[>] Lecture du fichier CSV...');
@@ -793,6 +928,9 @@ async function importCSV() {
 			throw new Error('Validation CSV echouee - Import annule');
 		}
 
+		// Declarer allowedValuesMap pour portee globale
+		let allowedValuesMap = new Map();
+
 		// ========== 2.5 VALIDATION ATTRIBUTS ==========
 		if (attributePairs.length > 0) {
 			// Charger valeurs autorisees
@@ -800,10 +938,15 @@ async function importCSV() {
 				.filter((p) => attributeMap.has(p.atrLabel))
 				.map((p) => attributeMap.get(p.atrLabel).atr_id);
 
-			const allowedValuesMap = await loadAllowedValues(prisma, atrIds);
+			allowedValuesMap = await loadAllowedValues(prisma, atrIds);
 
 			// Valider
-			const attrErrors = validateAttributeValues(attributePairs, attributeMap, allowedValuesMap);
+			const attrErrors = validateAttributeValues(
+				attributePairs,
+				attributeMap,
+				allowedValuesMap,
+				attributeUnitsMap
+			);
 			if (attrErrors.length > 0) {
 				console.error('[X] VALIDATION ATTRIBUTS ECHOUEE\n');
 				attrErrors.forEach((err) => console.error(`   ${err}`));
@@ -992,12 +1135,35 @@ async function importCSV() {
 						if (catAttrResult.isNew) stats.categoryAttributes++;
 
 						// 2. Upsert kit_attribute (instance/valeur)
+						// Determiner si l'attribut a des valeurs predefinies
+						const allowedValues = allowedValuesMap.get(attribute.atr_id);
+						let finalValue = atrValue;
+						let finalUnitId = null;
+
+						if (!allowedValues || allowedValues.size === 0) {
+							// Attribut sans valeurs predefinies - parser et resoudre l'unite
+							const { value, unit } = parseValueAndUnit(atrValue);
+							finalValue = value;
+
+							if (unit) {
+								// Unite specifiee - resoudre l'ID
+								finalUnitId = findUnitId(attribute.atr_id, unit, attributeUnitsMap);
+							} else {
+								// Pas d'unite specifiee - utiliser l'unite par defaut si disponible
+								const unitsData = attributeUnitsMap.get(attribute.atr_id);
+								if (unitsData && unitsData.default_unit_id) {
+									finalUnitId = unitsData.default_unit_id;
+								}
+							}
+						}
+
 						const kitAttrResult = await upsertKitAttribute(
 							tx,
 							kitResult.entity.kit_id,
 							attribute.atr_id,
-							atrValue,
-							atrLabel
+							finalValue,
+							atrLabel,
+							finalUnitId
 						);
 						if (kitAttrResult.isNew) stats.kitAttributes++;
 					}

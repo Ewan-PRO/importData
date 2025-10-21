@@ -186,6 +186,8 @@ model attribute {
   atr_check                                                          Boolean?
   atr_symbol_fr                                                      String?              @cenov_dev_db.VarChar(50)
   category_attribute                                                 category_attribute[]
+  attribute_unit_attribute_unit_fk_attributeToattribute              attribute_unit[]     @relation("attribute_unit_fk_attributeToattribute")
+  attribute_unit_attribute_unit_fk_unitToattribute                   attribute_unit[]     @relation("attribute_unit_fk_unitToattribute")
   attribute_value                                                    attribute_value[]
   kit_attribute_kit_attribute_fk_attribute_characteristicToattribute kit_attribute[]      @relation("kit_attribute_fk_attribute_characteristicToattribute")
   kit_attribute_kit_attribute_fk_attribute_uniteToattribute          kit_attribute[]      @relation("kit_attribute_fk_attribute_uniteToattribute")
@@ -247,6 +249,19 @@ model document_link {
   @@unique([fk_document, entity_type, entity_id], map: "unique_document_entity")
   @@index([fk_document], map: "idx_doc_link_document")
   @@index([entity_type, entity_id], map: "idx_doc_link_entity")
+  @@schema("public")
+}
+
+model attribute_unit {
+  fk_attribute                                     Int
+  fk_unit                                          Int
+  created_at                                       DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
+  updated_at                                       DateTime? @default(now()) @cenov_dev_db.Timestamp(6)
+  is_default                                       Boolean?  @default(true)
+  attribute_attribute_unit_fk_attributeToattribute attribute @relation("attribute_unit_fk_attributeToattribute", fields: [fk_attribute], references: [atr_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_attribute_default_unit_attribute")
+  attribute_attribute_unit_fk_unitToattribute      attribute @relation("attribute_unit_fk_unitToattribute", fields: [fk_unit], references: [atr_id], onUpdate: NoAction, map: "fk_attribute_default_unit_unit")
+
+  @@id([fk_attribute, fk_unit])
   @@schema("public")
 }
 
