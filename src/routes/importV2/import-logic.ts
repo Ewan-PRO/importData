@@ -476,17 +476,18 @@ export async function importToDatabase(
 				const supplierResult = await findOrCreateSupplier(tx, row.sup_code, row.sup_label, changes);
 				if (supplierResult.isNew) stats.suppliers++;
 
-				const kitResult = await findOrCreateKit(tx, row.kit_label);
+				const kitResult = await findOrCreateKit(tx, row.kit_label, changes);
 				if (kitResult.isNew) stats.kits++;
 
-				const categoryResult = await findOrCreateCategory(tx, row.cat_label, row.cat_code);
+				const categoryResult = await findOrCreateCategory(tx, row.cat_label, row.cat_code, changes);
 				if (categoryResult && categoryResult.isNew) stats.categories++;
 
 				const familyIds = await resolveFamilyHierarchy(
 					tx,
 					row,
 					supplierResult.entity.sup_id,
-					stats
+					stats,
+					changes
 				);
 
 				const productResult = await upsertProduct(
@@ -543,6 +544,22 @@ async function findOrCreateSupplier(
 	});
 
 	if (!existing) {
+		changes.push({
+			table: 'supplier',
+			schema: 'public',
+			column: 'sup_code',
+			oldValue: null,
+			newValue: sup_code,
+			recordId: sup_code
+		});
+		changes.push({
+			table: 'supplier',
+			schema: 'public',
+			column: 'sup_label',
+			oldValue: null,
+			newValue: sup_label,
+			recordId: sup_code
+		});
 		console.log(`📦 Fournisseur créé: ${sup_label} (${sup_code})`);
 	} else if (existing.sup_label !== sup_label) {
 		changes.push({
@@ -561,20 +578,35 @@ async function findOrCreateSupplier(
 	return { entity: supplier, isNew: !existing };
 }
 
-async function findOrCreateKit(tx: PrismaTransaction, kit_label: string) {
+async function findOrCreateKit(tx: PrismaTransaction, kit_label: string, changes: ChangeDetail[]) {
 	const existing = await tx.kit.findUnique({ where: { kit_label } });
 	const kit = await tx.kit.upsert({
 		where: { kit_label },
 		create: { kit_label },
 		update: {}
 	});
+
 	if (!existing) {
+		changes.push({
+			table: 'kit',
+			schema: 'public',
+			column: 'kit_label',
+			oldValue: null,
+			newValue: kit_label,
+			recordId: kit_label
+		});
 		console.log(`📦 Kit créé: ${kit_label}`);
 	}
+
 	return { entity: kit, isNew: !existing };
 }
 
-async function findOrCreateCategory(tx: PrismaTransaction, cat_label?: string, cat_code?: string) {
+async function findOrCreateCategory(
+	tx: PrismaTransaction,
+	cat_label: string | undefined,
+	cat_code: string | undefined,
+	changes: ChangeDetail[]
+) {
 	if (!cat_label || cat_label.trim() === '') return null;
 
 	const whereClause = cat_code ? { cat_code } : { cat_label };
@@ -585,8 +617,30 @@ async function findOrCreateCategory(tx: PrismaTransaction, cat_label?: string, c
 		category = await tx.category.create({
 			data: { cat_code: cat_code || null, cat_label }
 		});
+
+		changes.push({
+			table: 'category',
+			schema: 'produit',
+			column: 'cat_label',
+			oldValue: null,
+			newValue: cat_label,
+			recordId: cat_code || cat_label
+		});
+
+		if (cat_code) {
+			changes.push({
+				table: 'category',
+				schema: 'produit',
+				column: 'cat_code',
+				oldValue: null,
+				newValue: cat_code,
+				recordId: cat_code
+			});
+		}
+
 		console.log(`📦 Catégorie créée: ${cat_label}${cat_code ? ` (${cat_code})` : ''}`);
 	}
+
 	return { entity: category, isNew };
 }
 
@@ -594,19 +648,26 @@ async function resolveFamilyHierarchy(
 	tx: PrismaTransaction,
 	row: CSVRow,
 	fk_supplier: number,
-	stats: ImportStats
+	stats: ImportStats,
+	changes: ChangeDetail[]
 ) {
 	let fam_id = null,
 		sfam_id = null,
 		ssfam_id = null;
 
 	if (row.famille) {
-		const famille = await findOrCreateFamily(tx, row.famille, null, fk_supplier);
+		const famille = await findOrCreateFamily(tx, row.famille, null, fk_supplier, changes);
 		if (famille.isNew) stats.families++;
 		fam_id = famille.entity.fam_id;
 
 		if (row.sous_famille) {
-			const sousFamille = await findOrCreateFamily(tx, row.sous_famille, fam_id, fk_supplier);
+			const sousFamille = await findOrCreateFamily(
+				tx,
+				row.sous_famille,
+				fam_id,
+				fk_supplier,
+				changes
+			);
 			if (sousFamille.isNew) stats.families++;
 			sfam_id = sousFamille.entity.fam_id;
 
@@ -615,7 +676,8 @@ async function resolveFamilyHierarchy(
 					tx,
 					row.sous_sous_famille,
 					sfam_id,
-					fk_supplier
+					fk_supplier,
+					changes
 				);
 				if (sousSousFamille.isNew) stats.families++;
 				ssfam_id = sousSousFamille.entity.fam_id;
@@ -629,7 +691,8 @@ async function findOrCreateFamily(
 	tx: PrismaTransaction,
 	fam_label: string,
 	fk_parent: number | null,
-	fk_supplier: number
+	fk_supplier: number,
+	changes: ChangeDetail[]
 ) {
 	const whereClause = { fam_label, fk_parent: fk_parent || null, fk_supplier };
 	let family = await tx.family.findFirst({ where: whereClause });
@@ -647,9 +710,20 @@ async function findOrCreateFamily(
 				data: { fam_label, fk_parent: null, fk_supplier, fk_category: null }
 			});
 		}
+
 		const level = fk_parent ? '(sous-famille)' : '(famille)';
+		changes.push({
+			table: 'family',
+			schema: 'produit',
+			column: 'fam_label',
+			oldValue: null,
+			newValue: fam_label,
+			recordId: `${fam_label} ${level}`
+		});
+
 		console.log(`📦 Famille créée: ${fam_label} ${level}`);
 	}
+
 	return { entity: family, isNew };
 }
 
@@ -708,10 +782,36 @@ async function upsertProduct(
 		}
 		console.log(`🔄 Produit mis à jour: ${row.pro_cenov_id} (${row.pro_code})`);
 	} else {
+		// Tracker la création du produit avec tous ses champs
+		changes.push({
+			table: 'product',
+			schema: 'produit',
+			column: 'pro_cenov_id',
+			oldValue: null,
+			newValue: row.pro_cenov_id,
+			recordId: row.pro_cenov_id
+		});
+		changes.push({
+			table: 'product',
+			schema: 'produit',
+			column: 'pro_code',
+			oldValue: null,
+			newValue: row.pro_code,
+			recordId: row.pro_cenov_id
+		});
 		console.log(`✅ Produit créé: ${row.pro_cenov_id} (${row.pro_code})`);
 	}
 
 	if (categoryResult) {
+		const existingProductCategory = await tx.product_category.findUnique({
+			where: {
+				fk_product_fk_category: {
+					fk_product: product.pro_id,
+					fk_category: categoryResult.entity.cat_id
+				}
+			}
+		});
+
 		await tx.product_category.upsert({
 			where: {
 				fk_product_fk_category: {
@@ -722,6 +822,17 @@ async function upsertProduct(
 			create: { fk_product: product.pro_id, fk_category: categoryResult.entity.cat_id },
 			update: {}
 		});
+
+		if (!existingProductCategory) {
+			changes.push({
+				table: 'product_category',
+				schema: 'produit',
+				column: 'fk_category',
+				oldValue: null,
+				newValue: categoryResult.entity.cat_id,
+				recordId: `${row.pro_cenov_id} → cat_id:${categoryResult.entity.cat_id}`
+			});
+		}
 	}
 
 	return { entity: product, isNew: !existing };
@@ -758,8 +869,9 @@ async function upsertPricePurchase(
 		}
 	});
 
-	// Capturer les changements si prix existant
+	// Capturer les changements (création ou modification)
 	if (existing) {
+		// Modification : comparer anciennes vs nouvelles valeurs
 		if (existing.pp_amount.toNumber() !== pp_amount) {
 			changes.push({
 				table: 'price_purchase',
@@ -778,6 +890,26 @@ async function upsertPricePurchase(
 				schema: 'produit',
 				column: 'pp_discount',
 				oldValue: oldDiscount,
+				newValue: pp_discount,
+				recordId: `${row.pro_cenov_id} (${row.pp_date})`
+			});
+		}
+	} else {
+		// Création : tracker le nouveau prix
+		changes.push({
+			table: 'price_purchase',
+			schema: 'produit',
+			column: 'pp_amount',
+			oldValue: null,
+			newValue: pp_amount,
+			recordId: `${row.pro_cenov_id} (${row.pp_date})`
+		});
+		if (pp_discount !== null) {
+			changes.push({
+				table: 'price_purchase',
+				schema: 'produit',
+				column: 'pp_discount',
+				oldValue: null,
 				newValue: pp_discount,
 				recordId: `${row.pro_cenov_id} (${row.pp_date})`
 			});
@@ -824,6 +956,15 @@ async function importAttributes(
 				data: { fk_category: cat_id, fk_attribute: attribute.atr_id, cat_atr_required: false }
 			});
 			categoryAttributes++;
+
+			changes.push({
+				table: 'category_attribute',
+				schema: 'produit',
+				column: 'fk_attribute',
+				oldValue: null,
+				newValue: attribute.atr_id,
+				recordId: `cat_id:${cat_id} → ${atrLabel}`
+			});
 		}
 
 		const allowedValues = allowedValuesMap.get(attribute.atr_id);
@@ -886,6 +1027,27 @@ async function importAttributes(
 					kat_value: finalValue
 				}
 			});
+
+			// Tracker la création du kit_attribute
+			changes.push({
+				table: 'kit_attribute',
+				schema: 'public',
+				column: 'kat_value',
+				oldValue: null,
+				newValue: finalValue,
+				recordId: `${kit?.kit_label || kit_id} - ${atrLabel}`
+			});
+			if (finalUnitId !== null) {
+				changes.push({
+					table: 'kit_attribute',
+					schema: 'public',
+					column: 'fk_attribute_unite',
+					oldValue: null,
+					newValue: finalUnitId,
+					recordId: `${kit?.kit_label || kit_id} - ${atrLabel}`
+				});
+			}
+
 			kitAttributes++;
 		}
 	}

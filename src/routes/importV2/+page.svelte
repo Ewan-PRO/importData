@@ -452,30 +452,60 @@
 
 										<div class="space-y-2">
 											{#each changes as change, i (i)}
+												{@const isCreation = change.oldValue === null}
 												<div
-													class="grid grid-cols-[150px_1fr_auto_1fr] gap-3 rounded border border-gray-100 bg-gray-50 p-3 text-sm"
+													class="grid gap-3 rounded border p-3 text-sm {isCreation
+														? 'border-green-200 bg-green-50'
+														: 'border-gray-100 bg-gray-50'} {isCreation
+														? 'grid-cols-[150px_1fr]'
+														: 'grid-cols-[150px_1fr_auto_1fr]'}"
 												>
-													<div class="font-medium text-gray-600">{change.column}</div>
-
 													<div class="flex items-center gap-2">
-														<div
-															class="max-w-full overflow-hidden rounded bg-red-50 px-2 py-1 text-xs text-ellipsis whitespace-nowrap text-red-700"
-														>
-															{change.oldValue === null ? '(null)' : change.oldValue}
-														</div>
+														<span class="font-medium text-gray-600">{change.column}</span>
+														{#if isCreation}
+															<span
+																class="rounded bg-green-600 px-2 py-0.5 text-xs font-semibold text-white"
+															>
+																CRÉATION
+															</span>
+														{/if}
 													</div>
 
-													<div class="flex items-center justify-center text-gray-400">→</div>
-
-													<div class="flex items-center gap-2">
-														<div
-															class="max-w-full overflow-hidden rounded bg-green-50 px-2 py-1 text-xs text-ellipsis whitespace-nowrap text-green-700"
-														>
-															{change.newValue === null ? '(null)' : change.newValue}
+													{#if isCreation}
+														<!-- Mode création : afficher seulement la nouvelle valeur -->
+														<div class="flex items-center">
+															<div
+																class="max-w-full overflow-hidden rounded bg-white px-3 py-1 text-xs font-medium text-ellipsis whitespace-nowrap text-green-700 shadow-sm"
+															>
+																{change.newValue}
+															</div>
 														</div>
-													</div>
+													{:else}
+														<!-- Mode modification : afficher ancienne → nouvelle -->
+														<div class="flex items-center gap-2">
+															<div
+																class="max-w-full overflow-hidden rounded bg-red-50 px-2 py-1 text-xs text-ellipsis whitespace-nowrap text-red-700"
+															>
+																{change.oldValue}
+															</div>
+														</div>
 
-													<div class="col-span-4 mt-1 text-xs text-gray-500">
+														<div class="flex items-center justify-center text-gray-400">→</div>
+
+														<div class="flex items-center gap-2">
+															<div
+																class="max-w-full overflow-hidden rounded bg-green-50 px-2 py-1 text-xs text-ellipsis whitespace-nowrap text-green-700"
+															>
+																{change.newValue}
+															</div>
+														</div>
+													{/if}
+
+													<div
+														class="{isCreation
+															? 'col-span-2'
+															: 'col-span-4'} mt-1 text-xs text-gray-500"
+													>
 														ID: {change.recordId}
 													</div>
 												</div>
