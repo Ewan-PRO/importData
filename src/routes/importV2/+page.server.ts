@@ -128,7 +128,7 @@ export const actions: Actions = {
 			const attributeValidation = await validateAttributes(parsedData.attributes);
 
 			if (!csvValidation.success || !attributeValidation.success) {
-				return fail(400, { error: 'Validation échouée. Veuillez corriger les erreurs.' });
+				return fail(400, { error: 'Validation Ã©chouÃ©e. Veuillez corriger les erreurs.' });
 			}
 
 			const importResult = await importToDatabase(parsedData.data, parsedData.attributes);

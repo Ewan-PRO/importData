@@ -1,4 +1,3 @@
-import Papa from 'papaparse';
 import { PrismaClient as CenovDevPrismaClient } from '../../../prisma/cenov_dev/generated/index.js';
 
 type PrismaTransaction = Omit<
@@ -127,17 +126,24 @@ export function findUnitId(
 }
 
 // ============================================================================
-// PARSE CSV FORMAT VERTICAL
+// PARSE CSV FORMAT VERTICAL (NATIF - SANS PAPAPARSE)
 // ============================================================================
+function parseCSVNative(csvContent: string, delimiter: string): unknown[][] {
+	const lines = csvContent.split(/\r?\n/);
+	const result: unknown[][] = [];
+
+	for (const line of lines) {
+		if (line.trim() === '') continue; // Skip empty lines
+		const values = line.split(delimiter);
+		result.push(values);
+	}
+
+	return result;
+}
+
 export function parseCSVContent(csvContent: string): ParsedCSVData {
 	try {
-		const parseResult = Papa.parse(csvContent, {
-			delimiter: ';',
-			skipEmptyLines: true,
-			header: false
-		});
-
-		const rawData = parseResult.data as unknown[][];
+		const rawData = parseCSVNative(csvContent, ';');
 
 		if (rawData.length < 2) {
 			return {
