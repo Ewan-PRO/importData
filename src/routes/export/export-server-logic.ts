@@ -1,6 +1,7 @@
 // src/routes/export/export-server-logic.ts
 import * as XLSX from 'xlsx';
 import { XMLBuilder } from 'fast-xml-parser';
+import { Decimal } from '@prisma/client/runtime/library';
 import {
 	getTableMetadata,
 	getClient,
@@ -10,6 +11,57 @@ import {
 	type DatabaseName
 } from '$lib/prisma-meta';
 import type { SharedExportData, ExtractionOptions, ExportConfig } from './+page.server';
+
+// Convertir récursivement tous les Decimal en nombres pour sérialisation JSON
+function serializeData(obj: unknown): unknown {
+	if (obj === null || obj === undefined) return obj;
+
+	// Date doit être vérifié en premier (avant object générique)
+	if (obj instanceof Date) return obj;
+
+	// Array doit être vérifié avant object générique
+	if (Array.isArray(obj)) return obj.map(serializeData);
+
+	// Détecter Decimal de manière robuste (plusieurs méthodes)
+	if (typeof obj === 'object') {
+		// Méthode 1 : instanceof
+		if (obj instanceof Decimal) {
+			const converted = obj.toNumber();
+			console.log('🔵 [DEBUG] Decimal converti (instanceof):', obj, '→', converted);
+			return converted;
+		}
+
+		// Méthode 2 : Détecter les propriétés caractéristiques d'un Decimal
+		// Le constructeur peut être minifié (ex: 'i' au lieu de 'Decimal')
+		const objWithDecimalProps = obj as {
+			toNumber?: () => number;
+			s?: number;
+			e?: number;
+			d?: number[];
+		};
+
+		// Un Decimal a toujours : toNumber() + propriétés s, e, d
+		if (
+			typeof objWithDecimalProps.toNumber === 'function' &&
+			typeof objWithDecimalProps.s === 'number' &&
+			typeof objWithDecimalProps.e === 'number' &&
+			Array.isArray(objWithDecimalProps.d)
+		) {
+			const converted = objWithDecimalProps.toNumber();
+			console.log('🟢 [DEBUG] Decimal converti (structure):', obj, '→', converted);
+			return converted;
+		}
+
+		// Objet générique : convertir récursivement toutes les propriétés
+		const result: Record<string, unknown> = {};
+		for (const [key, value] of Object.entries(obj)) {
+			result[key] = serializeData(value);
+		}
+		return result;
+	}
+
+	return obj;
+}
 
 // Interface pour les fichiers d'export
 export interface ExportFile {
@@ -163,7 +215,13 @@ export async function extractTableData(
 		).$queryRawUnsafe(query)) as Record<string, unknown>[];
 
 		// Post-traitement : remplacer les timestamps Date par les versions string avec microsecondes
-		data = rawData.map((row) => {
+		// ET convertir tous les Decimal en nombres pour la sérialisation JSON
+		console.log('📊 [DEBUG] Données brutes extraites:', rawData.length, 'lignes');
+		if (rawData.length > 0) {
+			console.log('📊 [DEBUG] Première ligne brute:', rawData[0]);
+		}
+
+		data = rawData.map((row, index) => {
 			const processedRow = { ...row };
 			timestampColumns.forEach((col) => {
 				const stringKey = `${col.name}_str`;
@@ -174,7 +232,21 @@ export async function extractTableData(
 					delete processedRow[stringKey];
 				}
 			});
-			return processedRow;
+
+			// Debug : log première ligne avant conversion
+			if (index === 0) {
+				console.log('🔍 [DEBUG] Avant serializeData:', processedRow);
+			}
+
+			// Convertir tous les Decimal en nombres pour JSON (garde Decimal dans DB, converti pour export)
+			const serialized = serializeData(processedRow) as Record<string, unknown>;
+
+			// Debug : log première ligne après conversion
+			if (index === 0) {
+				console.log('✅ [DEBUG] Après serializeData:', serialized);
+			}
+
+			return serialized;
 		});
 	} catch (err) {
 		throw new Error(
