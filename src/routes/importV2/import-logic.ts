@@ -64,9 +64,19 @@ export interface ImportStats {
 	kitAttributes: number;
 }
 
+export interface ChangeDetail {
+	table: string;
+	schema: string;
+	column: string;
+	oldValue: string | number | null;
+	newValue: string | number | null;
+	recordId: string;
+}
+
 export interface ImportResult {
 	success: boolean;
 	stats: ImportStats;
+	changes: ChangeDetail[];
 	error?: string;
 }
 
@@ -457,12 +467,13 @@ export async function importToDatabase(
 		categoryAttributes: 0,
 		kitAttributes: 0
 	};
+	const changes: ChangeDetail[] = [];
 
 	try {
 		const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
 		await prisma.$transaction(async (tx) => {
 			for (const row of data) {
-				const supplierResult = await findOrCreateSupplier(tx, row.sup_code, row.sup_label);
+				const supplierResult = await findOrCreateSupplier(tx, row.sup_code, row.sup_label, changes);
 				if (supplierResult.isNew) stats.suppliers++;
 
 				const kitResult = await findOrCreateKit(tx, row.kit_label);
@@ -484,12 +495,13 @@ export async function importToDatabase(
 					supplierResult.entity.sup_id,
 					kitResult.entity.kit_id,
 					familyIds,
-					categoryResult
+					categoryResult,
+					changes
 				);
 				if (productResult.isNew) stats.products++;
 				else stats.productsUpdated++;
 
-				await upsertPricePurchase(tx, productResult.entity.pro_id, row);
+				await upsertPricePurchase(tx, productResult.entity.pro_id, row, changes);
 				stats.prices++;
 
 				if (categoryResult && attributes.length > 0) {
@@ -497,7 +509,8 @@ export async function importToDatabase(
 						tx,
 						categoryResult.entity.cat_id,
 						kitResult.entity.kit_id,
-						attributes
+						attributes,
+						changes
 					);
 					stats.categoryAttributes += attrStats.categoryAttributes;
 					stats.kitAttributes += attrStats.kitAttributes;
@@ -505,26 +518,46 @@ export async function importToDatabase(
 			}
 		});
 
-		return { success: true, stats };
+		return { success: true, stats, changes };
 	} catch (error) {
 		return {
 			success: false,
 			stats,
+			changes,
 			error: error instanceof Error ? error.message : 'Erreur inconnue'
 		};
 	}
 }
 
-async function findOrCreateSupplier(tx: PrismaTransaction, sup_code: string, sup_label: string) {
+async function findOrCreateSupplier(
+	tx: PrismaTransaction,
+	sup_code: string,
+	sup_label: string,
+	changes: ChangeDetail[]
+) {
 	const existing = await tx.supplier.findUnique({ where: { sup_code } });
 	const supplier = await tx.supplier.upsert({
 		where: { sup_code },
 		create: { sup_code, sup_label },
 		update: { sup_label }
 	});
+
 	if (!existing) {
 		console.log(`📦 Fournisseur créé: ${sup_label} (${sup_code})`);
+	} else if (existing.sup_label !== sup_label) {
+		changes.push({
+			table: 'supplier',
+			schema: 'public',
+			column: 'sup_label',
+			oldValue: existing.sup_label,
+			newValue: sup_label,
+			recordId: sup_code
+		});
+		console.log(
+			`🔄 Fournisseur mis à jour: ${sup_code} - "${existing.sup_label}" → "${sup_label}"`
+		);
 	}
+
 	return { entity: supplier, isNew: !existing };
 }
 
@@ -626,7 +659,8 @@ async function upsertProduct(
 	fk_supplier: number,
 	fk_kit: number,
 	familyIds: { fam_id: number | null; sfam_id: number | null; ssfam_id: number | null },
-	categoryResult: { entity: { cat_id: number }; isNew: boolean } | null
+	categoryResult: { entity: { cat_id: number }; isNew: boolean } | null,
+	changes: ChangeDetail[]
 ) {
 	const existing = await tx.product.findUnique({ where: { pro_cenov_id: row.pro_cenov_id } });
 
@@ -646,6 +680,37 @@ async function upsertProduct(
 		update: productData
 	});
 
+	// Capturer les changements si produit existant
+	if (existing) {
+		const fieldMap = [
+			{ key: 'pro_code', label: 'pro_code' },
+			{ key: 'fk_supplier', label: 'fk_supplier' },
+			{ key: 'fk_kit', label: 'fk_kit' },
+			{ key: 'fk_family', label: 'fk_family' },
+			{ key: 'fk_sfamily', label: 'fk_sfamily' },
+			{ key: 'fk_ssfamily', label: 'fk_ssfamily' }
+		];
+
+		for (const { key, label } of fieldMap) {
+			const oldValue = existing[key as keyof typeof existing];
+			const newValue = productData[key as keyof typeof productData];
+
+			if (oldValue !== newValue) {
+				changes.push({
+					table: 'product',
+					schema: 'produit',
+					column: label,
+					oldValue: oldValue as string | number | null,
+					newValue: newValue as string | number | null,
+					recordId: row.pro_cenov_id
+				});
+			}
+		}
+		console.log(`🔄 Produit mis à jour: ${row.pro_cenov_id} (${row.pro_code})`);
+	} else {
+		console.log(`✅ Produit créé: ${row.pro_cenov_id} (${row.pro_code})`);
+	}
+
 	if (categoryResult) {
 		await tx.product_category.upsert({
 			where: {
@@ -659,20 +724,24 @@ async function upsertProduct(
 		});
 	}
 
-	if (!existing) {
-		console.log(`✅ Produit créé: ${row.pro_cenov_id} (${row.pro_code})`);
-	} else {
-		console.log(`🔄 Produit mis à jour: ${row.pro_cenov_id} (${row.pro_code})`);
-	}
-
 	return { entity: product, isNew: !existing };
 }
 
-async function upsertPricePurchase(tx: PrismaTransaction, fk_product: number, row: CSVRow) {
+async function upsertPricePurchase(
+	tx: PrismaTransaction,
+	fk_product: number,
+	row: CSVRow,
+	changes: ChangeDetail[]
+) {
 	const pp_discount =
 		row.pp_discount && row.pp_discount.trim() !== '' ? parseFloat(row.pp_discount) : null;
 	const pp_date = new Date(row.pp_date);
 	const pp_amount = parseFloat(row.pp_amount);
+
+	// Vérifier si un prix existe déjà
+	const existing = await tx.price_purchase.findUnique({
+		where: { fk_product_pp_date: { fk_product, pp_date } }
+	});
 
 	await tx.price_purchase.upsert({
 		where: { fk_product_pp_date: { fk_product, pp_date } },
@@ -689,6 +758,32 @@ async function upsertPricePurchase(tx: PrismaTransaction, fk_product: number, ro
 		}
 	});
 
+	// Capturer les changements si prix existant
+	if (existing) {
+		if (existing.pp_amount.toNumber() !== pp_amount) {
+			changes.push({
+				table: 'price_purchase',
+				schema: 'produit',
+				column: 'pp_amount',
+				oldValue: existing.pp_amount.toNumber(),
+				newValue: pp_amount,
+				recordId: `${row.pro_cenov_id} (${row.pp_date})`
+			});
+		}
+
+		const oldDiscount = existing.pp_discount ? existing.pp_discount.toNumber() : null;
+		if (oldDiscount !== pp_discount) {
+			changes.push({
+				table: 'price_purchase',
+				schema: 'produit',
+				column: 'pp_discount',
+				oldValue: oldDiscount,
+				newValue: pp_discount,
+				recordId: `${row.pro_cenov_id} (${row.pp_date})`
+			});
+		}
+	}
+
 	const pp_net = pp_discount ? pp_amount * (1 - pp_discount / 100) : pp_amount;
 	const discountStr = pp_discount ? ` (remise ${pp_discount}% = ${pp_net.toFixed(2)}€ net)` : '';
 	console.log(`💰 Prix enregistré: ${pp_amount}€${discountStr} - Date: ${row.pp_date}`);
@@ -698,7 +793,8 @@ async function importAttributes(
 	tx: PrismaTransaction,
 	cat_id: number,
 	kit_id: number,
-	attributes: AttributePair[]
+	attributes: AttributePair[],
+	changes: ChangeDetail[]
 ) {
 	let categoryAttributes = 0,
 		kitAttributes = 0;
@@ -709,6 +805,9 @@ async function importAttributes(
 		.filter((a) => a.atrValue && attributeMap.has(a.atrLabel))
 		.map((a) => attributeMap.get(a.atrLabel)!.atr_id);
 	const allowedValuesMap = await loadAllowedValues(atrIds);
+
+	// Récupérer le kit_label pour l'ID de l'enregistrement
+	const kit = await tx.kit.findUnique({ where: { kit_id }, select: { kit_label: true } });
 
 	for (const { atrLabel, atrValue } of attributes) {
 		if (!atrValue || atrValue.trim() === '') continue;
@@ -750,6 +849,30 @@ async function importAttributes(
 		});
 
 		if (existingKitAttr) {
+			// Capturer les changements de valeur
+			if (existingKitAttr.kat_value !== finalValue) {
+				changes.push({
+					table: 'kit_attribute',
+					schema: 'public',
+					column: 'kat_value',
+					oldValue: existingKitAttr.kat_value,
+					newValue: finalValue,
+					recordId: `${kit?.kit_label || kit_id} - ${atrLabel}`
+				});
+			}
+
+			// Capturer les changements d'unité
+			if (existingKitAttr.fk_attribute_unite !== finalUnitId) {
+				changes.push({
+					table: 'kit_attribute',
+					schema: 'public',
+					column: 'fk_attribute_unite',
+					oldValue: existingKitAttr.fk_attribute_unite,
+					newValue: finalUnitId,
+					recordId: `${kit?.kit_label || kit_id} - ${atrLabel}`
+				});
+			}
+
 			await tx.kit_attribute.update({
 				where: { kat_id: existingKitAttr.kat_id },
 				data: { kat_value: finalValue, fk_attribute_unite: finalUnitId }

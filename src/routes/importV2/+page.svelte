@@ -33,9 +33,19 @@
 		kitAttributes: number;
 	}
 
+	interface ChangeDetail {
+		table: string;
+		schema: string;
+		column: string;
+		oldValue: string | number | null;
+		newValue: string | number | null;
+		recordId: string;
+	}
+
 	interface ImportResult {
 		success: boolean;
 		stats: ImportStats;
+		changes: ChangeDetail[];
 	}
 
 	let {
@@ -58,6 +68,21 @@
 		product: Record<string, string>;
 		attributes: Array<{ label: string; value: string }>;
 	} | null>(null);
+
+	// Grouper les changements par table
+	let changesByTable = $derived.by(() => {
+		if (!form?.result?.changes) return new Map();
+
+		const grouped = new Map<string, ChangeDetail[]>();
+		for (const change of form.result.changes) {
+			const key = `${change.schema}.${change.table}`;
+			if (!grouped.has(key)) {
+				grouped.set(key, []);
+			}
+			grouped.get(key)!.push(change);
+		}
+		return grouped;
+	});
 
 	function handleFileUpload(e: Event) {
 		const input = e.target as HTMLInputElement;
@@ -178,8 +203,8 @@
 	<Card class="w-full max-w-full">
 		{#if step === 1}
 			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-semibold">Upload fichier CSV</h2>
-				<p class="mb-4 text-gray-600">Sélectionnez un fichier CSV au format MVP (vertical)</p>
+				<h2 class="mb-4 text-xl font-semibold text-black">1. Upload fichier CSV :</h2>
+				<p class="mb-4 text-gray-600">Sélectionnez un fichier CSV :</p>
 
 				<div
 					class="mb-4 cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-8 text-center transition-colors hover:border-blue-400 hover:bg-blue-50"
@@ -217,7 +242,7 @@
 			</div>
 		{:else if step === 2 && parsedPreview}
 			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-semibold">Preview des données - {fileName}</h2>
+				<h2 class="mb-4 text-xl font-semibold text-black">2. Preview des données : {fileName}</h2>
 
 				<div class="mb-6 rounded-lg border bg-gray-50 p-4">
 					<h3 class="mb-2 font-medium">Données produit :</h3>
@@ -266,7 +291,7 @@
 			</div>
 		{:else if step === 3 && form?.validation}
 			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-semibold">Résultats validation</h2>
+				<h2 class="mb-4 text-xl font-semibold text-black">3. Résultats validation :</h2>
 
 				<div class="mb-6 grid grid-cols-3 gap-4">
 					<div class="rounded-lg border border-blue-200 bg-blue-50 p-4 text-center">
@@ -327,7 +352,8 @@
 						>
 							{isProcessing
 								? 'Import en cours...'
-								: `Importer ${form.validation.validRows} ligne(s) →`}
+								: `Importer ${form.validation.validRows} ligne(s)`}
+							<CircleArrowRight class="ml-2 h-4 w-4" />
 						</Button>
 					</div>
 				</form>
@@ -398,10 +424,68 @@
 						{#if form.result.stats.kitAttributes > 0}
 							<div class="rounded bg-white p-3 shadow-sm">
 								<div class="text-xs text-gray-600">Attributs kit</div>
-								<div class="text-2xl font-bold text-green-600">{form.result.stats.kitAttributes}</div>
+								<div class="text-2xl font-bold text-green-600">
+									{form.result.stats.kitAttributes}
+								</div>
 							</div>
 						{/if}
 					</div>
+
+					<!-- Détails des modifications -->
+					{#if form.result.changes && form.result.changes.length > 0}
+						<div class="mt-6 border-t border-green-200 pt-4">
+							<h4 class="mb-3 font-semibold text-green-800">
+								Détails des modifications ({form.result.changes.length}) :
+							</h4>
+
+							<div class="space-y-4">
+								{#each Array.from(changesByTable.entries()) as [tableKey, changes] (tableKey)}
+									<div class="rounded-lg border border-gray-200 bg-white p-4">
+										<h5 class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
+											<span class="rounded bg-blue-100 px-2 py-1 font-mono text-xs text-blue-700">
+												{tableKey}
+											</span>
+											<span class="text-gray-500">
+												({changes.length} modification{changes.length > 1 ? 's' : ''})
+											</span>
+										</h5>
+
+										<div class="space-y-2">
+											{#each changes as change, i (i)}
+												<div
+													class="grid grid-cols-[150px_1fr_auto_1fr] gap-3 rounded border border-gray-100 bg-gray-50 p-3 text-sm"
+												>
+													<div class="font-medium text-gray-600">{change.column}</div>
+
+													<div class="flex items-center gap-2">
+														<div
+															class="max-w-full overflow-hidden rounded bg-red-50 px-2 py-1 text-xs text-ellipsis whitespace-nowrap text-red-700"
+														>
+															{change.oldValue === null ? '(null)' : change.oldValue}
+														</div>
+													</div>
+
+													<div class="flex items-center justify-center text-gray-400">→</div>
+
+													<div class="flex items-center gap-2">
+														<div
+															class="max-w-full overflow-hidden rounded bg-green-50 px-2 py-1 text-xs text-ellipsis whitespace-nowrap text-green-700"
+														>
+															{change.newValue === null ? '(null)' : change.newValue}
+														</div>
+													</div>
+
+													<div class="col-span-4 mt-1 text-xs text-gray-500">
+														ID: {change.recordId}
+													</div>
+												</div>
+											{/each}
+										</div>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
 
 					<div class="mt-4 flex justify-center">
 						<Button variant="vert" onclick={resetImport}>

@@ -99,7 +99,9 @@ export const actions: Actions = {
 				warnings: [...csvValidation.warnings, ...attributeValidation.warnings]
 			};
 
-			console.log(`✅ Validation: ${csvValidation.validRows}/${parsedData.data.length} lignes valides`);
+			console.log(
+				`✅ Validation: ${csvValidation.validRows}/${parsedData.data.length} lignes valides`
+			);
 			return { validation };
 		} catch (err) {
 			console.error('❌ Erreur validation:', err);
