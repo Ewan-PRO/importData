@@ -1,9 +1,9 @@
 // src/routes/kits/+page.server.ts - Serveur unifié avec Prisma DMMF
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { superValidate } from 'sveltekit-superforms/server';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 } from 'sveltekit-superforms/adapters';
 import { protect } from '$lib/auth/protect';
 import { useDevTables } from '$lib/server/db';
 import {
@@ -49,17 +49,17 @@ async function generateDynamicSchemaFromTable(
 			case 'Int':
 			case 'Float':
 			case 'Decimal':
-				zodType = zodType.refine((val) => !isNaN(parseFloat(val)), {
+				zodType = zodType.refine((val) => !isNaN(parseFloat(val as string)), {
 					message: `${field.name} doit être un nombre valide`
 				});
 				break;
 			case 'DateTime':
-				zodType = zodType.refine((val) => !isNaN(Date.parse(val)), {
+				zodType = zodType.refine((val) => !isNaN(Date.parse(val as string)), {
 					message: `${field.name} doit être une date valide`
 				});
 				break;
 			case 'Boolean':
-				zodType = zodType.refine((val) => ['true', 'false', '1', '0'].includes(val.toLowerCase()), {
+				zodType = zodType.refine((val) => ['true', 'false', '1', '0'].includes((val as string).toLowerCase()), {
 					message: `${field.name} doit être true/false`
 				});
 				break;
@@ -304,7 +304,7 @@ export const load = (async (event) => {
 		);
 
 		// Créer un formulaire avec le schéma dynamique
-		const form = await superValidate(zod(schema));
+		const form = await superValidate(zod4(schema));
 
 		return {
 			data,
@@ -334,14 +334,14 @@ export const actions: Actions = {
 			tableInfo.tableName
 		);
 
-		const form = await superValidate(formData, zod(schema));
+		const form = await superValidate(formData, zod4(schema));
 
 		if (!form.valid) {
 			return fail(400, { form });
 		}
 
 		try {
-			const result = await createRecordDynamic(tableInfo.database, tableInfo.tableName, form.data);
+			const result = await createRecordDynamic(tableInfo.database, tableInfo.tableName, form.data as Record<string, string>);
 
 			// Réinitialiser le formulaire après succès
 			return { form, success: true, data: result };

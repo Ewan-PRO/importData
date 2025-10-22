@@ -9,7 +9,7 @@ export default defineConfig({
 		// Polyfills globaux pour Node.js
 		global: 'globalThis',
 		// Fix pour PapaParse en SSR
-		'this': 'globalThis'
+		this: 'globalThis'
 	},
 	ssr: {
 		// Forcer Prisma à rester externe

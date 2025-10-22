@@ -38,7 +38,8 @@
 		stats: ImportStats;
 	}
 
-	export let form: { validation?: ValidationResult; result?: ImportResult; error?: string } | null = null;
+	export let form: { validation?: ValidationResult; result?: ImportResult; error?: string } | null =
+		null;
 
 	let step = 1;
 	let csvFile: File | null = null;
@@ -46,7 +47,10 @@
 	let fileName = '';
 	let isProcessing = false;
 
-	let parsedPreview: { product: Record<string, string>; attributes: Array<{ label: string; value: string }> } | null = null;
+	let parsedPreview: {
+		product: Record<string, string>;
+		attributes: Array<{ label: string; value: string }>;
+	} | null = null;
 
 	function handleFileUpload(e: Event) {
 		const input = e.target as HTMLInputElement;
@@ -186,13 +190,18 @@
 						accept=".csv"
 						on:change={handleFileUpload}
 					/>
-					<Button variant="bleu" onclick={(e) => { e.stopPropagation(); document.getElementById('fileInput')?.click(); }}>
+					<Button
+						variant="bleu"
+						onclick={(e) => {
+							e.stopPropagation();
+							document.getElementById('fileInput')?.click();
+						}}
+					>
 						<Upload class="mr-2 h-5 w-5" />
 						Parcourir les fichiers
 					</Button>
 				</div>
 			</div>
-
 		{:else if step === 2 && parsedPreview}
 			<div class="mb-6">
 				<h2 class="mb-4 text-xl font-semibold">Preview des données - {fileName}</h2>
@@ -218,7 +227,16 @@
 					</div>
 				</div>
 
-				<form method="POST" action="?/validate" use:enhance={() => { isProcessing = true; return async ({ update }) => { await update(); }; }}>
+				<form
+					method="POST"
+					action="?/validate"
+					use:enhance={() => {
+						isProcessing = true;
+						return async ({ update }) => {
+							await update();
+						};
+					}}
+				>
 					<input type="hidden" name="csv" value={csvContent} />
 					<div class="flex justify-between">
 						<Button variant="noir" onclick={resetImport}>
@@ -231,7 +249,6 @@
 					</div>
 				</form>
 			</div>
-
 		{:else if step === 3 && form?.validation}
 			<div class="mb-6">
 				<h2 class="mb-4 text-xl font-semibold">Résultats validation</h2>
@@ -271,20 +288,34 @@
 					</div>
 				{/if}
 
-				<form method="POST" action="?/process" use:enhance={() => { isProcessing = true; return async ({ update }) => { await update(); }; }}>
+				<form
+					method="POST"
+					action="?/process"
+					use:enhance={() => {
+						isProcessing = true;
+						return async ({ update }) => {
+							await update();
+						};
+					}}
+				>
 					<input type="hidden" name="csv" value={csvContent} />
 					<div class="flex justify-between">
 						<Button variant="noir" onclick={() => (step = 2)}>
 							<CircleArrowLeft class="mr-2 h-4 w-4" />
 							Retour
 						</Button>
-						<Button type="submit" variant={form.validation.validRows > 0 ? 'vert' : 'noir'} disabled={form.validation.validRows === 0 || isProcessing}>
-							{isProcessing ? 'Import en cours...' : `Importer ${form.validation.validRows} ligne(s) →`}
+						<Button
+							type="submit"
+							variant={form.validation.validRows > 0 ? 'vert' : 'noir'}
+							disabled={form.validation.validRows === 0 || isProcessing}
+						>
+							{isProcessing
+								? 'Import en cours...'
+								: `Importer ${form.validation.validRows} ligne(s) →`}
 						</Button>
 					</div>
 				</form>
 			</div>
-
 		{:else if step === 4 && form?.result}
 			<div class="mb-6">
 				<div class="rounded-lg border border-green-200 bg-green-50 p-6">
@@ -308,7 +339,9 @@
 						</div>
 						<div class="rounded bg-white p-3">
 							<div class="font-medium">Produits mis à jour:</div>
-							<div class="text-2xl font-bold text-blue-600">{form.result.stats.productsUpdated}</div>
+							<div class="text-2xl font-bold text-blue-600">
+								{form.result.stats.productsUpdated}
+							</div>
 						</div>
 						<div class="rounded bg-white p-3">
 							<div class="font-medium">Prix enregistrés:</div>
@@ -320,7 +353,9 @@
 						</div>
 					</div>
 
-					<p class="mt-4 text-center text-sm text-green-700">Redirection automatique dans 3 secondes...</p>
+					<p class="mt-4 text-center text-sm text-green-700">
+						Redirection automatique dans 3 secondes...
+					</p>
 				</div>
 			</div>
 		{/if}
@@ -329,7 +364,9 @@
 	{#if isProcessing}
 		<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
 			<div class="rounded-lg bg-white p-6 shadow-lg">
-				<div class="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+				<div
+					class="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"
+				></div>
 				<p class="text-center font-medium">Traitement en cours...</p>
 			</div>
 		</div>

@@ -1,7 +1,10 @@
 import Papa from 'papaparse';
 import { PrismaClient as CenovDevPrismaClient } from '../../../prisma/cenov_dev/generated/index.js';
 
-type PrismaTransaction = Omit<CenovDevPrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
+type PrismaTransaction = Omit<
+	CenovDevPrismaClient,
+	'$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>;
 
 // ============================================================================
 // TYPES
@@ -102,7 +105,13 @@ export function parseValueAndUnit(rawValue: string): { value: string; unit: stri
 export function findUnitId(
 	atr_id: number,
 	unit_string: string,
-	attributeUnitsMap: Map<number, { default_unit_id: number | null; units: Array<{ unit_id: number; unit_value: string; unit_label: string }> }>
+	attributeUnitsMap: Map<
+		number,
+		{
+			default_unit_id: number | null;
+			units: Array<{ unit_id: number; unit_value: string; unit_label: string }>;
+		}
+	>
 ): number | null {
 	const unitsData = attributeUnitsMap.get(atr_id);
 	if (!unitsData || !unitsData.units) return null;
@@ -131,7 +140,12 @@ export function parseCSVContent(csvContent: string): ParsedCSVData {
 		const rawData = parseResult.data as unknown[][];
 
 		if (rawData.length < 2) {
-			return { success: false, data: [], attributes: [], error: 'Fichier CSV invalide (moins de 2 lignes)' };
+			return {
+				success: false,
+				data: [],
+				attributes: [],
+				error: 'Fichier CSV invalide (moins de 2 lignes)'
+			};
 		}
 
 		const headers = rawData[0] as string[];
@@ -183,13 +197,16 @@ export function parseCSVContent(csvContent: string): ParsedCSVData {
 // ============================================================================
 // VALIDATION CSV
 // ============================================================================
-export async function validateCSVData(data: CSVRow[], config: {
-	requiredFields: string[];
-	numericFields: string[];
-	dateFields: string[];
-	fieldMapping: Record<string, { table: string; field: string }>;
-	fieldMaxLengths: Record<string, number>;
-}): Promise<ValidationResult> {
+export async function validateCSVData(
+	data: CSVRow[],
+	config: {
+		requiredFields: string[];
+		numericFields: string[];
+		dateFields: string[];
+		fieldMapping: Record<string, { table: string; field: string }>;
+		fieldMaxLengths: Record<string, number>;
+	}
+): Promise<ValidationResult> {
 	const errors: ValidationError[] = [];
 	const warnings: ValidationError[] = [];
 	let validRows = 0;
@@ -202,7 +219,12 @@ export async function validateCSVData(data: CSVRow[], config: {
 		for (const field of config.requiredFields) {
 			const value = row[field as keyof CSVRow];
 			if (!value || (typeof value === 'string' && value.trim() === '')) {
-				errors.push({ line: lineNumber, field, value: value || '', error: 'Champ obligatoire manquant' });
+				errors.push({
+					line: lineNumber,
+					field,
+					value: value || '',
+					error: 'Champ obligatoire manquant'
+				});
 				rowValid = false;
 			}
 		}
@@ -227,7 +249,12 @@ export async function validateCSVData(data: CSVRow[], config: {
 			if (value && typeof value === 'string' && value.trim() !== '') {
 				const isoDate = convertToISODate(value);
 				if (!isoDate) {
-					errors.push({ line: lineNumber, field, value, error: 'Format date invalide (YYYY-MM-DD ou DD/MM/YYYY)' });
+					errors.push({
+						line: lineNumber,
+						field,
+						value,
+						error: 'Format date invalide (YYYY-MM-DD ou DD/MM/YYYY)'
+					});
 					rowValid = false;
 				} else {
 					const date = new Date(isoDate);
@@ -246,7 +273,12 @@ export async function validateCSVData(data: CSVRow[], config: {
 			if (value && typeof value === 'string' && value.trim() !== '') {
 				const maxLength = config.fieldMaxLengths[`${mapping.table}.${mapping.field}`];
 				if (maxLength && value.length > maxLength) {
-					errors.push({ line: lineNumber, field: csvField, value, error: `Trop long (${value.length}/${maxLength})` });
+					errors.push({
+						line: lineNumber,
+						field: csvField,
+						value,
+						error: `Trop long (${value.length}/${maxLength})`
+					});
 					rowValid = false;
 				}
 			}
@@ -263,7 +295,9 @@ export async function validateCSVData(data: CSVRow[], config: {
 // ============================================================================
 const prisma = new CenovDevPrismaClient();
 
-async function loadAttributeReference(): Promise<Map<string, { atr_id: number; atr_label: string }>> {
+async function loadAttributeReference(): Promise<
+	Map<string, { atr_id: number; atr_label: string }>
+> {
 	const attributes = await prisma.attribute.findMany({
 		select: { atr_id: true, atr_label: true }
 	});
@@ -272,7 +306,15 @@ async function loadAttributeReference(): Promise<Map<string, { atr_id: number; a
 	return map;
 }
 
-async function loadAttributeUnitsEnriched(): Promise<Map<number, { default_unit_id: number | null; units: Array<{ unit_id: number; unit_value: string; unit_label: string }> }>> {
+async function loadAttributeUnitsEnriched(): Promise<
+	Map<
+		number,
+		{
+			default_unit_id: number | null;
+			units: Array<{ unit_id: number; unit_value: string; unit_label: string }>;
+		}
+	>
+> {
 	const attributeUnits = await prisma.attribute_unit.findMany({
 		include: {
 			attribute_attribute_unit_fk_unitToattribute: {
@@ -353,7 +395,12 @@ export async function validateAttributes(attributes: AttributePair[]): Promise<V
 		if (allowedValues && allowedValues.size > 0) {
 			if (!allowedValues.has(atrValue)) {
 				const allowedList = Array.from(allowedValues).join(', ');
-				errors.push({ line: i + 1, field: atrLabel, value: atrValue, error: `Valeur non autorisée. Acceptées: ${allowedList}` });
+				errors.push({
+					line: i + 1,
+					field: atrLabel,
+					value: atrValue,
+					error: `Valeur non autorisée. Acceptées: ${allowedList}`
+				});
 			}
 		} else {
 			const { unit } = parseValueAndUnit(atrValue);
@@ -363,24 +410,44 @@ export async function validateAttributes(attributes: AttributePair[]): Promise<V
 					const unitId = findUnitId(attribute.atr_id, unit, attributeUnitsMap);
 					if (!unitId) {
 						const allowedUnits = unitsData.units.map((u) => u.unit_value).join(', ');
-						errors.push({ line: i + 1, field: atrLabel, value: atrValue, error: `Unité "${unit}" invalide. Acceptées: ${allowedUnits}` });
+						errors.push({
+							line: i + 1,
+							field: atrLabel,
+							value: atrValue,
+							error: `Unité "${unit}" invalide. Acceptées: ${allowedUnits}`
+						});
 					}
 				}
 			}
 		}
 	}
 
-	return { success: errors.length === 0, totalRows: attributes.length, validRows: attributes.length - errors.length, errors, warnings };
+	return {
+		success: errors.length === 0,
+		totalRows: attributes.length,
+		validRows: attributes.length - errors.length,
+		errors,
+		warnings
+	};
 }
 
 // ============================================================================
 // IMPORT BDD
 // ============================================================================
-export async function importToDatabase(data: CSVRow[], attributes: AttributePair[]): Promise<ImportResult> {
+export async function importToDatabase(
+	data: CSVRow[],
+	attributes: AttributePair[]
+): Promise<ImportResult> {
 	const stats: ImportStats = {
-		suppliers: 0, kits: 0, categories: 0, families: 0,
-		products: 0, productsUpdated: 0, prices: 0,
-		categoryAttributes: 0, kitAttributes: 0
+		suppliers: 0,
+		kits: 0,
+		categories: 0,
+		families: 0,
+		products: 0,
+		productsUpdated: 0,
+		prices: 0,
+		categoryAttributes: 0,
+		kitAttributes: 0
 	};
 
 	try {
@@ -395,9 +462,21 @@ export async function importToDatabase(data: CSVRow[], attributes: AttributePair
 				const categoryResult = await findOrCreateCategory(tx, row.cat_label, row.cat_code);
 				if (categoryResult && categoryResult.isNew) stats.categories++;
 
-				const familyIds = await resolveFamilyHierarchy(tx, row, supplierResult.entity.sup_id, stats);
+				const familyIds = await resolveFamilyHierarchy(
+					tx,
+					row,
+					supplierResult.entity.sup_id,
+					stats
+				);
 
-				const productResult = await upsertProduct(tx, row, supplierResult.entity.sup_id, kitResult.entity.kit_id, familyIds, categoryResult);
+				const productResult = await upsertProduct(
+					tx,
+					row,
+					supplierResult.entity.sup_id,
+					kitResult.entity.kit_id,
+					familyIds,
+					categoryResult
+				);
 				if (productResult.isNew) stats.products++;
 				else stats.productsUpdated++;
 
@@ -405,7 +484,12 @@ export async function importToDatabase(data: CSVRow[], attributes: AttributePair
 				stats.prices++;
 
 				if (categoryResult && attributes.length > 0) {
-					const attrStats = await importAttributes(tx, categoryResult.entity.cat_id, kitResult.entity.kit_id, attributes);
+					const attrStats = await importAttributes(
+						tx,
+						categoryResult.entity.cat_id,
+						kitResult.entity.kit_id,
+						attributes
+					);
 					stats.categoryAttributes += attrStats.categoryAttributes;
 					stats.kitAttributes += attrStats.kitAttributes;
 				}
@@ -414,7 +498,11 @@ export async function importToDatabase(data: CSVRow[], attributes: AttributePair
 
 		return { success: true, stats };
 	} catch (error) {
-		return { success: false, stats, error: error instanceof Error ? error.message : 'Erreur inconnue' };
+		return {
+			success: false,
+			stats,
+			error: error instanceof Error ? error.message : 'Erreur inconnue'
+		};
 	}
 }
 
@@ -453,8 +541,15 @@ async function findOrCreateCategory(tx: PrismaTransaction, cat_label?: string, c
 	return { entity: category, isNew };
 }
 
-async function resolveFamilyHierarchy(tx: PrismaTransaction, row: CSVRow, fk_supplier: number, stats: ImportStats) {
-	let fam_id = null, sfam_id = null, ssfam_id = null;
+async function resolveFamilyHierarchy(
+	tx: PrismaTransaction,
+	row: CSVRow,
+	fk_supplier: number,
+	stats: ImportStats
+) {
+	let fam_id = null,
+		sfam_id = null,
+		ssfam_id = null;
 
 	if (row.famille) {
 		const famille = await findOrCreateFamily(tx, row.famille, null, fk_supplier);
@@ -467,7 +562,12 @@ async function resolveFamilyHierarchy(tx: PrismaTransaction, row: CSVRow, fk_sup
 			sfam_id = sousFamille.entity.fam_id;
 
 			if (row.sous_sous_famille) {
-				const sousSousFamille = await findOrCreateFamily(tx, row.sous_sous_famille, sfam_id, fk_supplier);
+				const sousSousFamille = await findOrCreateFamily(
+					tx,
+					row.sous_sous_famille,
+					sfam_id,
+					fk_supplier
+				);
 				if (sousSousFamille.isNew) stats.families++;
 				ssfam_id = sousSousFamille.entity.fam_id;
 			}
@@ -476,7 +576,12 @@ async function resolveFamilyHierarchy(tx: PrismaTransaction, row: CSVRow, fk_sup
 	return { fam_id, sfam_id, ssfam_id };
 }
 
-async function findOrCreateFamily(tx: PrismaTransaction, fam_label: string, fk_parent: number | null, fk_supplier: number) {
+async function findOrCreateFamily(
+	tx: PrismaTransaction,
+	fam_label: string,
+	fk_parent: number | null,
+	fk_supplier: number
+) {
 	const whereClause = { fam_label, fk_parent: fk_parent || null, fk_supplier };
 	let family = await tx.family.findFirst({ where: whereClause });
 	const isNew = !family;
@@ -497,7 +602,14 @@ async function findOrCreateFamily(tx: PrismaTransaction, fam_label: string, fk_p
 	return { entity: family, isNew };
 }
 
-async function upsertProduct(tx: PrismaTransaction, row: CSVRow, fk_supplier: number, fk_kit: number, familyIds: { fam_id: number | null; sfam_id: number | null; ssfam_id: number | null }, categoryResult: { entity: { cat_id: number }; isNew: boolean } | null) {
+async function upsertProduct(
+	tx: PrismaTransaction,
+	row: CSVRow,
+	fk_supplier: number,
+	fk_kit: number,
+	familyIds: { fam_id: number | null; sfam_id: number | null; ssfam_id: number | null },
+	categoryResult: { entity: { cat_id: number }; isNew: boolean } | null
+) {
 	const existing = await tx.product.findUnique({ where: { pro_cenov_id: row.pro_cenov_id } });
 
 	const productData = {
@@ -533,7 +645,8 @@ async function upsertProduct(tx: PrismaTransaction, row: CSVRow, fk_supplier: nu
 }
 
 async function upsertPricePurchase(tx: PrismaTransaction, fk_product: number, row: CSVRow) {
-	const pp_discount = row.pp_discount && row.pp_discount.trim() !== '' ? parseFloat(row.pp_discount) : null;
+	const pp_discount =
+		row.pp_discount && row.pp_discount.trim() !== '' ? parseFloat(row.pp_discount) : null;
 	const pp_date = new Date(row.pp_date);
 
 	await tx.price_purchase.upsert({
@@ -552,12 +665,20 @@ async function upsertPricePurchase(tx: PrismaTransaction, fk_product: number, ro
 	});
 }
 
-async function importAttributes(tx: PrismaTransaction, cat_id: number, kit_id: number, attributes: AttributePair[]) {
-	let categoryAttributes = 0, kitAttributes = 0;
+async function importAttributes(
+	tx: PrismaTransaction,
+	cat_id: number,
+	kit_id: number,
+	attributes: AttributePair[]
+) {
+	let categoryAttributes = 0,
+		kitAttributes = 0;
 
 	const attributeMap = await loadAttributeReference();
 	const attributeUnitsMap = await loadAttributeUnitsEnriched();
-	const atrIds = attributes.filter((a) => a.atrValue && attributeMap.has(a.atrLabel)).map((a) => attributeMap.get(a.atrLabel)!.atr_id);
+	const atrIds = attributes
+		.filter((a) => a.atrValue && attributeMap.has(a.atrLabel))
+		.map((a) => attributeMap.get(a.atrLabel)!.atr_id);
 	const allowedValuesMap = await loadAllowedValues(atrIds);
 
 	for (const { atrLabel, atrValue } of attributes) {

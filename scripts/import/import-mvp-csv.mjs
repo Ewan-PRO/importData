@@ -575,10 +575,7 @@ function findUnitId(atr_id, unit_string, attributeUnitsMap) {
 
 	// Chercher dans unit_value puis unit_label (case-insensitive)
 	for (const unit of unitsData.units) {
-		if (
-			unit.unit_value.toLowerCase() === search ||
-			unit.unit_label.toLowerCase() === search
-		) {
+		if (unit.unit_value.toLowerCase() === search || unit.unit_label.toLowerCase() === search) {
 			return unit.unit_id;
 		}
 	}

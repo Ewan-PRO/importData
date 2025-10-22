@@ -378,7 +378,43 @@ Les tests d'intégration couvrent :
 - Utilise pnpm comme gestionnaire de paquets
 - Support des schémas de production et développement (tables/vues \_dev)
 - Composants UI personnalisés construits sur bits-ui et Flowbite
-- Validation de formulaires avec schémas Zod et SvelteKit Superforms
+- Validation de formulaires avec **Zod 4.1.12** et **SvelteKit Superforms 2.28.0**
+
+## Zod 4 et SvelteKit Superforms
+
+**Version requise :** `zod@4.1.12` (pas de version 3.x)
+
+**Utilisation correcte :**
+
+```typescript
+// ✅ CORRECT
+import { z } from 'zod/v4';
+import { zod4 } from 'sveltekit-superforms/adapters';
+
+const schema = z.object({ name: z.string() });
+const form = await superValidate(zod4(schema)); // Utiliser zod4, pas zod
+```
+
+**Breaking changes Zod 4 :**
+
+```typescript
+// errorMap → error
+z.enum(['a', 'b'], { error: 'Invalide' }); // Avant: errorMap: () => ({ message: ... })
+
+// z.record() nécessite 2 arguments
+z.record(z.string(), z.unknown()); // Avant: z.record(z.unknown())
+
+// z.refine() - cast explicite
+zodType.refine((val) => !isNaN(parseFloat(val as string)), { ... });
+```
+
+**Si erreur "ZodObject is not assignable" :**
+
+```bash
+pnpm why zod              # Vérifier qu'il n'y a QU'UNE version (4.1.12)
+pnpm remove zod           # Si plusieurs versions
+pnpm add -D zod@4.1.12    # Réinstaller
+```
 
 ## Bonnes Pratiques TypeScript
 

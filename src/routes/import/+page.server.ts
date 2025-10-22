@@ -2,8 +2,8 @@ import type { Actions, ServerLoad } from '@sveltejs/kit';
 import { fail } from '@sveltejs/kit';
 import { PrismaClient } from '@prisma/client';
 import { superValidate } from 'sveltekit-superforms/server';
-import { z } from 'zod';
-import { zod } from 'sveltekit-superforms/adapters';
+import { z } from 'zod/v4';
+import { zod4 } from 'sveltekit-superforms/adapters';
 import { protect } from '$lib/auth/protect';
 import {
 	getImportableTables,
@@ -139,7 +139,7 @@ interface InsertionResult {
 // Schéma de validation unifié (détection automatique mono/multi-table)
 const importSchema = z.object({
 	data: z.array(z.array(z.unknown())),
-	mappedFields: z.record(z.string()),
+	mappedFields: z.record(z.string(), z.string()),
 	selectedTables: z.array(z.string()),
 	targetTable: z.string().optional() // Rétrocompatibilité API
 });
@@ -856,7 +856,7 @@ export const actions: Actions = {
 		const { request } = event;
 		try {
 			// Validation du formulaire avec SuperForms
-			const form = await superValidate(request, zod(importSchema));
+			const form = await superValidate(request, zod4(importSchema));
 
 			if (!form.valid) {
 				return fail(400, { form });
@@ -899,7 +899,7 @@ export const actions: Actions = {
 		const { request } = event;
 		try {
 			// Validation du formulaire avec SuperForms
-			const form = await superValidate(request, zod(importSchema));
+			const form = await superValidate(request, zod4(importSchema));
 
 			if (!form.valid) {
 				return fail(400, { form });
@@ -933,7 +933,7 @@ export const actions: Actions = {
 			};
 
 			// Après un import réussi, reset le formulaire pour un nouvel import
-			const resetForm = await superValidate(zod(importSchema));
+			const resetForm = await superValidate(zod4(importSchema));
 
 			return {
 				form: {
@@ -965,7 +965,7 @@ export const load: ServerLoad = async (event) => {
 		await preloadAllFieldTypes();
 
 		// Initialisation d'un formulaire vide
-		const form = await superValidate(zod(importSchema));
+		const form = await superValidate(zod4(importSchema));
 
 		// Récupérer les tables et champs importables via DMMF
 		const availableTables = await getImportableTables();

@@ -1,8 +1,8 @@
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { superValidate } from 'sveltekit-superforms/server';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 } from 'sveltekit-superforms/adapters';
 import { protect } from '$lib/auth/protect';
 import {
 	getAllDatabaseTables,
@@ -108,11 +108,11 @@ function getValidFormats(): string[] {
 const exportSchema = z.object({
 	selectedSources: z.array(z.string()).min(1, 'Sélectionnez au moins une source'),
 	format: z.enum(['csv', 'xlsx', 'json', 'xml'], {
-		errorMap: () => ({ message: 'Format non supporté' })
+		error: 'Format non supporté'
 	}),
 	includeRelations: z.boolean().default(false),
 	rowLimit: z.number().min(1).max(1000000).optional(),
-	filters: z.record(z.unknown()).default({}),
+	filters: z.record(z.string(), z.unknown()).default({}),
 	includeHeaders: z.boolean().default(true),
 	dateRange: z
 		.object({
@@ -182,7 +182,7 @@ export const load = (async (event) => {
 
 	try {
 		const tables = await getTablesInfo();
-		const form = await superValidate(zod(exportSchema));
+		const form = await superValidate(zod4(exportSchema));
 
 		form.data = {
 			selectedSources: [],
@@ -217,7 +217,7 @@ export const actions: Actions = {
 		await protect(event);
 
 		const { request } = event;
-		const form = await superValidate(request, zod(exportSchema));
+		const form = await superValidate(request, zod4(exportSchema));
 
 		if (!form.valid) {
 			return fail(400, { form });
@@ -277,7 +277,7 @@ export const actions: Actions = {
 		await protect(event);
 
 		const { request } = event;
-		const form = await superValidate(request, zod(exportSchema));
+		const form = await superValidate(request, zod4(exportSchema));
 
 		if (!form.valid) {
 			return fail(400, { form });
