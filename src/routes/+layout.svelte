@@ -31,7 +31,7 @@
 		{ href: '/', label: 'Accueil' },
 		{ href: '/CRUD', label: 'CRUD' },
 		{ href: '/import', label: 'Import' },
-		{ href: '/importV2', label: 'Import MVP' },
+		{ href: '/importV2', label: 'ImportV2' },
 		{ href: '/export', label: 'Export' }
 	];
 </script>

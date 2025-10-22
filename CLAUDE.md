@@ -291,6 +291,19 @@ const products = await cenovDevPrisma.produit.findMany(); // Base CENOV_DEV
 - CENOV_DEV: Client séparé pour fonctionnalités catalogue produits
 - Les deux bases peuvent être utilisées simultanément
 
+**⚠️ Erreur SSR "exports is not defined" :**
+
+Si erreur `exports is not defined` sur une route → NE PAS importer directement le client Prisma cenov_dev. Utiliser `getClient()` :
+
+```typescript
+// ❌ Cause l'erreur
+import { PrismaClient } from '../../../prisma/cenov_dev/generated/index.js';
+
+// ✅ Solution SSR-safe
+import { getClient } from '$lib/prisma-meta';
+const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+```
+
 ### Structure des Fichiers Clés
 
 - `src/routes/` - Pages SvelteKit (categories, kits, import, products)

@@ -1,4 +1,5 @@
-import { PrismaClient as CenovDevPrismaClient } from '../../../prisma/cenov_dev/generated/index.js';
+import { getClient } from '$lib/prisma-meta';
+import type { PrismaClient as CenovDevPrismaClient } from '../../../prisma/cenov_dev/generated/index.js';
 
 type PrismaTransaction = Omit<
 	CenovDevPrismaClient,
@@ -299,11 +300,10 @@ export async function validateCSVData(
 // ============================================================================
 // VALIDATION ATTRIBUTS
 // ============================================================================
-const prisma = new CenovDevPrismaClient();
-
 async function loadAttributeReference(): Promise<
 	Map<string, { atr_id: number; atr_label: string }>
 > {
+	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
 	const attributes = await prisma.attribute.findMany({
 		select: { atr_id: true, atr_label: true }
 	});
@@ -321,6 +321,7 @@ async function loadAttributeUnitsEnriched(): Promise<
 		}
 	>
 > {
+	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
 	const attributeUnits = await prisma.attribute_unit.findMany({
 		include: {
 			attribute_attribute_unit_fk_unitToattribute: {
@@ -356,6 +357,7 @@ async function loadAttributeUnitsEnriched(): Promise<
 async function loadAllowedValues(atrIds: number[]): Promise<Map<number, Set<string>>> {
 	if (atrIds.length === 0) return new Map();
 
+	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
 	const attributeValues = await prisma.attribute_value.findMany({
 		where: { av_atr_id: { in: atrIds } },
 		select: { av_atr_id: true, av_value_label: true }
@@ -457,6 +459,7 @@ export async function importToDatabase(
 	};
 
 	try {
+		const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
 		await prisma.$transaction(async (tx) => {
 			for (const row of data) {
 				const supplierResult = await findOrCreateSupplier(tx, row.sup_code, row.sup_label);
