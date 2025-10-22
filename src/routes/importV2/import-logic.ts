@@ -522,6 +522,9 @@ async function findOrCreateSupplier(tx: PrismaTransaction, sup_code: string, sup
 		create: { sup_code, sup_label },
 		update: { sup_label }
 	});
+	if (!existing) {
+		console.log(`📦 Fournisseur créé: ${sup_label} (${sup_code})`);
+	}
 	return { entity: supplier, isNew: !existing };
 }
 
@@ -532,6 +535,9 @@ async function findOrCreateKit(tx: PrismaTransaction, kit_label: string) {
 		create: { kit_label },
 		update: {}
 	});
+	if (!existing) {
+		console.log(`📦 Kit créé: ${kit_label}`);
+	}
 	return { entity: kit, isNew: !existing };
 }
 
@@ -546,6 +552,7 @@ async function findOrCreateCategory(tx: PrismaTransaction, cat_label?: string, c
 		category = await tx.category.create({
 			data: { cat_code: cat_code || null, cat_label }
 		});
+		console.log(`📦 Catégorie créée: ${cat_label}${cat_code ? ` (${cat_code})` : ''}`);
 	}
 	return { entity: category, isNew };
 }
@@ -607,6 +614,8 @@ async function findOrCreateFamily(
 				data: { fam_label, fk_parent: null, fk_supplier, fk_category: null }
 			});
 		}
+		const level = fk_parent ? '(sous-famille)' : '(famille)';
+		console.log(`📦 Famille créée: ${fam_label} ${level}`);
 	}
 	return { entity: family, isNew };
 }
@@ -650,6 +659,12 @@ async function upsertProduct(
 		});
 	}
 
+	if (!existing) {
+		console.log(`✅ Produit créé: ${row.pro_cenov_id} (${row.pro_code})`);
+	} else {
+		console.log(`🔄 Produit mis à jour: ${row.pro_cenov_id} (${row.pro_code})`);
+	}
+
 	return { entity: product, isNew: !existing };
 }
 
@@ -657,21 +672,26 @@ async function upsertPricePurchase(tx: PrismaTransaction, fk_product: number, ro
 	const pp_discount =
 		row.pp_discount && row.pp_discount.trim() !== '' ? parseFloat(row.pp_discount) : null;
 	const pp_date = new Date(row.pp_date);
+	const pp_amount = parseFloat(row.pp_amount);
 
 	await tx.price_purchase.upsert({
 		where: { fk_product_pp_date: { fk_product, pp_date } },
 		create: {
 			fk_product,
 			pp_date,
-			pp_amount: parseFloat(row.pp_amount),
+			pp_amount,
 			pp_discount,
 			pro_cenov_id: row.pro_cenov_id
 		},
 		update: {
-			pp_amount: parseFloat(row.pp_amount),
+			pp_amount,
 			pp_discount
 		}
 	});
+
+	const pp_net = pp_discount ? pp_amount * (1 - pp_discount / 100) : pp_amount;
+	const discountStr = pp_discount ? ` (remise ${pp_discount}% = ${pp_net.toFixed(2)}€ net)` : '';
+	console.log(`💰 Prix enregistré: ${pp_amount}€${discountStr} - Date: ${row.pp_date}`);
 }
 
 async function importAttributes(
@@ -745,6 +765,10 @@ async function importAttributes(
 			});
 			kitAttributes++;
 		}
+	}
+
+	if (categoryAttributes > 0 || kitAttributes > 0) {
+		console.log(`📊 Attributs importés: ${kitAttributes} attributs kit`);
 	}
 
 	return { categoryAttributes, kitAttributes };

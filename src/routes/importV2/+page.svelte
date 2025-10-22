@@ -4,7 +4,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Card } from 'flowbite-svelte';
 	import * as Alert from '$lib/components/ui/alert';
-	import { Upload, AlertCircle, Check, CircleArrowLeft } from 'lucide-svelte';
+	import { Upload, AlertCircle, Check, CircleArrowLeft, CircleArrowRight } from 'lucide-svelte';
 
 	interface ValidationError {
 		line: number;
@@ -50,8 +50,9 @@
 	let fileName = $state('');
 	let isProcessing = $state(false);
 
-	let lastHandledValidation = $state<ValidationResult | null>(null);
-	let lastHandledResult = $state<ImportResult | null>(null);
+	// Flags pour détecter les nouvelles réponses (Solution 5 - Pattern Svelte 5)
+	let validationReceived = $state(false);
+	let resultReceived = $state(false);
 
 	let parsedPreview = $state<{
 		product: Record<string, string>;
@@ -121,28 +122,24 @@
 		fileName = '';
 		parsedPreview = null;
 		form = null;
-		lastHandledValidation = null;
-		lastHandledResult = null;
+		validationReceived = false;
+		resultReceived = false;
 	}
 
 	$effect(() => {
-		if (form?.validation && form.validation !== lastHandledValidation) {
-			lastHandledValidation = form.validation;
+		if (form?.validation && validationReceived) {
+			validationReceived = false; // Auto-reset après traitement
 			isProcessing = false;
 			step = 3;
 		}
 	});
 
 	$effect(() => {
-		if (form?.result && form.result !== lastHandledResult) {
-			lastHandledResult = form.result;
+		if (form?.result && resultReceived) {
+			resultReceived = false; // Auto-reset après traitement
 			isProcessing = false;
 			step = 4;
 			toast.success('Import réussi !');
-
-			setTimeout(() => {
-				resetImport();
-			}, 3000);
 		}
 	});
 
@@ -178,7 +175,7 @@
 		</div>
 	</div>
 
-	<Card>
+	<Card class="w-full max-w-full">
 		{#if step === 1}
 			<div class="mb-6">
 				<h2 class="mb-4 text-xl font-semibold">Upload fichier CSV</h2>
@@ -247,6 +244,7 @@
 					method="POST"
 					action="?/validate"
 					use:enhance={() => {
+						validationReceived = true;
 						isProcessing = true;
 						return async ({ update }) => {
 							await update();
@@ -260,7 +258,8 @@
 							Retour
 						</Button>
 						<Button type="submit" variant="vert" disabled={isProcessing}>
-							{isProcessing ? 'Validation...' : 'Valider →'}
+							Valider
+							<CircleArrowRight class="ml-2 h-4 w-4" />
 						</Button>
 					</div>
 				</form>
@@ -308,6 +307,7 @@
 					method="POST"
 					action="?/process"
 					use:enhance={() => {
+						resultReceived = true;
 						isProcessing = true;
 						return async ({ update }) => {
 							await update();
@@ -340,38 +340,75 @@
 						<h3 class="mb-2 text-xl font-medium text-green-800">Import terminé avec succès !</h3>
 					</div>
 
-					<div class="grid grid-cols-2 gap-4 text-sm">
-						<div class="rounded bg-white p-3">
-							<div class="font-medium">Fournisseurs créés:</div>
-							<div class="text-2xl font-bold text-green-600">{form.result.stats.suppliers}</div>
-						</div>
-						<div class="rounded bg-white p-3">
-							<div class="font-medium">Kits créés:</div>
-							<div class="text-2xl font-bold text-green-600">{form.result.stats.kits}</div>
-						</div>
-						<div class="rounded bg-white p-3">
-							<div class="font-medium">Produits créés:</div>
-							<div class="text-2xl font-bold text-green-600">{form.result.stats.products}</div>
-						</div>
-						<div class="rounded bg-white p-3">
-							<div class="font-medium">Produits mis à jour:</div>
-							<div class="text-2xl font-bold text-blue-600">
-								{form.result.stats.productsUpdated}
+					<h4 class="mb-3 font-semibold text-green-800">Résumé des modifications :</h4>
+
+					<div class="mb-4 grid grid-cols-2 gap-3 text-sm">
+						{#if form.result.stats.suppliers > 0}
+							<div class="rounded bg-white p-3 shadow-sm">
+								<div class="text-xs text-gray-600">Fournisseurs créés</div>
+								<div class="text-2xl font-bold text-green-600">{form.result.stats.suppliers}</div>
 							</div>
-						</div>
-						<div class="rounded bg-white p-3">
-							<div class="font-medium">Prix enregistrés:</div>
-							<div class="text-2xl font-bold text-green-600">{form.result.stats.prices}</div>
-						</div>
-						<div class="rounded bg-white p-3">
-							<div class="font-medium">Attributs importés:</div>
-							<div class="text-2xl font-bold text-green-600">{form.result.stats.kitAttributes}</div>
-						</div>
+						{/if}
+						{#if form.result.stats.categories > 0}
+							<div class="rounded bg-white p-3 shadow-sm">
+								<div class="text-xs text-gray-600">Catégories créées</div>
+								<div class="text-2xl font-bold text-green-600">{form.result.stats.categories}</div>
+							</div>
+						{/if}
+						{#if form.result.stats.families > 0}
+							<div class="rounded bg-white p-3 shadow-sm">
+								<div class="text-xs text-gray-600">Familles créées</div>
+								<div class="text-2xl font-bold text-green-600">{form.result.stats.families}</div>
+							</div>
+						{/if}
+						{#if form.result.stats.kits > 0}
+							<div class="rounded bg-white p-3 shadow-sm">
+								<div class="text-xs text-gray-600">Kits créés</div>
+								<div class="text-2xl font-bold text-green-600">{form.result.stats.kits}</div>
+							</div>
+						{/if}
+						{#if form.result.stats.products > 0}
+							<div class="rounded bg-white p-3 shadow-sm">
+								<div class="text-xs text-gray-600">Produits créés</div>
+								<div class="text-2xl font-bold text-green-600">{form.result.stats.products}</div>
+							</div>
+						{/if}
+						{#if form.result.stats.productsUpdated > 0}
+							<div class="rounded bg-white p-3 shadow-sm">
+								<div class="text-xs text-gray-600">Produits mis à jour</div>
+								<div class="text-2xl font-bold text-blue-600">
+									{form.result.stats.productsUpdated}
+								</div>
+							</div>
+						{/if}
+						{#if form.result.stats.prices > 0}
+							<div class="rounded bg-white p-3 shadow-sm">
+								<div class="text-xs text-gray-600">Prix enregistrés</div>
+								<div class="text-2xl font-bold text-green-600">{form.result.stats.prices}</div>
+							</div>
+						{/if}
+						{#if form.result.stats.categoryAttributes > 0}
+							<div class="rounded bg-white p-3 shadow-sm">
+								<div class="text-xs text-gray-600">Attributs catégorie</div>
+								<div class="text-2xl font-bold text-green-600">
+									{form.result.stats.categoryAttributes}
+								</div>
+							</div>
+						{/if}
+						{#if form.result.stats.kitAttributes > 0}
+							<div class="rounded bg-white p-3 shadow-sm">
+								<div class="text-xs text-gray-600">Attributs kit</div>
+								<div class="text-2xl font-bold text-green-600">{form.result.stats.kitAttributes}</div>
+							</div>
+						{/if}
 					</div>
 
-					<p class="mt-4 text-center text-sm text-green-700">
-						Redirection automatique dans 3 secondes...
-					</p>
+					<div class="mt-4 flex justify-center">
+						<Button variant="vert" onclick={resetImport}>
+							<Upload class="mr-2 h-4 w-4" />
+							Nouvel import
+						</Button>
+					</div>
 				</div>
 			</div>
 		{/if}

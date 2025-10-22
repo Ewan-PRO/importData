@@ -82,16 +82,11 @@ export const actions: Actions = {
 	validate: async ({ request }) => {
 		try {
 			const formData = await request.formData();
-
 			const { csvContent, error } = validateFormData(formData);
-			if (error) {
-				return fail(400, { error });
-			}
+			if (error) return fail(400, { error });
 
 			const parsedData: ParsedCSVData = parseCSVContent(csvContent);
-			if (!parsedData.success) {
-				return fail(400, { error: parsedData.error });
-			}
+			if (!parsedData.success) return fail(400, { error: parsedData.error });
 
 			const csvValidation = await validateCSVData(parsedData.data, CONFIG);
 			const attributeValidation = await validateAttributes(parsedData.attributes);
@@ -104,8 +99,10 @@ export const actions: Actions = {
 				warnings: [...csvValidation.warnings, ...attributeValidation.warnings]
 			};
 
+			console.log(`✅ Validation: ${csvValidation.validRows}/${parsedData.data.length} lignes valides`);
 			return { validation };
 		} catch (err) {
+			console.error('❌ Erreur validation:', err);
 			return fail(500, { error: `Erreur de validation: ${formatError(err)}` });
 		}
 	},
