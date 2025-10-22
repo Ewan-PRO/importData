@@ -38,19 +38,25 @@
 		stats: ImportStats;
 	}
 
-	export let form: { validation?: ValidationResult; result?: ImportResult; error?: string } | null =
-		null;
+	let {
+		form = $bindable()
+	}: {
+		form?: { validation?: ValidationResult; result?: ImportResult; error?: string } | null;
+	} = $props();
 
-	let step = 1;
-	let csvFile: File | null = null;
-	let csvContent = '';
-	let fileName = '';
-	let isProcessing = false;
+	let step = $state(1);
+	let csvFile = $state<File | null>(null);
+	let csvContent = $state('');
+	let fileName = $state('');
+	let isProcessing = $state(false);
 
-	let parsedPreview: {
+	let lastHandledValidation = $state<ValidationResult | null>(null);
+	let lastHandledResult = $state<ImportResult | null>(null);
+
+	let parsedPreview = $state<{
 		product: Record<string, string>;
 		attributes: Array<{ label: string; value: string }>;
-	} | null = null;
+	} | null>(null);
 
 	function handleFileUpload(e: Event) {
 		const input = e.target as HTMLInputElement;
@@ -115,27 +121,37 @@
 		fileName = '';
 		parsedPreview = null;
 		form = null;
+		lastHandledValidation = null;
+		lastHandledResult = null;
 	}
 
-	$: if (form?.validation) {
-		isProcessing = false;
-		step = 3;
-	}
+	$effect(() => {
+		if (form?.validation && form.validation !== lastHandledValidation) {
+			lastHandledValidation = form.validation;
+			isProcessing = false;
+			step = 3;
+		}
+	});
 
-	$: if (form?.result) {
-		isProcessing = false;
-		step = 4;
-		toast.success('Import réussi !');
+	$effect(() => {
+		if (form?.result && form.result !== lastHandledResult) {
+			lastHandledResult = form.result;
+			isProcessing = false;
+			step = 4;
+			toast.success('Import réussi !');
 
-		setTimeout(() => {
-			resetImport();
-		}, 3000);
-	}
+			setTimeout(() => {
+				resetImport();
+			}, 3000);
+		}
+	});
 
-	$: if (form?.error) {
-		toast.error(form.error);
-		isProcessing = false;
-	}
+	$effect(() => {
+		if (form?.error) {
+			toast.error(form.error);
+			isProcessing = false;
+		}
+	});
 </script>
 
 <div class="container mx-auto max-w-4xl p-6">
@@ -172,8 +188,8 @@
 					class="mb-4 cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-8 text-center transition-colors hover:border-blue-400 hover:bg-blue-50"
 					role="button"
 					tabindex="0"
-					on:click={() => document.getElementById('fileInput')?.click()}
-					on:keydown={(e) => {
+					onclick={() => document.getElementById('fileInput')?.click()}
+					onkeydown={(e) => {
 						if (e.key === 'Enter' || e.key === ' ') {
 							e.preventDefault();
 							document.getElementById('fileInput')?.click();
@@ -188,7 +204,7 @@
 						id="fileInput"
 						class="hidden"
 						accept=".csv"
-						on:change={handleFileUpload}
+						onchange={handleFileUpload}
 					/>
 					<Button
 						variant="bleu"
@@ -209,7 +225,7 @@
 				<div class="mb-6 rounded-lg border bg-gray-50 p-4">
 					<h3 class="mb-2 font-medium">Données produit :</h3>
 					<div class="grid grid-cols-2 gap-2 text-sm">
-						{#each Object.entries(parsedPreview.product) as [key, value]}
+						{#each Object.entries(parsedPreview.product) as [key, value] (key)}
 							<div><span class="font-medium">{key}:</span> {value}</div>
 						{/each}
 					</div>
@@ -218,7 +234,7 @@
 				<div class="mb-6 rounded-lg border bg-blue-50 p-4">
 					<h3 class="mb-2 font-medium">Attributs détectés ({parsedPreview.attributes.length}) :</h3>
 					<div class="grid gap-2">
-						{#each parsedPreview.attributes as attr}
+						{#each parsedPreview.attributes as attr (attr.label)}
 							<div class="flex justify-between rounded bg-white p-2 text-sm">
 								<span class="font-medium">{attr.label}:</span>
 								<span>{attr.value || '(vide)'}</span>
@@ -272,7 +288,7 @@
 					<div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
 						<h3 class="mb-2 font-medium text-red-800">Erreurs de validation :</h3>
 						<div class="max-h-64 overflow-y-auto">
-							{#each form.validation.errors as error}
+							{#each form.validation.errors as error, i (i)}
 								<div class="mb-2 rounded bg-white p-2 text-sm">
 									<div class="flex items-center gap-2">
 										<AlertCircle class="h-4 w-4 text-red-500" />

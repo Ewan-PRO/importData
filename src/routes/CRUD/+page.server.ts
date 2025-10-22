@@ -59,9 +59,12 @@ async function generateDynamicSchemaFromTable(
 				});
 				break;
 			case 'Boolean':
-				zodType = zodType.refine((val) => ['true', 'false', '1', '0'].includes((val as string).toLowerCase()), {
-					message: `${field.name} doit être true/false`
-				});
+				zodType = zodType.refine(
+					(val) => ['true', 'false', '1', '0'].includes((val as string).toLowerCase()),
+					{
+						message: `${field.name} doit être true/false`
+					}
+				);
 				break;
 		}
 
@@ -341,7 +344,11 @@ export const actions: Actions = {
 		}
 
 		try {
-			const result = await createRecordDynamic(tableInfo.database, tableInfo.tableName, form.data as Record<string, string>);
+			const result = await createRecordDynamic(
+				tableInfo.database,
+				tableInfo.tableName,
+				form.data as Record<string, string>
+			);
 
 			// Réinitialiser le formulaire après succès
 			return { form, success: true, data: result };
