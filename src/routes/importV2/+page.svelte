@@ -65,8 +65,7 @@
 	let resultReceived = $state(false);
 
 	let parsedPreview = $state<{
-		product: Record<string, string>;
-		attributes: Array<{ label: string; value: string }>;
+		columns: Array<{ header: string; value: string }>;
 	} | null>(null);
 
 	// Grouper les changements par table
@@ -102,38 +101,26 @@
 	function parsePreview() {
 		try {
 			const lines = csvContent.split('\n');
-			if (lines.length < 3) {
-				toast.error('Fichier CSV invalide (moins de 3 lignes)');
+			if (lines.length < 2) {
+				toast.error('Fichier CSV invalide (moins de 2 lignes)');
 				return;
 			}
 
 			const headers = lines[0].split(';');
-			const dataLine = lines[1].split(';');
-			const valuesLine = lines[2].split(';');
+			const values = lines[1].split(';');
 
-			const attributeIndexes: number[] = [];
-			headers.forEach((h, i) => {
-				if (h.trim() === 'atr_label') attributeIndexes.push(i);
-			});
+			const columns: Array<{ header: string; value: string }> = [];
 
-			const product: Record<string, string> = {};
 			headers.forEach((h, i) => {
-				if (!attributeIndexes.includes(i) && dataLine[i]) {
-					product[h.trim()] = dataLine[i].trim();
+				const header = h.trim();
+				const value = values[i] ? values[i].trim() : '';
+
+				if (header) {
+					columns.push({ header, value });
 				}
 			});
 
-			const attributes: Array<{ label: string; value: string }> = [];
-			attributeIndexes.forEach((i) => {
-				if (dataLine[i] && valuesLine[i]) {
-					attributes.push({
-						label: dataLine[i].trim(),
-						value: valuesLine[i].trim()
-					});
-				}
-			});
-
-			parsedPreview = { product, attributes };
+			parsedPreview = { columns };
 			step = 2;
 		} catch (error) {
 			toast.error('Erreur parsing CSV: ' + (error instanceof Error ? error.message : 'Erreur'));
@@ -245,21 +232,14 @@
 				<h2 class="mb-4 text-xl font-semibold text-black">2. Preview des données : {fileName}</h2>
 
 				<div class="mb-6 rounded-lg border bg-gray-50 p-4">
-					<h3 class="mb-2 font-medium">Données produit :</h3>
+					<h3 class="mb-2 font-medium">
+						Données détectées ({parsedPreview.columns.length} colonnes) :
+					</h3>
 					<div class="grid grid-cols-2 gap-2 text-sm">
-						{#each Object.entries(parsedPreview.product) as [key, value] (key)}
-							<div><span class="font-medium">{key}:</span> {value}</div>
-						{/each}
-					</div>
-				</div>
-
-				<div class="mb-6 rounded-lg border bg-blue-50 p-4">
-					<h3 class="mb-2 font-medium">Attributs détectés ({parsedPreview.attributes.length}) :</h3>
-					<div class="grid gap-2">
-						{#each parsedPreview.attributes as attr (attr.label)}
-							<div class="flex justify-between rounded bg-white p-2 text-sm">
-								<span class="font-medium">{attr.label}:</span>
-								<span>{attr.value || '(vide)'}</span>
+						{#each parsedPreview.columns as col (col.header)}
+							<div>
+								<span class="font-medium">{col.header}:</span>
+								<span class="text-gray-700">{col.value || '(vide)'}</span>
 							</div>
 						{/each}
 					</div>

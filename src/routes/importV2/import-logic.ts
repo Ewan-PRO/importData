@@ -26,8 +26,8 @@ export interface CSVRow {
 }
 
 export interface AttributePair {
-	atrLabel: string;
-	atrValue: string | null;
+	atrValueCode: string; // Code atr_value de la BDD (ex: PRESSION_LIMITE)
+	atrValue: string | null; // Valeur de l'attribut (ex: 0.1)
 }
 
 export interface ParsedCSVData {
@@ -152,7 +152,7 @@ function parseCSVNative(csvContent: string, delimiter: string): unknown[][] {
 	return result;
 }
 
-export function parseCSVContent(csvContent: string): ParsedCSVData {
+export async function parseCSVContent(csvContent: string): Promise<ParsedCSVData> {
 	try {
 		const rawData = parseCSVNative(csvContent, ';');
 
@@ -166,37 +166,32 @@ export function parseCSVContent(csvContent: string): ParsedCSVData {
 		}
 
 		const headers = rawData[0] as string[];
-		const attributeColumnIndexes: number[] = [];
+		const values = rawData[1] as string[];
 
-		headers.forEach((header, index) => {
-			if (header === 'atr_label') attributeColumnIndexes.push(index);
+		// Charger tous les atr_value depuis BDD pour détection
+		const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+		const attributesFromDB = await prisma.attribute.findMany({
+			select: { atr_value: true },
+			where: { atr_value: { not: null } }
 		});
-
-		const isVerticalFormat = attributeColumnIndexes.length > 0 && rawData.length >= 3;
-		if (!isVerticalFormat) {
-			return { success: false, data: [], attributes: [], error: 'Format vertical non détecté' };
-		}
-
-		const dataLine = rawData[1] as unknown[];
-		const valuesLine = rawData[2] as unknown[];
+		const validAtrValues = new Set(attributesFromDB.map((a) => a.atr_value));
 
 		const row: Record<string, string> = {};
-		headers.forEach((header, index) => {
-			if (!attributeColumnIndexes.includes(index)) {
-				row[header] = (dataLine[index] as string) || '';
-			}
-		});
-
 		const attributes: AttributePair[] = [];
-		attributeColumnIndexes.forEach((colIndex) => {
-			const atrLabel = dataLine[colIndex] as string;
-			const atrValue = valuesLine[colIndex] as string;
 
-			if (atrLabel && atrLabel.trim() !== '') {
+		headers.forEach((header, index) => {
+			const headerTrimmed = header.trim();
+			const value = values[index] ? String(values[index]).trim() : '';
+
+			if (validAtrValues.has(headerTrimmed)) {
+				// C'est un code atr_value connu en BDD
 				attributes.push({
-					atrLabel: atrLabel.trim(),
-					atrValue: atrValue ? atrValue.trim() : null
+					atrValueCode: headerTrimmed,
+					atrValue: value || null
 				});
+			} else {
+				// C'est une colonne métier
+				row[headerTrimmed] = value;
 			}
 		});
 
@@ -311,14 +306,15 @@ export async function validateCSVData(
 // VALIDATION ATTRIBUTS
 // ============================================================================
 async function loadAttributeReference(): Promise<
-	Map<string, { atr_id: number; atr_label: string }>
+	Map<string, { atr_id: number; atr_value: string }>
 > {
 	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
 	const attributes = await prisma.attribute.findMany({
-		select: { atr_id: true, atr_label: true }
+		select: { atr_id: true, atr_value: true },
+		where: { atr_value: { not: null } }
 	});
 	const map = new Map();
-	attributes.forEach((attr) => map.set(attr.atr_label, attr));
+	attributes.forEach((attr) => map.set(attr.atr_value!, attr));
 	return map;
 }
 
@@ -393,18 +389,23 @@ export async function validateAttributes(attributes: AttributePair[]): Promise<V
 	const attributeUnitsMap = await loadAttributeUnitsEnriched();
 
 	const attributeIds = attributes
-		.filter((a) => a.atrValue && attributeMap.has(a.atrLabel))
-		.map((a) => attributeMap.get(a.atrLabel)!.atr_id);
+		.filter((a) => a.atrValue && attributeMap.has(a.atrValueCode))
+		.map((a) => attributeMap.get(a.atrValueCode)!.atr_id);
 
 	const allowedValuesMap = await loadAllowedValues(attributeIds);
 
 	for (let i = 0; i < attributes.length; i++) {
-		const { atrLabel, atrValue } = attributes[i];
+		const { atrValueCode, atrValue } = attributes[i];
 		if (!atrValue || atrValue.trim() === '') continue;
 
-		const attribute = attributeMap.get(atrLabel);
+		const attribute = attributeMap.get(atrValueCode);
 		if (!attribute) {
-			errors.push({ line: i + 1, field: atrLabel, value: atrValue, error: 'Attribut introuvable' });
+			errors.push({
+				line: i + 1,
+				field: atrValueCode,
+				value: atrValue,
+				error: 'Code attribut inconnu'
+			});
 			continue;
 		}
 
@@ -415,7 +416,7 @@ export async function validateAttributes(attributes: AttributePair[]): Promise<V
 				const allowedList = Array.from(allowedValues).join(', ');
 				errors.push({
 					line: i + 1,
-					field: atrLabel,
+					field: atrValueCode,
 					value: atrValue,
 					error: `Valeur non autorisée. Acceptées: ${allowedList}`
 				});
@@ -430,7 +431,7 @@ export async function validateAttributes(attributes: AttributePair[]): Promise<V
 						const allowedUnits = unitsData.units.map((u) => u.unit_value).join(', ');
 						errors.push({
 							line: i + 1,
-							field: atrLabel,
+							field: atrValueCode,
 							value: atrValue,
 							error: `Unité "${unit}" invalide. Acceptées: ${allowedUnits}`
 						});
@@ -934,17 +935,17 @@ async function importAttributes(
 	const attributeMap = await loadAttributeReference();
 	const attributeUnitsMap = await loadAttributeUnitsEnriched();
 	const atrIds = attributes
-		.filter((a) => a.atrValue && attributeMap.has(a.atrLabel))
-		.map((a) => attributeMap.get(a.atrLabel)!.atr_id);
+		.filter((a) => a.atrValue && attributeMap.has(a.atrValueCode))
+		.map((a) => attributeMap.get(a.atrValueCode)!.atr_id);
 	const allowedValuesMap = await loadAllowedValues(atrIds);
 
 	// Récupérer le kit_label pour l'ID de l'enregistrement
 	const kit = await tx.kit.findUnique({ where: { kit_id }, select: { kit_label: true } });
 
-	for (const { atrLabel, atrValue } of attributes) {
+	for (const { atrValueCode, atrValue } of attributes) {
 		if (!atrValue || atrValue.trim() === '') continue;
 
-		const attribute = attributeMap.get(atrLabel);
+		const attribute = attributeMap.get(atrValueCode);
 		if (!attribute) continue;
 
 		const existingCatAttr = await tx.category_attribute.findFirst({
@@ -963,7 +964,7 @@ async function importAttributes(
 				column: 'fk_attribute',
 				oldValue: null,
 				newValue: attribute.atr_id,
-				recordId: `cat_id:${cat_id} → ${atrLabel}`
+				recordId: `cat_id:${cat_id} → ${atrValueCode}`
 			});
 		}
 
@@ -998,7 +999,7 @@ async function importAttributes(
 					column: 'kat_value',
 					oldValue: existingKitAttr.kat_value,
 					newValue: finalValue,
-					recordId: `${kit?.kit_label || kit_id} - ${atrLabel}`
+					recordId: `${kit?.kit_label || kit_id} - ${atrValueCode}`
 				});
 			}
 
@@ -1010,7 +1011,7 @@ async function importAttributes(
 					column: 'fk_attribute_unite',
 					oldValue: existingKitAttr.fk_attribute_unite,
 					newValue: finalUnitId,
-					recordId: `${kit?.kit_label || kit_id} - ${atrLabel}`
+					recordId: `${kit?.kit_label || kit_id} - ${atrValueCode}`
 				});
 			}
 
@@ -1035,7 +1036,7 @@ async function importAttributes(
 				column: 'kat_value',
 				oldValue: null,
 				newValue: finalValue,
-				recordId: `${kit?.kit_label || kit_id} - ${atrLabel}`
+				recordId: `${kit?.kit_label || kit_id} - ${atrValueCode}`
 			});
 			if (finalUnitId !== null) {
 				changes.push({
@@ -1044,7 +1045,7 @@ async function importAttributes(
 					column: 'fk_attribute_unite',
 					oldValue: null,
 					newValue: finalUnitId,
-					recordId: `${kit?.kit_label || kit_id} - ${atrLabel}`
+					recordId: `${kit?.kit_label || kit_id} - ${atrValueCode}`
 				});
 			}
 

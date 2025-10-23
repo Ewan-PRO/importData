@@ -85,7 +85,7 @@ export const actions: Actions = {
 			const { csvContent, error } = validateFormData(formData);
 			if (error) return fail(400, { error });
 
-			const parsedData: ParsedCSVData = parseCSVContent(csvContent);
+			const parsedData: ParsedCSVData = await parseCSVContent(csvContent);
 			if (!parsedData.success) return fail(400, { error: parsedData.error });
 
 			const csvValidation = await validateCSVData(parsedData.data, CONFIG);
@@ -118,7 +118,7 @@ export const actions: Actions = {
 				return fail(400, { error });
 			}
 
-			const parsedData = parseCSVContent(csvContent);
+			const parsedData = await parseCSVContent(csvContent);
 			if (!parsedData.success) {
 				return fail(400, { error: parsedData.error });
 			}
