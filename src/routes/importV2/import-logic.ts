@@ -296,6 +296,44 @@ export async function validateCSVData(
 			}
 		}
 
+		// Validation conditionnelle hiérarchie famille
+		const sousFamille = row.sous_famille;
+		const sousSousFamille = row.sous_sous_famille;
+		const famille = row.famille;
+
+		if (sousSousFamille && typeof sousSousFamille === 'string' && sousSousFamille.trim() !== '') {
+			// Si sous_sous_famille présent → famille ET sous_famille obligatoires
+			if (!famille || (typeof famille === 'string' && famille.trim() === '')) {
+				errors.push({
+					line: lineNumber,
+					field: 'famille',
+					value: famille || '',
+					error: 'Champ obligatoire si "sous_sous_famille" est renseigné'
+				});
+				rowValid = false;
+			}
+			if (!sousFamille || (typeof sousFamille === 'string' && sousFamille.trim() === '')) {
+				errors.push({
+					line: lineNumber,
+					field: 'sous_famille',
+					value: sousFamille || '',
+					error: 'Champ obligatoire si "sous_sous_famille" est renseigné'
+				});
+				rowValid = false;
+			}
+		} else if (sousFamille && typeof sousFamille === 'string' && sousFamille.trim() !== '') {
+			// Si sous_famille présent → famille obligatoire
+			if (!famille || (typeof famille === 'string' && famille.trim() === '')) {
+				errors.push({
+					line: lineNumber,
+					field: 'famille',
+					value: famille || '',
+					error: 'Champ obligatoire si "sous_famille" est renseigné'
+				});
+				rowValid = false;
+			}
+		}
+
 		if (rowValid) validRows++;
 	}
 
@@ -480,8 +518,14 @@ export async function importToDatabase(
 				const kitResult = await findOrCreateKit(tx, row.kit_label, changes);
 				if (kitResult.isNew) stats.kits++;
 
-				const categoryResult = await findOrCreateCategory(tx, row.cat_label, row.cat_code, changes);
-				if (categoryResult && categoryResult.isNew) stats.categories++;
+				// cat_code et cat_label sont obligatoires (validés avant l'import)
+				const categoryResult = await findOrCreateCategory(
+					tx,
+					row.cat_code!,
+					row.cat_label!,
+					changes
+				);
+				if (categoryResult.isNew) stats.categories++;
 
 				const familyIds = await resolveFamilyHierarchy(
 					tx,
@@ -584,7 +628,7 @@ async function findOrCreateKit(tx: PrismaTransaction, kit_label: string, changes
 	const kit = await tx.kit.upsert({
 		where: { kit_label },
 		create: { kit_label },
-		update: {}
+		update: { kit_label }
 	});
 
 	if (!existing) {
@@ -604,45 +648,64 @@ async function findOrCreateKit(tx: PrismaTransaction, kit_label: string, changes
 
 async function findOrCreateCategory(
 	tx: PrismaTransaction,
-	cat_label: string | undefined,
-	cat_code: string | undefined,
+	cat_code: string,
+	cat_label: string,
 	changes: ChangeDetail[]
 ) {
-	if (!cat_label || cat_label.trim() === '') return null;
+	// Note: CSV importe uniquement des catégories racine (fk_parent = null)
+	// Recherche par cat_code (les catégories racine ont fk_parent = null)
+	const existing = await tx.category.findFirst({
+		where: { fk_parent: null, cat_code }
+	});
 
-	const whereClause = cat_code ? { cat_code } : { cat_label };
-	let category = await tx.category.findFirst({ where: whereClause });
-	const isNew = !category;
+	let category;
 
-	if (!category) {
+	if (!existing) {
+		// CREATE - Nouvelle catégorie
 		category = await tx.category.create({
-			data: { cat_code: cat_code || null, cat_label }
+			data: { fk_parent: null, cat_code, cat_label }
 		});
 
+		changes.push({
+			table: 'category',
+			schema: 'produit',
+			column: 'cat_code',
+			oldValue: null,
+			newValue: cat_code,
+			recordId: cat_code
+		});
 		changes.push({
 			table: 'category',
 			schema: 'produit',
 			column: 'cat_label',
 			oldValue: null,
 			newValue: cat_label,
-			recordId: cat_code || cat_label
+			recordId: cat_code
 		});
+		console.log(`📦 Catégorie créée: ${cat_label} (${cat_code})`);
+	} else {
+		// UPDATE - Catégorie existe
+		if (existing.cat_label !== cat_label) {
+			category = await tx.category.update({
+				where: { cat_id: existing.cat_id },
+				data: { cat_label }
+			});
 
-		if (cat_code) {
 			changes.push({
 				table: 'category',
 				schema: 'produit',
-				column: 'cat_code',
-				oldValue: null,
-				newValue: cat_code,
+				column: 'cat_label',
+				oldValue: existing.cat_label,
+				newValue: cat_label,
 				recordId: cat_code
 			});
+			console.log(`🔄 Catégorie mise à jour: ${cat_code} - "${existing.cat_label}" → "${cat_label}"`);
+		} else {
+			category = existing;
 		}
-
-		console.log(`📦 Catégorie créée: ${cat_label}${cat_code ? ` (${cat_code})` : ''}`);
 	}
 
-	return { entity: category, isNew };
+	return { entity: category, isNew: !existing };
 }
 
 async function resolveFamilyHierarchy(

@@ -18,6 +18,8 @@ const CONFIG = {
 		'pro_code',
 		'sup_code',
 		'sup_label',
+		'cat_code',
+		'cat_label',
 		'kit_label',
 		'pp_amount',
 		'pp_date'
