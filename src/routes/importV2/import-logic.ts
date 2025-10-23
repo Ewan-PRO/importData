@@ -14,8 +14,8 @@ export interface CSVRow {
 	pro_code: string;
 	sup_code: string;
 	sup_label: string;
-	cat_code?: string;
-	cat_label?: string;
+	cat_code: string;
+	cat_label: string;
 	kit_label: string;
 	famille?: string;
 	sous_famille?: string;
@@ -521,8 +521,8 @@ export async function importToDatabase(
 				// cat_code et cat_label sont obligatoires (validés avant l'import)
 				const categoryResult = await findOrCreateCategory(
 					tx,
-					row.cat_code!,
-					row.cat_label!,
+					row.cat_code,
+					row.cat_label,
 					changes
 				);
 				if (categoryResult.isNew) stats.categories++;
