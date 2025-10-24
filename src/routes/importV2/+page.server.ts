@@ -4,6 +4,7 @@ import {
 	parseCSVContent,
 	validateCSVData,
 	validateAttributes,
+	validateRequiredAttributes,
 	importToDatabase,
 	type ParsedCSVData,
 	type ValidationResult,
@@ -117,12 +118,33 @@ export const actions: Actions = {
 				});
 			}
 
+			// ✅ VALIDATION ATTRIBUTS OBLIGATOIRES - PRIORITÉ 2
+			const requiredAttrsValidation = await validateRequiredAttributes(
+				parsedData.data,
+				parsedData.attributes
+			);
+
 			const validation: ValidationResult = {
-				success: csvValidation.success && allAttributeErrors.length === 0,
+				success:
+					csvValidation.success &&
+					allAttributeErrors.length === 0 &&
+					requiredAttrsValidation.success,
 				totalRows: parsedData.data.length,
-				validRows: csvValidation.validRows,
-				errors: [...csvValidation.errors, ...allAttributeErrors],
-				warnings: [...csvValidation.warnings, ...allAttributeWarnings]
+				validRows: Math.min(
+					csvValidation.validRows,
+					requiredAttrsValidation.validRows,
+					parsedData.data.length - allAttributeErrors.length
+				),
+				errors: [
+					...csvValidation.errors,
+					...allAttributeErrors,
+					...requiredAttrsValidation.errors
+				],
+				warnings: [
+					...csvValidation.warnings,
+					...allAttributeWarnings,
+					...requiredAttrsValidation.warnings
+				]
 			};
 
 			console.log(
@@ -162,7 +184,13 @@ export const actions: Actions = {
 				}
 			}
 
-			if (!csvValidation.success || hasAttributeErrors) {
+			// ✅ Validation attributs obligatoires
+			const requiredAttrsValidation = await validateRequiredAttributes(
+				parsedData.data,
+				parsedData.attributes
+			);
+
+			if (!csvValidation.success || hasAttributeErrors || !requiredAttrsValidation.success) {
 				return fail(400, { error: 'Validation échouée. Veuillez corriger les erreurs.' });
 			}
 

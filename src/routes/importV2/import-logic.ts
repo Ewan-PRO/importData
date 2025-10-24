@@ -266,6 +266,10 @@ export async function validateCSVData(
 	const rowValidityMap = new Map<number, boolean>(); // Track validity per line
 	const seenSupplierProducts = new Map<string, number>(); // key: "sup_code:pro_code" → first line number
 
+	// ✅ VALIDATION COHÉRENCE INTERNE CSV - PRIORITÉ 1
+	const supplierLabels = new Map<string, { label: string; line: number }>(); // sup_code → { label, line }
+	const categoryLabels = new Map<string, { label: string; line: number }>(); // cat_code → { label, line }
+
 	for (let i = 0; i < data.length; i++) {
 		const row = data[i];
 		const lineNumber = i + 2;
@@ -411,6 +415,49 @@ export async function validateCSVData(
 			}
 		}
 
+		// ✅ VALIDATION COHÉRENCE INTERNE CSV - Même sup_code doit avoir même sup_label
+		const sup_label = row.sup_label;
+		if (sup_code && sup_label) {
+			const existingSupplier = supplierLabels.get(sup_code);
+			if (existingSupplier) {
+				// Vérifier que le label est identique
+				if (existingSupplier.label !== sup_label) {
+					errors.push({
+						line: lineNumber,
+						field: 'sup_label',
+						value: sup_label,
+						error: `Incohérence : fournisseur ${sup_code} a différents noms (ligne ${existingSupplier.line}: "${existingSupplier.label}", ligne ${lineNumber}: "${sup_label}")`
+					});
+					rowValid = false;
+				}
+			} else {
+				// Première occurrence de ce sup_code
+				supplierLabels.set(sup_code, { label: sup_label, line: lineNumber });
+			}
+		}
+
+		// ✅ VALIDATION COHÉRENCE INTERNE CSV - Même cat_code doit avoir même cat_label
+		const cat_code = row.cat_code;
+		const cat_label = row.cat_label;
+		if (cat_code && cat_label) {
+			const existingCategory = categoryLabels.get(cat_code);
+			if (existingCategory) {
+				// Vérifier que le label est identique
+				if (existingCategory.label !== cat_label) {
+					errors.push({
+						line: lineNumber,
+						field: 'cat_label',
+						value: cat_label,
+						error: `Incohérence : catégorie ${cat_code} a différents noms (ligne ${existingCategory.line}: "${existingCategory.label}", ligne ${lineNumber}: "${cat_label}")`
+					});
+					rowValid = false;
+				}
+			} else {
+				// Première occurrence de ce cat_code
+				categoryLabels.set(cat_code, { label: cat_label, line: lineNumber });
+			}
+		}
+
 		rowValidityMap.set(lineNumber, rowValid);
 	}
 
@@ -497,6 +544,195 @@ async function loadAllowedValues(atrIds: number[]): Promise<Map<number, Set<stri
 		}
 	}
 	return allowedValuesMap;
+}
+
+// ============================================================================
+// VALIDATION ATTRIBUTS OBLIGATOIRES - PRIORITÉ 2
+// ============================================================================
+
+/**
+ * Charge les métadonnées des catégories et détecte les doublons
+ */
+async function loadCategoriesMetadata(catCodes: string[]): Promise<{
+	categoriesMap: Map<string, { cat_id: number; cat_label: string }>;
+	duplicates: Array<{ cat_code: string; labels: string[] }>;
+}> {
+	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+
+	const categories = await prisma.category.findMany({
+		where: {
+			cat_code: { in: catCodes },
+			fk_parent: null // Catégories racines uniquement
+		},
+		select: { cat_id: true, cat_code: true, cat_label: true }
+	});
+
+	const categoriesMap = new Map<string, { cat_id: number; cat_label: string }>();
+	const duplicates: Array<{ cat_code: string; labels: string[] }> = [];
+
+	// Grouper par cat_code pour détecter doublons
+	const grouped = new Map<string, Array<{ cat_id: number; cat_label: string }>>();
+	for (const cat of categories) {
+		if (!grouped.has(cat.cat_code!)) {
+			grouped.set(cat.cat_code!, []);
+		}
+		grouped.get(cat.cat_code!)!.push({ cat_id: cat.cat_id, cat_label: cat.cat_label });
+	}
+
+	// Détecter doublons et remplir la map
+	for (const [code, cats] of grouped.entries()) {
+		if (cats.length > 1) {
+			// Doublon détecté
+			duplicates.push({
+				cat_code: code,
+				labels: cats.map((c) => c.cat_label)
+			});
+		} else {
+			// Une seule catégorie
+			categoriesMap.set(code, cats[0]);
+		}
+	}
+
+	return { categoriesMap, duplicates };
+}
+
+/**
+ * Charge les attributs obligatoires pour plusieurs catégories
+ */
+async function loadRequiredAttributesByCategory(
+	categoryIds: number[]
+): Promise<Map<number, Array<{ code: string; label: string }>>> {
+	if (categoryIds.length === 0) return new Map();
+
+	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+
+	const requiredAttrs = await prisma.category_attribute.findMany({
+		where: {
+			fk_category: { in: categoryIds },
+			cat_atr_required: true
+		},
+		include: {
+			attribute: {
+				select: { atr_value: true, atr_label: true }
+			}
+		}
+	});
+
+	const map = new Map<number, Array<{ code: string; label: string }>>();
+	for (const attr of requiredAttrs) {
+		if (!map.has(attr.fk_category)) {
+			map.set(attr.fk_category, []);
+		}
+		map.get(attr.fk_category)!.push({
+			code: attr.attribute.atr_value!,
+			label: attr.attribute.atr_label
+		});
+	}
+
+	return map;
+}
+
+/**
+ * Valide que tous les attributs obligatoires sont présents pour chaque produit
+ */
+export async function validateRequiredAttributes(
+	data: CSVRow[],
+	attributesByProduct: ProductAttributes[]
+): Promise<ValidationResult> {
+	const errors: ValidationError[] = [];
+	const warnings: ValidationError[] = [];
+
+	// 1. Collecter tous les cat_code uniques
+	const uniqueCatCodes = Array.from(new Set(data.map((row) => row.cat_code).filter((c) => c)));
+
+	if (uniqueCatCodes.length === 0) {
+		return { success: true, totalRows: data.length, validRows: data.length, errors, warnings };
+	}
+
+	// 2. Charger métadonnées catégories + détecter doublons
+	const { categoriesMap, duplicates } = await loadCategoriesMetadata(uniqueCatCodes);
+
+	// 3. ERREUR BLOQUANTE si doublons cat_code
+	if (duplicates.length > 0) {
+		for (const dup of duplicates) {
+			errors.push({
+				line: 0, // Erreur globale BDD
+				field: 'cat_code',
+				value: dup.cat_code,
+				error: `ERREUR BDD: ${dup.labels.length} catégories racines avec le code ${dup.cat_code}. Labels: ${dup.labels.join(', ')}. Corrigez la base de données avant import.`
+			});
+		}
+		return { success: false, totalRows: data.length, validRows: 0, errors, warnings };
+	}
+
+	// 4. Charger attributs obligatoires pour toutes les catégories trouvées
+	const categoryIds = Array.from(categoriesMap.values()).map((c) => c.cat_id);
+	const requiredAttrsByCategory = await loadRequiredAttributesByCategory(categoryIds);
+
+	// 5. Détecter attributs du CSV pour les catégories inconnues (pour auto-liaison)
+	const unknownCategoryAttrs = new Map<string, Set<string>>(); // cat_code → Set<atr_value>
+
+	// 6. Valider chaque produit
+	for (let i = 0; i < data.length; i++) {
+		const row = data[i];
+		const lineNumber = i + 2;
+		const productAttrs = attributesByProduct.find((a) => a.pro_cenov_id === row.pro_cenov_id);
+
+		if (!productAttrs) continue;
+
+		const category = categoriesMap.get(row.cat_code);
+
+		// CAS 1: Catégorie inconnue
+		if (!category) {
+			warnings.push({
+				line: lineNumber,
+				field: 'cat_code',
+				value: row.cat_code,
+				error: `Catégorie "${row.cat_code}" inconnue en BDD. Elle sera créée automatiquement lors de l'import avec ${productAttrs.attributes.length} attribut(s) (tous optionnels).`
+			});
+
+			// Stocker attributs pour auto-liaison lors de l'import
+			if (!unknownCategoryAttrs.has(row.cat_code)) {
+				unknownCategoryAttrs.set(row.cat_code, new Set());
+			}
+			for (const attr of productAttrs.attributes) {
+				unknownCategoryAttrs.get(row.cat_code)!.add(attr.atrValueCode);
+			}
+
+			continue; // Pas de validation attributs obligatoires
+		}
+
+		// CAS 2: Catégorie connue - vérifier attributs obligatoires
+		const requiredAttrs = requiredAttrsByCategory.get(category.cat_id) || [];
+
+		if (requiredAttrs.length === 0) {
+			// Aucun attribut obligatoire
+			continue;
+		}
+
+		// Vérifier présence de tous les attributs obligatoires
+		const csvAttrCodes = productAttrs.attributes.map((a) => a.atrValueCode);
+		const missingAttrs = requiredAttrs.filter((req) => !csvAttrCodes.includes(req.code));
+
+		if (missingAttrs.length > 0) {
+			errors.push({
+				line: lineNumber,
+				field: 'attributs_obligatoires',
+				value: row.cat_code,
+				error: `Catégorie "${category.cat_label}" (${row.cat_code}) requiert ${missingAttrs.length} attribut(s) manquant(s): ${missingAttrs.map((m) => m.label).join(', ')}`
+			});
+		}
+	}
+
+	const validRows = data.length - errors.length;
+
+	return {
+		success: errors.length === 0,
+		totalRows: data.length,
+		validRows,
+		errors,
+		warnings
+	};
 }
 
 export async function validateAttributes(attributes: AttributePair[]): Promise<ValidationResult> {
@@ -682,6 +918,23 @@ export async function importToDatabase(
 				// cat_code et cat_label sont obligatoires (validés avant l'import)
 				const categoryResult = await findOrCreateCategory(tx, row.cat_code, row.cat_label, changes);
 				if (categoryResult.isNew) stats.categories++;
+
+				// ✅ AUTO-LIAISON: Si nouvelle catégorie, lier les attributs du CSV (tous optionnels)
+				if (categoryResult.isNew) {
+					const productAttrsForCategory = attributesByProduct.find(
+						(a) => a.pro_cenov_id === row.pro_cenov_id
+					);
+					if (productAttrsForCategory) {
+						const attributeCodes = productAttrsForCategory.attributes.map((a) => a.atrValueCode);
+						await autoLinkCategoryAttributes(
+							tx,
+							categoryResult.entity.cat_id,
+							row.cat_code,
+							attributeCodes,
+							changes
+						);
+					}
+				}
 
 				const familyIds = await resolveFamilyHierarchy(
 					tx,
@@ -871,6 +1124,74 @@ async function findOrCreateCategory(
 	return { entity: category, isNew: !existing };
 }
 
+/**
+ * Auto-lie les attributs du CSV à une nouvelle catégorie (tous optionnels)
+ */
+async function autoLinkCategoryAttributes(
+	tx: PrismaTransaction,
+	cat_id: number,
+	cat_code: string,
+	attributeCodes: string[],
+	changes: ChangeDetail[]
+): Promise<number> {
+	if (attributeCodes.length === 0) return 0;
+
+	let linkedCount = 0;
+
+	// Récupérer les atr_id pour les codes fournis
+	const attributes = await tx.attribute.findMany({
+		where: { atr_value: { in: attributeCodes } },
+		select: { atr_id: true, atr_value: true }
+	});
+
+	const attributeMap = new Map(attributes.map((a) => [a.atr_value!, a.atr_id]));
+
+	for (const code of attributeCodes) {
+		const atr_id = attributeMap.get(code);
+		if (!atr_id) {
+			console.log(`⚠️ Attribut ${code} introuvable, ignoré pour auto-liaison`);
+			continue;
+		}
+
+		// Vérifier si le lien existe déjà
+		const existing = await tx.category_attribute.findUnique({
+			where: {
+				fk_category_fk_attribute: {
+					fk_category: cat_id,
+					fk_attribute: atr_id
+				}
+			}
+		});
+
+		if (!existing) {
+			await tx.category_attribute.create({
+				data: {
+					fk_category: cat_id,
+					fk_attribute: atr_id,
+					cat_atr_required: false // Tous optionnels par défaut
+				}
+			});
+
+			changes.push({
+				table: 'category_attribute',
+				schema: 'produit',
+				column: 'fk_attribute',
+				oldValue: null,
+				newValue: atr_id,
+				recordId: `${cat_code} → ${code} (optionnel)`
+			});
+
+			linkedCount++;
+		}
+	}
+
+	if (linkedCount > 0) {
+		console.log(`📎 Auto-liaison: ${linkedCount} attribut(s) lié(s) à la catégorie ${cat_code}`);
+	}
+
+	return linkedCount;
+}
+
 async function resolveFamilyHierarchy(
 	tx: PrismaTransaction,
 	row: CSVRow,
@@ -968,6 +1289,9 @@ async function upsertProduct(
 	const productData = {
 		pro_cenov_id: row.pro_cenov_id,
 		pro_code: row.pro_code,
+		sup_code: row.sup_code,
+		sup_label: row.sup_label,
+		cat_code: row.cat_code,
 		fk_supplier,
 		fk_kit,
 		fk_family: familyIds.fam_id,
@@ -985,6 +1309,9 @@ async function upsertProduct(
 	if (existing) {
 		const fieldMap = [
 			{ key: 'pro_code', label: 'pro_code' },
+			{ key: 'sup_code', label: 'sup_code' },
+			{ key: 'sup_label', label: 'sup_label' },
+			{ key: 'cat_code', label: 'cat_code' },
 			{ key: 'fk_supplier', label: 'fk_supplier' },
 			{ key: 'fk_kit', label: 'fk_kit' },
 			{ key: 'fk_family', label: 'fk_family' },
@@ -1024,6 +1351,30 @@ async function upsertProduct(
 			column: 'pro_code',
 			oldValue: null,
 			newValue: row.pro_code,
+			recordId: row.pro_cenov_id
+		});
+		changes.push({
+			table: 'product',
+			schema: 'produit',
+			column: 'sup_code',
+			oldValue: null,
+			newValue: row.sup_code,
+			recordId: row.pro_cenov_id
+		});
+		changes.push({
+			table: 'product',
+			schema: 'produit',
+			column: 'sup_label',
+			oldValue: null,
+			newValue: row.sup_label,
+			recordId: row.pro_cenov_id
+		});
+		changes.push({
+			table: 'product',
+			schema: 'produit',
+			column: 'cat_code',
+			oldValue: null,
+			newValue: row.cat_code,
 			recordId: row.pro_cenov_id
 		});
 		console.log(`✅ Produit créé: ${row.pro_cenov_id} (${row.pro_code})`);
