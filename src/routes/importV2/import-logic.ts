@@ -263,7 +263,8 @@ export async function validateCSVData(
 ): Promise<ValidationResult> {
 	const errors: ValidationError[] = [];
 	const warnings: ValidationError[] = [];
-	let validRows = 0;
+	const rowValidityMap = new Map<number, boolean>(); // Track validity per line
+	const seenSupplierProducts = new Map<string, number>(); // key: "sup_code:pro_code" → first line number
 
 	for (let i = 0; i < data.length; i++) {
 		const row = data[i];
@@ -387,8 +388,34 @@ export async function validateCSVData(
 			}
 		}
 
-		if (rowValid) validRows++;
+		// ✅ VALIDATION : Vérifier que (sup_code, pro_code) est unique dans le CSV
+		const sup_code = row.sup_code;
+		const pro_code = row.pro_code;
+
+		if (sup_code && pro_code) {
+			const key = `${sup_code}:${pro_code}`;
+			const firstOccurrence = seenSupplierProducts.get(key);
+
+			if (firstOccurrence !== undefined) {
+				// Doublon détecté
+				errors.push({
+					line: lineNumber,
+					field: 'pro_code',
+					value: pro_code,
+					error: `Doublon : (${sup_code}, ${pro_code}) existe déjà ligne ${firstOccurrence}`
+				});
+				rowValid = false;
+			} else {
+				// Première occurrence
+				seenSupplierProducts.set(key, lineNumber);
+			}
+		}
+
+		rowValidityMap.set(lineNumber, rowValid);
 	}
+
+	// Compter les lignes valides
+	const validRows = Array.from(rowValidityMap.values()).filter((valid) => valid).length;
 
 	return { success: errors.length === 0, totalRows: data.length, validRows, errors, warnings };
 }
