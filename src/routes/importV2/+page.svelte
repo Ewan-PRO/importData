@@ -235,6 +235,11 @@
 					<h3 class="mb-2 font-medium">
 						Données détectées ({parsedPreview.columns.length} colonnes) :
 					</h3>
+					<div class="mb-3 rounded border border-blue-200 bg-blue-50 p-3">
+						<p class="text-sm font-medium text-blue-800">
+							Note: Le système détectera automatiquement le nombre de produits lors de la validation
+						</p>
+					</div>
 					<div class="grid grid-cols-2 gap-2 text-sm">
 						{#each parsedPreview.columns as col (col.header)}
 							<div>
@@ -276,15 +281,26 @@
 				<div class="mb-6 grid grid-cols-3 gap-4">
 					<div class="rounded-lg border border-blue-200 bg-blue-50 p-4 text-center">
 						<div class="text-2xl font-bold text-blue-600">{form.validation.totalRows}</div>
-						<div class="text-sm text-blue-800">Lignes totales</div>
+						<div class="text-sm text-blue-800">
+							Produit{form.validation.totalRows > 1 ? 's' : ''} détecté{form.validation.totalRows >
+							1
+								? 's'
+								: ''}
+						</div>
 					</div>
 					<div class="rounded-lg border border-green-200 bg-green-50 p-4 text-center">
 						<div class="text-2xl font-bold text-green-600">{form.validation.validRows}</div>
-						<div class="text-sm text-green-800">Lignes valides</div>
+						<div class="text-sm text-green-800">
+							Produit{form.validation.validRows > 1 ? 's' : ''} valide{form.validation.validRows > 1
+								? 's'
+								: ''}
+						</div>
 					</div>
 					<div class="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
 						<div class="text-2xl font-bold text-red-600">{form.validation.errors.length}</div>
-						<div class="text-sm text-red-800">Erreurs</div>
+						<div class="text-sm text-red-800">
+							Erreur{form.validation.errors.length > 1 ? 's' : ''}
+						</div>
 					</div>
 				</div>
 
@@ -332,7 +348,7 @@
 						>
 							{isProcessing
 								? 'Import en cours...'
-								: `Importer ${form.validation.validRows} ligne(s)`}
+								: `Importer ${form.validation.validRows} produit${form.validation.validRows > 1 ? 's' : ''}`}
 							<CircleArrowRight class="ml-2 h-4 w-4" />
 						</Button>
 					</div>

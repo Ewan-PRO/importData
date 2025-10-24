@@ -25,13 +25,11 @@
 
 	// Navigation items avec types stricts pour resolve
 	const navItems: Array<{
-		href: '/' | '/CRUD' | '/import' | '/importV2' | '/export';
+		href: '/' | '/importV2' | '/export';
 		label: string;
 	}> = [
 		{ href: '/', label: 'Accueil' },
-		{ href: '/CRUD', label: 'CRUD' },
-		{ href: '/import', label: 'Import' },
-		{ href: '/importV2', label: 'ImportV2' },
+		{ href: '/importV2', label: 'Import CSV' },
 		{ href: '/export', label: 'Export' }
 	];
 </script>

@@ -30,10 +30,15 @@ export interface AttributePair {
 	atrValue: string | null; // Valeur de l'attribut (ex: 0.1)
 }
 
+export interface ProductAttributes {
+	pro_cenov_id: string;
+	attributes: AttributePair[];
+}
+
 export interface ParsedCSVData {
 	success: boolean;
 	data: CSVRow[];
-	attributes: AttributePair[];
+	attributes: ProductAttributes[]; // Attributs par produit
 	error?: string;
 }
 
@@ -78,6 +83,18 @@ export interface ImportResult {
 	stats: ImportStats;
 	changes: ChangeDetail[];
 	error?: string;
+}
+
+interface AttributeMetadata {
+	attributeMap: Map<string, { atr_id: number; atr_value: string }>;
+	attributeUnitsMap: Map<
+		number,
+		{
+			default_unit_id: number | null;
+			units: Array<{ unit_id: number; unit_value: string; unit_label: string }>;
+		}
+	>;
+	allowedValuesMap: Map<number, Set<string>>;
 }
 
 // ============================================================================
@@ -166,7 +183,6 @@ export async function parseCSVContent(csvContent: string): Promise<ParsedCSVData
 		}
 
 		const headers = rawData[0] as string[];
-		const values = rawData[1] as string[];
 
 		// Charger tous les atr_value depuis BDD pour détection
 		const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
@@ -176,26 +192,47 @@ export async function parseCSVContent(csvContent: string): Promise<ParsedCSVData
 		});
 		const validAtrValues = new Set(attributesFromDB.map((a) => a.atr_value));
 
-		const row: Record<string, string> = {};
-		const attributes: AttributePair[] = [];
+		const allRows: CSVRow[] = [];
+		const allAttributes: ProductAttributes[] = [];
 
-		headers.forEach((header, index) => {
-			const headerTrimmed = header.trim();
-			const value = values[index] ? String(values[index]).trim() : '';
+		// Boucle sur TOUTES les lignes de données (à partir de la ligne 2)
+		for (let lineIndex = 1; lineIndex < rawData.length; lineIndex++) {
+			const values = rawData[lineIndex] as string[];
 
-			if (validAtrValues.has(headerTrimmed)) {
-				// C'est un code atr_value connu en BDD
-				attributes.push({
-					atrValueCode: headerTrimmed,
-					atrValue: value || null
-				});
-			} else {
-				// C'est une colonne métier
-				row[headerTrimmed] = value;
+			// Skip lignes vides (tous les champs vides)
+			if (values.every((v) => !v || v.trim() === '')) {
+				console.log(`⚠️ Ligne ${lineIndex + 1} vide ignorée`);
+				continue;
 			}
-		});
 
-		return { success: true, data: [row as unknown as CSVRow], attributes };
+			const row: Record<string, string> = {};
+			const attributes: AttributePair[] = [];
+
+			headers.forEach((header, index) => {
+				const headerTrimmed = header.trim();
+				const value = values[index] ? String(values[index]).trim() : '';
+
+				if (validAtrValues.has(headerTrimmed)) {
+					// C'est un code atr_value connu en BDD
+					attributes.push({
+						atrValueCode: headerTrimmed,
+						atrValue: value || null
+					});
+				} else {
+					// C'est une colonne métier
+					row[headerTrimmed] = value;
+				}
+			});
+
+			allRows.push(row as unknown as CSVRow);
+			allAttributes.push({
+				pro_cenov_id: row['pro_cenov_id'] || `ligne_${lineIndex + 1}`,
+				attributes
+			});
+		}
+
+		console.log(`✅ ${allRows.length} produit(s) détecté(s)`);
+		return { success: true, data: allRows, attributes: allAttributes };
 	} catch (error) {
 		return {
 			success: false,
@@ -493,7 +530,7 @@ export async function validateAttributes(attributes: AttributePair[]): Promise<V
 // ============================================================================
 export async function importToDatabase(
 	data: CSVRow[],
-	attributes: AttributePair[]
+	attributesByProduct: ProductAttributes[]
 ): Promise<ImportResult> {
 	const stats: ImportStats = {
 		suppliers: 0,
@@ -510,6 +547,31 @@ export async function importToDatabase(
 
 	try {
 		const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+
+		// ✅ Charger TOUTES les métadonnées AVANT la transaction (évite timeout)
+		console.log('🔄 Chargement métadonnées attributs...');
+		const metadata: AttributeMetadata = {
+			attributeMap: await loadAttributeReference(),
+			attributeUnitsMap: await loadAttributeUnitsEnriched(),
+			allowedValuesMap: new Map() // Sera rempli dynamiquement
+		};
+
+		// Collecter tous les atr_id nécessaires
+		const allAtrIds = new Set<number>();
+		for (const productAttrs of attributesByProduct) {
+			for (const attr of productAttrs.attributes) {
+				const atrData = metadata.attributeMap.get(attr.atrValueCode);
+				if (atrData) allAtrIds.add(atrData.atr_id);
+			}
+		}
+
+		// Charger valeurs autorisées pour tous les attributs
+		if (allAtrIds.size > 0) {
+			metadata.allowedValuesMap = await loadAllowedValues(Array.from(allAtrIds));
+		}
+
+		console.log(`✅ Métadonnées chargées (${metadata.attributeMap.size} attributs)`);
+
 		await prisma.$transaction(async (tx) => {
 			for (const row of data) {
 				const supplierResult = await findOrCreateSupplier(tx, row.sup_code, row.sup_label, changes);
@@ -519,12 +581,7 @@ export async function importToDatabase(
 				if (kitResult.isNew) stats.kits++;
 
 				// cat_code et cat_label sont obligatoires (validés avant l'import)
-				const categoryResult = await findOrCreateCategory(
-					tx,
-					row.cat_code,
-					row.cat_label,
-					changes
-				);
+				const categoryResult = await findOrCreateCategory(tx, row.cat_code, row.cat_label, changes);
 				if (categoryResult.isNew) stats.categories++;
 
 				const familyIds = await resolveFamilyHierarchy(
@@ -550,13 +607,17 @@ export async function importToDatabase(
 				await upsertPricePurchase(tx, productResult.entity.pro_id, row, changes);
 				stats.prices++;
 
-				if (categoryResult && attributes.length > 0) {
+				// Récupérer les attributs de CE produit
+				const productAttrs = attributesByProduct.find((a) => a.pro_cenov_id === row.pro_cenov_id);
+
+				if (categoryResult && productAttrs && productAttrs.attributes.length > 0) {
 					const attrStats = await importAttributes(
 						tx,
 						categoryResult.entity.cat_id,
 						kitResult.entity.kit_id,
-						attributes,
-						changes
+						productAttrs.attributes,
+						changes,
+						metadata // ✅ Passer les métadonnées préchargées
 					);
 					stats.categoryAttributes += attrStats.categoryAttributes;
 					stats.kitAttributes += attrStats.kitAttributes;
@@ -699,7 +760,9 @@ async function findOrCreateCategory(
 				newValue: cat_label,
 				recordId: cat_code
 			});
-			console.log(`🔄 Catégorie mise à jour: ${cat_code} - "${existing.cat_label}" → "${cat_label}"`);
+			console.log(
+				`🔄 Catégorie mise à jour: ${cat_code} - "${existing.cat_label}" → "${cat_label}"`
+			);
 		} else {
 			category = existing;
 		}
@@ -990,17 +1053,14 @@ async function importAttributes(
 	cat_id: number,
 	kit_id: number,
 	attributes: AttributePair[],
-	changes: ChangeDetail[]
+	changes: ChangeDetail[],
+	metadata: AttributeMetadata // ✅ Métadonnées préchargées
 ) {
 	let categoryAttributes = 0,
 		kitAttributes = 0;
 
-	const attributeMap = await loadAttributeReference();
-	const attributeUnitsMap = await loadAttributeUnitsEnriched();
-	const atrIds = attributes
-		.filter((a) => a.atrValue && attributeMap.has(a.atrValueCode))
-		.map((a) => attributeMap.get(a.atrValueCode)!.atr_id);
-	const allowedValuesMap = await loadAllowedValues(atrIds);
+	// ✅ Utiliser les métadonnées préchargées (pas de requêtes BDD)
+	const { attributeMap, attributeUnitsMap, allowedValuesMap } = metadata;
 
 	// Récupérer le kit_label pour l'ID de l'enregistrement
 	const kit = await tx.kit.findUnique({ where: { kit_id }, select: { kit_label: true } });

@@ -6,7 +6,8 @@ import {
 	validateAttributes,
 	importToDatabase,
 	type ParsedCSVData,
-	type ValidationResult
+	type ValidationResult,
+	type ValidationError
 } from './import-logic';
 
 // ============================================================================
@@ -90,19 +91,42 @@ export const actions: Actions = {
 			const parsedData: ParsedCSVData = await parseCSVContent(csvContent);
 			if (!parsedData.success) return fail(400, { error: parsedData.error });
 
+			// Validation CSV (toutes les lignes)
 			const csvValidation = await validateCSVData(parsedData.data, CONFIG);
-			const attributeValidation = await validateAttributes(parsedData.attributes);
+
+			// Validation attributs PAR produit
+			const allAttributeErrors: ValidationError[] = [];
+			const allAttributeWarnings: ValidationError[] = [];
+
+			for (const productAttrs of parsedData.attributes) {
+				const attrValidation = await validateAttributes(productAttrs.attributes);
+
+				// Préfixer erreurs avec pro_cenov_id
+				attrValidation.errors.forEach((err) => {
+					allAttributeErrors.push({
+						...err,
+						field: `[${productAttrs.pro_cenov_id}] ${err.field}`
+					});
+				});
+
+				attrValidation.warnings.forEach((warn) => {
+					allAttributeWarnings.push({
+						...warn,
+						field: `[${productAttrs.pro_cenov_id}] ${warn.field}`
+					});
+				});
+			}
 
 			const validation: ValidationResult = {
-				success: csvValidation.success && attributeValidation.success,
+				success: csvValidation.success && allAttributeErrors.length === 0,
 				totalRows: parsedData.data.length,
 				validRows: csvValidation.validRows,
-				errors: [...csvValidation.errors, ...attributeValidation.errors],
-				warnings: [...csvValidation.warnings, ...attributeValidation.warnings]
+				errors: [...csvValidation.errors, ...allAttributeErrors],
+				warnings: [...csvValidation.warnings, ...allAttributeWarnings]
 			};
 
 			console.log(
-				`✅ Validation: ${csvValidation.validRows}/${parsedData.data.length} lignes valides`
+				`✅ Validation: ${csvValidation.validRows}/${parsedData.data.length} produit(s) valide(s)`
 			);
 			return { validation };
 		} catch (err) {
@@ -125,10 +149,20 @@ export const actions: Actions = {
 				return fail(400, { error: parsedData.error });
 			}
 
+			// Validation CSV
 			const csvValidation = await validateCSVData(parsedData.data, CONFIG);
-			const attributeValidation = await validateAttributes(parsedData.attributes);
 
-			if (!csvValidation.success || !attributeValidation.success) {
+			// Validation attributs PAR produit
+			let hasAttributeErrors = false;
+			for (const productAttrs of parsedData.attributes) {
+				const attrValidation = await validateAttributes(productAttrs.attributes);
+				if (!attrValidation.success) {
+					hasAttributeErrors = true;
+					break;
+				}
+			}
+
+			if (!csvValidation.success || hasAttributeErrors) {
 				return fail(400, { error: 'Validation échouée. Veuillez corriger les erreurs.' });
 			}
 
@@ -138,6 +172,7 @@ export const actions: Actions = {
 				return fail(500, { error: `Erreur d'import: ${importResult.error}` });
 			}
 
+			console.log(`✅ Import réussi: ${parsedData.data.length} produit(s) importé(s)`);
 			return { success: true, result: importResult };
 		} catch (err) {
 			return fail(500, { error: `Erreur d'importation: ${formatError(err)}` });
