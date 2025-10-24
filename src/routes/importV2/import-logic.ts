@@ -95,6 +95,11 @@ interface AttributeMetadata {
 		}
 	>;
 	allowedValuesMap: Map<number, Set<string>>;
+	categoryAttributesMap: Map<string, boolean>; // key: "cat_id:atr_id" → exists
+	kitAttributesMap: Map<
+		string,
+		{ kat_id: number; kat_value: string | null; fk_attribute_unite: number | null }
+	>; // key: "kit_id:atr_id"
 }
 
 // ============================================================================
@@ -289,6 +294,17 @@ export async function validateCSVData(
 				if (field === 'pp_amount' && numValue <= 0) {
 					errors.push({ line: lineNumber, field, value, error: 'Le prix doit être > 0' });
 					rowValid = false;
+				}
+				if (field === 'pp_discount') {
+					if (numValue < 0 || numValue > 100) {
+						errors.push({
+							line: lineNumber,
+							field,
+							value,
+							error: 'La remise doit être entre 0 et 100%'
+						});
+						rowValid = false;
+					}
 				}
 			}
 		}
@@ -553,11 +569,24 @@ export async function importToDatabase(
 		const metadata: AttributeMetadata = {
 			attributeMap: await loadAttributeReference(),
 			attributeUnitsMap: await loadAttributeUnitsEnriched(),
-			allowedValuesMap: new Map() // Sera rempli dynamiquement
+			allowedValuesMap: new Map<number, Set<string>>(), // Sera rempli dynamiquement
+			categoryAttributesMap: new Map<string, boolean>(),
+			kitAttributesMap: new Map<
+				string,
+				{ kat_id: number; kat_value: string | null; fk_attribute_unite: number | null }
+			>()
 		};
 
-		// Collecter tous les atr_id nécessaires
+		// Collecter tous les cat_id, kit_id et atr_id uniques du CSV
+		const uniqueCatCodes = new Set<string>();
+		const uniqueKitLabels = new Set<string>();
 		const allAtrIds = new Set<number>();
+
+		for (const row of data) {
+			if (row.cat_code) uniqueCatCodes.add(row.cat_code);
+			if (row.kit_label) uniqueKitLabels.add(row.kit_label);
+		}
+
 		for (const productAttrs of attributesByProduct) {
 			for (const attr of productAttrs.attributes) {
 				const atrData = metadata.attributeMap.get(attr.atrValueCode);
@@ -570,7 +599,50 @@ export async function importToDatabase(
 			metadata.allowedValuesMap = await loadAllowedValues(Array.from(allAtrIds));
 		}
 
-		console.log(`✅ Métadonnées chargées (${metadata.attributeMap.size} attributs)`);
+		// ✅ OPTIMISATION : Précharger category_attribute et kit_attribute (évite 2000+ requêtes en boucle)
+		console.log('🔄 Préchargement category_attribute et kit_attribute...');
+
+		// Récupérer les cat_id depuis les cat_code
+		const categories = await prisma.category.findMany({
+			where: { fk_parent: null, cat_code: { in: Array.from(uniqueCatCodes) } },
+			select: { cat_id: true, cat_code: true }
+		});
+		const catIdsByCatCode = new Map(categories.map((c) => [c.cat_code!, c.cat_id]));
+		const uniqueCatIds = Array.from(catIdsByCatCode.values());
+
+		// Récupérer les kit_id depuis les kit_label
+		const kits = await prisma.kit.findMany({
+			where: { kit_label: { in: Array.from(uniqueKitLabels) } },
+			select: { kit_id: true, kit_label: true }
+		});
+		const kitIdsByKitLabel = new Map(kits.map((k) => [k.kit_label, k.kit_id]));
+		const uniqueKitIds = Array.from(kitIdsByKitLabel.values());
+
+		// Précharger TOUS les category_attribute
+		const categoryAttributes = await prisma.category_attribute.findMany({
+			where: { fk_category: { in: uniqueCatIds } }
+		});
+		for (const ca of categoryAttributes) {
+			const key = `${ca.fk_category}:${ca.fk_attribute}`;
+			metadata.categoryAttributesMap.set(key, true);
+		}
+
+		// Précharger TOUS les kit_attribute
+		const kitAttributes = await prisma.kit_attribute.findMany({
+			where: { fk_kit: { in: uniqueKitIds } }
+		});
+		for (const ka of kitAttributes) {
+			const key = `${ka.fk_kit}:${ka.fk_attribute_characteristic}`;
+			metadata.kitAttributesMap.set(key, {
+				kat_id: ka.kat_id,
+				kat_value: ka.kat_value,
+				fk_attribute_unite: ka.fk_attribute_unite
+			});
+		}
+
+		console.log(
+			`✅ Métadonnées chargées: ${metadata.attributeMap.size} attributs, ${categoryAttributes.length} category_attribute, ${kitAttributes.length} kit_attribute`
+		);
 
 		await prisma.$transaction(async (tx) => {
 			for (const row of data) {
@@ -615,6 +687,7 @@ export async function importToDatabase(
 						tx,
 						categoryResult.entity.cat_id,
 						kitResult.entity.kit_id,
+						row.kit_label, // ✅ Passer kit_label pour éviter requête
 						productAttrs.attributes,
 						changes,
 						metadata // ✅ Passer les métadonnées préchargées
@@ -1052,6 +1125,7 @@ async function importAttributes(
 	tx: PrismaTransaction,
 	cat_id: number,
 	kit_id: number,
+	kit_label: string, // ✅ Reçu en paramètre au lieu de requête
 	attributes: AttributePair[],
 	changes: ChangeDetail[],
 	metadata: AttributeMetadata // ✅ Métadonnées préchargées
@@ -1060,10 +1134,13 @@ async function importAttributes(
 		kitAttributes = 0;
 
 	// ✅ Utiliser les métadonnées préchargées (pas de requêtes BDD)
-	const { attributeMap, attributeUnitsMap, allowedValuesMap } = metadata;
-
-	// Récupérer le kit_label pour l'ID de l'enregistrement
-	const kit = await tx.kit.findUnique({ where: { kit_id }, select: { kit_label: true } });
+	const {
+		attributeMap,
+		attributeUnitsMap,
+		allowedValuesMap,
+		categoryAttributesMap,
+		kitAttributesMap
+	} = metadata;
 
 	for (const { atrValueCode, atrValue } of attributes) {
 		if (!atrValue || atrValue.trim() === '') continue;
@@ -1071,15 +1148,18 @@ async function importAttributes(
 		const attribute = attributeMap.get(atrValueCode);
 		if (!attribute) continue;
 
-		const existingCatAttr = await tx.category_attribute.findFirst({
-			where: { fk_category: cat_id, fk_attribute: attribute.atr_id }
-		});
+		// ✅ OPTIMISATION : Vérifier existence dans map préchargée (au lieu de findFirst)
+		const catAttrKey = `${cat_id}:${attribute.atr_id}`;
+		const existingCatAttr = categoryAttributesMap.has(catAttrKey);
 
 		if (!existingCatAttr) {
 			await tx.category_attribute.create({
 				data: { fk_category: cat_id, fk_attribute: attribute.atr_id, cat_atr_required: false }
 			});
 			categoryAttributes++;
+
+			// ✅ Ajouter à la map pour éviter duplicatas dans la même transaction
+			categoryAttributesMap.set(catAttrKey, true);
 
 			changes.push({
 				table: 'category_attribute',
@@ -1109,9 +1189,9 @@ async function importAttributes(
 			}
 		}
 
-		const existingKitAttr = await tx.kit_attribute.findFirst({
-			where: { fk_kit: kit_id, fk_attribute_characteristic: attribute.atr_id }
-		});
+		// ✅ OPTIMISATION : Vérifier existence dans map préchargée (au lieu de findFirst)
+		const kitAttrKey = `${kit_id}:${attribute.atr_id}`;
+		const existingKitAttr = kitAttributesMap.get(kitAttrKey);
 
 		if (existingKitAttr) {
 			// Capturer les changements de valeur
@@ -1122,7 +1202,7 @@ async function importAttributes(
 					column: 'kat_value',
 					oldValue: existingKitAttr.kat_value,
 					newValue: finalValue,
-					recordId: `${kit?.kit_label || kit_id} - ${atrValueCode}`
+					recordId: `${kit_label} - ${atrValueCode}`
 				});
 			}
 
@@ -1134,7 +1214,7 @@ async function importAttributes(
 					column: 'fk_attribute_unite',
 					oldValue: existingKitAttr.fk_attribute_unite,
 					newValue: finalUnitId,
-					recordId: `${kit?.kit_label || kit_id} - ${atrValueCode}`
+					recordId: `${kit_label} - ${atrValueCode}`
 				});
 			}
 
@@ -1142,14 +1222,28 @@ async function importAttributes(
 				where: { kat_id: existingKitAttr.kat_id },
 				data: { kat_value: finalValue, fk_attribute_unite: finalUnitId }
 			});
+
+			// ✅ Mettre à jour la map avec les nouvelles valeurs
+			kitAttributesMap.set(kitAttrKey, {
+				kat_id: existingKitAttr.kat_id,
+				kat_value: finalValue,
+				fk_attribute_unite: finalUnitId
+			});
 		} else {
-			await tx.kit_attribute.create({
+			const created = await tx.kit_attribute.create({
 				data: {
 					fk_kit: kit_id,
 					fk_attribute_characteristic: attribute.atr_id,
 					fk_attribute_unite: finalUnitId,
 					kat_value: finalValue
 				}
+			});
+
+			// ✅ Ajouter à la map pour éviter duplicatas dans la même transaction
+			kitAttributesMap.set(kitAttrKey, {
+				kat_id: created.kat_id,
+				kat_value: finalValue,
+				fk_attribute_unite: finalUnitId
 			});
 
 			// Tracker la création du kit_attribute
@@ -1159,7 +1253,7 @@ async function importAttributes(
 				column: 'kat_value',
 				oldValue: null,
 				newValue: finalValue,
-				recordId: `${kit?.kit_label || kit_id} - ${atrValueCode}`
+				recordId: `${kit_label} - ${atrValueCode}`
 			});
 			if (finalUnitId !== null) {
 				changes.push({
@@ -1168,7 +1262,7 @@ async function importAttributes(
 					column: 'fk_attribute_unite',
 					oldValue: null,
 					newValue: finalUnitId,
-					recordId: `${kit?.kit_label || kit_id} - ${atrValueCode}`
+					recordId: `${kit_label} - ${atrValueCode}`
 				});
 			}
 
