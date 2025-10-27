@@ -24,7 +24,12 @@
 		"prisma:studio-dev": "prisma studio --schema prisma/cenov_dev/schema.prisma",
 		"prisma:push-dev": "prisma db push --schema prisma/cenov_dev/schema.prisma",
 		"prisma:pull-dev": "prisma db pull --schema prisma/cenov_dev/schema.prisma",
-		"prisma:generate-all": "npm run prisma:generate && npm run prisma:generate-dev",
+		"prisma:generate-preprod": "prisma generate --schema prisma/cenov_preprod/schema.prisma",
+		"prisma:migrate-preprod": "prisma migrate dev --schema prisma/cenov_preprod/schema.prisma",
+		"prisma:studio-preprod": "prisma studio --schema prisma/cenov_preprod/schema.prisma",
+		"prisma:push-preprod": "prisma db push --schema prisma/cenov_preprod/schema.prisma",
+		"prisma:pull-preprod": "prisma db pull --schema prisma/cenov_preprod/schema.prisma",
+		"prisma:generate-all": "npm run prisma:generate && npm run prisma:generate-dev && npm run prisma:generate-preprod",
 		"postinstall": "npm run prisma:generate-all"
 	},
 	"devDependencies": {

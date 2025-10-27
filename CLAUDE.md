@@ -137,10 +137,20 @@ pnpm prisma:push-dev                       # Pousser schéma vers BDD (cenov_dev
 pnpm prisma:pull-dev                       # Récupérer schéma depuis BDD (cenov_dev)
 ```
 
-**Générer les deux clients :**
+**Base CENOV_PREPROD (Pré-production) :**
 
 ```bash
-pnpm prisma:generate-all                   # Générer les deux clients (automatique au pnpm install)
+pnpm prisma:generate-preprod               # Générer client Prisma (cenov_preprod)
+pnpm prisma:migrate-preprod                # Exécuter migrations (cenov_preprod)
+pnpm prisma:studio-preprod                 # Ouvrir Prisma Studio (cenov_preprod)
+pnpm prisma:push-preprod                   # Pousser schéma vers BDD (cenov_preprod)
+pnpm prisma:pull-preprod                   # Récupérer schéma depuis BDD (cenov_preprod)
+```
+
+**Générer tous les clients :**
+
+```bash
+pnpm prisma:generate-all                   # Générer les trois clients (automatique au pnpm install)
 ```
 
 **Commandes manuelles (si nécessaire) :**
@@ -161,6 +171,14 @@ npx prisma db pull --schema prisma/cenov_dev/schema.prisma
 npx prisma studio --schema prisma/cenov_dev/schema.prisma
 npx prisma migrate dev --schema prisma/cenov_dev/schema.prisma
 npx prisma migrate deploy --schema prisma/cenov_dev/schema.prisma
+
+# CENOV_PREPROD:
+npx prisma generate --schema prisma/cenov_preprod/schema.prisma
+npx prisma db push --schema prisma/cenov_preprod/schema.prisma
+npx prisma db pull --schema prisma/cenov_preprod/schema.prisma
+npx prisma studio --schema prisma/cenov_preprod/schema.prisma
+npx prisma migrate dev --schema prisma/cenov_preprod/schema.prisma
+npx prisma migrate deploy --schema prisma/cenov_preprod/schema.prisma
 ```
 
 **Installation des dépendances :**
@@ -216,9 +234,9 @@ _Extrait les métadonnées Prisma DMMF (Data Model Meta Format) de CENOV_DEV ver
 
 ### Architecture Base de Données
 
-**Architecture Double Base :**
+**Architecture Triple Base :**
 
-L'application utilise **DEUX bases de données séparées** :
+L'application utilise **TROIS bases de données séparées** :
 
 1. **Base CENOV** (`DATABASE_URL`) - Base principale de production
    - Système principal de gestion des produits, kits et pièces
@@ -238,10 +256,20 @@ L'application utilise **DEUX bases de données séparées** :
    - **Vues produit** : import_name, v_produit_categorie_attribut, v_tarif_achat, mv_categorie
    - **Vues public** : attribute_required, v_categorie, v_kit_caracteristique, v_produit_categorie_attribut
 
+3. **Base CENOV_PREPROD** (`CENOV_PREPROD_DATABASE_URL`) - Base pré-production
+   - Environnement de pré-production pour tests avant déploiement
+   - **16 tables** : 7 schéma `produit` + 9 schéma `public`
+   - **Schéma produit** : category, category_attribute, cross_ref, family, price_purchase, product, product_category
+   - **Schéma public** : attribute, attribute_unit, attribute_value, document, document_link, kit, kit_attribute, part_nc, supplier
+   - **7 vues** : 4 schéma `produit` + 3 schéma `public`
+   - **Vues produit** : import_name, mv_categorie, v_price_purchase, v_produit_categorie_attribut
+   - **Vues public** : attribute_required, v_categorie, v_kit_caracteristique
+
 **Export base de données:** Données complètes exportées en JSON dans `scripts/BDD-IA/output/` pour analyse IA :
 
 - **CENOV** : 12 tables (568 lignes), 6 vues (1685 lignes)
 - **CENOV_DEV** : 15 tables (572 lignes), 8 vues (1791 lignes)
+- **CENOV_PREPROD** : 16 tables, 7 vues
 
 ## Principe Anti-Hardcoding avec Prisma DMMF
 
@@ -280,28 +308,36 @@ const prisma = new PrismaClient();
 import { PrismaClient as CenovDevPrismaClient } from '../../prisma/cenov_dev/generated';
 const cenovDevPrisma = new CenovDevPrismaClient();
 
+// Pour la base CENOV_PREPROD:
+import { PrismaClient as CenovPreprodPrismaClient } from '../../prisma/cenov_preprod/generated';
+const cenovPreprodPrisma = new CenovPreprodPrismaClient();
+
 // Exemples d'utilisation:
 const kits = await prisma.kit.findMany(); // Base CENOV
-const products = await cenovDevPrisma.produit.findMany(); // Base CENOV_DEV
+const products = await cenovDevPrisma.product.findMany(); // Base CENOV_DEV
+const preprodProducts = await cenovPreprodPrisma.product.findMany(); // Base CENOV_PREPROD
 ```
 
 **Gestion des Connexions :**
 
 - CENOV: Client Prisma standard pour opérations principales
 - CENOV_DEV: Client séparé pour fonctionnalités catalogue produits
-- Les deux bases peuvent être utilisées simultanément
+- CENOV_PREPROD: Client séparé pour environnement de pré-production
+- Les trois bases peuvent être utilisées simultanément
 
 **⚠️ Erreur SSR "exports is not defined" :**
 
-Si erreur `exports is not defined` sur une route → NE PAS importer directement le client Prisma cenov_dev. Utiliser `getClient()` :
+Si erreur `exports is not defined` sur une route → NE PAS importer directement le client Prisma cenov_dev ou cenov_preprod. Utiliser `getClient()` :
 
 ```typescript
 // ❌ Cause l'erreur
 import { PrismaClient } from '../../../prisma/cenov_dev/generated/index.js';
+import { PrismaClient } from '../../../prisma/cenov_preprod/generated/index.js';
 
 // ✅ Solution SSR-safe
 import { getClient } from '$lib/prisma-meta';
 const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+const prismaPreprod = (await getClient('cenov_preprod')) as unknown as CenovPreprodPrismaClient;
 ```
 
 ### Structure des Fichiers Clés
@@ -318,10 +354,10 @@ const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient
 
 **Fonctions Principales :**
 
-- `getDatabases()` - Accès aux clients et métadonnées des deux bases
+- `getDatabases()` - Accès aux clients et métadonnées des trois bases
 - `getTableMetadata(database, tableName)` - Détection schéma via DMMF
 - `getAllTables(database)` - Tables avec détection automatique du schéma
-- `getAllDatabaseTables()` - Tables combinées des deux bases
+- `getAllDatabaseTables()` - Tables combinées des trois bases
 
 **Bonnes Pratiques :**
 
@@ -333,7 +369,7 @@ const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient
 
 ### Workflow Prisma
 
-**Workflow Double Schéma :**
+**Workflow Triple Schéma :**
 
 **Pour la base CENOV (principale) :**
 
@@ -347,6 +383,12 @@ const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient
 2. Exécuter: `npx prisma generate --schema prisma/cenov_dev/schema.prisma`
 3. Exécuter: `npx prisma db push --schema prisma/cenov_dev/schema.prisma` (ou migrate)
 
+**Pour la base CENOV_PREPROD :**
+
+1. Éditer `prisma/cenov_preprod/schema.prisma`
+2. Exécuter: `npx prisma generate --schema prisma/cenov_preprod/schema.prisma`
+3. Exécuter: `npx prisma db push --schema prisma/cenov_preprod/schema.prisma` (ou migrate)
+
 **⚠️ Problèmes Courants & Solutions :**
 
 - **Erreur "Model already exists":** Toujours spécifier le flag `--schema` pour éviter les conflits
@@ -356,10 +398,11 @@ const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient
 **Corrections rapides :**
 
 ```bash
-# Nettoyer et régénérer les deux clients:
+# Nettoyer et régénérer les trois clients:
 rm -rf prisma/generated/ node_modules/.prisma/
 npx prisma generate --schema prisma/cenov/schema.prisma
 npx prisma generate --schema prisma/cenov_dev/schema.prisma
+npx prisma generate --schema prisma/cenov_preprod/schema.prisma
 ```
 
 ### Authentification

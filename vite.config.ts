@@ -12,8 +12,8 @@ export default defineConfig({
 	ssr: {
 		// Forcer Prisma standard à rester externe
 		external: ['@prisma/client', '.prisma/client'],
-		// Forcer l'inclusion du 2ème client cenov_dev dans le bundle SSR
-		noExternal: ['../../prisma/cenov_dev/generated']
+		// Forcer l'inclusion des clients cenov_dev et cenov_preprod dans le bundle SSR
+		noExternal: ['../../prisma/cenov_dev/generated', '../../prisma/cenov_preprod/generated']
 	},
 	optimizeDeps: {
 		// Exclure Prisma de l'optimisation des dépendances

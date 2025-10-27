@@ -8,3 +8,4 @@ bun.lockb
 # Prisma generated clients
 prisma/generated/
 prisma/cenov_dev/generated/
+prisma/cenov_preprod/generated/

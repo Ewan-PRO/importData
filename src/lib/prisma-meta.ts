@@ -56,6 +56,10 @@ async function initializePrisma() {
 let CenovDevPrisma: PrismaModule['Prisma'] | undefined;
 let CenovDevPrismaClient: PrismaModule['PrismaClient'] | undefined;
 
+// Client de pré-production typé
+let CenovPreprodPrisma: PrismaModule['Prisma'] | undefined;
+let CenovPreprodPrismaClient: PrismaModule['PrismaClient'] | undefined;
+
 // Fonction helper pour déterminer si on utilise les vues dev (comme db.ts)
 function shouldUseDevViews() {
 	// Utiliser process.env directement (côté serveur uniquement)
@@ -135,7 +139,71 @@ async function initializeCenovDevPrisma() {
 	}
 }
 
-export type DatabaseName = 'cenov' | 'cenov_dev';
+// Initialisation du client de pré-production
+async function initializeCenovPreprodPrisma() {
+	if (browser) return;
+
+	await initializePrisma();
+
+	console.log('🧪 [PRISMA-META] Chargement client preprod');
+	try {
+		let preprodPrismaModule: PrismaModule | undefined;
+
+		if (dev) {
+			// DEV: createRequire (gère CommonJS)
+			console.log('🛠️ [PRISMA-META] Mode DEV - createRequire (preprod)');
+			try {
+				const { createRequire } = await import('node:module');
+				const { fileURLToPath } = await import('node:url');
+				const path = await import('node:path');
+
+				const __filename = fileURLToPath(import.meta.url);
+				const __dirname = path.dirname(__filename);
+				const require = createRequire(import.meta.url);
+
+				const preprodPrismaPath = path.resolve(__dirname, '../../prisma/cenov_preprod/generated');
+				preprodPrismaModule = require(preprodPrismaPath) as unknown as PrismaModule;
+				console.log('✅ [PRISMA-META] createRequire réussi (preprod)');
+			} catch (createRequireError) {
+				console.log('❌ [PRISMA-META] createRequire échoué (preprod):', createRequireError);
+				throw createRequireError;
+			}
+		} else {
+			// PROD: import() avec @vite-ignore
+			console.log('🚀 [PRISMA-META] Mode PROD - import() (preprod)');
+			try {
+				const path = await import('node:path');
+				const { pathToFileURL } = await import('node:url');
+				const absolutePath = path.resolve(process.cwd(), 'prisma/cenov_preprod/generated/index.js');
+				const fileUrl = pathToFileURL(absolutePath).href;
+
+				preprodPrismaModule = (await import(/* @vite-ignore */ fileUrl)) as unknown as PrismaModule;
+			} catch {
+				// Fallback import relatif
+				preprodPrismaModule = (await import(
+					/* @vite-ignore */ '../../prisma/cenov_preprod/generated/index.js'
+				)) as unknown as PrismaModule;
+			}
+			console.log('✅ [PRISMA-META] import() réussi (preprod)');
+		}
+
+		if (preprodPrismaModule?.Prisma && preprodPrismaModule?.PrismaClient) {
+			CenovPreprodPrisma = preprodPrismaModule.Prisma;
+			CenovPreprodPrismaClient = preprodPrismaModule.PrismaClient;
+			console.log('✅ [PRISMA-META] Client preprod chargé avec succès');
+		} else {
+			throw new Error('Module preprod invalide - Prisma/PrismaClient manquants');
+		}
+	} catch (error) {
+		console.log('❌ [PRISMA-META] Erreur client preprod:', error);
+		// Fallback au client principal
+		CenovPreprodPrisma = Prisma;
+		CenovPreprodPrismaClient = PrismaClient;
+		console.log('⚪ [PRISMA-META] Utilisation client principal en fallback (preprod)');
+	}
+}
+
+export type DatabaseName = 'cenov' | 'cenov_dev' | 'cenov_preprod';
 
 export interface TableInfo {
 	name: string;
@@ -166,6 +234,10 @@ interface DatabaseConfig {
 		dmmf: PrismaModule['Prisma']['dmmf'];
 		client: Record<string, unknown>;
 	};
+	cenov_preprod: {
+		dmmf: PrismaModule['Prisma']['dmmf'];
+		client: Record<string, unknown>;
+	};
 }
 
 // Cache pour les bases de données (singleton)
@@ -185,8 +257,16 @@ async function createDatabases(): Promise<DatabaseConfig> {
 
 	await initializePrisma();
 	await initializeCenovDevPrisma();
+	await initializeCenovPreprodPrisma();
 
-	if (!Prisma || !PrismaClient || !CenovDevPrisma || !CenovDevPrismaClient) {
+	if (
+		!Prisma ||
+		!PrismaClient ||
+		!CenovDevPrisma ||
+		!CenovDevPrismaClient ||
+		!CenovPreprodPrisma ||
+		!CenovPreprodPrismaClient
+	) {
 		throw new Error('[PRISMA-META] Modules Prisma non initialisés');
 	}
 
@@ -198,6 +278,10 @@ async function createDatabases(): Promise<DatabaseConfig> {
 		cenov_dev: {
 			dmmf: CenovDevPrisma.dmmf,
 			client: new CenovDevPrismaClient()
+		},
+		cenov_preprod: {
+			dmmf: CenovPreprodPrisma.dmmf,
+			client: new CenovPreprodPrismaClient()
 		}
 	};
 }
@@ -396,7 +480,7 @@ export async function getAllTables(database: DatabaseName): Promise<TableInfo[]>
 	return tables;
 }
 
-// Obtenir toutes les tables des 2 bases (côté serveur uniquement)
+// Obtenir toutes les tables des 3 bases (côté serveur uniquement)
 export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 	if (browser) {
 		throw new Error('[PRISMA-META] getAllDatabaseTables ne peut être appelé côté client');
@@ -404,7 +488,8 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 
 	const cenovTables = await getAllTables('cenov');
 	const cenovDevTables = await getAllTables('cenov_dev');
-	const allTables = [...cenovTables, ...cenovDevTables];
+	const cenovPreprodTables = await getAllTables('cenov_preprod');
+	const allTables = [...cenovTables, ...cenovDevTables, ...cenovPreprodTables];
 
 	// Tri uniforme : par database → par schéma → par type (tables avant vues) → par nom
 	const sortedTables = allTables.sort((a, b) => {
@@ -440,7 +525,7 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 // Obtenir tous les noms de bases de données
 export async function getAllDatabaseNames(): Promise<DatabaseName[]> {
 	if (browser) {
-		return ['cenov', 'cenov_dev'];
+		return ['cenov', 'cenov_dev', 'cenov_preprod'];
 	}
 
 	const databases = await getDatabases();

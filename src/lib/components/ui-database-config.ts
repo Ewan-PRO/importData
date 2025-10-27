@@ -21,9 +21,9 @@ export {
 };
 
 // ========== TYPES ==========
-export type DatabaseName = 'cenov' | 'cenov_dev';
+export type DatabaseName = 'cenov' | 'cenov_dev' | 'cenov_preprod';
 export type SchemaName = 'produit' | 'public';
-export type BadgeVariant = 'bleu' | 'orange' | 'vert' | 'noir' | 'purple' | 'cyan';
+export type BadgeVariant = 'bleu' | 'orange' | 'vert' | 'noir' | 'purple' | 'cyan' | 'jaune';
 
 // ========== CONFIGURATION ==========
 export const DATABASE_CONFIG = {
@@ -38,6 +38,12 @@ export const DATABASE_CONFIG = {
 		variant: 'orange' as const,
 		emoji: '⚙️',
 		label: 'CENOV_DEV'
+	},
+	cenov_preprod: {
+		icon: RocketIcon,
+		variant: 'jaune' as const,
+		emoji: '🧪',
+		label: 'CENOV_PREPROD'
 	}
 } as const;
 
@@ -58,7 +64,14 @@ export const SCHEMA_CONFIG = {
 
 // Obtenir infos badge database
 export function getDatabaseBadgeInfo(database: string) {
-	const config = database.includes('dev') ? DATABASE_CONFIG.cenov_dev : DATABASE_CONFIG.cenov;
+	let config;
+	if (database.includes('preprod')) {
+		config = DATABASE_CONFIG.cenov_preprod;
+	} else if (database.includes('dev')) {
+		config = DATABASE_CONFIG.cenov_dev;
+	} else {
+		config = DATABASE_CONFIG.cenov;
+	}
 	return {
 		variant: config.variant,
 		label: `${config.emoji} ${config.label}`,
@@ -68,7 +81,9 @@ export function getDatabaseBadgeInfo(database: string) {
 
 // Obtenir icône database
 export function getDatabaseIcon(database: string) {
-	return database.includes('dev') ? SettingsIcon : RocketIcon;
+	if (database.includes('preprod')) return RocketIcon;
+	if (database.includes('dev')) return SettingsIcon;
+	return RocketIcon;
 }
 
 // Obtenir icône schéma

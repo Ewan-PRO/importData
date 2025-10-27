@@ -135,11 +135,7 @@ export const actions: Actions = {
 					requiredAttrsValidation.validRows,
 					parsedData.data.length - allAttributeErrors.length
 				),
-				errors: [
-					...csvValidation.errors,
-					...allAttributeErrors,
-					...requiredAttrsValidation.errors
-				],
+				errors: [...csvValidation.errors, ...allAttributeErrors, ...requiredAttrsValidation.errors],
 				warnings: [
 					...csvValidation.warnings,
 					...allAttributeWarnings,
