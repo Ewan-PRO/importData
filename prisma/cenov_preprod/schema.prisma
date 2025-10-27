@@ -110,8 +110,10 @@ model product {
   fk_ssfamily      Int?
   fk_sfamily       Int?
   cat_code         String?            @cenov_preprod_db.VarChar(50)
+  fk_document      Int?
   cross_ref        cross_ref[]
   price_purchase   price_purchase[]
+  document         document?          @relation(fields: [fk_document], references: [doc_id], onDelete: NoAction, onUpdate: NoAction)
   kit              kit?               @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
   supplier         supplier?          @relation(fields: [fk_supplier], references: [sup_id], onDelete: NoAction, onUpdate: NoAction)
   product_category product_category[]
@@ -191,6 +193,7 @@ model document {
   doc_file_name        String?         @cenov_preprod_db.VarChar(255)
   created_at           DateTime?       @default(now()) @cenov_preprod_db.Timestamp(6)
   updated_at           DateTime?       @default(now()) @cenov_preprod_db.Timestamp(6)
+  product              product[]
   document_link        document_link[]
 
   @@schema("public")
