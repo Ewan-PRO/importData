@@ -174,7 +174,10 @@ function parseCSVNative(csvContent: string, delimiter: string): unknown[][] {
 	return result;
 }
 
-export async function parseCSVContent(csvContent: string): Promise<ParsedCSVData> {
+export async function parseCSVContent(
+	csvContent: string,
+	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
+): Promise<ParsedCSVData> {
 	try {
 		const rawData = parseCSVNative(csvContent, ';');
 
@@ -190,7 +193,7 @@ export async function parseCSVContent(csvContent: string): Promise<ParsedCSVData
 		const headers = rawData[0] as string[];
 
 		// Charger tous les atr_value depuis BDD pour détection
-		const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+		const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
 		const attributesFromDB = await prisma.attribute.findMany({
 			select: { atr_value: true },
 			where: { atr_value: { not: null } }
@@ -470,10 +473,10 @@ export async function validateCSVData(
 // ============================================================================
 // VALIDATION ATTRIBUTS
 // ============================================================================
-async function loadAttributeReference(): Promise<
-	Map<string, { atr_id: number; atr_value: string }>
-> {
-	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+async function loadAttributeReference(
+	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
+): Promise<Map<string, { atr_id: number; atr_value: string }>> {
+	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
 	const attributes = await prisma.attribute.findMany({
 		select: { atr_id: true, atr_value: true },
 		where: { atr_value: { not: null } }
@@ -483,7 +486,9 @@ async function loadAttributeReference(): Promise<
 	return map;
 }
 
-async function loadAttributeUnitsEnriched(): Promise<
+async function loadAttributeUnitsEnriched(
+	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
+): Promise<
 	Map<
 		number,
 		{
@@ -492,7 +497,7 @@ async function loadAttributeUnitsEnriched(): Promise<
 		}
 	>
 > {
-	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
 	const attributeUnits = await prisma.attribute_unit.findMany({
 		include: {
 			attribute_attribute_unit_fk_unitToattribute: {
@@ -525,10 +530,13 @@ async function loadAttributeUnitsEnriched(): Promise<
 	return map;
 }
 
-async function loadAllowedValues(atrIds: number[]): Promise<Map<number, Set<string>>> {
+async function loadAllowedValues(
+	atrIds: number[],
+	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
+): Promise<Map<number, Set<string>>> {
 	if (atrIds.length === 0) return new Map();
 
-	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
 	const attributeValues = await prisma.attribute_value.findMany({
 		where: { av_atr_id: { in: atrIds } },
 		select: { av_atr_id: true, av_value_label: true }
@@ -553,11 +561,14 @@ async function loadAllowedValues(atrIds: number[]): Promise<Map<number, Set<stri
 /**
  * Charge les métadonnées des catégories et détecte les doublons
  */
-async function loadCategoriesMetadata(catCodes: string[]): Promise<{
+async function loadCategoriesMetadata(
+	catCodes: string[],
+	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
+): Promise<{
 	categoriesMap: Map<string, { cat_id: number; cat_label: string }>;
 	duplicates: Array<{ cat_code: string; labels: string[] }>;
 }> {
-	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
 
 	const categories = await prisma.category.findMany({
 		where: {
@@ -600,11 +611,12 @@ async function loadCategoriesMetadata(catCodes: string[]): Promise<{
  * Charge les attributs obligatoires pour plusieurs catégories
  */
 async function loadRequiredAttributesByCategory(
-	categoryIds: number[]
+	categoryIds: number[],
+	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
 ): Promise<Map<number, Array<{ code: string; label: string }>>> {
 	if (categoryIds.length === 0) return new Map();
 
-	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
 
 	const requiredAttrs = await prisma.category_attribute.findMany({
 		where: {
@@ -637,7 +649,8 @@ async function loadRequiredAttributesByCategory(
  */
 export async function validateRequiredAttributes(
 	data: CSVRow[],
-	attributesByProduct: ProductAttributes[]
+	attributesByProduct: ProductAttributes[],
+	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
 ): Promise<ValidationResult> {
 	const errors: ValidationError[] = [];
 	const warnings: ValidationError[] = [];
@@ -650,7 +663,7 @@ export async function validateRequiredAttributes(
 	}
 
 	// 2. Charger métadonnées catégories + détecter doublons
-	const { categoriesMap, duplicates } = await loadCategoriesMetadata(uniqueCatCodes);
+	const { categoriesMap, duplicates } = await loadCategoriesMetadata(uniqueCatCodes, database);
 
 	// 3. ERREUR BLOQUANTE si doublons cat_code
 	if (duplicates.length > 0) {
@@ -667,7 +680,7 @@ export async function validateRequiredAttributes(
 
 	// 4. Charger attributs obligatoires pour toutes les catégories trouvées
 	const categoryIds = Array.from(categoriesMap.values()).map((c) => c.cat_id);
-	const requiredAttrsByCategory = await loadRequiredAttributesByCategory(categoryIds);
+	const requiredAttrsByCategory = await loadRequiredAttributesByCategory(categoryIds, database);
 
 	// 5. Détecter attributs du CSV pour les catégories inconnues (pour auto-liaison)
 	const unknownCategoryAttrs = new Map<string, Set<string>>(); // cat_code → Set<atr_value>
@@ -735,18 +748,21 @@ export async function validateRequiredAttributes(
 	};
 }
 
-export async function validateAttributes(attributes: AttributePair[]): Promise<ValidationResult> {
+export async function validateAttributes(
+	attributes: AttributePair[],
+	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
+): Promise<ValidationResult> {
 	const errors: ValidationError[] = [];
 	const warnings: ValidationError[] = [];
 
-	const attributeMap = await loadAttributeReference();
-	const attributeUnitsMap = await loadAttributeUnitsEnriched();
+	const attributeMap = await loadAttributeReference(database);
+	const attributeUnitsMap = await loadAttributeUnitsEnriched(database);
 
 	const attributeIds = attributes
 		.filter((a) => a.atrValue && attributeMap.has(a.atrValueCode))
 		.map((a) => attributeMap.get(a.atrValueCode)!.atr_id);
 
-	const allowedValuesMap = await loadAllowedValues(attributeIds);
+	const allowedValuesMap = await loadAllowedValues(attributeIds, database);
 
 	for (let i = 0; i < attributes.length; i++) {
 		const { atrValueCode, atrValue } = attributes[i];
@@ -809,7 +825,8 @@ export async function validateAttributes(attributes: AttributePair[]): Promise<V
 // ============================================================================
 export async function importToDatabase(
 	data: CSVRow[],
-	attributesByProduct: ProductAttributes[]
+	attributesByProduct: ProductAttributes[],
+	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
 ): Promise<ImportResult> {
 	const stats: ImportStats = {
 		suppliers: 0,
@@ -825,13 +842,13 @@ export async function importToDatabase(
 	const changes: ChangeDetail[] = [];
 
 	try {
-		const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+		const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
 
 		// ✅ Charger TOUTES les métadonnées AVANT la transaction (évite timeout)
 		console.log('🔄 Chargement métadonnées attributs...');
 		const metadata: AttributeMetadata = {
-			attributeMap: await loadAttributeReference(),
-			attributeUnitsMap: await loadAttributeUnitsEnriched(),
+			attributeMap: await loadAttributeReference(database),
+			attributeUnitsMap: await loadAttributeUnitsEnriched(database),
 			allowedValuesMap: new Map<number, Set<string>>(), // Sera rempli dynamiquement
 			categoryAttributesMap: new Map<string, boolean>(),
 			kitAttributesMap: new Map<
@@ -859,7 +876,7 @@ export async function importToDatabase(
 
 		// Charger valeurs autorisées pour tous les attributs
 		if (allAtrIds.size > 0) {
-			metadata.allowedValuesMap = await loadAllowedValues(Array.from(allAtrIds));
+			metadata.allowedValuesMap = await loadAllowedValues(Array.from(allAtrIds), database);
 		}
 
 		// ✅ OPTIMISATION : Précharger category_attribute et kit_attribute (évite 2000+ requêtes en boucle)
@@ -931,7 +948,8 @@ export async function importToDatabase(
 							categoryResult.entity.cat_id,
 							row.cat_code,
 							attributeCodes,
-							changes
+							changes,
+							metadata
 						);
 					}
 				}
@@ -1132,7 +1150,8 @@ async function autoLinkCategoryAttributes(
 	cat_id: number,
 	cat_code: string,
 	attributeCodes: string[],
-	changes: ChangeDetail[]
+	changes: ChangeDetail[],
+	metadata: AttributeMetadata
 ): Promise<number> {
 	if (attributeCodes.length === 0) return 0;
 
@@ -1153,17 +1172,11 @@ async function autoLinkCategoryAttributes(
 			continue;
 		}
 
-		// Vérifier si le lien existe déjà
-		const existing = await tx.category_attribute.findUnique({
-			where: {
-				fk_category_fk_attribute: {
-					fk_category: cat_id,
-					fk_attribute: atr_id
-				}
-			}
-		});
+		// ✅ Vérifier dans le cache d'abord
+		const catAttrKey = `${cat_id}:${atr_id}`;
+		const existingInCache = metadata.categoryAttributesMap.has(catAttrKey);
 
-		if (!existing) {
+		if (!existingInCache) {
 			await tx.category_attribute.create({
 				data: {
 					fk_category: cat_id,
@@ -1171,6 +1184,9 @@ async function autoLinkCategoryAttributes(
 					cat_atr_required: false // Tous optionnels par défaut
 				}
 			});
+
+			// ✅ Mettre à jour le cache pour éviter duplicatas
+			metadata.categoryAttributesMap.set(catAttrKey, true);
 
 			changes.push({
 				table: 'category_attribute',

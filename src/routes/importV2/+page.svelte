@@ -59,6 +59,7 @@
 	let csvContent = $state('');
 	let fileName = $state('');
 	let isProcessing = $state(false);
+	let selectedDatabase = $state<'cenov_dev' | 'cenov_preprod'>('cenov_dev');
 
 	// Flags pour détecter les nouvelles réponses (Solution 5 - Pattern Svelte 5)
 	let validationReceived = $state(false);
@@ -193,6 +194,32 @@
 				<h2 class="mb-4 text-xl font-semibold text-black">1. Upload fichier CSV :</h2>
 				<p class="mb-4 text-gray-600">Sélectionnez un fichier CSV :</p>
 
+				<div class="mb-6">
+					<h3 class="mb-3 text-sm font-medium text-gray-700">Base de données cible :</h3>
+					<div class="flex gap-4">
+						<label class="flex cursor-pointer items-center">
+							<input
+								type="radio"
+								name="database"
+								value="cenov_dev"
+								bind:group={selectedDatabase}
+								class="mr-2"
+							/>
+							<span class="text-sm">CENOV_DEV</span>
+						</label>
+						<label class="flex cursor-pointer items-center">
+							<input
+								type="radio"
+								name="database"
+								value="cenov_preprod"
+								bind:group={selectedDatabase}
+								class="mr-2"
+							/>
+							<span class="text-sm">CENOV_PREPROD</span>
+						</label>
+					</div>
+				</div>
+
 				<div
 					class="mb-4 cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-8 text-center transition-colors hover:border-blue-400 hover:bg-blue-50"
 					role="button"
@@ -262,6 +289,7 @@
 					}}
 				>
 					<input type="hidden" name="csv" value={csvContent} />
+					<input type="hidden" name="database" value={selectedDatabase} />
 					<div class="flex justify-between">
 						<Button variant="noir" onclick={resetImport}>
 							<CircleArrowLeft class="mr-2 h-4 w-4" />
@@ -336,6 +364,7 @@
 					}}
 				>
 					<input type="hidden" name="csv" value={csvContent} />
+					<input type="hidden" name="database" value={selectedDatabase} />
 					<div class="flex justify-between">
 						<Button variant="noir" onclick={() => (step = 2)}>
 							<CircleArrowLeft class="mr-2 h-4 w-4" />

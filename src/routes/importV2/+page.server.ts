@@ -89,7 +89,9 @@ export const actions: Actions = {
 			const { csvContent, error } = validateFormData(formData);
 			if (error) return fail(400, { error });
 
-			const parsedData: ParsedCSVData = await parseCSVContent(csvContent);
+			const database = (formData.get('database') as 'cenov_dev' | 'cenov_preprod') || 'cenov_dev';
+
+			const parsedData: ParsedCSVData = await parseCSVContent(csvContent, database);
 			if (!parsedData.success) return fail(400, { error: parsedData.error });
 
 			// Validation CSV (toutes les lignes)
@@ -100,7 +102,7 @@ export const actions: Actions = {
 			const allAttributeWarnings: ValidationError[] = [];
 
 			for (const productAttrs of parsedData.attributes) {
-				const attrValidation = await validateAttributes(productAttrs.attributes);
+				const attrValidation = await validateAttributes(productAttrs.attributes, database);
 
 				// Préfixer erreurs avec pro_cenov_id
 				attrValidation.errors.forEach((err) => {
@@ -121,7 +123,8 @@ export const actions: Actions = {
 			// ✅ VALIDATION ATTRIBUTS OBLIGATOIRES - PRIORITÉ 2
 			const requiredAttrsValidation = await validateRequiredAttributes(
 				parsedData.data,
-				parsedData.attributes
+				parsedData.attributes,
+				database
 			);
 
 			const validation: ValidationResult = {
@@ -162,7 +165,9 @@ export const actions: Actions = {
 				return fail(400, { error });
 			}
 
-			const parsedData = await parseCSVContent(csvContent);
+			const database = (formData.get('database') as 'cenov_dev' | 'cenov_preprod') || 'cenov_dev';
+
+			const parsedData = await parseCSVContent(csvContent, database);
 			if (!parsedData.success) {
 				return fail(400, { error: parsedData.error });
 			}
@@ -173,7 +178,7 @@ export const actions: Actions = {
 			// Validation attributs PAR produit
 			let hasAttributeErrors = false;
 			for (const productAttrs of parsedData.attributes) {
-				const attrValidation = await validateAttributes(productAttrs.attributes);
+				const attrValidation = await validateAttributes(productAttrs.attributes, database);
 				if (!attrValidation.success) {
 					hasAttributeErrors = true;
 					break;
@@ -183,14 +188,15 @@ export const actions: Actions = {
 			// ✅ Validation attributs obligatoires
 			const requiredAttrsValidation = await validateRequiredAttributes(
 				parsedData.data,
-				parsedData.attributes
+				parsedData.attributes,
+				database
 			);
 
 			if (!csvValidation.success || hasAttributeErrors || !requiredAttrsValidation.success) {
 				return fail(400, { error: 'Validation échouée. Veuillez corriger les erreurs.' });
 			}
 
-			const importResult = await importToDatabase(parsedData.data, parsedData.attributes);
+			const importResult = await importToDatabase(parsedData.data, parsedData.attributes, database);
 
 			if (!importResult.success) {
 				return fail(500, { error: `Erreur d'import: ${importResult.error}` });

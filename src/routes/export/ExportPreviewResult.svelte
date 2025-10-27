@@ -190,7 +190,7 @@
 					})()}
 					{@const dbInfo = matchingTableInfo
 						? getDatabaseBadgeInfo(matchingTableInfo.database)
-						: { variant: 'noir' as const, label: 'Inconnue' }}
+						: { variant: 'noir' as const, label: 'Inconnue', icon: Rocket }}
 					{@const schemaVariant = matchingTableInfo?.schema
 						? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.variant ||
 							'cyan'
@@ -200,6 +200,7 @@
 							matchingTableInfo.schema
 						: 'Inconnu'}
 					{@const TableIconComponent = getTableIcon(matchingTableInfo?.category || 'tables')}
+					{@const DbIconComponent = dbInfo.icon}
 					{@const SchemaIconComponent = matchingTableInfo?.schema
 						? SCHEMA_CONFIG[matchingTableInfo.schema as keyof typeof SCHEMA_CONFIG]?.icon
 						: LockOpen}
@@ -222,11 +223,7 @@
 											{matchingTableInfo.category.replace('_', ' ')}
 										</Badge>
 										<Badge variant={dbInfo.variant}>
-											{#if matchingTableInfo?.database.includes('dev')}
-												<Settings />
-											{:else}
-												<Rocket />
-											{/if}
+											<DbIconComponent />
 											{matchingTableInfo?.database.toUpperCase()}
 										</Badge>
 										<Badge variant={schemaVariant}>
@@ -259,13 +256,8 @@
 											{/if}
 										</Badge>
 										<Badge variant={dbInfo.variant}>
-											{#if matchingTableInfo?.database.includes('dev')}
-												<Settings />
-												{matchingTableInfo.database.toUpperCase()}
-											{:else}
-												<Rocket />
-												{matchingTableInfo.database.toUpperCase()}
-											{/if}
+											<DbIconComponent />
+											{matchingTableInfo.database.toUpperCase()}
 										</Badge>
 										<Badge variant={schemaVariant}>
 											<SchemaIconComponent />

@@ -403,10 +403,10 @@
 				<div class="mb-6 space-y-4">
 					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 						<!-- Card Type -->
-						<Card class="h-36 border-blue-200 bg-blue-50 p-4 shadow-none">
-							<div class="mb-2 flex items-center gap-2">
-								<FileType class="h-5 w-5 text-blue-600" />
-								<h3 class="text-lg font-semibold text-blue-700">Type de données :</h3>
+						<Card class="h-48 border-blue-300 bg-blue-100 p-6 shadow-md">
+							<div class="mb-3 flex items-center gap-2">
+								<FileType class="h-6 w-6 text-blue-600" />
+								<h3 class="text-xl font-bold text-blue-800">Type de données :</h3>
 							</div>
 							<div class="space-y-2">
 								<label class="flex cursor-pointer items-center space-x-2">
@@ -415,10 +415,10 @@
 										name="type"
 										value="all"
 										bind:group={selectedType}
-										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+										class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
-									<span class="text-sm text-gray-900"
-										><FileType class="mr-1 inline h-4 w-4" />Tous ({filteredTables.length})</span
+									<span class="text-base font-medium text-gray-900"
+										><FileType class="mr-1 inline h-5 w-5" />Tous ({filteredTables.length})</span
 									>
 								</label>
 								<label class="flex cursor-pointer items-center space-x-2">
@@ -427,10 +427,10 @@
 										name="type"
 										value="tables"
 										bind:group={selectedType}
-										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+										class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
-									<span class="text-sm text-gray-900"
-										><TableIcon class="mr-1 inline h-4 w-4" />Tables ({filteredTables.filter(
+									<span class="text-base font-medium text-gray-900"
+										><TableIcon class="mr-1 inline h-5 w-5" />Tables ({filteredTables.filter(
 											(t) => t.category === 'table'
 										).length})</span
 									>
@@ -441,10 +441,10 @@
 										name="type"
 										value="views"
 										bind:group={selectedType}
-										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+										class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
-									<span class="text-sm text-gray-900"
-										><Eye class="mr-1 inline h-4 w-4" />Vues ({filteredTables.filter(
+									<span class="text-base font-medium text-gray-900"
+										><Eye class="mr-1 inline h-5 w-5" />Vues ({filteredTables.filter(
 											(t) => t.category === 'view'
 										).length})</span
 									>
@@ -453,10 +453,10 @@
 						</Card>
 
 						<!-- Card Base de données -->
-						<Card class="h-36 border-emerald-200 bg-emerald-50 p-4 shadow-none">
-							<div class="mb-2 flex items-center gap-2">
-								<Database class="h-5 w-5 text-emerald-600" />
-								<h3 class="text-lg font-semibold text-emerald-700">Base de données :</h3>
+						<Card class="h-48 border-emerald-300 bg-emerald-100 p-6 shadow-md">
+							<div class="mb-3 flex items-center gap-2">
+								<Database class="h-6 w-6 text-emerald-600" />
+								<h3 class="text-xl font-bold text-emerald-800">Base de données :</h3>
 							</div>
 							<div class="space-y-2">
 								<label class="flex cursor-pointer items-center space-x-2">
@@ -465,28 +465,25 @@
 										name="database"
 										value="all"
 										bind:group={selectedDatabase}
-										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+										class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
-									<span class="text-sm text-gray-900"
-										><Database class="mr-1 inline h-4 w-4" />Toutes ({filteredTables.length})</span
+									<span class="text-base font-medium text-gray-900"
+										><Database class="mr-1 inline h-5 w-5" />Toutes ({filteredTables.length})</span
 									>
 								</label>
 								{#each databases as database (database)}
 									{@const dbInfo = getDatabaseBadgeInfo(database)}
+									{@const DbIcon = dbInfo.icon}
 									<label class="flex cursor-pointer items-center space-x-2">
 										<input
 											type="radio"
 											name="database"
 											value={database}
 											bind:group={selectedDatabase}
-											class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+											class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
 										/>
-										<span class="text-sm text-gray-900">
-											{#if database.includes('dev')}
-												<Settings class="mr-0.5 inline h-4 w-4" />
-											{:else}
-												<Rocket class="mr-0.5 inline h-4 w-4" />
-											{/if}
+										<span class="text-base font-medium text-gray-900">
+											<DbIcon class="mr-0.5 inline h-5 w-5" />
 											{dbInfo.label.split(' ')[1]} ({filteredTables.filter(
 												(t) => t.database === database
 											).length})</span
@@ -497,10 +494,10 @@
 						</Card>
 
 						<!-- Card Schéma -->
-						<Card class="h-36 border-purple-200 bg-purple-50 p-4 shadow-none">
-							<div class="mb-2 flex items-center gap-2">
-								<Sheet class="h-5 w-5 text-purple-600" />
-								<h3 class="text-lg font-semibold text-purple-700">Schéma :</h3>
+						<Card class="h-48 border-purple-300 bg-purple-100 p-6 shadow-md">
+							<div class="mb-3 flex items-center gap-2">
+								<Sheet class="h-6 w-6 text-purple-600" />
+								<h3 class="text-xl font-bold text-purple-800">Schéma :</h3>
 							</div>
 							<div class="space-y-2">
 								<label class="flex cursor-pointer items-center space-x-2">
@@ -509,10 +506,10 @@
 										name="schema"
 										value="all"
 										bind:group={selectedSchema}
-										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+										class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
 									/>
-									<span class="text-sm text-gray-900"
-										><Sheet class="mr-1 inline h-4 w-4" />Tous ({filteredTables.length})</span
+									<span class="text-base font-medium text-gray-900"
+										><Sheet class="mr-1 inline h-5 w-5" />Tous ({filteredTables.length})</span
 									>
 								</label>
 								{#each uniqueSchemas as schema (schema)}
@@ -523,10 +520,10 @@
 											name="schema"
 											value={schema}
 											bind:group={selectedSchema}
-											class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+											class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
 										/>
-										<span class="text-sm text-gray-900">
-											<SchemaIcon class="mr-0.5 inline h-4 w-4" />
+										<span class="text-base font-medium text-gray-900">
+											<SchemaIcon class="mr-0.5 inline h-5 w-5" />
 											{SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.label || schema} ({filteredTables.filter(
 												(t) => t.schema === schema
 											).length})
@@ -611,6 +608,7 @@
 					<div class="grid gap-3">
 						{#each filteredTables as table (`${table.database}-${table.name}`)}
 							{@const dbInfo = getDatabaseBadgeInfo(table.database)}
+							{@const DbIconComponent = dbInfo.icon}
 							{@const schemaVariant =
 								SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.variant || 'cyan'}
 							{@const schemaLabel =
@@ -664,11 +662,7 @@
 														{table.category}
 													</Badge>
 													<Badge variant={dbInfo.variant}>
-														{#if table.database.includes('dev')}
-															<Settings />
-														{:else}
-															<Rocket />
-														{/if}
+														<DbIconComponent />
 														{table.database.toUpperCase()}
 													</Badge>
 													<Badge variant={schemaVariant}>
@@ -696,11 +690,7 @@
 														{/if}
 													</Badge>
 													<Badge variant={dbInfo.variant}>
-														{#if table.database.includes('dev')}
-															<Settings />{table.database.toUpperCase()}
-														{:else}
-															<Rocket />{table.database.toUpperCase()}
-														{/if}
+														<DbIconComponent />{table.database.toUpperCase()}
 													</Badge>
 													<Badge variant={schemaVariant}>
 														<SchemaIconComponent />
