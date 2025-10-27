@@ -560,6 +560,7 @@ async function loadAllowedValues(
 
 /**
  * Charge les métadonnées des catégories et détecte les doublons
+ * ✅ AMÉLIORATION : Recherche dans toute la hiérarchie (pas seulement racines)
  */
 async function loadCategoriesMetadata(
 	catCodes: string[],
@@ -570,12 +571,13 @@ async function loadCategoriesMetadata(
 }> {
 	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
 
+	// ✅ MODIFICATION : Recherche dans toute la hiérarchie
 	const categories = await prisma.category.findMany({
 		where: {
-			cat_code: { in: catCodes },
-			fk_parent: null // Catégories racines uniquement
+			cat_code: { in: catCodes }
+			// fk_parent retiré : accepte racines ET sous-catégories
 		},
-		select: { cat_id: true, cat_code: true, cat_label: true }
+		select: { cat_id: true, cat_code: true, cat_label: true, fk_parent: true }
 	});
 
 	const categoriesMap = new Map<string, { cat_id: number; cat_label: string }>();
@@ -883,8 +885,9 @@ export async function importToDatabase(
 		console.log('🔄 Préchargement category_attribute et kit_attribute...');
 
 		// Récupérer les cat_id depuis les cat_code
+		// ✅ CORRECTION : Recherche dans toute la hiérarchie (cohérent avec findOrCreateCategory)
 		const categories = await prisma.category.findMany({
-			where: { fk_parent: null, cat_code: { in: Array.from(uniqueCatCodes) } },
+			where: { cat_code: { in: Array.from(uniqueCatCodes) } },
 			select: { cat_id: true, cat_code: true }
 		});
 		const catIdsByCatCode = new Map(categories.map((c) => [c.cat_code!, c.cat_id]));
@@ -924,6 +927,7 @@ export async function importToDatabase(
 			`✅ Métadonnées chargées: ${metadata.attributeMap.size} attributs, ${categoryAttributes.length} category_attribute, ${kitAttributes.length} kit_attribute`
 		);
 
+		// ✅ CORRECTION : Augmenter timeout transaction pour import de masse
 		await prisma.$transaction(async (tx) => {
 			for (const row of data) {
 				const supplierResult = await findOrCreateSupplier(tx, row.sup_code, row.sup_label, changes);
@@ -994,6 +998,9 @@ export async function importToDatabase(
 					stats.kitAttributes += attrStats.kitAttributes;
 				}
 			}
+		}, {
+			timeout: 60000,  // 60 secondes (au lieu de 5s par défaut)
+			maxWait: 10000   // 10 secondes d'attente max pour obtenir une connexion
 		});
 
 		return { success: true, stats, changes };
@@ -1084,16 +1091,25 @@ async function findOrCreateCategory(
 	cat_label: string,
 	changes: ChangeDetail[]
 ) {
-	// Note: CSV importe uniquement des catégories racine (fk_parent = null)
-	// Recherche par cat_code (les catégories racine ont fk_parent = null)
-	const existing = await tx.category.findFirst({
-		where: { fk_parent: null, cat_code }
+	// ✅ AMÉLIORATION : Recherche dans toute la hiérarchie (pas seulement racines)
+	const categories = await tx.category.findMany({
+		where: { cat_code }
 	});
 
+	// ✅ ROBUSTESSE : Vérifier unicité du cat_code
+	if (categories.length > 1) {
+		throw new Error(
+			`Ambiguïté BDD : ${categories.length} catégories trouvées avec le code ${cat_code}. ` +
+				`IDs: ${categories.map((c) => c.cat_id).join(', ')}. ` +
+				`Corrigez les doublons en base avant import.`
+		);
+	}
+
+	const existing = categories.length === 1 ? categories[0] : null;
 	let category;
 
 	if (!existing) {
-		// CREATE - Nouvelle catégorie
+		// CREATE - Nouvelle catégorie (racine par défaut)
 		category = await tx.category.create({
 			data: { fk_parent: null, cat_code, cat_label }
 		});
@@ -1114,9 +1130,12 @@ async function findOrCreateCategory(
 			newValue: cat_label,
 			recordId: cat_code
 		});
-		console.log(`📦 Catégorie créée: ${cat_label} (${cat_code})`);
+		console.log(`📦 Catégorie créée (racine): ${cat_label} (${cat_code})`);
 	} else {
-		// UPDATE - Catégorie existe
+		// UPDATE - Catégorie existe (peut être racine ou sous-catégorie)
+		const hierarchyInfo = existing.fk_parent ? `sous-catégorie de ${existing.fk_parent}` : 'racine';
+		console.log(`✅ Catégorie trouvée: ${cat_code} - ${cat_label} (${hierarchyInfo})`);
+
 		if (existing.cat_label !== cat_label) {
 			category = await tx.category.update({
 				where: { cat_id: existing.cat_id },
@@ -1300,7 +1319,10 @@ async function upsertProduct(
 	categoryResult: { entity: { cat_id: number }; isNew: boolean } | null,
 	changes: ChangeDetail[]
 ) {
-	const existing = await tx.product.findUnique({ where: { pro_cenov_id: row.pro_cenov_id } });
+	// ✅ CORRECTION : Utiliser la vraie clé métier (fk_supplier, pro_code)
+	const existing = await tx.product.findUnique({
+		where: { fk_supplier_pro_code: { fk_supplier, pro_code: row.pro_code } }
+	});
 
 	const productData = {
 		pro_cenov_id: row.pro_cenov_id,
@@ -1316,7 +1338,7 @@ async function upsertProduct(
 	};
 
 	const product = await tx.product.upsert({
-		where: { pro_cenov_id: row.pro_cenov_id },
+		where: { fk_supplier_pro_code: { fk_supplier, pro_code: row.pro_code } },
 		create: productData,
 		update: productData
 	});
