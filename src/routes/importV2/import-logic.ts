@@ -16,6 +16,7 @@ export interface CSVRow {
 	sup_label: string;
 	cat_code: string;
 	cat_label: string;
+	fk_document?: string;
 	kit_label: string;
 	famille?: string;
 	sous_famille?: string;
@@ -1334,7 +1335,8 @@ async function upsertProduct(
 		fk_kit,
 		fk_family: familyIds.fam_id,
 		fk_sfamily: familyIds.sfam_id,
-		fk_ssfamily: familyIds.ssfam_id
+		fk_ssfamily: familyIds.ssfam_id,
+		fk_document: row.fk_document ? parseInt(row.fk_document) : null
 	};
 
 	const product = await tx.product.upsert({
@@ -1354,7 +1356,8 @@ async function upsertProduct(
 			{ key: 'fk_kit', label: 'fk_kit' },
 			{ key: 'fk_family', label: 'fk_family' },
 			{ key: 'fk_sfamily', label: 'fk_sfamily' },
-			{ key: 'fk_ssfamily', label: 'fk_ssfamily' }
+			{ key: 'fk_ssfamily', label: 'fk_ssfamily' },
+			{ key: 'fk_document', label: 'fk_document' }
 		];
 
 		for (const { key, label } of fieldMap) {
@@ -1415,6 +1418,16 @@ async function upsertProduct(
 			newValue: row.cat_code,
 			recordId: row.pro_cenov_id
 		});
+		if (row.fk_document) {
+			changes.push({
+				table: 'product',
+				schema: 'produit',
+				column: 'fk_document',
+				oldValue: null,
+				newValue: parseInt(row.fk_document),
+				recordId: row.pro_cenov_id
+			});
+		}
 		console.log(`✅ Produit créé: ${row.pro_cenov_id} (${row.pro_code})`);
 	}
 
@@ -1470,6 +1483,8 @@ async function upsertPricePurchase(
 		where: { fk_product_pp_date: { fk_product, pp_date } }
 	});
 
+	const fk_document = row.fk_document ? parseInt(row.fk_document) : null;
+
 	await tx.price_purchase.upsert({
 		where: { fk_product_pp_date: { fk_product, pp_date } },
 		create: {
@@ -1477,11 +1492,13 @@ async function upsertPricePurchase(
 			pp_date,
 			pp_amount,
 			pp_discount,
-			pro_cenov_id: row.pro_cenov_id
+			pro_cenov_id: row.pro_cenov_id,
+			fk_document
 		},
 		update: {
 			pp_amount,
-			pp_discount
+			pp_discount,
+			fk_document
 		}
 	});
 
@@ -1510,6 +1527,17 @@ async function upsertPricePurchase(
 				recordId: `${row.pro_cenov_id} (${row.pp_date})`
 			});
 		}
+
+		if (existing.fk_document !== fk_document) {
+			changes.push({
+				table: 'price_purchase',
+				schema: 'produit',
+				column: 'fk_document',
+				oldValue: existing.fk_document,
+				newValue: fk_document,
+				recordId: `${row.pro_cenov_id} (${row.pp_date})`
+			});
+		}
 	} else {
 		// Création : tracker le nouveau prix
 		changes.push({
@@ -1527,6 +1555,16 @@ async function upsertPricePurchase(
 				column: 'pp_discount',
 				oldValue: null,
 				newValue: pp_discount,
+				recordId: `${row.pro_cenov_id} (${row.pp_date})`
+			});
+		}
+		if (fk_document !== null) {
+			changes.push({
+				table: 'price_purchase',
+				schema: 'produit',
+				column: 'fk_document',
+				oldValue: null,
+				newValue: fk_document,
 				recordId: `${row.pro_cenov_id} (${row.pp_date})`
 			});
 		}
