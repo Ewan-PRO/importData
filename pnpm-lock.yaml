@@ -57,6 +57,9 @@ importers:
       '@internationalized/date':
         specifier: ^3.10.0
         version: 3.10.0
+      '@lucide/svelte':
+        specifier: ^0.544.0
+        version: 0.544.0(svelte@5.41.1)
       '@sveltejs/adapter-node':
         specifier: ^5.4.0
         version: 5.4.0(@sveltejs/kit@2.47.2(@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.41.1)(vite@6.4.1(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)(vite@6.4.1(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))
@@ -508,6 +511,11 @@ packages:
     resolution: {integrity: sha512-bQWXRABf9r1hix5sBrnlBPtC6EWoMYsFGmClkZ5PgxRDRH/cnUB3/9p1orl+hE7DAnf6sFNjLk2qX4h/0sLgCA==}
     peerDependencies:
       '@sveltejs/kit': ^2.20.6
+
+  '@lucide/svelte@0.544.0':
+    resolution: {integrity: sha512-9f9O6uxng2pLB01sxNySHduJN3HTl5p0HDu4H26VR51vhZfiMzyOMe9Mhof3XAk4l813eTtl+/DYRvGyoRR+yw==}
+    peerDependencies:
+      svelte: ^5
 
   '@melt-ui/svelte@0.76.2':
     resolution: {integrity: sha512-7SbOa11tXUS95T3fReL+dwDs5FyJtCEqrqG3inRziDws346SYLsxOQ6HmX+4BkIsQh1R8U3XNa+EMmdMt38lMA==}
@@ -3021,6 +3029,10 @@ snapshots:
     dependencies:
       '@logto/node': 3.1.6
       '@sveltejs/kit': 2.47.2(@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.41.1)(vite@6.4.1(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)(vite@6.4.1(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2))
+
+  '@lucide/svelte@0.544.0(svelte@5.41.1)':
+    dependencies:
+      svelte: 5.41.1
 
   '@melt-ui/svelte@0.76.2(svelte@5.41.1)':
     dependencies:

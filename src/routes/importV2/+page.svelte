@@ -1,11 +1,22 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { Button } from '$lib/components/ui/button';
 	import { Card } from 'flowbite-svelte';
 	import * as Alert from '$lib/components/ui/alert';
-	import { Upload, AlertCircle, Check, CircleArrowLeft, CircleArrowRight } from 'lucide-svelte';
+	import {
+		Upload,
+		AlertCircle,
+		Check,
+		CircleArrowLeft,
+		CircleArrowRight,
+		ChevronsUpDown
+	} from 'lucide-svelte';
+	import * as Command from '$lib/components/ui/command';
+	import * as Popover from '$lib/components/ui/popover';
+	import { cn } from '$lib/utils';
 
 	interface ValidationError {
 		line: number;
@@ -50,17 +61,31 @@
 	}
 
 	let {
+		data,
 		form = $bindable()
 	}: {
+		data: {
+			categories: Array<{
+				cat_id: number;
+				cat_code: string;
+				cat_label: string;
+				attributeCount: number;
+			}>;
+		};
 		form?: { validation?: ValidationResult; result?: ImportResult; error?: string } | null;
 	} = $props();
 
-	let step = $state(1);
+	let step = $state(0); // ✅ Commencer à 0 pour l'ÉTAPE 0
 	let csvFile = $state<File | null>(null);
 	let csvContent = $state('');
 	let fileName = $state('');
 	let isProcessing = $state(false);
 	let selectedDatabase = $state<'cenov_dev' | 'cenov_preprod'>('cenov_dev');
+
+	// ✅ États pour le Combobox (ÉTAPE 0)
+	let open = $state(false);
+	let selectedCategory = $state<string>(''); // cat_code
+	let searchValue = $state('');
 
 	// Flags pour détecter les nouvelles réponses (Solution 5 - Pattern Svelte 5)
 	let validationReceived = $state(false);
@@ -130,7 +155,7 @@
 	}
 
 	function resetImport() {
-		step = 1;
+		step = 0; // ✅ Retour à l'ÉTAPE 0
 		csvFile = null;
 		csvContent = '';
 		fileName = '';
@@ -138,6 +163,10 @@
 		form = null;
 		validationReceived = false;
 		resultReceived = false;
+		// Réinitialiser états Combobox
+		selectedCategory = '';
+		searchValue = '';
+		open = false;
 	}
 
 	$effect(() => {
@@ -171,6 +200,10 @@
 	<Alert.GlobalAlert />
 
 	<div class="mb-8 flex justify-between">
+		<div class="step flex-1 {step >= 0 ? 'active' : ''}">
+			<div class="mb-2 text-center text-sm font-medium">0. Template</div>
+			<div class="mx-4 h-2 rounded bg-gray-200 {step >= 0 ? 'bg-blue-500' : ''}"></div>
+		</div>
 		<div class="step flex-1 {step >= 1 ? 'active' : ''}">
 			<div class="mb-2 text-center text-sm font-medium">1. Upload</div>
 			<div class="mx-4 h-2 rounded bg-gray-200 {step >= 1 ? 'bg-blue-500' : ''}"></div>
@@ -190,7 +223,101 @@
 	</div>
 
 	<Card class="w-full max-w-full">
-		{#if step === 1}
+		{#if step === 0}
+			<!-- ✅ ÉTAPE 0 : Génération template (optionnelle) -->
+			<div class="mb-6">
+				<h2 class="mb-4 text-xl font-semibold text-black">
+					0. Télécharger template CSV (optionnel) :
+				</h2>
+				<p class="mb-6 text-gray-600">
+					Choisissez une catégorie pour générer un fichier CSV avec les bonnes colonnes d'attributs.
+				</p>
+
+				<!-- Combobox pour sélectionner la catégorie -->
+				<div class="mb-6">
+					<label for="category-combobox" class="mb-2 block text-sm font-medium text-gray-700">
+						Sélectionner une catégorie :
+					</label>
+
+					<Popover.Root bind:open>
+						<Popover.Trigger
+							id="category-combobox"
+							role="combobox"
+							aria-expanded={open}
+							aria-controls="category-list"
+							class="border-input bg-background ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{#if selectedCategory}
+								{@const category = data.categories.find((c) => c.cat_code === selectedCategory)}
+								{category?.cat_label} ({category?.attributeCount} attribut{category?.attributeCount
+									? 's'
+									: ''})
+							{:else}
+								Rechercher une catégorie...
+							{/if}
+							<ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+						</Popover.Trigger>
+						<Popover.Content class="w-[600px] p-0">
+							<Command.Root id="category-list">
+								<Command.Input placeholder="Rechercher une catégorie..." bind:value={searchValue} />
+								<Command.List>
+									<Command.Empty>Aucune catégorie trouvée.</Command.Empty>
+									<Command.Group>
+										{#each data.categories.filter((c) => c.cat_label
+												.toLowerCase()
+												.includes(searchValue.toLowerCase())) as category (category.cat_code)}
+											<Command.Item
+												value={category.cat_code}
+												onSelect={() => {
+													selectedCategory = category.cat_code;
+													open = false;
+												}}
+											>
+												<Check
+													class={cn(
+														'mr-2 h-4 w-4',
+														selectedCategory === category.cat_code ? 'opacity-100' : 'opacity-0'
+													)}
+												/>
+												{category.cat_label}
+												<span class="text-muted-foreground ml-auto text-sm">
+													({category.attributeCount} attribut{category.attributeCount > 1
+														? 's'
+														: ''})
+												</span>
+											</Command.Item>
+										{/each}
+									</Command.Group>
+								</Command.List>
+							</Command.Root>
+						</Popover.Content>
+					</Popover.Root>
+				</div>
+
+				<!-- Boutons en bas -->
+				{#if selectedCategory}
+					<div class="flex justify-end">
+						<a
+							href="{resolve('/importV2')}?cat_code={selectedCategory}&database={selectedDatabase}"
+							download="template_{selectedCategory}.csv"
+							data-sveltekit-reload
+						>
+							<Button variant="vert">
+								Télécharger template CSV
+								<CircleArrowRight class="ml-2 h-4 w-4" />
+							</Button>
+						</a>
+					</div>
+				{:else}
+					<div class="flex justify-end">
+						<Button variant="noir" onclick={() => (step = 1)}>
+							Passer cette étape
+							<CircleArrowRight class="ml-2 h-4 w-4" />
+						</Button>
+					</div>
+				{/if}
+			</div>
+		{:else if step === 1}
 			<div class="mb-6">
 				<h2 class="mb-4 text-xl font-semibold text-black">1. Upload fichier CSV :</h2>
 				<p class="mb-4 text-gray-600">Sélectionnez un fichier CSV :</p>
@@ -252,6 +379,14 @@
 					>
 						<Upload class="mr-2 h-5 w-5" />
 						Parcourir les fichiers
+					</Button>
+				</div>
+
+				<!-- Bouton Retour -->
+				<div class="flex justify-start">
+					<Button variant="noir" onclick={() => (step = 0)}>
+						<CircleArrowLeft class="mr-2 h-4 w-4" />
+						Retour
 					</Button>
 				</div>
 			</div>

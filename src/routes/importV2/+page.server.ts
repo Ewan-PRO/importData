@@ -10,6 +10,8 @@ import {
 	type ValidationResult,
 	type ValidationError
 } from './import-logic';
+import { getClient } from '$lib/prisma-meta';
+import type { PrismaClient as CenovDevPrismaClient } from '../../../prisma/cenov_dev/generated/index.js';
 
 // ============================================================================
 // CONFIGURATION
@@ -214,5 +216,39 @@ export const actions: Actions = {
 // LOAD
 // ============================================================================
 export const load: PageServerLoad = async () => {
-	return { config: CONFIG };
+	// ✅ Charger les catégories avec comptage d'attributs
+	const database = 'cenov_dev'; // Par défaut
+	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
+
+	// Charger toutes les catégories avec comptage des attributs liés
+	const categoriesRaw = await prisma.category.findMany({
+		select: {
+			cat_id: true,
+			cat_code: true,
+			cat_label: true
+		},
+		orderBy: {
+			cat_id: 'asc'
+		}
+	});
+
+	// Compter les attributs pour chaque catégorie
+	const categories = await Promise.all(
+		categoriesRaw.map(async (cat) => {
+			const attributeCount = await prisma.category_attribute.count({
+				where: { fk_category: cat.cat_id }
+			});
+			return {
+				cat_id: cat.cat_id,
+				cat_code: cat.cat_code,
+				cat_label: cat.cat_label,
+				attributeCount
+			};
+		})
+	);
+
+	return {
+		config: CONFIG,
+		categories
+	};
 };
