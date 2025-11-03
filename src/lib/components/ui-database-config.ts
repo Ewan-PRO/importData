@@ -12,11 +12,11 @@ import {
 } from 'lucide-svelte';
 
 // Re-export des icônes pour utilisation externe
-export { Rocket as RocketIcon } from 'lucide-svelte';
-export { Settings as SettingsIcon } from 'lucide-svelte';
-export { LockOpen as LockOpenIcon } from 'lucide-svelte';
-export { Package as PackageIcon } from 'lucide-svelte';
-export { Eye as EyeIcon } from 'lucide-svelte';
+export { Rocket } from 'lucide-svelte';
+export { Settings } from 'lucide-svelte';
+export { LockOpen } from 'lucide-svelte';
+export { Package } from 'lucide-svelte';
+export { Eye } from 'lucide-svelte';
 export { Table as TableIcon } from 'lucide-svelte';
 
 // ========== TYPES ==========

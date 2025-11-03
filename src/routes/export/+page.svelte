@@ -27,8 +27,6 @@
 	import ExportPreviewResult from './ExportPreviewResult.svelte';
 	import {
 		SCHEMA_CONFIG,
-		Rocket,
-		Settings,
 		getSchemaIcon,
 		getTableIcon,
 		getBadgeVariant,

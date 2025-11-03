@@ -295,7 +295,9 @@ export async function generateFileName(
 		prefix = Array.from(usedDatabases)[0] as string;
 	} else {
 		// Concaténer tous les noms de bases utilisées
-		prefix = Array.from(usedDatabases).sort((a, b) => a.localeCompare(b)).join('_');
+		prefix = Array.from(usedDatabases)
+			.sort((a, b) => a.localeCompare(b))
+			.join('_');
 	}
 
 	let tablePart: string;

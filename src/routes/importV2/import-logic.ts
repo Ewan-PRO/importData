@@ -485,7 +485,9 @@ async function loadAttributeReference(
 		where: { atr_value: { not: null } }
 	});
 	const map = new Map();
-	for (const attr of attributes) { map.set(attr.atr_value!, attr); }
+	for (const attr of attributes) {
+		map.set(attr.atr_value!, attr);
+	}
 	return map;
 }
 

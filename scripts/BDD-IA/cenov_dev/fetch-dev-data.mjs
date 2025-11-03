@@ -259,7 +259,13 @@ async function fetchDevData() {
 		};
 
 		// Sauvegarde des résultats complets
-		const outputDir = path.join(process.cwd().replaceAll('\\', '/'), 'scripts', 'BDD-IA', 'cenov_dev', 'output');
+		const outputDir = path.join(
+			process.cwd().replaceAll('\\', '/'),
+			'scripts',
+			'BDD-IA',
+			'cenov_dev',
+			'output'
+		);
 		await fs.mkdir(outputDir, { recursive: true });
 
 		const outputFile = path.join(

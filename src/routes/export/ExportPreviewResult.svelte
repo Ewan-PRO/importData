@@ -19,7 +19,6 @@
 	import {
 		SCHEMA_CONFIG,
 		Rocket,
-		Settings,
 		getDatabaseBadgeInfo,
 		getTableIcon,
 		getBadgeVariant,

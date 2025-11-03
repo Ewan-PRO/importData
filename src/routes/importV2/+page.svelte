@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { toast } from 'svelte-sonner';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { Button } from '$lib/components/ui/button';
 	import { Card } from 'flowbite-svelte';
 	import * as Alert from '$lib/components/ui/alert';
@@ -71,9 +72,9 @@
 
 	// Grouper les changements par table
 	let changesByTable = $derived.by(() => {
-		if (!form?.result?.changes) return new Map();
+		if (!form?.result?.changes) return new SvelteMap();
 
-		const grouped = new Map<string, ChangeDetail[]>();
+		const grouped = new SvelteMap<string, ChangeDetail[]>();
 		for (const change of form.result.changes) {
 			const key = `${change.schema}.${change.table}`;
 			if (!grouped.has(key)) {
@@ -465,18 +466,19 @@
 
 							<div class="space-y-4">
 								{#each Array.from(changesByTable.entries()) as [tableKey, changes] (tableKey)}
+									{@const typedChanges = changes as ChangeDetail[]}
 									<div class="rounded-lg border border-gray-200 bg-white p-4">
 										<h5 class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
 											<span class="rounded bg-blue-100 px-2 py-1 font-mono text-xs text-blue-700">
 												{tableKey}
 											</span>
 											<span class="text-gray-500">
-												({changes.length} modification{changes.length > 1 ? 's' : ''})
+												({typedChanges.length} modification{typedChanges.length > 1 ? 's' : ''})
 											</span>
 										</h5>
 
 										<div class="space-y-2">
-											{#each changes as change, i (i)}
+											{#each typedChanges as change, i (i)}
 												{@const isCreation = change.oldValue === null}
 												<div
 													class="grid gap-3 rounded border p-3 text-sm {isCreation
