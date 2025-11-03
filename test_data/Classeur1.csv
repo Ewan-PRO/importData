@@ -1,6 +1,0 @@
-﻿;;;;;;;;pression limite 50Hz;puissance utile nominale 50Hz;tension couplage appelation usuelle 50Hz;"
-Débit volumique nominal 50 Hz";type d'alimentation;indice energétique IE;filtre air integré;valve de régulation de vide intégré;Niveau de bruit 50Hz;"
-Débit volumique nominal 60 Hz";puissance utile nominale 60Hz;;
-;;;;Famille;Sous_famille;Sous_sous_famille;Nom commerciale de la pompe;vide limite;puissance;Tension 50Hz;Débit (50Hz);Nombre de phases;indice energétique IE;Filtre à Air intégré;Valve de régulation de vide intégré;Niveau de bruit 50Hz;Débit (60Hz);puissance 60Hz;;
-cenov_id;supplier_name;supplier_number;category;ATT0000053;ATT0000054;ATT0000055;ATT0000056;ATT0000039 [mbar];ATT0000040 [kW];ATT0000041;ATT0000049;ATT0000044;ATT0000045;ATT0000046;ATT0000047;ATT0000048;ATT0000050;ATT0000051;PRIX TARIF ;DISCOUNT
-PROG051972-SUP0000005;BECKER;G051972;POMPE A PALETTES LUBRIFIEES;U5;U 5.101;U 5.101 VARIAIR;Pompe à palettes lubrifiées U 5.101 VARIAIR TRI 4 kW - G051972;0.1;4;400/480 V;140;triphasé;IE3;non;non;87;150;4;150 €;50%

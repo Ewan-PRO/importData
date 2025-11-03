@@ -1341,7 +1341,6 @@ async function upsertProduct(
 	categoryResult: { entity: { cat_id: number }; isNew: boolean } | null,
 	changes: ChangeDetail[]
 ) {
-	// ✅ CORRECTION : Utiliser la vraie clé métier (fk_supplier, pro_code)
 	const existing = await tx.product.findUnique({
 		where: { fk_supplier_pro_code: { fk_supplier, pro_code: row.pro_code } }
 	});
@@ -1356,8 +1355,7 @@ async function upsertProduct(
 		fk_kit,
 		fk_family: familyIds.fam_id,
 		fk_sfamily: familyIds.sfam_id,
-		fk_ssfamily: familyIds.ssfam_id,
-		fk_document: row.fk_document ? Number.parseInt(row.fk_document) : null
+		fk_ssfamily: familyIds.ssfam_id
 	};
 
 	const product = await tx.product.upsert({
