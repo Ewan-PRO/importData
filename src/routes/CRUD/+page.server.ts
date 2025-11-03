@@ -41,7 +41,7 @@ async function generateDynamicSchemaFromTable(
 
 	const zodFields: Record<string, z.ZodTypeAny> = {};
 
-	metadata.fields.forEach((field) => {
+	for (const field of metadata.fields) {
 		let zodType: z.ZodTypeAny = z.string();
 
 		// Validation selon le type DMMF
@@ -49,12 +49,12 @@ async function generateDynamicSchemaFromTable(
 			case 'Int':
 			case 'Float':
 			case 'Decimal':
-				zodType = zodType.refine((val) => !isNaN(parseFloat(val as string)), {
+				zodType = zodType.refine((val) => !Number.isNaN(parseFloat(val as string)), {
 					message: `${field.name} doit être un nombre valide`
 				});
 				break;
 			case 'DateTime':
-				zodType = zodType.refine((val) => !isNaN(Date.parse(val as string)), {
+				zodType = zodType.refine((val) => !Number.isNaN(Date.parse(val as string)), {
 					message: `${field.name} doit être une date valide`
 				});
 				break;
@@ -78,7 +78,7 @@ async function generateDynamicSchemaFromTable(
 		}
 
 		zodFields[field.name] = zodType;
-	});
+	}
 
 	return {
 		schema: z.object(zodFields),

@@ -110,13 +110,12 @@ model product {
   fk_ssfamily      Int?
   fk_sfamily       Int?
   cat_code         String?            @cenov_preprod_db.VarChar(50)
-  fk_document      Int?
   cross_ref        cross_ref[]
   price_purchase   price_purchase[]
-  document         document?          @relation(fields: [fk_document], references: [doc_id], onDelete: NoAction, onUpdate: NoAction)
   kit              kit?               @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
   supplier         supplier?          @relation(fields: [fk_supplier], references: [sup_id], onDelete: NoAction, onUpdate: NoAction)
   product_category product_category[]
+  document         document[]
 
   @@unique([fk_supplier, pro_code])
   @@schema("produit")
@@ -186,32 +185,20 @@ model attribute_value {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model document {
-  doc_data_source      String?         @cenov_preprod_db.VarChar(500)
-  doc_link_source      String?         @cenov_preprod_db.VarChar(200)
-  doc_type_file_source String?         @cenov_preprod_db.VarChar(50)
-  doc_id               Int             @id @default(autoincrement())
-  doc_file_name        String?         @cenov_preprod_db.VarChar(255)
-  created_at           DateTime?       @default(now()) @cenov_preprod_db.Timestamp(6)
-  updated_at           DateTime?       @default(now()) @cenov_preprod_db.Timestamp(6)
-  product              product[]
-  document_link        document_link[]
+  doc_data_source      String?   @cenov_preprod_db.VarChar(500)
+  doc_link_source      String?   @cenov_preprod_db.VarChar(200)
+  doc_type_file_source String?   @cenov_preprod_db.VarChar(50)
+  doc_id               Int       @id @default(autoincrement())
+  doc_file_name        String?   @cenov_preprod_db.VarChar(255)
+  created_at           DateTime? @default(now()) @cenov_preprod_db.Timestamp(6)
+  updated_at           DateTime? @default(now()) @cenov_preprod_db.Timestamp(6)
+  product_id           Int?
+  doc_category         String?   @cenov_preprod_db.VarChar(50)
+  doc_title            String?   @cenov_preprod_db.VarChar(255)
+  doc_version          String?   @cenov_preprod_db.VarChar(20)
+  is_active            Boolean?  @default(true)
+  product              product?  @relation(fields: [product_id], references: [pro_id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@schema("public")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model document_link {
-  id          Int       @id @default(autoincrement())
-  fk_document Int
-  entity_type String    @cenov_preprod_db.VarChar(50)
-  entity_id   Int
-  created_at  DateTime? @default(now()) @cenov_preprod_db.Timestamp(6)
-  updated_at  DateTime? @default(now()) @cenov_preprod_db.Timestamp(6)
-  document    document  @relation(fields: [fk_document], references: [doc_id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@unique([fk_document, entity_type, entity_id], map: "unique_document_entity")
-  @@index([fk_document], map: "idx_doc_link_document")
-  @@index([entity_type, entity_id], map: "idx_doc_link_entity")
   @@schema("public")
 }
 
@@ -266,33 +253,6 @@ model supplier {
   product         product[]
 
   @@schema("public")
-}
-
-view import_name {
-  pro_id               Int?
-  cenov_id             String?   @cenov_preprod_db.VarChar(50)
-  pro_code             String?   @cenov_preprod_db.VarChar(50)
-  supplier_id          Int?
-  supplier_code        String?   @cenov_preprod_db.VarChar(50)
-  supplier_name        String?   @cenov_preprod_db.VarChar(70)
-  famille              String?   @cenov_preprod_db.VarChar(100)
-  sous_famille         String?   @cenov_preprod_db.VarChar(100)
-  sous_sous_famille    String?   @cenov_preprod_db.VarChar(100)
-  category_label       String?   @cenov_preprod_db.VarChar(100)
-  category_id          String?   @cenov_preprod_db.VarChar(100)
-  nom_commercial       String?   @cenov_preprod_db.VarChar(100)
-  pression_limite_mbar String?
-  puissance_kw         String?
-  att0000053           String?
-  att0000054           String?
-  att0000055           String?
-  att0000056           String?
-  data_source          String?   @cenov_preprod_db.VarChar(500)
-  type_file_source     String?   @cenov_preprod_db.VarChar(50)
-  link_source          String?   @cenov_preprod_db.VarChar(200)
-  modification_date    DateTime? @cenov_preprod_db.Timestamp(6)
-
-  @@schema("produit")
 }
 
 view mv_categorie {

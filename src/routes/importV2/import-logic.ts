@@ -298,7 +298,7 @@ export async function validateCSVData(
 			const value = row[field as keyof CSVRow];
 			if (value && typeof value === 'string' && value.trim() !== '') {
 				const numValue = Number.parseFloat(value);
-				if (isNaN(numValue)) {
+				if (Number.isNaN(numValue)) {
 					errors.push({ line: lineNumber, field, value, error: 'Format numérique invalide' });
 					rowValid = false;
 				}
@@ -324,7 +324,15 @@ export async function validateCSVData(
 			const value = row[field as keyof CSVRow];
 			if (value && typeof value === 'string' && value.trim() !== '') {
 				const isoDate = convertToISODate(value);
-				if (!isoDate) {
+				if (isoDate) {
+					const date = new Date(isoDate);
+					if (Number.isNaN(date.getTime())) {
+						errors.push({ line: lineNumber, field, value, error: 'Date invalide' });
+						rowValid = false;
+					} else {
+						(row[field as keyof CSVRow] as string) = isoDate;
+					}
+				} else {
 					errors.push({
 						line: lineNumber,
 						field,
@@ -332,14 +340,6 @@ export async function validateCSVData(
 						error: 'Format date invalide (YYYY-MM-DD ou DD/MM/YYYY)'
 					});
 					rowValid = false;
-				} else {
-					const date = new Date(isoDate);
-					if (isNaN(date.getTime())) {
-						errors.push({ line: lineNumber, field, value, error: 'Date invalide' });
-						rowValid = false;
-					} else {
-						(row[field as keyof CSVRow] as string) = isoDate;
-					}
 				}
 			}
 		}
@@ -406,7 +406,10 @@ export async function validateCSVData(
 			const key = `${sup_code}:${pro_code}`;
 			const firstOccurrence = seenSupplierProducts.get(key);
 
-			if (firstOccurrence !== undefined) {
+			if (firstOccurrence === undefined) {
+				// Première occurrence
+				seenSupplierProducts.set(key, lineNumber);
+			} else {
 				// Doublon détecté
 				errors.push({
 					line: lineNumber,
@@ -415,9 +418,6 @@ export async function validateCSVData(
 					error: `Doublon : (${sup_code}, ${pro_code}) existe déjà ligne ${firstOccurrence}`
 				});
 				rowValid = false;
-			} else {
-				// Première occurrence
-				seenSupplierProducts.set(key, lineNumber);
 			}
 		}
 
@@ -468,7 +468,7 @@ export async function validateCSVData(
 	}
 
 	// Compter les lignes valides
-	const validRows = Array.from(rowValidityMap.values()).filter((valid) => valid).length;
+	const validRows = Array.from(rowValidityMap.values()).filter(Boolean).length;
 
 	return { success: errors.length === 0, totalRows: data.length, validRows, errors, warnings };
 }
@@ -661,7 +661,7 @@ export async function validateRequiredAttributes(
 	const warnings: ValidationError[] = [];
 
 	// 1. Collecter tous les cat_code uniques
-	const uniqueCatCodes = Array.from(new Set(data.map((row) => row.cat_code).filter((c) => c)));
+	const uniqueCatCodes = Array.from(new Set(data.map((row) => row.cat_code).filter(Boolean)));
 
 	if (uniqueCatCodes.length === 0) {
 		return { success: true, totalRows: data.length, validRows: data.length, errors, warnings };
@@ -729,8 +729,8 @@ export async function validateRequiredAttributes(
 		}
 
 		// Vérifier présence de tous les attributs obligatoires
-		const csvAttrCodes = productAttrs.attributes.map((a) => a.atrValueCode);
-		const missingAttrs = requiredAttrs.filter((req) => !csvAttrCodes.includes(req.code));
+		const csvAttrCodes = new Set(productAttrs.attributes.map((a) => a.atrValueCode));
+		const missingAttrs = requiredAttrs.filter((req) => !csvAttrCodes.has(req.code));
 
 		if (missingAttrs.length > 0) {
 			errors.push({
@@ -1126,7 +1126,32 @@ async function findOrCreateCategory(
 	const existing = categories.length === 1 ? categories[0] : null;
 	let category;
 
-	if (!existing) {
+	if (existing) {
+		// UPDATE - Catégorie existe (peut être racine ou sous-catégorie)
+		const hierarchyInfo = existing.fk_parent ? `sous-catégorie de ${existing.fk_parent}` : 'racine';
+		console.log(`✅ Catégorie trouvée: ${cat_code} - ${cat_label} (${hierarchyInfo})`);
+
+		if (existing.cat_label === cat_label) {
+			category = existing;
+		} else {
+			category = await tx.category.update({
+				where: { cat_id: existing.cat_id },
+				data: { cat_label }
+			});
+
+			changes.push({
+				table: 'category',
+				schema: 'produit',
+				column: 'cat_label',
+				oldValue: existing.cat_label,
+				newValue: cat_label,
+				recordId: cat_code
+			});
+			console.log(
+				`🔄 Catégorie mise à jour: ${cat_code} - "${existing.cat_label}" → "${cat_label}"`
+			);
+		}
+	} else {
 		// CREATE - Nouvelle catégorie (racine par défaut)
 		category = await tx.category.create({
 			data: { fk_parent: null, cat_code, cat_label }
@@ -1151,31 +1176,6 @@ async function findOrCreateCategory(
 			}
 		);
 		console.log(`📦 Catégorie créée (racine): ${cat_label} (${cat_code})`);
-	} else {
-		// UPDATE - Catégorie existe (peut être racine ou sous-catégorie)
-		const hierarchyInfo = existing.fk_parent ? `sous-catégorie de ${existing.fk_parent}` : 'racine';
-		console.log(`✅ Catégorie trouvée: ${cat_code} - ${cat_label} (${hierarchyInfo})`);
-
-		if (existing.cat_label !== cat_label) {
-			category = await tx.category.update({
-				where: { cat_id: existing.cat_id },
-				data: { cat_label }
-			});
-
-			changes.push({
-				table: 'category',
-				schema: 'produit',
-				column: 'cat_label',
-				oldValue: existing.cat_label,
-				newValue: cat_label,
-				recordId: cat_code
-			});
-			console.log(
-				`🔄 Catégorie mise à jour: ${cat_code} - "${existing.cat_label}" → "${cat_label}"`
-			);
-		} else {
-			category = existing;
-		}
 	}
 
 	return { entity: category, isNew: !existing };
@@ -1302,15 +1302,15 @@ async function findOrCreateFamily(
 	const isNew = !family;
 
 	if (!family) {
-		if (fk_parent !== null) {
+		if (fk_parent === null) {
+			family = await tx.family.create({
+				data: { fam_label, fk_parent: null, fk_supplier, fk_category: null }
+			});
+		} else {
 			family = await tx.family.upsert({
 				where: { fam_label_fk_parent_fk_supplier: { fam_label, fk_parent, fk_supplier } },
 				create: { fam_label, fk_parent, fk_supplier, fk_category: null },
 				update: {}
-			});
-		} else {
-			family = await tx.family.create({
-				data: { fam_label, fk_parent: null, fk_supplier, fk_category: null }
 			});
 		}
 
@@ -1659,7 +1659,7 @@ async function importAttributes(
 				finalUnitId = findUnitId(attribute.atr_id, unit, attributeUnitsMap);
 			} else {
 				const unitsData = attributeUnitsMap.get(attribute.atr_id);
-				if (unitsData && unitsData.default_unit_id) {
+				if (unitsData?.default_unit_id) {
 					finalUnitId = unitsData.default_unit_id;
 				}
 			}

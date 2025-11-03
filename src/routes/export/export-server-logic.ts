@@ -88,8 +88,18 @@ export function formatValueForExport(value: unknown): string {
 		return JSON.stringify(value);
 	}
 
-	// Conversion en string
-	return String(value);
+	// Conversion en string pour les primitives (string, number, boolean, bigint)
+	// Optimisation : si déjà une string, retourner directement
+	if (typeof value === 'string') {
+		return value;
+	}
+
+	if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+		return String(value);
+	}
+
+	console.warn('Unexpected type in formatValueForExport:', typeof value, value);
+	return JSON.stringify(value);
 }
 
 // Extractions données tables
@@ -157,7 +167,7 @@ export async function extractTableData(
 	}
 
 	// Construire le nom qualifié de la table avec le schéma
-	const qualifiedTableName = `"${schema.replace(/"/g, '""')}"."${realTableName.replace(/"/g, '""')}"`;
+	const qualifiedTableName = `"${schema.replaceAll('"', '""')}"."${realTableName.replaceAll('"', '""')}"`;
 
 	// Identifier les colonnes datetime (Date + Timestamp) pour formatage spécial
 	const timestampColumns =
@@ -184,7 +194,7 @@ export async function extractTableData(
 			timestampColumns
 				.map(
 					(col) =>
-						`"${col.name.replace(/"/g, '""')}"::text as "${col.name.replace(/"/g, '""')}_str"`
+						`"${col.name.replaceAll('"', '""')}"::text as "${col.name.replaceAll('"', '""')}_str"`
 				)
 				.join(', ');
 	}
@@ -223,7 +233,7 @@ export async function extractTableData(
 
 		data = rawData.map((row, index) => {
 			const processedRow = { ...row };
-			timestampColumns.forEach((col) => {
+			for (const col of timestampColumns) {
 				const stringKey = `${col.name}_str`;
 				if (processedRow[stringKey]) {
 					// Remplacer la version Date par la version string avec microsecondes
@@ -231,7 +241,7 @@ export async function extractTableData(
 					// Supprimer la colonne temporaire _str
 					delete processedRow[stringKey];
 				}
-			});
+			}
 
 			// Debug : log première ligne avant conversion
 			if (index === 0) {
@@ -285,7 +295,7 @@ export async function generateFileName(
 		prefix = Array.from(usedDatabases)[0] as string;
 	} else {
 		// Concaténer tous les noms de bases utilisées
-		prefix = Array.from(usedDatabases).sort().join('_');
+		prefix = Array.from(usedDatabases).sort((a, b) => a.localeCompare(b)).join('_');
 	}
 
 	let tablePart: string;
@@ -402,7 +412,7 @@ export async function generateCSVFile(
 
 				// Échappement CSV spécifique
 				if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-					value = `"${value.replace(/"/g, '""')}"`;
+					value = `"${value.replaceAll('"', '""')}"`;
 				}
 
 				csvRow.push(value);

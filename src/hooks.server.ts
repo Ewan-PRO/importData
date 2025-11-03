@@ -1,11 +1,7 @@
 // Polyfills globaux pour __dirname et __filename en ES modules
 // Doit être défini AVANT tous les imports pour Prisma
-if (typeof globalThis.__dirname === 'undefined') {
-	globalThis.__dirname = '/app';
-}
-if (typeof globalThis.__filename === 'undefined') {
-	globalThis.__filename = '/app/index.js';
-}
+globalThis.__dirname ??= '/app';
+globalThis.__filename ??= '/app/index.js';
 
 import { handleLogto, UserScope } from '@logto/sveltekit';
 import { env } from '$env/dynamic/private';
