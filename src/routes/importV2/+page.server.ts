@@ -105,19 +105,19 @@ export const actions: Actions = {
 				const attrValidation = await validateAttributes(productAttrs.attributes, database);
 
 				// Préfixer erreurs avec pro_cenov_id
-				attrValidation.errors.forEach((err) => {
+				for (const err of attrValidation.errors) {
 					allAttributeErrors.push({
 						...err,
 						field: `[${productAttrs.pro_cenov_id}] ${err.field}`
 					});
-				});
+				}
 
-				attrValidation.warnings.forEach((warn) => {
+				for (const warn of attrValidation.warnings) {
 					allAttributeWarnings.push({
 						...warn,
 						field: `[${productAttrs.pro_cenov_id}] ${warn.field}`
 					});
-				});
+				}
 			}
 
 			// ✅ VALIDATION ATTRIBUTS OBLIGATOIRES - PRIORITÉ 2

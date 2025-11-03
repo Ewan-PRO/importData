@@ -70,12 +70,14 @@ export interface ImportStats {
 	kitAttributes: number;
 }
 
+export type ChangeValue = string | number | null;
+
 export interface ChangeDetail {
 	table: string;
 	schema: string;
 	column: string;
-	oldValue: string | number | null;
-	newValue: string | number | null;
+	oldValue: ChangeValue;
+	newValue: ChangeValue;
 	recordId: string;
 }
 
@@ -112,7 +114,7 @@ function convertToISODate(dateStr: string): string | null {
 
 	if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
 
-	const match = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+	const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(trimmed);
 	if (match) {
 		const [, day, month, year] = match;
 		return `${year}-${month}-${day}`;
@@ -126,7 +128,7 @@ export function parseValueAndUnit(rawValue: string): { value: string; unit: stri
 	}
 
 	const regex = /^(\d+(?:\.\d+)?(?:\/\d+)?)\s*(.*)$/;
-	const match = rawValue.trim().match(regex);
+	const match = regex.exec(rawValue.trim());
 
 	if (!match) return { value: rawValue, unit: null };
 
@@ -147,7 +149,7 @@ export function findUnitId(
 	>
 ): number | null {
 	const unitsData = attributeUnitsMap.get(atr_id);
-	if (!unitsData || !unitsData.units) return null;
+	if (!unitsData?.units) return null;
 
 	const search = unit_string.toLowerCase();
 
@@ -217,7 +219,7 @@ export async function parseCSVContent(
 			const row: Record<string, string> = {};
 			const attributes: AttributePair[] = [];
 
-			headers.forEach((header, index) => {
+			for (const [index, header] of headers.entries()) {
 				const headerTrimmed = header.trim();
 				const value = values[index] ? String(values[index]).trim() : '';
 
@@ -231,7 +233,7 @@ export async function parseCSVContent(
 					// C'est une colonne métier
 					row[headerTrimmed] = value;
 				}
-			});
+			}
 
 			allRows.push(row as unknown as CSVRow);
 			allAttributes.push({
@@ -295,7 +297,7 @@ export async function validateCSVData(
 		for (const field of config.numericFields) {
 			const value = row[field as keyof CSVRow];
 			if (value && typeof value === 'string' && value.trim() !== '') {
-				const numValue = parseFloat(value);
+				const numValue = Number.parseFloat(value);
 				if (isNaN(numValue)) {
 					errors.push({ line: lineNumber, field, value, error: 'Format numérique invalide' });
 					rowValid = false;
@@ -483,7 +485,7 @@ async function loadAttributeReference(
 		where: { atr_value: { not: null } }
 	});
 	const map = new Map();
-	attributes.forEach((attr) => map.set(attr.atr_value!, attr));
+	for (const attr of attributes) { map.set(attr.atr_value!, attr); }
 	return map;
 }
 
@@ -929,80 +931,93 @@ export async function importToDatabase(
 		);
 
 		// ✅ CORRECTION : Augmenter timeout transaction pour import de masse
-		await prisma.$transaction(async (tx) => {
-			for (const row of data) {
-				const supplierResult = await findOrCreateSupplier(tx, row.sup_code, row.sup_label, changes);
-				if (supplierResult.isNew) stats.suppliers++;
-
-				const kitResult = await findOrCreateKit(tx, row.kit_label, changes);
-				if (kitResult.isNew) stats.kits++;
-
-				// cat_code et cat_label sont obligatoires (validés avant l'import)
-				const categoryResult = await findOrCreateCategory(tx, row.cat_code, row.cat_label, changes);
-				if (categoryResult.isNew) stats.categories++;
-
-				// ✅ AUTO-LIAISON: Si nouvelle catégorie, lier les attributs du CSV (tous optionnels)
-				if (categoryResult.isNew) {
-					const productAttrsForCategory = attributesByProduct.find(
-						(a) => a.pro_cenov_id === row.pro_cenov_id
+		await prisma.$transaction(
+			async (tx) => {
+				for (const row of data) {
+					const supplierResult = await findOrCreateSupplier(
+						tx,
+						row.sup_code,
+						row.sup_label,
+						changes
 					);
-					if (productAttrsForCategory) {
-						const attributeCodes = productAttrsForCategory.attributes.map((a) => a.atrValueCode);
-						await autoLinkCategoryAttributes(
+					if (supplierResult.isNew) stats.suppliers++;
+
+					const kitResult = await findOrCreateKit(tx, row.kit_label, changes);
+					if (kitResult.isNew) stats.kits++;
+
+					// cat_code et cat_label sont obligatoires (validés avant l'import)
+					const categoryResult = await findOrCreateCategory(
+						tx,
+						row.cat_code,
+						row.cat_label,
+						changes
+					);
+					if (categoryResult.isNew) stats.categories++;
+
+					// ✅ AUTO-LIAISON: Si nouvelle catégorie, lier les attributs du CSV (tous optionnels)
+					if (categoryResult.isNew) {
+						const productAttrsForCategory = attributesByProduct.find(
+							(a) => a.pro_cenov_id === row.pro_cenov_id
+						);
+						if (productAttrsForCategory) {
+							const attributeCodes = productAttrsForCategory.attributes.map((a) => a.atrValueCode);
+							await autoLinkCategoryAttributes(
+								tx,
+								categoryResult.entity.cat_id,
+								row.cat_code,
+								attributeCodes,
+								changes,
+								metadata
+							);
+						}
+					}
+
+					const familyIds = await resolveFamilyHierarchy(
+						tx,
+						row,
+						supplierResult.entity.sup_id,
+						stats,
+						changes
+					);
+
+					const productResult = await upsertProduct(
+						tx,
+						row,
+						supplierResult.entity.sup_id,
+						kitResult.entity.kit_id,
+						familyIds,
+						categoryResult,
+						changes
+					);
+					if (productResult.isNew) stats.products++;
+					else stats.productsUpdated++;
+
+					await upsertPricePurchase(tx, productResult.entity.pro_id, row, changes);
+					stats.prices++;
+
+					// Récupérer les attributs de CE produit
+					const productAttrs = attributesByProduct.find((a) => a.pro_cenov_id === row.pro_cenov_id);
+
+					if (categoryResult && productAttrs && productAttrs.attributes.length > 0) {
+						const attrStats = await importAttributes(
 							tx,
 							categoryResult.entity.cat_id,
-							row.cat_code,
-							attributeCodes,
+							kitResult.entity.kit_id,
+							row.kit_label, // ✅ Passer kit_label pour éviter requête
+							productAttrs.attributes,
 							changes,
-							metadata
+							metadata // ✅ Passer les métadonnées préchargées
 						);
+						stats.categoryAttributes += attrStats.categoryAttributes;
+						stats.kitAttributes += attrStats.kitAttributes;
 					}
 				}
-
-				const familyIds = await resolveFamilyHierarchy(
-					tx,
-					row,
-					supplierResult.entity.sup_id,
-					stats,
-					changes
-				);
-
-				const productResult = await upsertProduct(
-					tx,
-					row,
-					supplierResult.entity.sup_id,
-					kitResult.entity.kit_id,
-					familyIds,
-					categoryResult,
-					changes
-				);
-				if (productResult.isNew) stats.products++;
-				else stats.productsUpdated++;
-
-				await upsertPricePurchase(tx, productResult.entity.pro_id, row, changes);
-				stats.prices++;
-
-				// Récupérer les attributs de CE produit
-				const productAttrs = attributesByProduct.find((a) => a.pro_cenov_id === row.pro_cenov_id);
-
-				if (categoryResult && productAttrs && productAttrs.attributes.length > 0) {
-					const attrStats = await importAttributes(
-						tx,
-						categoryResult.entity.cat_id,
-						kitResult.entity.kit_id,
-						row.kit_label, // ✅ Passer kit_label pour éviter requête
-						productAttrs.attributes,
-						changes,
-						metadata // ✅ Passer les métadonnées préchargées
-					);
-					stats.categoryAttributes += attrStats.categoryAttributes;
-					stats.kitAttributes += attrStats.kitAttributes;
-				}
+			},
+			{
+				timeout: 60000, // 60 secondes (au lieu de 5s par défaut)
+				maxWait: 10000 // 10 secondes d'attente max pour obtenir une connexion
 			}
-		}, {
-			timeout: 60000,  // 60 secondes (au lieu de 5s par défaut)
-			maxWait: 10000   // 10 secondes d'attente max pour obtenir une connexion
-		});
+		);
 
 		return { success: true, stats, changes };
 	} catch (error) {
@@ -1029,22 +1044,24 @@ async function findOrCreateSupplier(
 	});
 
 	if (!existing) {
-		changes.push({
-			table: 'supplier',
-			schema: 'public',
-			column: 'sup_code',
-			oldValue: null,
-			newValue: sup_code,
-			recordId: sup_code
-		});
-		changes.push({
-			table: 'supplier',
-			schema: 'public',
-			column: 'sup_label',
-			oldValue: null,
-			newValue: sup_label,
-			recordId: sup_code
-		});
+		changes.push(
+			{
+				table: 'supplier',
+				schema: 'public',
+				column: 'sup_code',
+				oldValue: null,
+				newValue: sup_code,
+				recordId: sup_code
+			},
+			{
+				table: 'supplier',
+				schema: 'public',
+				column: 'sup_label',
+				oldValue: null,
+				newValue: sup_label,
+				recordId: sup_code
+			}
+		);
 		console.log(`📦 Fournisseur créé: ${sup_label} (${sup_code})`);
 	} else if (existing.sup_label !== sup_label) {
 		changes.push({
@@ -1115,22 +1132,24 @@ async function findOrCreateCategory(
 			data: { fk_parent: null, cat_code, cat_label }
 		});
 
-		changes.push({
-			table: 'category',
-			schema: 'produit',
-			column: 'cat_code',
-			oldValue: null,
-			newValue: cat_code,
-			recordId: cat_code
-		});
-		changes.push({
-			table: 'category',
-			schema: 'produit',
-			column: 'cat_label',
-			oldValue: null,
-			newValue: cat_label,
-			recordId: cat_code
-		});
+		changes.push(
+			{
+				table: 'category',
+				schema: 'produit',
+				column: 'cat_code',
+				oldValue: null,
+				newValue: cat_code,
+				recordId: cat_code
+			},
+			{
+				table: 'category',
+				schema: 'produit',
+				column: 'cat_label',
+				oldValue: null,
+				newValue: cat_label,
+				recordId: cat_code
+			}
+		);
 		console.log(`📦 Catégorie créée (racine): ${cat_label} (${cat_code})`);
 	} else {
 		// UPDATE - Catégorie existe (peut être racine ou sous-catégorie)
@@ -1336,7 +1355,7 @@ async function upsertProduct(
 		fk_family: familyIds.fam_id,
 		fk_sfamily: familyIds.sfam_id,
 		fk_ssfamily: familyIds.ssfam_id,
-		fk_document: row.fk_document ? parseInt(row.fk_document) : null
+		fk_document: row.fk_document ? Number.parseInt(row.fk_document) : null
 	};
 
 	const product = await tx.product.upsert({
@@ -1369,8 +1388,8 @@ async function upsertProduct(
 					table: 'product',
 					schema: 'produit',
 					column: label,
-					oldValue: oldValue as string | number | null,
-					newValue: newValue as string | number | null,
+					oldValue: oldValue as ChangeValue,
+					newValue: newValue as ChangeValue,
 					recordId: row.pro_cenov_id
 				});
 			}
@@ -1378,56 +1397,59 @@ async function upsertProduct(
 		console.log(`🔄 Produit mis à jour: ${row.pro_cenov_id} (${row.pro_code})`);
 	} else {
 		// Tracker la création du produit avec tous ses champs
-		changes.push({
-			table: 'product',
-			schema: 'produit',
-			column: 'pro_cenov_id',
-			oldValue: null,
-			newValue: row.pro_cenov_id,
-			recordId: row.pro_cenov_id
-		});
-		changes.push({
-			table: 'product',
-			schema: 'produit',
-			column: 'pro_code',
-			oldValue: null,
-			newValue: row.pro_code,
-			recordId: row.pro_cenov_id
-		});
-		changes.push({
-			table: 'product',
-			schema: 'produit',
-			column: 'sup_code',
-			oldValue: null,
-			newValue: row.sup_code,
-			recordId: row.pro_cenov_id
-		});
-		changes.push({
-			table: 'product',
-			schema: 'produit',
-			column: 'sup_label',
-			oldValue: null,
-			newValue: row.sup_label,
-			recordId: row.pro_cenov_id
-		});
-		changes.push({
-			table: 'product',
-			schema: 'produit',
-			column: 'cat_code',
-			oldValue: null,
-			newValue: row.cat_code,
-			recordId: row.pro_cenov_id
-		});
+		const productChanges: ChangeDetail[] = [
+			{
+				table: 'product',
+				schema: 'produit',
+				column: 'pro_cenov_id',
+				oldValue: null,
+				newValue: row.pro_cenov_id,
+				recordId: row.pro_cenov_id
+			},
+			{
+				table: 'product',
+				schema: 'produit',
+				column: 'pro_code',
+				oldValue: null,
+				newValue: row.pro_code,
+				recordId: row.pro_cenov_id
+			},
+			{
+				table: 'product',
+				schema: 'produit',
+				column: 'sup_code',
+				oldValue: null,
+				newValue: row.sup_code,
+				recordId: row.pro_cenov_id
+			},
+			{
+				table: 'product',
+				schema: 'produit',
+				column: 'sup_label',
+				oldValue: null,
+				newValue: row.sup_label,
+				recordId: row.pro_cenov_id
+			},
+			{
+				table: 'product',
+				schema: 'produit',
+				column: 'cat_code',
+				oldValue: null,
+				newValue: row.cat_code,
+				recordId: row.pro_cenov_id
+			}
+		];
 		if (row.fk_document) {
-			changes.push({
+			productChanges.push({
 				table: 'product',
 				schema: 'produit',
 				column: 'fk_document',
 				oldValue: null,
-				newValue: parseInt(row.fk_document),
+				newValue: Number.parseInt(row.fk_document),
 				recordId: row.pro_cenov_id
 			});
 		}
+		changes.push(...productChanges);
 		console.log(`✅ Produit créé: ${row.pro_cenov_id} (${row.pro_code})`);
 	}
 
@@ -1474,16 +1496,16 @@ async function upsertPricePurchase(
 	changes: ChangeDetail[]
 ) {
 	const pp_discount =
-		row.pp_discount && row.pp_discount.trim() !== '' ? parseFloat(row.pp_discount) : null;
+		row.pp_discount && row.pp_discount.trim() !== '' ? Number.parseFloat(row.pp_discount) : null;
 	const pp_date = new Date(row.pp_date);
-	const pp_amount = parseFloat(row.pp_amount);
+	const pp_amount = Number.parseFloat(row.pp_amount);
 
 	// Vérifier si un prix existe déjà
 	const existing = await tx.price_purchase.findUnique({
 		where: { fk_product_pp_date: { fk_product, pp_date } }
 	});
 
-	const fk_document = row.fk_document ? parseInt(row.fk_document) : null;
+	const fk_document = row.fk_document ? Number.parseInt(row.fk_document) : null;
 
 	await tx.price_purchase.upsert({
 		where: { fk_product_pp_date: { fk_product, pp_date } },
