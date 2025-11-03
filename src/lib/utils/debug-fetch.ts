@@ -10,7 +10,7 @@ export async function debugFetch(
 	context = 'UNKNOWN'
 ): Promise<Response> {
 	const startTime = performance.now();
-	const requestId = Math.random().toString(36).substr(2, 9);
+	const requestId = Math.random().toString(36).slice(2, 11);
 
 	console.log(`🚀 [FETCH-${context}] [${requestId}] Début requête vers: ${url}`);
 	console.log(`📋 [FETCH-${context}] [${requestId}] Options:`, {
@@ -55,12 +55,12 @@ export async function debugFetch(
 			duration: `${duration}ms`
 		});
 
-		if (!response.ok) {
+		if (response.ok) {
+			console.log(`✅ [FETCH-${context}] [${requestId}] Succès en ${duration}ms`);
+		} else {
 			console.error(
 				`❌ [FETCH-${context}] [${requestId}] Erreur HTTP: ${response.status} - ${response.statusText}`
 			);
-		} else {
-			console.log(`✅ [FETCH-${context}] [${requestId}] Succès en ${duration}ms`);
 		}
 
 		return response;

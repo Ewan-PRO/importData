@@ -49,7 +49,7 @@ async function generateDynamicSchemaFromTable(
 			case 'Int':
 			case 'Float':
 			case 'Decimal':
-				zodType = zodType.refine((val) => !Number.isNaN(parseFloat(val as string)), {
+				zodType = zodType.refine((val) => !Number.isNaN(Number.parseFloat(val as string)), {
 					message: `${field.name} doit être un nombre valide`
 				});
 				break;
@@ -113,7 +113,7 @@ async function createRecordDynamic(
 	const insertData: Record<string, unknown> = {};
 
 	// Conversion automatique selon les types DMMF
-	metadata.fields.forEach((field) => {
+	for (const field of metadata.fields) {
 		if (formData[field.name] !== undefined && !field.isPrimaryKey) {
 			const value = formData[field.name];
 
@@ -122,17 +122,17 @@ async function createRecordDynamic(
 				if (!field.isRequired) {
 					insertData[field.name] = null;
 				}
-				return;
+				continue;
 			}
 
 			// Conversion selon le type DMMF
 			switch (field.type) {
 				case 'Int':
-					insertData[field.name] = parseInt(value, 10);
+					insertData[field.name] = Number.parseInt(value, 10);
 					break;
 				case 'Float':
 				case 'Decimal':
-					insertData[field.name] = parseFloat(value);
+					insertData[field.name] = Number.parseFloat(value);
 					break;
 				case 'Boolean':
 					insertData[field.name] = ['true', '1'].includes(value.toLowerCase());
@@ -144,7 +144,7 @@ async function createRecordDynamic(
 					insertData[field.name] = value;
 			}
 		}
-	});
+	}
 
 	return await createRecord(database, tableName, insertData);
 }
@@ -172,7 +172,7 @@ async function updateRecordDynamic(
 	const updateData: Record<string, unknown> = {};
 
 	// Conversion automatique selon les types DMMF
-	metadata.fields.forEach((field) => {
+	for (const field of metadata.fields) {
 		if (formData[field.name] !== undefined && !field.isPrimaryKey) {
 			const value = formData[field.name];
 
@@ -180,17 +180,17 @@ async function updateRecordDynamic(
 				if (!field.isRequired) {
 					updateData[field.name] = null;
 				}
-				return;
+				continue;
 			}
 
 			// Conversion selon le type DMMF
 			switch (field.type) {
 				case 'Int':
-					updateData[field.name] = parseInt(value, 10);
+					updateData[field.name] = Number.parseInt(value, 10);
 					break;
 				case 'Float':
 				case 'Decimal':
-					updateData[field.name] = parseFloat(value);
+					updateData[field.name] = Number.parseFloat(value);
 					break;
 				case 'Boolean':
 					updateData[field.name] = ['true', '1'].includes(value.toLowerCase());
@@ -202,7 +202,7 @@ async function updateRecordDynamic(
 					updateData[field.name] = value;
 			}
 		}
-	});
+	}
 
 	return await updateRecord(database, tableName, { [primaryKey]: id }, updateData);
 }
@@ -389,7 +389,7 @@ export const actions: Actions = {
 			const result = await updateRecordDynamic(
 				tableInfo.database,
 				tableInfo.tableName,
-				parseInt(id),
+				Number.parseInt(id, 10),
 				updateData
 			);
 			return { success: true, data: result };
@@ -416,7 +416,7 @@ export const actions: Actions = {
 		const tableInfo = await getFirstAvailableTable();
 
 		try {
-			await deleteRecordDynamic(tableInfo.database, tableInfo.tableName, parseInt(id));
+			await deleteRecordDynamic(tableInfo.database, tableInfo.tableName, Number.parseInt(id, 10));
 			return { success: true };
 		} catch (err) {
 			console.error('Erreur lors de la suppression:', err);

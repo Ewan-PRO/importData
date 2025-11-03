@@ -10,8 +10,8 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import fs from 'fs/promises';
-import path from 'path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 const prisma = new PrismaClient({
 	datasources: {
@@ -244,20 +244,19 @@ async function fetchCenovViews() {
 // Execution si le script est lance directement
 if (
 	import.meta.url ===
-		`file://${process.cwd().replace(/\\/g, '/')}/scripts/BDD-IA/cenov/fetch-cenov-views.mjs` ||
+		`file://${process.cwd().replaceAll('\\', '/')}/scripts/BDD-IA/cenov/fetch-cenov-views.mjs` ||
 	process.argv[1]?.endsWith('fetch-cenov-views.mjs')
 ) {
 	console.log('🚀 Demarrage du script de recuperation des vues cenov...');
-	fetchCenovViews()
-		.then(() => {
-			console.log('✅ Script termine avec succes');
-			process.exit(0);
-		})
-		.catch((error) => {
-			console.error('❌ Echec du script:', error);
-			console.error('Details:', error.stack);
-			process.exit(1);
-		});
+	try {
+		await fetchCenovViews();
+		console.log('✅ Script termine avec succes');
+		process.exit(0);
+	} catch (error) {
+		console.error('❌ Echec du script:', error);
+		console.error('Details:', error.stack);
+		process.exit(1);
+	}
 }
 
 export {

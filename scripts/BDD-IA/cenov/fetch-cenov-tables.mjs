@@ -10,8 +10,8 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import fs from 'fs/promises';
-import path from 'path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 const prisma = new PrismaClient({
 	datasources: {
@@ -186,20 +186,19 @@ async function fetchCenovTables() {
 // Execution si le script est lance directement
 if (
 	import.meta.url ===
-		`file://${process.cwd().replace(/\\/g, '/')}/scripts/BDD-IA/cenov/fetch-cenov-tables.mjs` ||
+		`file://${process.cwd().replaceAll('\\', '/')}/scripts/BDD-IA/cenov/fetch-cenov-tables.mjs` ||
 	process.argv[1]?.endsWith('fetch-cenov-tables.mjs')
 ) {
 	console.log('🚀 Demarrage du script de recuperation des tables cenov...');
-	fetchCenovTables()
-		.then(() => {
-			console.log('✅ Script termine avec succes');
-			process.exit(0);
-		})
-		.catch((error) => {
-			console.error('❌ Echec du script:', error);
-			console.error('Details:', error.stack);
-			process.exit(1);
-		});
+	try {
+		await fetchCenovTables();
+		console.log('✅ Script termine avec succes');
+		process.exit(0);
+	} catch (error) {
+		console.error('❌ Echec du script:', error);
+		console.error('Details:', error.stack);
+		process.exit(1);
+	}
 }
 
 export { fetchCenovTables, getTablesForSchema, getTableData, SCHEMAS };

@@ -10,8 +10,8 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import fs from 'fs/promises';
-import path from 'path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { getTablesForSchema, getTableData, SCHEMAS } from './fetch-dev-tables.mjs';
 import {
 	getViewsForSchema,
@@ -259,7 +259,7 @@ async function fetchDevData() {
 		};
 
 		// Sauvegarde des résultats complets
-		const outputDir = path.join(process.cwd(), 'scripts', 'BDD-IA', 'cenov_dev', 'output');
+		const outputDir = path.join(process.cwd().replaceAll('\\', '/'), 'scripts', 'BDD-IA', 'cenov_dev', 'output');
 		await fs.mkdir(outputDir, { recursive: true });
 
 		const outputFile = path.join(
@@ -330,15 +330,14 @@ async function fetchDevData() {
 
 // Exécution si le script est lancé directement
 if (import.meta.url.includes('fetch-dev-data.mjs')) {
-	fetchDevData()
-		.then(() => {
-			console.log('\n🎉 Script principal cenov_dev terminé avec succès');
-			process.exit(0);
-		})
-		.catch((error) => {
-			console.error('\n💥 Échec du script principal cenov_dev:', error);
-			process.exit(1);
-		});
+	try {
+		await fetchDevData();
+		console.log('\n🎉 Script principal cenov_dev terminé avec succès');
+		process.exit(0);
+	} catch (error) {
+		console.error('\n💥 Échec du script principal cenov_dev:', error);
+		process.exit(1);
+	}
 }
 
 export { fetchDevData, getDevDatabaseInfo };

@@ -292,9 +292,7 @@ export async function getDatabases(): Promise<DatabaseConfig> {
 		throw new Error('[PRISMA-META] getDatabases ne peut être appelé côté client');
 	}
 
-	if (!databasesCache) {
-		databasesCache = await createDatabases();
-	}
+	databasesCache ??= await createDatabases();
 
 	return databasesCache;
 }
@@ -316,7 +314,7 @@ function detectPrimaryKeyFromDMMF(model: DMMFModelFromPrisma): string | null {
 
 	// 2. Pour les vues : chercher le premier champ "id-like"
 	const idLikeFields = model.fields.filter((f) =>
-		f.name.match(/^(.*_id|id|pro_id|cat_id|atr_id|kit_id|fam_id|frs_id|par_id|kat_id)$/)
+		/^(.*_id|id|pro_id|cat_id|atr_id|kit_id|fam_id|frs_id|par_id|kat_id)$/.test(f.name)
 	);
 
 	if (idLikeFields.length > 0) {
@@ -400,8 +398,8 @@ export async function getPrimaryKeyFields(
 	const modelWithPK = model as DMMFModelFromPrisma & { primaryKey?: { fields?: string[] } | null };
 
 	// 1. Clé primaire composite (@@id)
-	if (modelWithPK.primaryKey?.fields && modelWithPK.primaryKey.fields.length > 0) {
-		return modelWithPK.primaryKey.fields;
+	if ((modelWithPK.primaryKey?.fields?.length ?? 0) > 0) {
+		return modelWithPK.primaryKey?.fields ?? [];
 	}
 
 	// 2. Clé primaire simple (@id)
@@ -492,7 +490,7 @@ export async function getAllDatabaseTables(): Promise<TableInfo[]> {
 	const allTables = [...cenovTables, ...cenovDevTables, ...cenovPreprodTables];
 
 	// Tri uniforme : par database → par schéma → par type (tables avant vues) → par nom
-	const sortedTables = allTables.sort((a, b) => {
+	const sortedTables = allTables.toSorted((a, b) => {
 		// Définir la priorité du type (table avant vue)
 		const getTypeOrder = (category: 'table' | 'view') => (category === 'table' ? 1 : 2);
 
@@ -651,43 +649,43 @@ function getUniqueFieldsFromDMMF(model: Record<string, unknown>): string[] {
 	const fields = model.fields as Array<{ name: string; isId?: boolean; isUnique?: boolean }>;
 	if (fields) {
 		const idFields = fields.filter((f) => f.isId);
-		idFields.forEach((field) => {
+		for (const field of idFields) {
 			if (!uniqueFields.includes(field.name)) {
 				uniqueFields.push(field.name);
 			}
-		});
+		}
 
 		// 2. Champs avec @unique
 		const uniqueSingleFields = fields.filter((f) => f.isUnique);
-		uniqueSingleFields.forEach((field) => {
+		for (const field of uniqueSingleFields) {
 			if (!uniqueFields.includes(field.name)) {
 				uniqueFields.push(field.name);
 			}
-		});
+		}
 	}
 
 	// 3. Contraintes composées @@unique et @@id
 	const uniqueIndexes = model.uniqueIndexes as Array<{ fields?: string[] }> | undefined;
 	if (uniqueIndexes) {
-		uniqueIndexes.forEach((index) => {
+		for (const index of uniqueIndexes) {
 			if (index.fields) {
-				index.fields.forEach((fieldName) => {
+				for (const fieldName of index.fields) {
 					if (!uniqueFields.includes(fieldName)) {
 						uniqueFields.push(fieldName);
 					}
-				});
+				}
 			}
-		});
+		}
 	}
 
 	// 4. Clé primaire composite @@id
 	const primaryKey = model.primaryKey as { fields?: string[] } | undefined;
-	if (primaryKey && primaryKey.fields) {
-		primaryKey.fields.forEach((fieldName) => {
+	if (primaryKey?.fields) {
+		for (const fieldName of primaryKey.fields) {
 			if (!uniqueFields.includes(fieldName)) {
 				uniqueFields.push(fieldName);
 			}
-		});
+		}
 	}
 
 	return uniqueFields;
@@ -699,9 +697,9 @@ function generateValidatorsFromDMMF(
 ): Record<string, (value: unknown) => boolean> {
 	const validators: Record<string, (value: unknown) => boolean> = {};
 
-	fields.forEach((field) => {
+	for (const field of fields) {
 		validators[field.name] = createValidatorForField(field);
-	});
+	}
 
 	return validators;
 }
@@ -729,13 +727,13 @@ function createValidatorForField(field: FieldInfo): (value: unknown) => boolean 
 			case 'Int':
 			case 'BigInt': {
 				const numValue = Number(value);
-				return !isNaN(numValue) && Number.isInteger(numValue);
+				return !Number.isNaN(numValue) && Number.isInteger(numValue);
 			}
 
 			case 'Float':
 			case 'Decimal': {
 				const floatValue = Number(value);
-				return !isNaN(floatValue);
+				return !Number.isNaN(floatValue);
 			}
 
 			case 'Boolean':
@@ -748,10 +746,10 @@ function createValidatorForField(field: FieldInfo): (value: unknown) => boolean 
 				);
 
 			case 'DateTime':
-				if (value instanceof Date) return !isNaN(value.getTime());
+				if (value instanceof Date) return !Number.isNaN(value.getTime());
 				if (typeof value === 'string') {
 					const date = new Date(value);
-					return !isNaN(date.getTime());
+					return !Number.isNaN(date.getTime());
 				}
 				return false;
 
@@ -860,7 +858,7 @@ export async function createRecord(
 		create: (args: { data: unknown }) => Promise<Record<string, unknown>>;
 	};
 
-	if (!model || !model.create) {
+	if (!model?.create) {
 		throw new Error(`Table ${tableName} not found in database ${database}`);
 	}
 
@@ -883,7 +881,7 @@ export async function updateRecord(
 		updateMany: (args: { where: unknown; data: unknown }) => Promise<{ count: number }>;
 	};
 
-	if (!model || !model.updateMany) {
+	if (!model?.updateMany) {
 		throw new Error(`Table ${tableName} not found in database ${database}`);
 	}
 
@@ -905,7 +903,7 @@ export async function findRecord(
 		findFirst: (args: { where: unknown }) => Promise<Record<string, unknown> | null>;
 	};
 
-	if (!model || !model.findFirst) {
+	if (!model?.findFirst) {
 		throw new Error(`Table ${tableName} not found in database ${database}`);
 	}
 

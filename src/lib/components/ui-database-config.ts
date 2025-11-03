@@ -1,6 +1,7 @@
 // Configuration UI centralisée pour bases de données, schémas et tables
 // Utilisé par import, export et tous les composants
 
+// Imports pour utilisation locale dans ce fichier
 import {
 	Rocket as RocketIcon,
 	Settings as SettingsIcon,
@@ -10,15 +11,13 @@ import {
 	Table as TableIconComponent
 } from 'lucide-svelte';
 
-// Re-export des icônes pour utilisation directe
-export {
-	RocketIcon as Rocket,
-	SettingsIcon as Settings,
-	LockOpenIcon as LockOpen,
-	PackageIcon as Package,
-	EyeIcon as Eye,
-	TableIconComponent as TableIcon
-};
+// Re-export des icônes pour utilisation externe
+export { Rocket as RocketIcon } from 'lucide-svelte';
+export { Settings as SettingsIcon } from 'lucide-svelte';
+export { LockOpen as LockOpenIcon } from 'lucide-svelte';
+export { Package as PackageIcon } from 'lucide-svelte';
+export { Eye as EyeIcon } from 'lucide-svelte';
+export { Table as TableIcon } from 'lucide-svelte';
 
 // ========== TYPES ==========
 export type DatabaseName = 'cenov' | 'cenov_dev' | 'cenov_preprod';

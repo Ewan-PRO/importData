@@ -10,8 +10,8 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import fs from 'fs/promises';
-import path from 'path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { getTablesForSchema, getTableData, SCHEMAS } from './fetch-cenov-tables.mjs';
 import {
 	getViewsForSchema,
@@ -330,15 +330,14 @@ async function fetchCenovData() {
 
 // Execution si le script est lance directement
 if (import.meta.url.includes('fetch-cenov-data.mjs')) {
-	fetchCenovData()
-		.then(() => {
-			console.log('\n🎉 Script principal cenov termine avec succes');
-			process.exit(0);
-		})
-		.catch((error) => {
-			console.error('\n💥 Echec du script principal cenov:', error);
-			process.exit(1);
-		});
+	try {
+		await fetchCenovData();
+		console.log('\n🎉 Script principal cenov termine avec succes');
+		process.exit(0);
+	} catch (error) {
+		console.error('\n💥 Echec du script principal cenov:', error);
+		process.exit(1);
+	}
 }
 
 export { fetchCenovData, getCenovDatabaseInfo };

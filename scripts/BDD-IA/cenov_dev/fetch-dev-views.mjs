@@ -10,8 +10,8 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import fs from 'fs/promises';
-import path from 'path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 const prisma = new PrismaClient({
 	datasources: {
@@ -196,7 +196,7 @@ async function fetchDevViews() {
 		}
 
 		// Sauvegarde des résultats
-		const outputDir = path.join(process.cwd(), 'scripts', 'BDD-IA', 'cenov_dev', 'output');
+		const outputDir = path.join(process.cwd().replaceAll('\\', '/'), 'scripts', 'BDD-IA', 'cenov_dev', 'output');
 		await fs.mkdir(outputDir, { recursive: true });
 
 		const outputFile = path.join(
@@ -244,20 +244,19 @@ async function fetchDevViews() {
 // Exécution si le script est lancé directement
 if (
 	import.meta.url ===
-		`file://${process.cwd().replace(/\\/g, '/')}/scripts/BDD-IA/cenov_dev/fetch-dev-views.mjs` ||
+		`file://${process.cwd().replaceAll('\\', '/')}/scripts/BDD-IA/cenov_dev/fetch-dev-views.mjs` ||
 	process.argv[1]?.endsWith('fetch-dev-views.mjs')
 ) {
 	console.log('🚀 Démarrage du script de récupération des vues cenov_dev...');
-	fetchDevViews()
-		.then(() => {
-			console.log('✅ Script terminé avec succès');
-			process.exit(0);
-		})
-		.catch((error) => {
-			console.error('❌ Échec du script:', error);
-			console.error('Détails:', error.stack);
-			process.exit(1);
-		});
+	try {
+		await fetchDevViews();
+		console.log('✅ Script terminé avec succès');
+		process.exit(0);
+	} catch (error) {
+		console.error('❌ Échec du script:', error);
+		console.error('Détails:', error.stack);
+		process.exit(1);
+	}
 }
 
 export {

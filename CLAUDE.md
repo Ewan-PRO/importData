@@ -508,6 +508,64 @@ const data: TableData[] = [];
 - Entrées utilisateur nécessitant validation
 - Structures de données génériques
 
+## Corrections SonarLint Récurrentes
+
+**Erreurs fréquentes et leurs corrections rapides :**
+
+```typescript
+// ❌ S7773 - Fonctions globales
+isNaN(value)
+parseInt(value, 10)
+parseFloat(value)
+
+// ✅ S7773 - Méthodes Number
+Number.isNaN(value)
+Number.parseInt(value, 10)
+Number.parseFloat(value)
+
+// ❌ S7728 - forEach avec return
+items.forEach(item => {
+  if (condition) return;  // Ne sort pas de la fonction parente !
+  process(item);
+});
+
+// ✅ S7728 - for...of avec continue
+for (const item of items) {
+  if (condition) continue;
+  process(item);
+}
+
+// ❌ S6551 - Stringification implicite
+return String(value);  // Type unknown
+
+// ✅ S6551 - Type narrowing explicite
+if (typeof value === 'string') return value;
+if (typeof value === 'number') return String(value);
+return JSON.stringify(value);
+
+// ❌ S2871 - Sort sans comparateur
+array.sort()  // Tri alphabétique par défaut
+
+// ✅ S2871 - Sort avec comparateur
+array.sort((a, b) => a.localeCompare(b))  // Strings
+array.sort((a, b) => a - b)               // Numbers
+
+// ❌ S7741 + S6606 - typeof undefined
+if (typeof globalThis.foo === 'undefined') {
+  globalThis.foo = defaultValue;
+}
+
+// ✅ S7741 + S6606 - Nullish coalescing
+globalThis.foo ??= defaultValue;
+```
+
+**Checklist avant commit :**
+- [ ] Remplacer `isNaN/parseInt/parseFloat` → `Number.*`
+- [ ] Remplacer `.forEach()` avec `return` → `for...of` avec `continue`
+- [ ] Ajouter type narrowing explicite pour `unknown`
+- [ ] Ajouter comparateur à `.sort()`
+- [ ] Utiliser `??=` au lieu de `typeof === 'undefined'`
+
 ## Guide Composants UI
 
 **Variantes de boutons disponibles :**

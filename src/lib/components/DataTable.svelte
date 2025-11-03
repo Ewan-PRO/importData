@@ -229,7 +229,7 @@
 										? getNiveauNumber(column.key)! + 1
 										: ''} :
 								</span>
-								<span class="inline break-words">{formatValue(item, column)}</span>
+								<span class="inline wrap-break-word">{formatValue(item, column)}</span>
 							</div>
 						</div>
 					{/if}
@@ -253,7 +253,7 @@
 </div>
 
 <style>
-	.break-words {
+	.wrap-break-word {
 		overflow-wrap: break-word;
 		word-wrap: break-word;
 		hyphens: auto;

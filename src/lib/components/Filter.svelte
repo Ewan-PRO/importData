@@ -61,7 +61,7 @@
 
 <div class="mb-4 flex flex-col gap-3 sm:flex-row">
 	<!-- Champ de recherche -->
-	<div class="flex-grow">
+	<div class="grow">
 		<div class="flex flex-col gap-3 sm:flex-row">
 			{#if fields.length > 1}
 				<div class="w-full sm:w-1/4">
