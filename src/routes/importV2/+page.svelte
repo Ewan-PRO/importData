@@ -85,7 +85,6 @@
 	// ✅ États pour le Combobox (ÉTAPE 0)
 	let open = $state(false);
 	let selectedCategory = $state<string>(''); // cat_code
-	let searchValue = $state('');
 
 	// Flags pour détecter les nouvelles réponses (Solution 5 - Pattern Svelte 5)
 	let validationReceived = $state(false);
@@ -165,7 +164,6 @@
 		resultReceived = false;
 		// Réinitialiser états Combobox
 		selectedCategory = '';
-		searchValue = '';
 		open = false;
 	}
 
@@ -245,46 +243,52 @@
 							role="combobox"
 							aria-expanded={open}
 							aria-controls="category-list"
-							class="border-input bg-background ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+							class="border-input bg-background ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring flex h-12 w-full items-center justify-between rounded-md border-2 px-4 py-3 text-sm shadow-sm transition-all focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-200 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{#if selectedCategory}
 								{@const category = data.categories.find((c) => c.cat_code === selectedCategory)}
-								{category?.cat_label} ({category?.attributeCount} attribut{category?.attributeCount
-									? 's'
-									: ''})
+								<span class="font-medium">{category?.cat_label}</span>
+								<span class="text-muted-foreground ml-2 text-xs">
+									({category?.attributeCount ?? 0} attribut{(category?.attributeCount ?? 0) > 1
+										? 's'
+										: ''})
+								</span>
 							{:else}
-								Rechercher une catégorie...
+								<span class="text-gray-500">Rechercher une catégorie...</span>
 							{/if}
 							<ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
 						</Popover.Trigger>
-						<Popover.Content class="w-[600px] p-0">
+						<Popover.Content class="w-[700px] p-0">
 							<Command.Root id="category-list">
-								<Command.Input placeholder="Rechercher une catégorie..." bind:value={searchValue} />
-								<Command.List>
+								<Command.Input placeholder="Tapez pour rechercher..." />
+								<Command.List class="max-h-[400px]">
 									<Command.Empty>Aucune catégorie trouvée.</Command.Empty>
 									<Command.Group>
-										{#each data.categories.filter((c) => c.cat_label
-												.toLowerCase()
-												.includes(searchValue.toLowerCase())) as category (category.cat_code)}
+										{#each data.categories as category (category.cat_code)}
 											<Command.Item
-												value={category.cat_code}
+												value={category.cat_label}
 												onSelect={() => {
 													selectedCategory = category.cat_code;
 													open = false;
 												}}
+												class="cursor-pointer py-3"
 											>
 												<Check
 													class={cn(
-														'mr-2 h-4 w-4',
+														'mr-3 h-4 w-4 text-green-600',
 														selectedCategory === category.cat_code ? 'opacity-100' : 'opacity-0'
 													)}
 												/>
-												{category.cat_label}
-												<span class="text-muted-foreground ml-auto text-sm">
-													({category.attributeCount} attribut{category.attributeCount > 1
-														? 's'
-														: ''})
-												</span>
+												<div class="flex flex-1 items-center justify-between">
+													<span class="text-sm font-medium">{category.cat_label}</span>
+													<span
+														class="ml-4 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
+													>
+														{category.attributeCount} attribut{category.attributeCount > 1
+															? 's'
+															: ''}
+													</span>
+												</div>
 											</Command.Item>
 										{/each}
 									</Command.Group>
