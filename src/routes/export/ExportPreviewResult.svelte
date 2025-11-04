@@ -153,7 +153,7 @@
 				</Button>
 				<Button type="submit" variant="bleu">
 					{#if submitting}
-						<Spinner class="mr-2" />
+						<Spinner class="mr-2 text-white" />
 						Génération de l'aperçu...
 					{:else}
 						<Eye class="mr-2 h-4 w-4" />
@@ -339,7 +339,7 @@
 				</Button>
 				<Button type="submit" variant="vert" size="lg">
 					{#if submitting}
-						<Spinner class="mr-2" />
+						<Spinner class="mr-2 text-white" />
 						Export en cours...
 					{:else}
 						<FileDown class="mr-2 h-4 w-4" />
