@@ -1,6 +1,6 @@
 <!-- TableSelector.svelte - Composant réutilisable pour sélection de tables -->
 <script lang="ts">
-	import { Card } from 'flowbite-svelte';
+	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
@@ -233,165 +233,177 @@
 		<div class="mb-6 space-y-4">
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				<!-- Card Type -->
-				<Card class="h-44 border-blue-200 bg-blue-50 p-4 shadow-none">
-					<div class="mb-2 flex items-center gap-2">
-						<FileType class="h-5 w-5 text-blue-600" />
-						<h3 class="text-lg font-semibold text-blue-700">Type de données :</h3>
-					</div>
-					<div class="space-y-2">
-						<label class="flex cursor-pointer items-center space-x-2">
-							<input
-								type="radio"
-								name="type"
-								value="all"
-								bind:group={selectedType}
-								onchange={() => handleTypeChange('all')}
-								class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-							/>
-							<span class="text-sm text-gray-900">
-								<FileType class="mr-1 inline h-4 w-4" />
-								Tous les types ({filteredCount})
-							</span>
-						</label>
-						<label class="flex cursor-pointer items-center space-x-2">
-							<input
-								type="radio"
-								name="type"
-								value="tables"
-								bind:group={selectedType}
-								onchange={() => handleTypeChange('tables')}
-								class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-							/>
-							<span class="text-sm text-gray-900">
-								<TableIcon class="mr-1 inline h-4 w-4" />
-								Tables ({filteredTables.filter((t) => t.tableType === 'table' || !t.tableType)
-									.length})
-							</span>
-						</label>
-						<label class="flex cursor-pointer items-center space-x-2">
-							<input
-								type="radio"
-								name="type"
-								value="views"
-								bind:group={selectedType}
-								onchange={() => handleTypeChange('views')}
-								class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-							/>
-							<span class="text-sm text-gray-900">
-								<Eye class="mr-1 inline h-4 w-4" />
-								Vues ({filteredTables.filter((t) => t.tableType === 'view').length})
-							</span>
-						</label>
-						<label class="flex cursor-pointer items-center space-x-2">
-							<input
-								type="radio"
-								name="type"
-								value="compatible"
-								bind:group={selectedType}
-								onchange={() => handleTypeChange('compatible')}
-								class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-							/>
-							<span class="text-sm text-gray-900">
-								<Download class="mr-1 inline h-4 w-4" />
-								Sources prêtes pour l'importation ({compatibleCount})
-							</span>
-						</label>
-					</div>
-				</Card>
+				<Card.Root class="h-44 border-blue-200 bg-blue-50 shadow-none">
+					<Card.Header>
+						<Card.Title class="flex items-center gap-2 text-lg text-blue-700">
+							<FileType class="h-5 w-5 text-blue-600" />
+							Type de données :
+						</Card.Title>
+					</Card.Header>
+					<Card.Content>
+						<div class="space-y-2">
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="radio"
+									name="type"
+									value="all"
+									bind:group={selectedType}
+									onchange={() => handleTypeChange('all')}
+									class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span class="text-sm text-gray-900">
+									<FileType class="mr-1 inline h-4 w-4" />
+									Tous les types ({filteredCount})
+								</span>
+							</label>
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="radio"
+									name="type"
+									value="tables"
+									bind:group={selectedType}
+									onchange={() => handleTypeChange('tables')}
+									class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span class="text-sm text-gray-900">
+									<TableIcon class="mr-1 inline h-4 w-4" />
+									Tables ({filteredTables.filter((t) => t.tableType === 'table' || !t.tableType)
+										.length})
+								</span>
+							</label>
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="radio"
+									name="type"
+									value="views"
+									bind:group={selectedType}
+									onchange={() => handleTypeChange('views')}
+									class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span class="text-sm text-gray-900">
+									<Eye class="mr-1 inline h-4 w-4" />
+									Vues ({filteredTables.filter((t) => t.tableType === 'view').length})
+								</span>
+							</label>
+							<label class="flex cursor-pointer items-center space-x-2">
+								<input
+									type="radio"
+									name="type"
+									value="compatible"
+									bind:group={selectedType}
+									onchange={() => handleTypeChange('compatible')}
+									class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+								/>
+								<span class="text-sm text-gray-900">
+									<Download class="mr-1 inline h-4 w-4" />
+									Sources prêtes pour l'importation ({compatibleCount})
+								</span>
+							</label>
+						</div>
+					</Card.Content>
+				</Card.Root>
 
 				<!-- Card Base de données -->
-				<Card class="h-44 border-emerald-200 bg-emerald-50 p-4 shadow-none">
-					<div class="mb-2 flex items-center gap-2">
-						<Database class="h-5 w-5 text-emerald-600" />
-						<h3 class="text-lg font-semibold text-emerald-700">Base de données :</h3>
-					</div>
-					<div class="space-y-2">
-						<label class="flex cursor-pointer items-center space-x-2">
-							<input
-								type="radio"
-								name="database"
-								value="all"
-								bind:group={selectedDatabase}
-								onchange={() => handleDatabaseChange('all')}
-								class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-							/>
-							<span class="text-sm text-gray-900">
-								<Database class="mr-1 inline h-4 w-4" />
-								Toutes les bases ({filteredCount})
-							</span>
-						</label>
-						{#each databases as database (database)}
-							{@const dbInfo = getDatabaseBadgeInfo(database)}
+				<Card.Root class="h-44 border-emerald-200 bg-emerald-50 shadow-none">
+					<Card.Header>
+						<Card.Title class="flex items-center gap-2 text-lg text-emerald-700">
+							<Database class="h-5 w-5 text-emerald-600" />
+							Base de données :
+						</Card.Title>
+					</Card.Header>
+					<Card.Content>
+						<div class="space-y-2">
 							<label class="flex cursor-pointer items-center space-x-2">
 								<input
 									type="radio"
 									name="database"
-									value={database}
+									value="all"
 									bind:group={selectedDatabase}
-									onchange={() => handleDatabaseChange(database as 'all' | 'cenov' | 'cenov_dev')}
+									onchange={() => handleDatabaseChange('all')}
 									class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
 								<span class="text-sm text-gray-900">
-									{#if database.includes('dev')}
-										<Settings class="mr-0.5 inline h-4 w-4" />
-									{:else}
-										<Rocket class="mr-0.5 inline h-4 w-4" />
-									{/if}
-									{dbInfo.label.split(' ')[1]} ({filteredTables.filter((t) => {
-										const tableDb =
-											t.database || (t.value.includes('cenov_dev:') ? 'cenov_dev' : 'cenov');
-										return tableDb === database;
-									}).length})
+									<Database class="mr-1 inline h-4 w-4" />
+									Toutes les bases ({filteredCount})
 								</span>
 							</label>
-						{/each}
-					</div>
-				</Card>
+							{#each databases as database (database)}
+								{@const dbInfo = getDatabaseBadgeInfo(database)}
+								<label class="flex cursor-pointer items-center space-x-2">
+									<input
+										type="radio"
+										name="database"
+										value={database}
+										bind:group={selectedDatabase}
+										onchange={() => handleDatabaseChange(database as 'all' | 'cenov' | 'cenov_dev')}
+										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
+									<span class="text-sm text-gray-900">
+										{#if database.includes('dev')}
+											<Settings class="mr-0.5 inline h-4 w-4" />
+										{:else}
+											<Rocket class="mr-0.5 inline h-4 w-4" />
+										{/if}
+										{dbInfo.label.split(' ')[1]} ({filteredTables.filter((t) => {
+											const tableDb =
+												t.database || (t.value.includes('cenov_dev:') ? 'cenov_dev' : 'cenov');
+											return tableDb === database;
+										}).length})
+									</span>
+								</label>
+							{/each}
+						</div>
+					</Card.Content>
+				</Card.Root>
 
 				<!-- Card Schéma -->
-				<Card class="h-44 border-purple-200 bg-purple-50 p-4 shadow-none">
-					<div class="mb-2 flex items-center gap-2">
-						<Package class="h-5 w-5 text-purple-600" />
-						<h3 class="text-lg font-semibold text-purple-700">Schéma :</h3>
-					</div>
-					<div class="space-y-2">
-						<label class="flex cursor-pointer items-center space-x-2">
-							<input
-								type="radio"
-								name="schema"
-								value="all"
-								bind:group={selectedSchema}
-								onchange={() => handleSchemaChange('all')}
-								class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-							/>
-							<span class="text-sm text-gray-900">
-								<Package class="mr-1 inline h-4 w-4" />
-								Tous les schémas ({filteredCount})
-							</span>
-						</label>
-						{#each uniqueSchemas as schema (schema)}
+				<Card.Root class="h-44 border-purple-200 bg-purple-50 shadow-none">
+					<Card.Header>
+						<Card.Title class="flex items-center gap-2 text-lg text-purple-700">
+							<Package class="h-5 w-5 text-purple-600" />
+							Schéma :
+						</Card.Title>
+					</Card.Header>
+					<Card.Content>
+						<div class="space-y-2">
 							<label class="flex cursor-pointer items-center space-x-2">
 								<input
 									type="radio"
 									name="schema"
-									value={schema}
+									value="all"
 									bind:group={selectedSchema}
-									onchange={() => handleSchemaChange(schema as 'all' | 'produit' | 'public')}
+									onchange={() => handleSchemaChange('all')}
 									class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
 								/>
 								<span class="text-sm text-gray-900">
-									{#if schema === 'produit'}
-										<Package class="mr-0.5 inline h-4 w-4" />
-									{:else}
-										<LockOpen class="mr-0.5 inline h-4 w-4" />
-									{/if}
-									{SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.label || schema}
-									({filteredTables.filter((t) => t.category === schema).length})
+									<Package class="mr-1 inline h-4 w-4" />
+									Tous les schémas ({filteredCount})
 								</span>
 							</label>
-						{/each}
-					</div>
-				</Card>
+							{#each uniqueSchemas as schema (schema)}
+								<label class="flex cursor-pointer items-center space-x-2">
+									<input
+										type="radio"
+										name="schema"
+										value={schema}
+										bind:group={selectedSchema}
+										onchange={() => handleSchemaChange(schema as 'all' | 'produit' | 'public')}
+										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
+									<span class="text-sm text-gray-900">
+										{#if schema === 'produit'}
+											<Package class="mr-0.5 inline h-4 w-4" />
+										{:else}
+											<LockOpen class="mr-0.5 inline h-4 w-4" />
+										{/if}
+										{SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.label || schema}
+										({filteredTables.filter((t) => t.category === schema).length})
+									</span>
+								</label>
+							{/each}
+						</div>
+					</Card.Content>
+				</Card.Root>
 			</div>
 
 			<!-- Actions et recherche -->

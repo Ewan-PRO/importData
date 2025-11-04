@@ -319,7 +319,7 @@
 	<Alert.GlobalAlert />
 
 	<!-- Indicateur d'étapes -->
-	<Card.Root class="mb-8 w-full max-w-none">
+	<Card.Root variant="blanc" class="mb-8 w-full max-w-none">
 		<Card.Content>
 			<div class="steps flex justify-between">
 				<div class={`step-item ${step >= 1 ? 'text-blue-700' : ''} flex-1`}>
@@ -362,7 +362,7 @@
 	</Card.Root>
 
 	<!-- Résumé des données -->
-	<Card.Root class="mb-6 w-full max-w-none">
+	<Card.Root variant="blanc" class="mb-6 w-full max-w-none">
 		<Card.Content>
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 				<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
@@ -396,7 +396,7 @@
 		</Card.Content>
 	</Card.Root>
 
-	<Card.Root class="w-full max-w-none">
+	<Card.Root variant="blanc" class="w-full max-w-none">
 		<Card.Content>
 			{#if step === 1}
 				<!-- Étape 1: Sélection des tables -->
