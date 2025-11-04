@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms/client';
-	import { Spinner } from 'flowbite-svelte';
+	import { Spinner } from '$lib/components/ui/spinner';
 	import * as Card from '$lib/components/ui/card';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
@@ -802,7 +802,7 @@
 			class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
 		>
 			<div class="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-				<Spinner class="mx-auto mb-4" size="xl" />
+				<Spinner class="mx-auto mb-4 size-12" />
 				<p class="text-center font-medium">
 					{step === 3 ? "Génération de l'export en cours..." : 'Traitement en cours...'}
 				</p>

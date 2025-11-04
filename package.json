@@ -29,8 +29,8 @@
 		"prisma:studio-preprod": "prisma studio --schema prisma/cenov_preprod/schema.prisma",
 		"prisma:push-preprod": "prisma db push --schema prisma/cenov_preprod/schema.prisma",
 		"prisma:pull-preprod": "prisma db pull --schema prisma/cenov_preprod/schema.prisma",
-		"prisma:generate-all": "npm run prisma:generate && npm run prisma:generate-dev && npm run prisma:generate-preprod",
-		"postinstall": "npm run prisma:generate-all"
+		"prisma:generate-all": "pnpm run prisma:generate && pnpm run prisma:generate-dev && pnpm run prisma:generate-preprod",
+		"postinstall": "pnpm run prisma:generate-all"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.1",

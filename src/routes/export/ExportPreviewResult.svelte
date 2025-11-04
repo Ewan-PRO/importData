@@ -1,6 +1,6 @@
 <!-- src/routes/export/ExportPreviewResult.svelte -->
 <script lang="ts">
-	import { Spinner } from 'flowbite-svelte';
+	import { Spinner } from '$lib/components/ui/spinner';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Table from '$lib/components/ui/table';
@@ -153,7 +153,7 @@
 				</Button>
 				<Button type="submit" variant="bleu">
 					{#if submitting}
-						<Spinner class="mr-2 h-4 w-4" />
+						<Spinner class="mr-2" />
 						Génération de l'aperçu...
 					{:else}
 						<Eye class="mr-2 h-4 w-4" />
@@ -339,7 +339,7 @@
 				</Button>
 				<Button type="submit" variant="vert" size="lg">
 					{#if submitting}
-						<Spinner class="mr-2 h-4 w-4" />
+						<Spinner class="mr-2" />
 						Export en cours...
 					{:else}
 						<FileDown class="mr-2 h-4 w-4" />
