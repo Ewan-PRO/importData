@@ -312,8 +312,11 @@
 					{#if selectedCategory}
 						<a
 							href="{resolve('/importV2')}?cat_code={selectedCategory}&database={selectedDatabase}"
-							download="template_{selectedCategory}.csv"
+							download="template_{searchInput.replaceAll(' ', '_')}.csv"
 							data-sveltekit-reload
+							onclick={() => {
+								toast.success(`Template CSV "${searchInput}" téléchargé avec succès`);
+							}}
 						>
 							<Button variant="vert">
 								Télécharger template CSV
