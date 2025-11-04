@@ -2,7 +2,8 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms/client';
-	import { Card, Spinner } from 'flowbite-svelte';
+	import { Spinner } from 'flowbite-svelte';
+	import * as Card from '$lib/components/ui/card';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
@@ -318,463 +319,482 @@
 	<Alert.GlobalAlert />
 
 	<!-- Indicateur d'étapes -->
-	<Card class="mb-8 w-full max-w-none">
-		<div class="steps flex justify-between">
-			<div class={`step-item ${step >= 1 ? 'text-blue-700' : ''} flex-1`}>
-				<div class="flex items-center">
-					<div
-						class={`mr-1 flex h-8 w-8 items-center justify-center rounded-full sm:mr-2 ${step >= 1 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
-					>
-						1
+	<Card.Root class="mb-8 w-full max-w-none">
+		<Card.Content>
+			<div class="steps flex justify-between">
+				<div class={`step-item ${step >= 1 ? 'text-blue-700' : ''} flex-1`}>
+					<div class="flex items-center">
+						<div
+							class={`mr-1 flex h-8 w-8 items-center justify-center rounded-full sm:mr-2 ${step >= 1 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
+						>
+							1
+						</div>
+						<span class="hidden sm:inline">Sélection des sources</span>
+						<span class="sm:hidden">Sources</span>
 					</div>
-					<span class="hidden sm:inline">Sélection des sources</span>
-					<span class="sm:hidden">Sources</span>
+				</div>
+				<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
+				<div class={`step-item ${step >= 2 ? 'text-blue-700' : ''} flex-1`}>
+					<div class="flex items-center">
+						<div
+							class={`mr-1 flex h-8 w-8 items-center justify-center rounded-full sm:mr-2 ${step >= 2 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
+						>
+							2
+						</div>
+						<span class="hidden sm:inline">Configuration</span>
+						<span class="sm:hidden">Config</span>
+					</div>
+				</div>
+				<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
+				<div class={`step-item ${step >= 3 ? 'text-blue-700' : ''} flex-1`}>
+					<div class="flex items-center">
+						<div
+							class={`mr-1 flex h-8 w-8 items-center justify-center rounded-full sm:mr-2 ${step >= 3 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
+						>
+							3
+						</div>
+						<span class="hidden sm:inline">Aperçu & Export</span>
+						<span class="sm:hidden">Export</span>
+					</div>
 				</div>
 			</div>
-			<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
-			<div class={`step-item ${step >= 2 ? 'text-blue-700' : ''} flex-1`}>
-				<div class="flex items-center">
-					<div
-						class={`mr-1 flex h-8 w-8 items-center justify-center rounded-full sm:mr-2 ${step >= 2 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
-					>
-						2
-					</div>
-					<span class="hidden sm:inline">Configuration</span>
-					<span class="sm:hidden">Config</span>
-				</div>
-			</div>
-			<div class="step-separator mx-4 h-px flex-1 self-center bg-gray-300"></div>
-			<div class={`step-item ${step >= 3 ? 'text-blue-700' : ''} flex-1`}>
-				<div class="flex items-center">
-					<div
-						class={`mr-1 flex h-8 w-8 items-center justify-center rounded-full sm:mr-2 ${step >= 3 ? 'bg-blue-100 text-blue-700' : 'bg-gray-200'}`}
-					>
-						3
-					</div>
-					<span class="hidden sm:inline">Aperçu & Export</span>
-					<span class="sm:hidden">Export</span>
-				</div>
-			</div>
-		</div>
-	</Card>
+		</Card.Content>
+	</Card.Root>
 
 	<!-- Résumé des données -->
-	<Card class="mb-6 w-full max-w-none">
-		<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-			<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
-				<div class="flex items-center justify-between">
-					<div>
-						<div class="text-2xl font-bold text-blue-600">{data.totalTables}</div>
-						<div class="text-sm text-blue-800">Sources disponibles</div>
+	<Card.Root class="mb-6 w-full max-w-none">
+		<Card.Content>
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+				<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
+					<div class="flex items-center justify-between">
+						<div>
+							<div class="text-2xl font-bold text-blue-600">{data.totalTables}</div>
+							<div class="text-sm text-blue-800">Sources disponibles</div>
+						</div>
+						<Database class="h-8 w-8 text-blue-500" />
 					</div>
-					<Database class="h-8 w-8 text-blue-500" />
+				</div>
+				<div class="rounded-lg border border-green-200 bg-green-50 p-4">
+					<div class="flex items-center justify-between">
+						<div>
+							<div class="text-2xl font-bold text-green-600">{data.formattedTotalRows}</div>
+							<div class="text-sm text-green-800">Lignes totales</div>
+						</div>
+						<ChartColumn class="h-8 w-8 text-green-500" />
+					</div>
+				</div>
+				<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
+					<div class="flex items-center justify-between">
+						<div>
+							<div class="text-2xl font-bold text-purple-600">{filteredTables.length}</div>
+							<div class="text-sm text-purple-800">Sources filtrées</div>
+						</div>
+						<CheckCircle class="h-8 w-8 text-purple-500" />
+					</div>
 				</div>
 			</div>
-			<div class="rounded-lg border border-green-200 bg-green-50 p-4">
-				<div class="flex items-center justify-between">
-					<div>
-						<div class="text-2xl font-bold text-green-600">{data.formattedTotalRows}</div>
-						<div class="text-sm text-green-800">Lignes totales</div>
-					</div>
-					<ChartColumn class="h-8 w-8 text-green-500" />
-				</div>
-			</div>
-			<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
-				<div class="flex items-center justify-between">
-					<div>
-						<div class="text-2xl font-bold text-purple-600">{filteredTables.length}</div>
-						<div class="text-sm text-purple-800">Sources filtrées</div>
-					</div>
-					<CheckCircle class="h-8 w-8 text-purple-500" />
-				</div>
-			</div>
-		</div>
-	</Card>
+		</Card.Content>
+	</Card.Root>
 
-	<Card class="w-full max-w-none">
-		{#if step === 1}
-			<!-- Étape 1: Sélection des tables -->
-			<div class="mb-6">
-				<h2 class="mb-4 text-xl font-bold text-black">Sélection des sources à exporter :</h2>
+	<Card.Root class="w-full max-w-none">
+		<Card.Content>
+			{#if step === 1}
+				<!-- Étape 1: Sélection des tables -->
+				<div class="mb-6">
+					<h2 class="mb-4 text-xl font-bold text-black">Sélection des sources à exporter :</h2>
 
-				<!-- Filtres avec Cards -->
-				<div class="mb-6 space-y-4">
-					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-						<!-- Card Type -->
-						<Card class="h-48 border-blue-300 bg-blue-100 p-6 shadow-md">
-							<div class="mb-3 flex items-center gap-2">
-								<FileType class="h-6 w-6 text-blue-600" />
-								<h3 class="text-xl font-bold text-blue-800">Type de données :</h3>
-							</div>
-							<div class="space-y-2">
-								<label class="flex cursor-pointer items-center space-x-2">
+					<!-- Filtres avec Cards -->
+					<div class="mb-6 space-y-4">
+						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+							<!-- Card Type -->
+							<Card.Root class="h-56 border-blue-300 bg-blue-100 shadow-md">
+								<Card.Header>
+									<Card.Title class="flex items-center gap-2 text-xl text-blue-800">
+										<FileType class="h-6 w-6 text-blue-600" />
+										Type de données :
+									</Card.Title>
+								</Card.Header>
+								<Card.Content>
+									<div class="space-y-2">
+										<label class="flex cursor-pointer items-center space-x-2">
+											<input
+												type="radio"
+												name="type"
+												value="all"
+												bind:group={selectedType}
+												class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
+											/>
+											<span class="text-base font-medium text-gray-900"
+												><FileType class="mr-1 inline h-5 w-5" />Tous ({filteredTables.length})</span
+											>
+										</label>
+										<label class="flex cursor-pointer items-center space-x-2">
+											<input
+												type="radio"
+												name="type"
+												value="tables"
+												bind:group={selectedType}
+												class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
+											/>
+											<span class="text-base font-medium text-gray-900"
+												><TableIcon class="mr-1 inline h-5 w-5" />Tables ({filteredTables.filter(
+													(t) => t.category === 'table'
+												).length})</span
+											>
+										</label>
+										<label class="flex cursor-pointer items-center space-x-2">
+											<input
+												type="radio"
+												name="type"
+												value="views"
+												bind:group={selectedType}
+												class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
+											/>
+											<span class="text-base font-medium text-gray-900"
+												><Eye class="mr-1 inline h-5 w-5" />Vues ({filteredTables.filter(
+													(t) => t.category === 'view'
+												).length})</span
+											>
+										</label>
+									</div>
+								</Card.Content>
+							</Card.Root>
+
+							<!-- Card Base de données -->
+							<Card.Root class="h-56 border-emerald-300 bg-emerald-100 shadow-md">
+								<Card.Header>
+									<Card.Title class="flex items-center gap-2 text-xl text-emerald-800">
+										<Database class="h-6 w-6 text-emerald-600" />
+										Base de données :
+									</Card.Title>
+								</Card.Header>
+								<Card.Content>
+									<div class="space-y-2">
+										<label class="flex cursor-pointer items-center space-x-2">
+											<input
+												type="radio"
+												name="database"
+												value="all"
+												bind:group={selectedDatabase}
+												class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
+											/>
+											<span class="text-base font-medium text-gray-900"
+												><Database class="mr-1 inline h-5 w-5" />Toutes ({filteredTables.length})</span
+											>
+										</label>
+										{#each databases as database (database)}
+											{@const dbInfo = getDatabaseBadgeInfo(database)}
+											{@const DbIcon = dbInfo.icon}
+											<label class="flex cursor-pointer items-center space-x-2">
+												<input
+													type="radio"
+													name="database"
+													value={database}
+													bind:group={selectedDatabase}
+													class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
+												/>
+												<span class="text-base font-medium text-gray-900">
+													<DbIcon class="mr-0.5 inline h-5 w-5" />
+													{dbInfo.label.split(' ')[1]} ({filteredTables.filter(
+														(t) => t.database === database
+													).length})</span
+												>
+											</label>
+										{/each}
+									</div>
+								</Card.Content>
+							</Card.Root>
+
+							<!-- Card Schéma -->
+							<Card.Root class="h-56 border-purple-300 bg-purple-100 shadow-md">
+								<Card.Header>
+									<Card.Title class="flex items-center gap-2 text-xl text-purple-800">
+										<Sheet class="h-6 w-6 text-purple-600" />
+										Schéma :
+									</Card.Title>
+								</Card.Header>
+								<Card.Content>
+									<div class="space-y-2">
+										<label class="flex cursor-pointer items-center space-x-2">
+											<input
+												type="radio"
+												name="schema"
+												value="all"
+												bind:group={selectedSchema}
+												class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
+											/>
+											<span class="text-base font-medium text-gray-900"
+												><Sheet class="mr-1 inline h-5 w-5" />Tous ({filteredTables.length})</span
+											>
+										</label>
+										{#each uniqueSchemas as schema (schema)}
+											{@const SchemaIcon = getSchemaIcon(schema)}
+											<label class="flex cursor-pointer items-center space-x-2">
+												<input
+													type="radio"
+													name="schema"
+													value={schema}
+													bind:group={selectedSchema}
+													class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
+												/>
+												<span class="text-base font-medium text-gray-900">
+													<SchemaIcon class="mr-0.5 inline h-5 w-5" />
+													{SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.label || schema} ({filteredTables.filter(
+														(t) => t.schema === schema
+													).length})
+												</span>
+											</label>
+										{/each}
+									</div>
+								</Card.Content>
+							</Card.Root>
+						</div>
+
+						<!-- Recherche et actions -->
+						<div class="grid grid-cols-1 items-center gap-6 sm:grid-cols-2 lg:grid-cols-3">
+							<div class="flex items-center justify-center gap-4">
+								<label class="flex min-h-[42px] cursor-pointer items-center space-x-2">
 									<input
-										type="radio"
-										name="type"
-										value="all"
-										bind:group={selectedType}
-										class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
-									/>
-									<span class="text-base font-medium text-gray-900"
-										><FileType class="mr-1 inline h-5 w-5" />Tous ({filteredTables.length})</span
-									>
-								</label>
-								<label class="flex cursor-pointer items-center space-x-2">
-									<input
-										type="radio"
-										name="type"
-										value="tables"
-										bind:group={selectedType}
-										class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
-									/>
-									<span class="text-base font-medium text-gray-900"
-										><TableIcon class="mr-1 inline h-5 w-5" />Tables ({filteredTables.filter(
-											(t) => t.category === 'table'
-										).length})</span
-									>
-								</label>
-								<label class="flex cursor-pointer items-center space-x-2">
-									<input
-										type="radio"
-										name="type"
-										value="views"
-										bind:group={selectedType}
-										class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
-									/>
-									<span class="text-base font-medium text-gray-900"
-										><Eye class="mr-1 inline h-5 w-5" />Vues ({filteredTables.filter(
-											(t) => t.category === 'view'
-										).length})</span
-									>
-								</label>
-							</div>
-						</Card>
-
-						<!-- Card Base de données -->
-						<Card class="h-48 border-emerald-300 bg-emerald-100 p-6 shadow-md">
-							<div class="mb-3 flex items-center gap-2">
-								<Database class="h-6 w-6 text-emerald-600" />
-								<h3 class="text-xl font-bold text-emerald-800">Base de données :</h3>
-							</div>
-							<div class="space-y-2">
-								<label class="flex cursor-pointer items-center space-x-2">
-									<input
-										type="radio"
-										name="database"
-										value="all"
-										bind:group={selectedDatabase}
-										class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
-									/>
-									<span class="text-base font-medium text-gray-900"
-										><Database class="mr-1 inline h-5 w-5" />Toutes ({filteredTables.length})</span
-									>
-								</label>
-								{#each databases as database (database)}
-									{@const dbInfo = getDatabaseBadgeInfo(database)}
-									{@const DbIcon = dbInfo.icon}
-									<label class="flex cursor-pointer items-center space-x-2">
-										<input
-											type="radio"
-											name="database"
-											value={database}
-											bind:group={selectedDatabase}
-											class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
-										/>
-										<span class="text-base font-medium text-gray-900">
-											<DbIcon class="mr-0.5 inline h-5 w-5" />
-											{dbInfo.label.split(' ')[1]} ({filteredTables.filter(
-												(t) => t.database === database
-											).length})</span
-										>
-									</label>
-								{/each}
-							</div>
-						</Card>
-
-						<!-- Card Schéma -->
-						<Card class="h-48 border-purple-300 bg-purple-100 p-6 shadow-md">
-							<div class="mb-3 flex items-center gap-2">
-								<Sheet class="h-6 w-6 text-purple-600" />
-								<h3 class="text-xl font-bold text-purple-800">Schéma :</h3>
-							</div>
-							<div class="space-y-2">
-								<label class="flex cursor-pointer items-center space-x-2">
-									<input
-										type="radio"
-										name="schema"
-										value="all"
-										bind:group={selectedSchema}
-										class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
-									/>
-									<span class="text-base font-medium text-gray-900"
-										><Sheet class="mr-1 inline h-5 w-5" />Tous ({filteredTables.length})</span
-									>
-								</label>
-								{#each uniqueSchemas as schema (schema)}
-									{@const SchemaIcon = getSchemaIcon(schema)}
-									<label class="flex cursor-pointer items-center space-x-2">
-										<input
-											type="radio"
-											name="schema"
-											value={schema}
-											bind:group={selectedSchema}
-											class="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
-										/>
-										<span class="text-base font-medium text-gray-900">
-											<SchemaIcon class="mr-0.5 inline h-5 w-5" />
-											{SCHEMA_CONFIG[schema as keyof typeof SCHEMA_CONFIG]?.label || schema} ({filteredTables.filter(
-												(t) => t.schema === schema
-											).length})
-										</span>
-									</label>
-								{/each}
-							</div>
-						</Card>
-					</div>
-
-					<!-- Recherche et actions -->
-					<div class="grid grid-cols-1 items-center gap-6 sm:grid-cols-2 lg:grid-cols-3">
-						<div class="flex items-center justify-center gap-4">
-							<label class="flex min-h-[42px] cursor-pointer items-center space-x-2">
-								<input
-									type="checkbox"
-									checked={filteredTables.length > 0 &&
-										filteredTables.every((table: ExportTableInfo) =>
-											$form.selectedSources.includes(`${table.database}-${table.name}`)
-										)}
-									onchange={() => {
-										const filteredTableIds = filteredTables.map(
-											(t: ExportTableInfo) => `${t.database}-${t.name}`
-										);
-										const selectedFilteredCount = filteredTableIds.filter((id) =>
-											$form.selectedSources.includes(id)
-										).length;
-
-										if (selectedFilteredCount === filteredTables.length) {
-											$form.selectedSources = $form.selectedSources.filter(
-												(id) => !filteredTableIds.includes(id)
+										type="checkbox"
+										checked={filteredTables.length > 0 &&
+											filteredTables.every((table: ExportTableInfo) =>
+												$form.selectedSources.includes(`${table.database}-${table.name}`)
+											)}
+										onchange={() => {
+											const filteredTableIds = filteredTables.map(
+												(t: ExportTableInfo) => `${t.database}-${t.name}`
 											);
-										} else {
-											const newSelection = [
-												...new Set([...$form.selectedSources, ...filteredTableIds])
-											];
-											$form.selectedSources = newSelection;
-										}
+											const selectedFilteredCount = filteredTableIds.filter((id) =>
+												$form.selectedSources.includes(id)
+											).length;
+
+											if (selectedFilteredCount === filteredTables.length) {
+												$form.selectedSources = $form.selectedSources.filter(
+													(id) => !filteredTableIds.includes(id)
+												);
+											} else {
+												const newSelection = [
+													...new Set([...$form.selectedSources, ...filteredTableIds])
+												];
+												$form.selectedSources = newSelection;
+											}
+										}}
+										class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
+									<span class="text-sm">Sélectionner tout ({filteredTables.length})</span>
+								</label>
+
+								<Button
+									variant="noir"
+									onclick={() => {
+										selectedType = 'all';
+										selectedDatabase = 'all';
+										selectedSchema = 'all';
+										searchTerm = '';
 									}}
-									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								>
+									<RefreshCcw class="mr-2 h-4 w-4" />
+									Réinitialiser
+								</Button>
+							</div>
+
+							<div class="relative">
+								<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+								<Input
+									type="text"
+									bind:value={searchTerm}
+									placeholder="Rechercher..."
+									class="min-h-[42px] pl-9"
 								/>
-								<span class="text-sm">Sélectionner tout ({filteredTables.length})</span>
-							</label>
+							</div>
 
-							<Button
-								variant="noir"
-								onclick={() => {
-									selectedType = 'all';
-									selectedDatabase = 'all';
-									selectedSchema = 'all';
-									searchTerm = '';
-								}}
+							<div
+								class="flex min-h-[42px] items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-6 py-3"
 							>
-								<RefreshCcw class="mr-2 h-4 w-4" />
-								Réinitialiser
-							</Button>
-						</div>
-
-						<div class="relative">
-							<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-							<Input
-								type="text"
-								bind:value={searchTerm}
-								placeholder="Rechercher..."
-								class="min-h-[42px] pl-9"
-							/>
-						</div>
-
-						<div
-							class="flex min-h-[42px] items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-6 py-3"
-						>
-							<div class="flex items-center gap-1 text-sm text-purple-800">
-								<CheckCircle class="h-4 w-4" />
-								<span class="font-semibold">{selectedFilteredCount}</span> sélectionnées
+								<div class="flex items-center gap-1 text-sm text-purple-800">
+									<CheckCircle class="h-4 w-4" />
+									<span class="font-semibold">{selectedFilteredCount}</span> sélectionnées
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
 
-				<!-- Liste des tables (simplifié pour ~450 lignes total) -->
-				<div class="mb-6 max-h-96 overflow-y-auto">
-					<div class="grid gap-3">
-						{#each filteredTables as table (`${table.database}-${table.name}`)}
-							{@const dbInfo = getDatabaseBadgeInfo(table.database)}
-							{@const DbIconComponent = dbInfo.icon}
-							{@const schemaVariant =
-								SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.variant || 'cyan'}
-							{@const schemaLabel =
-								SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.label || table.schema}
-							{@const TableIconComponent = getTableIcon(table.category)}
-							{@const SchemaIconComponent = getSchemaIcon(table.schema)}
-							<label
-								class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100 sm:max-w-none"
-							>
-								<input
-									type="checkbox"
-									bind:group={$form.selectedSources}
-									value={`${table.database}-${table.name}`}
-									onchange={() => {
-										const tableId = `${table.database}-${table.name}`;
-										const isSelected = $form.selectedSources.includes(tableId);
-										const tableType = table.category === 'view' ? 'vue' : 'table';
+					<!-- Liste des tables (simplifié pour ~450 lignes total) -->
+					<div class="mb-6 max-h-96 overflow-y-auto">
+						<div class="grid gap-3">
+							{#each filteredTables as table (`${table.database}-${table.name}`)}
+								{@const dbInfo = getDatabaseBadgeInfo(table.database)}
+								{@const DbIconComponent = dbInfo.icon}
+								{@const schemaVariant =
+									SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.variant || 'cyan'}
+								{@const schemaLabel =
+									SCHEMA_CONFIG[table.schema as keyof typeof SCHEMA_CONFIG]?.label || table.schema}
+								{@const TableIconComponent = getTableIcon(table.category)}
+								{@const SchemaIconComponent = getSchemaIcon(table.schema)}
+								<label
+									class="flex max-w-xs cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-red-100 sm:max-w-none"
+								>
+									<input
+										type="checkbox"
+										bind:group={$form.selectedSources}
+										value={`${table.database}-${table.name}`}
+										onchange={() => {
+											const tableId = `${table.database}-${table.name}`;
+											const isSelected = $form.selectedSources.includes(tableId);
+											const tableType = table.category === 'view' ? 'vue' : 'table';
 
-										if (isSelected) {
-											toast.info(
-												`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} sélectionnée`,
-												{
-													description: `${table.displayName} (${table.formattedRowCount || formatNumber(table.rowCount || 0)} lignes)`
-												}
-											);
-										} else {
-											toast.info(
-												`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} désélectionnée`,
-												{
-													description: table.displayName
-												}
-											);
-										}
-									}}
-									class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-								/>
+											if (isSelected) {
+												toast.info(
+													`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} sélectionnée`,
+													{
+														description: `${table.displayName} (${table.formattedRowCount || formatNumber(table.rowCount || 0)} lignes)`
+													}
+												);
+											} else {
+												toast.info(
+													`${tableType.charAt(0).toUpperCase() + tableType.slice(1)} désélectionnée`,
+													{
+														description: table.displayName
+													}
+												);
+											}
+										}}
+										class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
 
-								<div class="flex-1">
-									<div class="flex items-center gap-3">
-										<TableIconComponent class="h-5 w-5 text-gray-500" />
-										<div class="min-w-0 flex-1">
-											<div class="hidden sm:block">
-												<div class="flex items-center gap-2">
-													<span class="font-medium">{table.displayName}</span>
-													<Badge variant={getBadgeVariant(table.category)}>
-														{#if table.category === 'view'}
-															<Eye />
-														{:else}
-															<TableIcon />
-														{/if}
-														{table.category}
-													</Badge>
-													<Badge variant={dbInfo.variant}>
-														<DbIconComponent />
-														{table.database.toUpperCase()}
-													</Badge>
-													<Badge variant={schemaVariant}>
-														<SchemaIconComponent />
-														{schemaLabel}
-													</Badge>
+									<div class="flex-1">
+										<div class="flex items-center gap-3">
+											<TableIconComponent class="h-5 w-5 text-gray-500" />
+											<div class="min-w-0 flex-1">
+												<div class="hidden sm:block">
+													<div class="flex items-center gap-2">
+														<span class="font-medium">{table.displayName}</span>
+														<Badge variant={getBadgeVariant(table.category)}>
+															{#if table.category === 'view'}
+																<Eye />
+															{:else}
+																<TableIcon />
+															{/if}
+															{table.category}
+														</Badge>
+														<Badge variant={dbInfo.variant}>
+															<DbIconComponent />
+															{table.database.toUpperCase()}
+														</Badge>
+														<Badge variant={schemaVariant}>
+															<SchemaIconComponent />
+															{schemaLabel}
+														</Badge>
+													</div>
+													<div class="text-sm text-gray-500">
+														{table.displayName} • {table.formattedRowCount ||
+															formatNumber(table.rowCount || 0)} lignes
+													</div>
 												</div>
-												<div class="text-sm text-gray-500">
-													{table.displayName} • {table.formattedRowCount ||
-														formatNumber(table.rowCount || 0)} lignes
-												</div>
-											</div>
 
-											<div class="sm:hidden">
-												<div class="font-medium">{table.displayName}</div>
-												<div class="mt-1 text-sm text-gray-500">
-													{table.formattedRowCount || formatNumber(table.rowCount || 0)} lignes
-												</div>
-												<div class="mt-2 flex flex-wrap gap-1">
-													<Badge variant={getBadgeVariant(table.category)}>
-														{#if table.category === 'view'}
-															<Eye />Vue
-														{:else}
-															<TableIcon />Table
-														{/if}
-													</Badge>
-													<Badge variant={dbInfo.variant}>
-														<DbIconComponent />{table.database.toUpperCase()}
-													</Badge>
-													<Badge variant={schemaVariant}>
-														<SchemaIconComponent />
-														{schemaLabel}
-													</Badge>
+												<div class="sm:hidden">
+													<div class="font-medium">{table.displayName}</div>
+													<div class="mt-1 text-sm text-gray-500">
+														{table.formattedRowCount || formatNumber(table.rowCount || 0)} lignes
+													</div>
+													<div class="mt-2 flex flex-wrap gap-1">
+														<Badge variant={getBadgeVariant(table.category)}>
+															{#if table.category === 'view'}
+																<Eye />Vue
+															{:else}
+																<TableIcon />Table
+															{/if}
+														</Badge>
+														<Badge variant={dbInfo.variant}>
+															<DbIconComponent />{table.database.toUpperCase()}
+														</Badge>
+														<Badge variant={schemaVariant}>
+															<SchemaIconComponent />
+															{schemaLabel}
+														</Badge>
+													</div>
 												</div>
 											</div>
 										</div>
 									</div>
-								</div>
 
-								<div class="hidden text-right text-sm text-gray-500 sm:block">
-									<div>{table.columns.length} colonnes</div>
-									{#if table.relations && table.relations.length > 0}
-										<div class="text-xs">{table.relations.length} relation(s)</div>
-									{/if}
-								</div>
-							</label>
-						{/each}
-					</div>
-				</div>
-
-				<!-- Format d'export -->
-				<div class="mb-6">
-					<h3 class="mb-3 font-medium text-gray-900">Format d'export :</h3>
-					<div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-						{#each exportFormats as format (format.value)}
-							{@const FormatIconComponent = format.icon}
-							<label
-								class="flex cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-gray-50 {$form.format ===
-								format.value
-									? 'border-blue-500 bg-blue-50'
-									: ''}"
-							>
-								<input
-									type="radio"
-									bind:group={$form.format}
-									value={format.value}
-									class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-								/>
-								<div class="flex-1">
-									<div class="flex items-center gap-2">
-										<FormatIconComponent class="h-5 w-5 text-gray-900" />
-										<span class="font-medium whitespace-nowrap text-gray-900">{format.label}</span>
-										{#if format.recommended}
-											<Badge variant="noir">Recommandé</Badge>
+									<div class="hidden text-right text-sm text-gray-500 sm:block">
+										<div>{table.columns.length} colonnes</div>
+										{#if table.relations && table.relations.length > 0}
+											<div class="text-xs">{table.relations.length} relation(s)</div>
 										{/if}
 									</div>
-									<div class="text-sm text-gray-900">{format.description}</div>
-								</div>
-							</label>
-						{/each}
+								</label>
+							{/each}
+						</div>
+					</div>
+
+					<!-- Format d'export -->
+					<div class="mb-6">
+						<h3 class="mb-3 font-medium text-gray-900">Format d'export :</h3>
+						<div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+							{#each exportFormats as format (format.value)}
+								{@const FormatIconComponent = format.icon}
+								<label
+									class="flex cursor-pointer items-center space-x-3 rounded-lg border p-4 transition-colors hover:bg-gray-50 {$form.format ===
+									format.value
+										? 'border-blue-500 bg-blue-50'
+										: ''}"
+								>
+									<input
+										type="radio"
+										bind:group={$form.format}
+										value={format.value}
+										class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+									/>
+									<div class="flex-1">
+										<div class="flex items-center gap-2">
+											<FormatIconComponent class="h-5 w-5 text-gray-900" />
+											<span class="font-medium whitespace-nowrap text-gray-900">{format.label}</span
+											>
+											{#if format.recommended}
+												<Badge variant="noir">Recommandé</Badge>
+											{/if}
+										</div>
+										<div class="text-sm text-gray-900">{format.description}</div>
+									</div>
+								</label>
+							{/each}
+						</div>
+					</div>
+
+					<div class="flex justify-center gap-4">
+						<Button
+							variant="bleu"
+							onclick={validateAndNext}
+							disabled={$form.selectedSources.length === 0 || !$form.format}
+						>
+							Continuer
+							<CircleArrowRight class="ml-2 h-4 w-4" />
+						</Button>
 					</div>
 				</div>
+			{/if}
 
-				<div class="flex justify-center gap-4">
-					<Button
-						variant="bleu"
-						onclick={validateAndNext}
-						disabled={$form.selectedSources.length === 0 || !$form.format}
-					>
-						Continuer
-						<CircleArrowRight class="ml-2 h-4 w-4" />
-					</Button>
-				</div>
-			</div>
-		{/if}
-
-		<!-- Étapes 2, 3 et 4: Configuration, Aperçu et Résultat -->
-		<ExportPreviewResult
-			{step}
-			{previewData}
-			{previewConfig}
-			{exportResult}
-			formStore={form}
-			{superEnhance}
-			{exportFormats}
-			tables={data.tables}
-			{goToStep}
-			{resetExport}
-			{formatPreviewValue}
-			{formatNumber}
-			{formatFileSize}
-			submitting={$submitting}
-		/>
-	</Card>
+			<!-- Étapes 2, 3 et 4: Configuration, Aperçu et Résultat -->
+			<ExportPreviewResult
+				{step}
+				{previewData}
+				{previewConfig}
+				{exportResult}
+				formStore={form}
+				{superEnhance}
+				{exportFormats}
+				tables={data.tables}
+				{goToStep}
+				{resetExport}
+				{formatPreviewValue}
+				{formatNumber}
+				{formatFileSize}
+				submitting={$submitting}
+			/>
+		</Card.Content>
+	</Card.Root>
 
 	{#if $submitting}
 		<div
