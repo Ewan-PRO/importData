@@ -226,14 +226,11 @@ export const load: PageServerLoad = async () => {
 			cat_id: true,
 			cat_code: true,
 			cat_label: true
-		},
-		orderBy: {
-			cat_id: 'asc'
 		}
 	});
 
 	// Compter les attributs pour chaque catégorie
-	const categories = await Promise.all(
+	const categoriesWithCount = await Promise.all(
 		categoriesRaw.map(async (cat) => {
 			const attributeCount = await prisma.category_attribute.count({
 				where: { fk_category: cat.cat_id }
@@ -245,6 +242,11 @@ export const load: PageServerLoad = async () => {
 				attributeCount
 			};
 		})
+	);
+
+	// Tri alphabétique case-insensitive (A, a, B, b au lieu de A, B, a, b)
+	const categories = categoriesWithCount.toSorted((a, b) =>
+		(a.cat_label || '').localeCompare(b.cat_label || '', 'fr', { sensitivity: 'base' })
 	);
 
 	return {
