@@ -190,11 +190,6 @@
 		}
 	}
 
-	// $effect séparé pour les logs (ne perturbe pas la réactivité)
-	$effect(() => {
-		console.log('🎯 focusedIndex changed:', focusedIndex);
-	});
-
 	function handleFileUpload(e: Event) {
 		const input = e.target as HTMLInputElement;
 		if (!input.files || input.files.length === 0) return;
@@ -321,15 +316,7 @@
 
 				<!-- Autocomplétion pour sélectionner la catégorie -->
 				<div class="relative flex items-start gap-4">
-					<div
-						class="relative flex-1"
-						role="combobox"
-						tabindex="0"
-						aria-expanded={showSuggestions}
-						aria-haspopup="listbox"
-						aria-controls="category-listbox"
-						onkeydown={handleKeyboardNavigation}
-					>
+					<div class="relative flex-1">
 						<div
 							class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"
 						>
@@ -349,10 +336,16 @@
 								selectedCategory = '';
 								focusedIndex = -1;
 							}}
+							onkeydown={handleKeyboardNavigation}
 							placeholder="Rechercher une catégorie..."
 							class="pl-10"
+							role="combobox"
+							aria-expanded={showSuggestions}
 							aria-autocomplete="list"
 							aria-controls="category-listbox"
+							aria-activedescendant={focusedIndex >= 0
+								? `category-option-${filteredCategories[focusedIndex]?.cat_code}`
+								: undefined}
 						/>
 
 						<!-- Liste d'autocomplétion -->
@@ -365,6 +358,7 @@
 								{#each filteredCategories as category, index (category.cat_code)}
 									<button
 										type="button"
+										id="category-option-{category.cat_code}"
 										role="option"
 										aria-selected={index === focusedIndex}
 										onclick={() => selectCategory(category)}
