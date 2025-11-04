@@ -129,6 +129,72 @@
 		focusedIndex = -1;
 	}
 
+	async function handleDownloadTemplate(e: MouseEvent) {
+		e.preventDefault();
+
+		try {
+			const url = `${resolve('/importV2')}?cat_code=${selectedCategory}&database=${selectedDatabase}`;
+			const response = await fetch(url);
+
+			if (!response.ok) {
+				throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+			}
+
+			// Créer un blob et déclencher le téléchargement
+			const blob = await response.blob();
+			const downloadUrl = window.URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = downloadUrl;
+			link.download = `template_${searchInput.replaceAll(' ', '_')}.csv`;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(downloadUrl);
+
+			// Toast success seulement après téléchargement réussi
+			toast.success(`Template CSV "${searchInput}" téléchargé avec succès`);
+		} catch (error) {
+			console.error('Erreur téléchargement template:', error);
+			toast.error(
+				`Erreur lors du téléchargement du template : ${error instanceof Error ? error.message : 'Erreur inconnue'}`
+			);
+		}
+	}
+
+	function handleKeyboardNavigation(e: KeyboardEvent) {
+		if (!showSuggestions || filteredCategories.length === 0) return;
+
+		switch (e.key) {
+			case 'ArrowDown':
+				e.preventDefault();
+				focusedIndex = (focusedIndex + 1) % filteredCategories.length;
+				break;
+
+			case 'ArrowUp':
+				e.preventDefault();
+				focusedIndex = focusedIndex <= 0 ? filteredCategories.length - 1 : focusedIndex - 1;
+				break;
+
+			case 'Enter':
+				e.preventDefault();
+				if (focusedIndex >= 0 && focusedIndex < filteredCategories.length) {
+					selectCategory(filteredCategories[focusedIndex]);
+				}
+				break;
+
+			case 'Escape':
+				e.preventDefault();
+				showSuggestions = false;
+				focusedIndex = -1;
+				break;
+		}
+	}
+
+	// $effect séparé pour les logs (ne perturbe pas la réactivité)
+	$effect(() => {
+		console.log('🎯 focusedIndex changed:', focusedIndex);
+	});
+
 	function handleFileUpload(e: Event) {
 		const input = e.target as HTMLInputElement;
 		if (!input.files || input.files.length === 0) return;
@@ -255,7 +321,15 @@
 
 				<!-- Autocomplétion pour sélectionner la catégorie -->
 				<div class="relative flex items-start gap-4">
-					<div class="relative flex-1">
+					<div
+						class="relative flex-1"
+						role="combobox"
+						tabindex="0"
+						aria-expanded={showSuggestions}
+						aria-haspopup="listbox"
+						aria-controls="category-listbox"
+						onkeydown={handleKeyboardNavigation}
+					>
 						<div
 							class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"
 						>
@@ -273,23 +347,30 @@
 							oninput={() => {
 								showSuggestions = true;
 								selectedCategory = '';
+								focusedIndex = -1;
 							}}
 							placeholder="Rechercher une catégorie..."
 							class="pl-10"
+							aria-autocomplete="list"
+							aria-controls="category-listbox"
 						/>
 
 						<!-- Liste d'autocomplétion -->
 						{#if showSuggestions && filteredCategories.length > 0}
 							<div
+								id="category-listbox"
+								role="listbox"
 								class="absolute z-50 mt-1 max-h-96 w-full overflow-y-auto rounded-lg border-2 border-gray-200 bg-white shadow-2xl"
 							>
 								{#each filteredCategories as category, index (category.cat_code)}
 									<button
 										type="button"
+										role="option"
+										aria-selected={index === focusedIndex}
 										onclick={() => selectCategory(category)}
-										class="flex w-full items-center justify-between border-b border-gray-100 px-4 py-3 text-left transition-colors hover:bg-gray-50 focus:bg-gray-50 focus:outline-none {index ===
+										class="flex w-full items-center justify-between border-b border-gray-100 px-4 py-3 text-left transition-colors hover:bg-blue-100 focus:bg-blue-100 focus:outline-none {index ===
 										focusedIndex
-											? 'bg-gray-50'
+											? 'bg-blue-100'
 											: ''}"
 									>
 										<span class="text-sm font-medium text-gray-900">{category.cat_label}</span>
@@ -310,19 +391,10 @@
 
 					<!-- Bouton à droite -->
 					{#if selectedCategory}
-						<a
-							href="{resolve('/importV2')}?cat_code={selectedCategory}&database={selectedDatabase}"
-							download="template_{searchInput.replaceAll(' ', '_')}.csv"
-							data-sveltekit-reload
-							onclick={() => {
-								toast.success(`Template CSV "${searchInput}" téléchargé avec succès`);
-							}}
-						>
-							<Button variant="vert">
-								Télécharger template CSV
-								<CircleArrowRight class="ml-2 h-4 w-4" />
-							</Button>
-						</a>
+						<Button variant="vert" onclick={handleDownloadTemplate}>
+							Télécharger template CSV
+							<CircleArrowRight class="ml-2 h-4 w-4" />
+						</Button>
 					{:else}
 						<Button variant="noir" onclick={() => (step = 1)}>
 							Passer cette étape

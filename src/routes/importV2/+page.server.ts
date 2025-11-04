@@ -220,34 +220,29 @@ export const load: PageServerLoad = async () => {
 	const database = 'cenov_dev'; // Par défaut
 	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
 
-	// Charger toutes les catégories avec comptage des attributs liés
-	const categoriesRaw = await prisma.category.findMany({
+	// Charger toutes les catégories avec comptage des attributs en une seule requête
+	const categoriesWithCount = await prisma.category.findMany({
 		select: {
 			cat_id: true,
 			cat_code: true,
-			cat_label: true
+			cat_label: true,
+			_count: {
+				select: { category_attribute: true }
+			}
 		}
 	});
 
-	// Compter les attributs pour chaque catégorie
-	const categoriesWithCount = await Promise.all(
-		categoriesRaw.map(async (cat) => {
-			const attributeCount = await prisma.category_attribute.count({
-				where: { fk_category: cat.cat_id }
-			});
-			return {
-				cat_id: cat.cat_id,
-				cat_code: cat.cat_code,
-				cat_label: cat.cat_label,
-				attributeCount
-			};
-		})
-	);
-
-	// Tri alphabétique case-insensitive (A, a, B, b au lieu de A, B, a, b)
-	const categories = categoriesWithCount.toSorted((a, b) =>
-		(a.cat_label || '').localeCompare(b.cat_label || '', 'fr', { sensitivity: 'base' })
-	);
+	// Mapper le format pour l'interface et tri alphabétique case-insensitive
+	const categories = categoriesWithCount
+		.map((cat) => ({
+			cat_id: cat.cat_id,
+			cat_code: cat.cat_code,
+			cat_label: cat.cat_label,
+			attributeCount: cat._count.category_attribute
+		}))
+		.toSorted((a, b) =>
+			(a.cat_label || '').localeCompare(b.cat_label || '', 'fr', { sensitivity: 'base' })
+		);
 
 	return {
 		config: CONFIG,
