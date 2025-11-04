@@ -454,7 +454,7 @@
 	<!-- Formulaire d'ajout -->
 	<Form
 		bind:isOpen={addFormOpen}
-		title="Ajouter un enregistrement"
+		title="Ajouter un enregistrement :"
 		fields={addFormFields}
 		data={formData}
 		submitLabel="Créer"

@@ -196,14 +196,14 @@
 	}
 </script>
 
-<Modal bind:open={isOpen}>
+<Modal bind:open={isOpen} size="lg">
 	<h3 class="text-lg font-bold {isDelete ? 'text-black' : 'text-gray-900'}">
 		{isDelete ? 'Confirmer la suppression :' : title}
 	</h3>
-	<form on:submit={onSubmit} class="space-y-4">
+	<form on:submit={onSubmit} class="grid grid-cols-2 gap-4">
 		{#if isDelete}
 			<!-- Interface spéciale pour la suppression -->
-			<div class="space-y-4">
+			<div class="col-span-2">
 				<p class="text-gray-700">
 					Êtes-vous sûr de vouloir supprimer cette {title.includes('catégorie')
 						? 'catégorie'
@@ -227,7 +227,7 @@
 		{:else}
 			<!-- Interface normale pour création/édition -->
 			{#each fields as field (field.key)}
-				<div>
+				<div class="w-full">
 					<div class="mb-2 flex items-center justify-between">
 						<Label for={field.key}>{field.label}</Label>
 						<div class="flex gap-2">
@@ -350,7 +350,7 @@
 			{/each}
 		{/if}
 
-		<div class="flex justify-end space-x-2 pt-4">
+		<div class="col-span-2 flex justify-end space-x-2 pt-4">
 			<Button variant="noir" onclick={handleCancel}>
 				<CircleX class="mr-2 h-4 w-4" />
 				{cancelLabel}

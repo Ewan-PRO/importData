@@ -283,23 +283,23 @@
 	<div class="mb-8 flex justify-between">
 		<div class="step flex-1 {step >= 0 ? 'active' : ''}">
 			<div class="mb-2 text-center text-sm font-medium">0. Template</div>
-			<div class="mx-4 h-2 rounded bg-gray-200 {step >= 0 ? 'bg-blue-500' : ''}"></div>
+			<div class="mx-4 h-2 rounded {step >= 0 ? 'bg-blue-500' : 'bg-gray-200'}"></div>
 		</div>
 		<div class="step flex-1 {step >= 1 ? 'active' : ''}">
 			<div class="mb-2 text-center text-sm font-medium">1. Upload</div>
-			<div class="mx-4 h-2 rounded bg-gray-200 {step >= 1 ? 'bg-blue-500' : ''}"></div>
+			<div class="mx-4 h-2 rounded {step >= 1 ? 'bg-blue-500' : 'bg-gray-200'}"></div>
 		</div>
 		<div class="step flex-1 {step >= 2 ? 'active' : ''}">
 			<div class="mb-2 text-center text-sm font-medium">2. Preview</div>
-			<div class="mx-4 h-2 rounded bg-gray-200 {step >= 2 ? 'bg-blue-500' : ''}"></div>
+			<div class="mx-4 h-2 rounded {step >= 2 ? 'bg-blue-500' : 'bg-gray-200'}"></div>
 		</div>
 		<div class="step flex-1 {step >= 3 ? 'active' : ''}">
 			<div class="mb-2 text-center text-sm font-medium">3. Validation</div>
-			<div class="mx-4 h-2 rounded bg-gray-200 {step >= 3 ? 'bg-blue-500' : ''}"></div>
+			<div class="mx-4 h-2 rounded {step >= 3 ? 'bg-blue-500' : 'bg-gray-200'}"></div>
 		</div>
 		<div class="step flex-1 {step >= 4 ? 'active' : ''}">
 			<div class="mb-2 text-center text-sm font-medium">4. Import</div>
-			<div class="mx-4 h-2 rounded bg-gray-200 {step >= 4 ? 'bg-blue-500' : ''}"></div>
+			<div class="mx-4 h-2 rounded {step >= 4 ? 'bg-blue-500' : 'bg-gray-200'}"></div>
 		</div>
 	</div>
 
