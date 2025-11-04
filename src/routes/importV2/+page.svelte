@@ -4,6 +4,7 @@
 	import { toast } from 'svelte-sonner';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 	import { Card } from 'flowbite-svelte';
 	import * as Alert from '$lib/components/ui/alert';
 	import {
@@ -12,11 +13,8 @@
 		Check,
 		CircleArrowLeft,
 		CircleArrowRight,
-		ChevronsUpDown
+		Search
 	} from 'lucide-svelte';
-	import * as Command from '$lib/components/ui/command';
-	import * as Popover from '$lib/components/ui/popover';
-	import { cn } from '$lib/utils';
 
 	interface ValidationError {
 		line: number;
@@ -82,9 +80,19 @@
 	let isProcessing = $state(false);
 	let selectedDatabase = $state<'cenov_dev' | 'cenov_preprod'>('cenov_dev');
 
-	// ✅ États pour le Combobox (ÉTAPE 0)
-	let open = $state(false);
+	// ✅ États pour l'autocomplétion (ÉTAPE 0)
+	let searchInput = $state('');
 	let selectedCategory = $state<string>(''); // cat_code
+	let showSuggestions = $state(false);
+	let focusedIndex = $state(-1);
+
+	// Catégories filtrées pour l'autocomplétion
+	let filteredCategories = $derived.by(() => {
+		if (!searchInput.trim()) return data.categories;
+		return data.categories.filter((c) =>
+			c.cat_label.toLowerCase().includes(searchInput.toLowerCase())
+		);
+	});
 
 	// Flags pour détecter les nouvelles réponses (Solution 5 - Pattern Svelte 5)
 	let validationReceived = $state(false);
@@ -108,6 +116,18 @@
 		}
 		return grouped;
 	});
+
+	function selectCategory(category: {
+		cat_id: number;
+		cat_code: string;
+		cat_label: string;
+		attributeCount: number;
+	}) {
+		selectedCategory = category.cat_code;
+		searchInput = category.cat_label;
+		showSuggestions = false;
+		focusedIndex = -1;
+	}
 
 	function handleFileUpload(e: Event) {
 		const input = e.target as HTMLInputElement;
@@ -162,9 +182,11 @@
 		form = null;
 		validationReceived = false;
 		resultReceived = false;
-		// Réinitialiser états Combobox
+		// Réinitialiser états autocomplétion
 		selectedCategory = '';
-		open = false;
+		searchInput = '';
+		showSuggestions = false;
+		focusedIndex = -1;
 	}
 
 	$effect(() => {
@@ -223,7 +245,7 @@
 	<Card class="w-full max-w-full">
 		{#if step === 0}
 			<!-- ✅ ÉTAPE 0 : Génération template (optionnelle) -->
-			<div class="mb-6">
+			<div>
 				<h2 class="mb-4 text-xl font-semibold text-black">
 					0. Télécharger template CSV (optionnel) :
 				</h2>
@@ -231,76 +253,63 @@
 					Choisissez une catégorie pour générer un fichier CSV avec les bonnes colonnes d'attributs.
 				</p>
 
-				<!-- Combobox pour sélectionner la catégorie -->
-				<div class="mb-6">
-					<label for="category-combobox" class="mb-2 block text-sm font-medium text-gray-700">
-						Sélectionner une catégorie :
-					</label>
-
-					<Popover.Root bind:open>
-						<Popover.Trigger
-							id="category-combobox"
-							role="combobox"
-							aria-expanded={open}
-							aria-controls="category-list"
-							class="border-input bg-background ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring flex h-12 w-full items-center justify-between rounded-md border-2 px-4 py-3 text-sm shadow-sm transition-all focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-200 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+				<!-- Autocomplétion pour sélectionner la catégorie -->
+				<div class="relative flex items-start gap-4">
+					<div class="relative flex-1">
+						<div
+							class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"
 						>
-							{#if selectedCategory}
-								{@const category = data.categories.find((c) => c.cat_code === selectedCategory)}
-								<span class="font-medium">{category?.cat_label}</span>
-								<span class="text-muted-foreground ml-2 text-xs">
-									({category?.attributeCount ?? 0} attribut{(category?.attributeCount ?? 0) > 1
-										? 's'
-										: ''})
-								</span>
-							{:else}
-								<span class="text-gray-500">Rechercher une catégorie...</span>
-							{/if}
-							<ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-						</Popover.Trigger>
-						<Popover.Content class="w-[700px] p-0">
-							<Command.Root id="category-list">
-								<Command.Input placeholder="Tapez pour rechercher..." />
-								<Command.List class="max-h-[400px]">
-									<Command.Empty>Aucune catégorie trouvée.</Command.Empty>
-									<Command.Group>
-										{#each data.categories as category (category.cat_code)}
-											<Command.Item
-												value={category.cat_label}
-												onSelect={() => {
-													selectedCategory = category.cat_code;
-													open = false;
-												}}
-												class="cursor-pointer py-3"
-											>
-												<Check
-													class={cn(
-														'mr-3 h-4 w-4 text-green-600',
-														selectedCategory === category.cat_code ? 'opacity-100' : 'opacity-0'
-													)}
-												/>
-												<div class="flex flex-1 items-center justify-between">
-													<span class="text-sm font-medium">{category.cat_label}</span>
-													<span
-														class="ml-4 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
-													>
-														{category.attributeCount} attribut{category.attributeCount > 1
-															? 's'
-															: ''}
-													</span>
-												</div>
-											</Command.Item>
-										{/each}
-									</Command.Group>
-								</Command.List>
-							</Command.Root>
-						</Popover.Content>
-					</Popover.Root>
-				</div>
+							<Search class="h-5 w-5" />
+						</div>
+						<Input
+							id="category-search"
+							type="text"
+							variant="gray"
+							bind:value={searchInput}
+							onfocus={() => (showSuggestions = true)}
+							onblur={() => {
+								setTimeout(() => (showSuggestions = false), 200);
+							}}
+							oninput={() => {
+								showSuggestions = true;
+								selectedCategory = '';
+							}}
+							placeholder="Rechercher une catégorie..."
+							class="pl-10"
+						/>
 
-				<!-- Boutons en bas -->
-				{#if selectedCategory}
-					<div class="flex justify-end">
+						<!-- Liste d'autocomplétion -->
+						{#if showSuggestions && filteredCategories.length > 0}
+							<div
+								class="absolute z-50 mt-1 max-h-96 w-full overflow-y-auto rounded-lg border-2 border-gray-200 bg-white shadow-2xl"
+							>
+								{#each filteredCategories as category, index (category.cat_code)}
+									<button
+										type="button"
+										onclick={() => selectCategory(category)}
+										class="flex w-full items-center justify-between border-b border-gray-100 px-4 py-3 text-left transition-colors hover:bg-gray-50 focus:bg-gray-50 focus:outline-none {index ===
+										focusedIndex
+											? 'bg-gray-50'
+											: ''}"
+									>
+										<span class="text-sm font-medium text-gray-900">{category.cat_label}</span>
+										<span class="ml-4 text-xs text-gray-500">
+											{category.attributeCount} attribut{category.attributeCount > 1 ? 's' : ''}
+										</span>
+									</button>
+								{/each}
+							</div>
+						{:else if showSuggestions && searchInput.trim() && filteredCategories.length === 0}
+							<div
+								class="absolute z-50 mt-1 w-full rounded-lg border-2 border-gray-200 bg-white p-4 text-center shadow-2xl"
+							>
+								<p class="text-sm text-gray-500">Aucune catégorie trouvée</p>
+							</div>
+						{/if}
+					</div>
+
+					<!-- Bouton à droite -->
+					{#if selectedCategory}
 						<a
 							href="{resolve('/importV2')}?cat_code={selectedCategory}&database={selectedDatabase}"
 							download="template_{selectedCategory}.csv"
@@ -311,15 +320,13 @@
 								<CircleArrowRight class="ml-2 h-4 w-4" />
 							</Button>
 						</a>
-					</div>
-				{:else}
-					<div class="flex justify-end">
+					{:else}
 						<Button variant="noir" onclick={() => (step = 1)}>
 							Passer cette étape
 							<CircleArrowRight class="ml-2 h-4 w-4" />
 						</Button>
-					</div>
-				{/if}
+					{/if}
+				</div>
 			</div>
 		{:else if step === 1}
 			<div class="mb-6">
