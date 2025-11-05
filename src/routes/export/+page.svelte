@@ -365,31 +365,31 @@
 	<Card.Root variant="blanc" class="mb-6 w-full max-w-none">
 		<Card.Content>
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-				<div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
+				<div class="rounded-lg border border-sky-500 bg-sky-100 p-4">
 					<div class="flex items-center justify-between">
 						<div>
-							<div class="text-2xl font-bold text-blue-600">{data.totalTables}</div>
-							<div class="text-sm text-blue-800">Sources disponibles</div>
+							<div class="text-2xl font-bold text-sky-700">{data.totalTables}</div>
+							<div class="text-sm text-sky-900">Sources disponibles</div>
 						</div>
-						<Database class="h-8 w-8 text-blue-500" />
+						<Database class="h-8 w-8 text-sky-600" />
 					</div>
 				</div>
-				<div class="rounded-lg border border-green-200 bg-green-50 p-4">
+				<div class="rounded-lg border border-green-500 bg-green-100 p-4">
 					<div class="flex items-center justify-between">
 						<div>
-							<div class="text-2xl font-bold text-green-600">{data.formattedTotalRows}</div>
-							<div class="text-sm text-green-800">Lignes totales</div>
+							<div class="text-2xl font-bold text-green-700">{data.formattedTotalRows}</div>
+							<div class="text-sm text-green-900">Lignes totales</div>
 						</div>
-						<ChartColumn class="h-8 w-8 text-green-500" />
+						<ChartColumn class="h-8 w-8 text-green-600" />
 					</div>
 				</div>
-				<div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
+				<div class="rounded-lg border border-fuchsia-500 bg-fuchsia-100 p-4">
 					<div class="flex items-center justify-between">
 						<div>
-							<div class="text-2xl font-bold text-purple-600">{filteredTables.length}</div>
-							<div class="text-sm text-purple-800">Sources filtrées</div>
+							<div class="text-2xl font-bold text-fuchsia-700">{filteredTables.length}</div>
+							<div class="text-sm text-fuchsia-900">Sources filtrées</div>
 						</div>
-						<CheckCircle class="h-8 w-8 text-purple-500" />
+						<CheckCircle class="h-8 w-8 text-fuchsia-600" />
 					</div>
 				</div>
 			</div>
@@ -407,10 +407,10 @@
 					<div class="mb-6 space-y-4">
 						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 							<!-- Card Type -->
-							<Card.Root class="h-56 border-blue-300 bg-blue-100 shadow-md">
+							<Card.Root class="h-56 border-sky-500 bg-sky-100 shadow-md">
 								<Card.Header>
-									<Card.Title class="flex items-center gap-2 text-xl text-blue-800">
-										<FileType class="h-6 w-6 text-blue-600" />
+									<Card.Title class="flex items-center gap-2 text-xl text-sky-900">
+										<FileType class="h-6 w-6 text-sky-600" />
 										Type de données :
 									</Card.Title>
 								</Card.Header>
@@ -461,10 +461,10 @@
 							</Card.Root>
 
 							<!-- Card Base de données -->
-							<Card.Root class="h-56 border-emerald-300 bg-emerald-100 shadow-md">
+							<Card.Root class="h-56 border-green-500 bg-green-100 shadow-md">
 								<Card.Header>
-									<Card.Title class="flex items-center gap-2 text-xl text-emerald-800">
-										<Database class="h-6 w-6 text-emerald-600" />
+									<Card.Title class="flex items-center gap-2 text-xl text-green-900">
+										<Database class="h-6 w-6 text-green-600" />
 										Base de données :
 									</Card.Title>
 								</Card.Header>
@@ -506,10 +506,10 @@
 							</Card.Root>
 
 							<!-- Card Schéma -->
-							<Card.Root class="h-56 border-purple-300 bg-purple-100 shadow-md">
+							<Card.Root class="h-56 border-fuchsia-500 bg-fuchsia-100 shadow-md">
 								<Card.Header>
-									<Card.Title class="flex items-center gap-2 text-xl text-purple-800">
-										<Sheet class="h-6 w-6 text-purple-600" />
+									<Card.Title class="flex items-center gap-2 text-xl text-fuchsia-900">
+										<Sheet class="h-6 w-6 text-fuchsia-600" />
 										Schéma :
 									</Card.Title>
 								</Card.Header>
