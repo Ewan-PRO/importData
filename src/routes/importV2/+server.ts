@@ -29,9 +29,25 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		console.log(`✅ Catégorie trouvée: ${category.cat_label} (ID: ${category.cat_id})`);
 
-		// 3. Charger les attributs liés à cette catégorie
+		// 3. ✅ RÉCUPÉRER HIÉRARCHIE COMPLÈTE (attributs directs + hérités)
+		const hierarchy: number[] = [];
+		let currentCatId: number | null = category.cat_id;
+
+		// Remonter jusqu'à la racine (fk_parent = null)
+		while (currentCatId !== null) {
+			hierarchy.push(currentCatId);
+			const cat: { fk_parent: number | null } | null = await prisma.category.findUnique({
+				where: { cat_id: currentCatId },
+				select: { fk_parent: true }
+			});
+			currentCatId = cat?.fk_parent ?? null;
+		}
+
+		console.log(`📈 Hiérarchie: ${hierarchy.length} niveau(x) - IDs: ${hierarchy.join(' → ')}`);
+
+		// 4. Charger TOUS les attributs de la hiérarchie
 		const categoryAttributes = await prisma.category_attribute.findMany({
-			where: { fk_category: category.cat_id },
+			where: { fk_category: { in: hierarchy } },
 			include: {
 				attribute: {
 					select: { atr_value: true }
@@ -42,9 +58,9 @@ export const GET: RequestHandler = async ({ url }) => {
 			}
 		});
 
-		console.log(`📊 Attributs trouvés: ${categoryAttributes.length}`);
+		console.log(`📊 Attributs trouvés: ${categoryAttributes.length} (directs + hérités)`);
 
-		// 4. Construire les en-têtes CSV
+		// 5. Construire les en-têtes CSV
 		const metierHeaders = [
 			'pro_cenov_id',
 			'pro_code',
@@ -62,9 +78,15 @@ export const GET: RequestHandler = async ({ url }) => {
 			'pp_discount'
 		];
 
-		const attributeHeaders = categoryAttributes
-			.map((ca) => ca.attribute.atr_value)
-			.filter((v): v is string => v !== null);
+		// ✅ Dédupliquer les attributs (si même attribut dans parent et enfant)
+		const uniqueAttributeValues = new Set<string>();
+		for (const ca of categoryAttributes) {
+			if (ca.attribute.atr_value) {
+				uniqueAttributeValues.add(ca.attribute.atr_value);
+			}
+		}
+
+		const attributeHeaders = Array.from(uniqueAttributeValues).sort((a, b) => a.localeCompare(b));
 
 		const allHeaders = [...metierHeaders, ...attributeHeaders];
 

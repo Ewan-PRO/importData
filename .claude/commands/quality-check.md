@@ -7,13 +7,13 @@ allowed-tools: Bash(pnpm lint:*), Bash(pnpm format:*), Bash(pnpm check:*)
 
 Exécute une vérification complète de la qualité du code en trois étapes :
 
-## Étape 1 : Vérification Prettier + ESLint
-
-Exécute `pnpm lint` pour vérifier le formatage et les règles de linting.
-
-## Étape 2 : Formatage Automatique
+## Étape 1 : Formatage Automatique
 
 Exécute `pnpm format` pour formater automatiquement le code avec Prettier.
+
+## Étape 2 : Vérification Prettier + ESLint
+
+Exécute `pnpm lint` pour vérifier le formatage et les règles de linting.
 
 ## Étape 3 : Type Checking Svelte
 
@@ -27,7 +27,15 @@ Présente les résultats sous ce format structuré :
 🔍 RAPPORT DE QUALITÉ DU CODE
 ═══════════════════════════════════════
 
-✅ 1. LINT (Prettier + ESLint)
+📝 1. FORMAT (Prettier)
+─────────────────────────────────────
+[Statut: ✅ Code formaté / ⚠️ Fichiers modifiés]
+[Nombre de fichiers modifiés: X]
+
+Fichiers formatés:
+- [Liste des fichiers si pertinent]
+
+✅ 2. LINT (Prettier + ESLint)
 ─────────────────────────────────────
 [Statut: ✅ Succès / ⚠️ Avertissements / ❌ Erreurs]
 [Nombre d'erreurs: X]
@@ -35,14 +43,6 @@ Présente les résultats sous ce format structuré :
 
 Problèmes principaux:
 - [Liste des erreurs/avertissements les plus importants]
-
-📝 2. FORMAT (Prettier)
-─────────────────────────────────────
-[Statut: ✅ Code formaté / ⚠️ Fichiers modifiés]
-[Nombre de fichiers modifiés: X]
-
-Fichiers formatés:
-- [Liste des fichiers si pertinent]
 
 🔎 3. TYPE CHECK (Svelte)
 ─────────────────────────────────────

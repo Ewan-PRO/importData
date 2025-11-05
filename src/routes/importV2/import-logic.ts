@@ -560,6 +560,48 @@ async function loadAllowedValues(
 }
 
 // ============================================================================
+// HÉRITAGE ATTRIBUTS CATÉGORIE
+// ============================================================================
+
+/**
+ * Calcule le nombre total d'attributs (directs + hérités) pour une catégorie
+ * Remonte récursivement la hiérarchie via fk_parent
+ */
+export async function getCategoryTotalAttributeCount(
+	catId: number,
+	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
+): Promise<number> {
+	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
+
+	// Récupérer la hiérarchie complète (remonter via fk_parent)
+	const hierarchy: number[] = [];
+	let currentCatId: number | null = catId;
+
+	// Remonter jusqu'à la racine (fk_parent = null)
+	while (currentCatId !== null) {
+		hierarchy.push(currentCatId);
+		const category: { fk_parent: number | null } | null = await prisma.category.findUnique({
+			where: { cat_id: currentCatId },
+			select: { fk_parent: true }
+		});
+		currentCatId = category?.fk_parent ?? null;
+	}
+
+	// Charger TOUS les attributs de la hiérarchie
+	const allAttributes = await prisma.category_attribute.findMany({
+		where: {
+			fk_category: { in: hierarchy }
+		},
+		select: { fk_attribute: true }
+	});
+
+	// Dédupliquer (si même attribut dans parent et enfant, compter 1 seule fois)
+	const uniqueAttributeIds = new Set(allAttributes.map((a) => a.fk_attribute));
+
+	return uniqueAttributeIds.size;
+}
+
+// ============================================================================
 // VALIDATION ATTRIBUTS OBLIGATOIRES - PRIORITÉ 2
 // ============================================================================
 

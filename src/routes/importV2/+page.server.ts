@@ -6,6 +6,7 @@ import {
 	validateAttributes,
 	validateRequiredAttributes,
 	importToDatabase,
+	getCategoryTotalAttributeCount,
 	type ParsedCSVData,
 	type ValidationResult,
 	type ValidationError
@@ -216,36 +217,39 @@ export const actions: Actions = {
 // LOAD
 // ============================================================================
 export const load: PageServerLoad = async () => {
-	// ✅ Charger les catégories avec comptage d'attributs
+	// ✅ Charger les catégories avec comptage d'attributs (DIRECTS + HÉRITÉS)
 	const database = 'cenov_dev'; // Par défaut
 	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
 
-	// Charger toutes les catégories avec comptage des attributs en une seule requête
-	const categoriesWithCount = await prisma.category.findMany({
+	// Charger toutes les catégories
+	const allCategories = await prisma.category.findMany({
 		select: {
 			cat_id: true,
 			cat_code: true,
-			cat_label: true,
-			_count: {
-				select: { category_attribute: true }
-			}
+			cat_label: true
 		}
 	});
 
-	// Mapper le format pour l'interface et tri alphabétique case-insensitive
-	const categories = categoriesWithCount
-		.map((cat) => ({
-			cat_id: cat.cat_id,
-			cat_code: cat.cat_code,
-			cat_label: cat.cat_label,
-			attributeCount: cat._count.category_attribute
-		}))
-		.toSorted((a, b) =>
-			(a.cat_label || '').localeCompare(b.cat_label || '', 'fr', { sensitivity: 'base' })
-		);
+	// Calculer le comptage total (directs + hérités) pour CHAQUE catégorie
+	const categories = await Promise.all(
+		allCategories.map(async (cat) => {
+			const totalAttributeCount = await getCategoryTotalAttributeCount(cat.cat_id, database);
+			return {
+				cat_id: cat.cat_id,
+				cat_code: cat.cat_code,
+				cat_label: cat.cat_label,
+				attributeCount: totalAttributeCount // ✅ TOTAL (directs + hérités)
+			};
+		})
+	);
+
+	// Tri alphabétique case-insensitive
+	const sortedCategories = categories.toSorted((a, b) =>
+		(a.cat_label || '').localeCompare(b.cat_label || '', 'fr', { sensitivity: 'base' })
+	);
 
 	return {
 		config: CONFIG,
-		categories
+		categories: sortedCategories
 	};
 };
