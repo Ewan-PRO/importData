@@ -24,7 +24,7 @@
 	bind:this={ref}
 	data-slot="card"
 	class={cn(
-		'text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
+		'text-card-foreground flex flex-col gap-2 rounded-xl border py-6 shadow-sm',
 		variantClasses[variant],
 		className
 	)}
