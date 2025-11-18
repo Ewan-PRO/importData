@@ -216,9 +216,18 @@ export const actions: Actions = {
 // ============================================================================
 // LOAD
 // ============================================================================
-export const load: PageServerLoad = async () => {
-	// ✅ Charger les catégories avec comptage d'attributs (DIRECTS + HÉRITÉS)
-	const database = 'cenov_dev'; // Par défaut
+
+/**
+ * Charge les catégories avec comptage d'attributs (DIRECTS + HÉRITÉS) pour une base donnée
+ */
+async function loadCategoriesForDatabase(database: 'cenov_dev' | 'cenov_preprod'): Promise<
+	Array<{
+		cat_id: number;
+		cat_code: string | null;
+		cat_label: string;
+		attributeCount: number;
+	}>
+> {
 	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
 
 	// Charger toutes les catégories
@@ -244,12 +253,23 @@ export const load: PageServerLoad = async () => {
 	);
 
 	// Tri alphabétique case-insensitive
-	const sortedCategories = categories.toSorted((a, b) =>
+	return categories.toSorted((a, b) =>
 		(a.cat_label || '').localeCompare(b.cat_label || '', 'fr', { sensitivity: 'base' })
 	);
+}
+
+export const load: PageServerLoad = async () => {
+	// ✅ Charger les catégories des DEUX bases en parallèle
+	const [cenovDevCategories, cenovPreprodCategories] = await Promise.all([
+		loadCategoriesForDatabase('cenov_dev'),
+		loadCategoriesForDatabase('cenov_preprod')
+	]);
 
 	return {
 		config: CONFIG,
-		categories: sortedCategories
+		categories: {
+			cenov_dev: cenovDevCategories,
+			cenov_preprod: cenovPreprodCategories
+		}
 	};
 };

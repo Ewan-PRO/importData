@@ -3,7 +3,7 @@
 	import { cn, type WithElementRef } from '$lib/utils.js';
 
 	type Props = WithElementRef<HTMLAttributes<HTMLDivElement>> & {
-		variant?: 'blanc' | 'gris';
+		variant?: 'blanc' | 'gris' | 'bleu';
 	};
 
 	let {
@@ -16,7 +16,8 @@
 
 	const variantClasses = {
 		blanc: 'bg-white',
-		gris: 'bg-gray-50'
+		gris: 'bg-gray-100',
+		bleu: 'bg-blue-100'
 	};
 </script>
 

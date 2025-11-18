@@ -82,15 +82,29 @@
 
 	// ✅ États pour l'autocomplétion (ÉTAPE 0)
 	let searchInput = $state('');
-	let selectedCategory = $state<string>(''); // cat_code
+	let selectedCategory = $state<string | null>(''); // cat_code
 	let showSuggestions = $state(false);
 	let focusedIndex = $state(-1);
 
-	// Catégories filtrées pour l'autocomplétion
+	// ✅ Catégories de la base sélectionnée
+	type CategoryItem = {
+		cat_id: number;
+		cat_code: string | null;
+		cat_label: string;
+		attributeCount: number;
+	};
+	let currentCategories = $derived(
+		(data.categories as unknown as Record<'cenov_dev' | 'cenov_preprod', CategoryItem[]>)[
+			selectedDatabase
+		]
+	);
+
+	// Catégories filtrées pour l'autocomplétion (sur base sélectionnée)
 	let filteredCategories = $derived.by(() => {
-		if (!searchInput.trim()) return data.categories;
-		return data.categories.filter((c) =>
-			c.cat_label.toLowerCase().includes(searchInput.toLowerCase())
+		if (!searchInput.trim()) return currentCategories;
+		return currentCategories.filter(
+			(c: { cat_id: number; cat_code: string | null; cat_label: string; attributeCount: number }) =>
+				c.cat_label.toLowerCase().includes(searchInput.toLowerCase())
 		);
 	});
 
@@ -117,12 +131,7 @@
 		return grouped;
 	});
 
-	function selectCategory(category: {
-		cat_id: number;
-		cat_code: string;
-		cat_label: string;
-		attributeCount: number;
-	}) {
+	function selectCategory(category: CategoryItem) {
 		selectedCategory = category.cat_code;
 		searchInput = category.cat_label;
 		showSuggestions = false;
@@ -308,19 +317,62 @@
 			{#if step === 0}
 				<!-- ✅ ÉTAPE 0 : Génération template (optionnelle) -->
 				<div>
-					<h2 class="mb-4 text-xl font-semibold text-black">
+					<h2 class="mb-2 text-xl font-semibold text-black">
 						0. Télécharger template CSV (optionnel) :
 					</h2>
-					<p class="mb-6 text-gray-600">
+					<p class="mb-4 text-gray-600">
 						Choisissez une catégorie pour générer un fichier CSV avec les bonnes colonnes
 						d'attributs.
 					</p>
+
+					<!-- ✅ Sélection base de données -->
+					<Card.Root variant="bleu" class="mb-4 py-4">
+						<Card.Content class="px-4">
+							<h3 class="mb-2 text-sm font-medium text-blue-700">Base de données cible :</h3>
+							<div class="flex gap-4">
+								<label class="flex cursor-pointer items-center">
+									<input
+										type="radio"
+										name="database_step0"
+										value="cenov_dev"
+										bind:group={selectedDatabase}
+										class="mr-2"
+									/>
+									<span class="text-sm"
+										>CENOV_DEV ({(
+											data.categories as unknown as Record<
+												'cenov_dev' | 'cenov_preprod',
+												CategoryItem[]
+											>
+										).cenov_dev.length} catégories)</span
+									>
+								</label>
+								<label class="flex cursor-pointer items-center">
+									<input
+										type="radio"
+										name="database_step0"
+										value="cenov_preprod"
+										bind:group={selectedDatabase}
+										class="mr-2"
+									/>
+									<span class="text-sm"
+										>CENOV_PREPROD ({(
+											data.categories as unknown as Record<
+												'cenov_dev' | 'cenov_preprod',
+												CategoryItem[]
+											>
+										).cenov_preprod.length} catégories)</span
+									>
+								</label>
+							</div>
+						</Card.Content>
+					</Card.Root>
 
 					<!-- Autocomplétion pour sélectionner la catégorie -->
 					<div class="relative flex items-start gap-4">
 						<div class="relative flex-1">
 							<div
-								class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"
+								class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400"
 							>
 								<Search class="h-5 w-5" />
 							</div>
@@ -355,7 +407,7 @@
 								<div
 									id="category-listbox"
 									role="listbox"
-									class="absolute z-50 mt-1 max-h-96 w-full overflow-y-auto rounded-lg border-2 border-gray-200 bg-white shadow-2xl"
+									class="absolute z-50 mt-2 max-h-96 w-full overflow-y-auto rounded-lg border-2 border-gray-200 bg-white shadow-2xl"
 								>
 									{#each filteredCategories as category, index (category.cat_code)}
 										<button
@@ -364,7 +416,7 @@
 											role="option"
 											aria-selected={index === focusedIndex}
 											onclick={() => selectCategory(category)}
-											class="flex w-full items-center justify-between border-b border-gray-100 px-4 py-3 text-left transition-colors hover:bg-blue-100 focus:bg-blue-100 focus:outline-none {index ===
+											class="flex w-full items-center justify-between border-b border-gray-100 px-4 py-4 text-left transition-colors hover:bg-blue-100 focus:bg-blue-100 focus:outline-none {index ===
 											focusedIndex
 												? 'bg-blue-100'
 												: ''}"
@@ -378,7 +430,7 @@
 								</div>
 							{:else if showSuggestions && searchInput.trim() && filteredCategories.length === 0}
 								<div
-									class="absolute z-50 mt-1 w-full rounded-lg border-2 border-gray-200 bg-white p-4 text-center shadow-2xl"
+									class="absolute z-50 mt-2 w-full rounded-lg border-2 border-gray-200 bg-white p-4 text-center shadow-2xl"
 								>
 									<p class="text-sm text-gray-500">Aucune catégorie trouvée</p>
 								</div>
@@ -404,30 +456,15 @@
 					<h2 class="mb-4 text-xl font-semibold text-black">1. Upload fichier CSV :</h2>
 					<p class="mb-4 text-gray-600">Sélectionnez un fichier CSV :</p>
 
-					<div class="mb-6">
-						<h3 class="mb-3 text-sm font-medium text-gray-700">Base de données cible :</h3>
-						<div class="flex gap-4">
-							<label class="flex cursor-pointer items-center">
-								<input
-									type="radio"
-									name="database"
-									value="cenov_dev"
-									bind:group={selectedDatabase}
-									class="mr-2"
-								/>
-								<span class="text-sm">CENOV_DEV</span>
-							</label>
-							<label class="flex cursor-pointer items-center">
-								<input
-									type="radio"
-									name="database"
-									value="cenov_preprod"
-									bind:group={selectedDatabase}
-									class="mr-2"
-								/>
-								<span class="text-sm">CENOV_PREPROD</span>
-							</label>
-						</div>
+					<!-- ✅ Info base de données sélectionnée (lecture seule) -->
+					<div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+						<p class="text-sm text-blue-700">
+							📊 Base cible : <strong
+								>{selectedDatabase === 'cenov_dev'
+									? 'CENOV_DEV (Développement)'
+									: 'CENOV_PREPROD (Pré-production)'}</strong
+							>
+						</p>
 					</div>
 
 					<div
