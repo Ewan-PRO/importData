@@ -365,13 +365,13 @@
 	<Card.Root variant="blanc" class="mb-6 w-full max-w-none">
 		<Card.Content>
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-				<div class="rounded-lg border border-sky-500 bg-sky-100 p-4">
+				<div class="rounded-lg border border-blue-500 bg-blue-100 p-4">
 					<div class="flex items-center justify-between">
 						<div>
-							<div class="text-2xl font-bold text-sky-700">{data.totalTables}</div>
-							<div class="text-sm text-sky-900">Sources disponibles</div>
+							<div class="text-2xl font-bold text-blue-700">{data.totalTables}</div>
+							<div class="text-sm text-blue-900">Sources disponibles</div>
 						</div>
-						<Database class="h-8 w-8 text-sky-600" />
+						<Database class="h-8 w-8 text-blue-600" />
 					</div>
 				</div>
 				<div class="rounded-lg border border-green-500 bg-green-100 p-4">
