@@ -601,6 +601,88 @@ export async function getCategoryTotalAttributeCount(
 	return uniqueAttributeIds.size;
 }
 
+/**
+ * Récupère TOUS les attributs obligatoires d'une catégorie (directs + hérités)
+ * Remonte récursivement la hiérarchie via fk_parent
+ */
+export async function getCategoryRequiredAttributesWithInheritance(
+	catId: number,
+	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
+): Promise<
+	Array<{
+		atr_id: number;
+		atr_value: string;
+		atr_label: string;
+		inherited: boolean;
+		fromCatId: number;
+		fromCatLabel: string;
+	}>
+> {
+	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
+
+	// 1. Remonter hiérarchie complète via fk_parent
+	const hierarchy: Array<{ cat_id: number; cat_label: string }> = [];
+	let currentCatId: number | null = catId;
+
+	while (currentCatId !== null) {
+		const category: { cat_id: number; cat_label: string; fk_parent: number | null } | null =
+			await prisma.category.findUnique({
+				where: { cat_id: currentCatId },
+				select: { cat_id: true, cat_label: true, fk_parent: true }
+			});
+
+		if (!category) break;
+
+		hierarchy.push({ cat_id: category.cat_id, cat_label: category.cat_label });
+		currentCatId = category.fk_parent;
+	}
+
+	// 2. Charger TOUS les attributs obligatoires de la hiérarchie
+	const categoryIds = hierarchy.map((h) => h.cat_id);
+
+	const requiredAttrs = await prisma.category_attribute.findMany({
+		where: {
+			fk_category: { in: categoryIds },
+			cat_atr_required: true // ← Attributs OBLIGATOIRES uniquement
+		},
+		include: {
+			attribute: {
+				select: { atr_id: true, atr_value: true, atr_label: true }
+			},
+			category: {
+				select: { cat_label: true }
+			}
+		}
+	});
+
+	// 3. Dédupliquer et marquer l'origine
+	const seen = new Set<number>();
+	const result: Array<{
+		atr_id: number;
+		atr_value: string;
+		atr_label: string;
+		inherited: boolean;
+		fromCatId: number;
+		fromCatLabel: string;
+	}> = [];
+
+	for (const attr of requiredAttrs) {
+		if (!seen.has(attr.attribute.atr_id)) {
+			seen.add(attr.attribute.atr_id);
+			result.push({
+				atr_id: attr.attribute.atr_id,
+				atr_value: attr.attribute.atr_value!,
+				atr_label: attr.attribute.atr_label,
+				inherited: attr.fk_category !== catId,
+				fromCatId: attr.fk_category,
+				fromCatLabel: attr.category.cat_label
+			});
+		}
+	}
+
+	return result;
+}
+
 // ============================================================================
 // VALIDATION ATTRIBUTS OBLIGATOIRES - PRIORITÉ 2
 // ============================================================================
@@ -657,43 +739,6 @@ async function loadCategoriesMetadata(
 }
 
 /**
- * Charge les attributs obligatoires pour plusieurs catégories
- */
-async function loadRequiredAttributesByCategory(
-	categoryIds: number[],
-	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
-): Promise<Map<number, Array<{ code: string; label: string }>>> {
-	if (categoryIds.length === 0) return new Map();
-
-	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
-
-	const requiredAttrs = await prisma.category_attribute.findMany({
-		where: {
-			fk_category: { in: categoryIds },
-			cat_atr_required: true
-		},
-		include: {
-			attribute: {
-				select: { atr_value: true, atr_label: true }
-			}
-		}
-	});
-
-	const map = new Map<number, Array<{ code: string; label: string }>>();
-	for (const attr of requiredAttrs) {
-		if (!map.has(attr.fk_category)) {
-			map.set(attr.fk_category, []);
-		}
-		map.get(attr.fk_category)!.push({
-			code: attr.attribute.atr_value!,
-			label: attr.attribute.atr_label
-		});
-	}
-
-	return map;
-}
-
-/**
  * Valide que tous les attributs obligatoires sont présents pour chaque produit
  */
 export async function validateRequiredAttributes(
@@ -727,9 +772,18 @@ export async function validateRequiredAttributes(
 		return { success: false, totalRows: data.length, validRows: 0, errors, warnings };
 	}
 
-	// 4. Charger attributs obligatoires pour toutes les catégories trouvées
-	const categoryIds = Array.from(categoriesMap.values()).map((c) => c.cat_id);
-	const requiredAttrsByCategory = await loadRequiredAttributesByCategory(categoryIds, database);
+	// 4. Cache pour attributs obligatoires avec héritage (optimisation performance)
+	const requiredAttrsCache = new Map<
+		number,
+		Array<{
+			atr_id: number;
+			atr_value: string;
+			atr_label: string;
+			inherited: boolean;
+			fromCatId: number;
+			fromCatLabel: string;
+		}>
+	>();
 
 	// 5. Détecter attributs du CSV pour les catégories inconnues (pour auto-liaison)
 	const unknownCategoryAttrs = new Map<string, Set<string>>(); // cat_code → Set<atr_value>
@@ -764,24 +818,40 @@ export async function validateRequiredAttributes(
 			continue; // Pas de validation attributs obligatoires
 		}
 
-		// CAS 2: Catégorie connue - vérifier attributs obligatoires
-		const requiredAttrs = requiredAttrsByCategory.get(category.cat_id) || [];
+		// CAS 2: Catégorie connue - vérifier attributs obligatoires (directs + hérités)
+		// Utiliser cache pour éviter requêtes BDD répétées
+		if (!requiredAttrsCache.has(category.cat_id)) {
+			const attrs = await getCategoryRequiredAttributesWithInheritance(category.cat_id, database);
+			requiredAttrsCache.set(category.cat_id, attrs);
+		}
+
+		const requiredAttrs = requiredAttrsCache.get(category.cat_id)!;
 
 		if (requiredAttrs.length === 0) {
-			// Aucun attribut obligatoire
+			// Aucun attribut obligatoire (ni direct ni hérité)
 			continue;
 		}
 
 		// Vérifier présence de tous les attributs obligatoires
 		const csvAttrCodes = new Set(productAttrs.attributes.map((a) => a.atrValueCode));
-		const missingAttrs = requiredAttrs.filter((req) => !csvAttrCodes.has(req.code));
+		const missingAttrs = requiredAttrs.filter((req) => !csvAttrCodes.has(req.atr_value));
 
 		if (missingAttrs.length > 0) {
+			// Message d'erreur avec indication de l'origine (hérité ou direct)
+			const errorDetails = missingAttrs
+				.map((m) => {
+					if (m.inherited) {
+						return `${m.atr_label} (hérité de "${m.fromCatLabel}")`;
+					}
+					return m.atr_label;
+				})
+				.join(', ');
+
 			errors.push({
 				line: lineNumber,
 				field: 'attributs_obligatoires',
 				value: row.cat_code,
-				error: `Catégorie "${category.cat_label}" (${row.cat_code}) requiert ${missingAttrs.length} attribut(s) manquant(s): ${missingAttrs.map((m) => m.label).join(', ')}`
+				error: `Catégorie "${category.cat_label}" (${row.cat_code}) requiert ${missingAttrs.length} attribut(s) manquant(s): ${errorDetails}`
 			});
 		}
 	}
