@@ -66,11 +66,11 @@ importV2/
 
 ### **Justification de la Structure**
 
-| Élément            | Responsabilité                                    | Couche        |
-| ------------------ | ------------------------------------------------- | ------------- |
-| `+page.server.ts`  | Actions SvelteKit (validate, process, load)       | Présentation  |
-| `services/`        | Logique métier (validation + orchestration)       | Métier        |
-| `repositories/`    | Accès données (requêtes Prisma, référentiels)     | Données       |
+| Élément           | Responsabilité                                | Couche       |
+| ----------------- | --------------------------------------------- | ------------ |
+| `+page.server.ts` | Actions SvelteKit (validate, process, load)   | Présentation |
+| `services/`       | Logique métier (validation + orchestration)   | Métier       |
+| `repositories/`   | Accès données (requêtes Prisma, référentiels) | Données      |
 
 ### **Avantages de cette Structure**
 
@@ -98,12 +98,12 @@ import { loadCategoriesMetadata } from '../repositories/import.repository';
 
 ### **Correspondance avec l'Architecture**
 
-| Couche Architecture | Implémentation Fichiers                            |
-| ------------------- | -------------------------------------------------- |
-| **Présentation**    | `+page.server.ts` (racine)                        |
-| **Métier**          | `services/import.validation.ts`                   |
-|                     | `services/import.orchestrator.ts`                 |
-| **Données**         | `repositories/import.repository.ts`               |
+| Couche Architecture | Implémentation Fichiers             |
+| ------------------- | ----------------------------------- |
+| **Présentation**    | `+page.server.ts` (racine)          |
+| **Métier**          | `services/import.validation.ts`     |
+|                     | `services/import.orchestrator.ts`   |
+| **Données**         | `repositories/import.repository.ts` |
 
 ---
 
@@ -631,49 +631,49 @@ type PrismaTransaction = Omit<CenovDevPrismaClient, '$connect' | '$disconnect' |
 
 ### **Depuis `import-logic.ts` (1797 lignes) → 4 fichiers (2 dossiers)**
 
-| Fonction actuelle                    | Destination                           | Ligne actuelle | Raison                  |
-| ------------------------------------ | ------------------------------------- | -------------- | ----------------------- |
-| **TYPES**                            |                                       |                |                         |
-| `CSVRow`                             | `services/import.validation.ts`       | 12-27          | Type métier validation  |
-| `AttributePair`                      | `services/import.validation.ts`       | 29-32          | Type métier validation  |
-| `ProductAttributes`                  | `services/import.validation.ts`       | 34-37          | Type métier validation  |
-| `ParsedCSVData`                      | `services/import.validation.ts`       | 39-44          | Type métier validation  |
-| `ValidationError`                    | `services/import.validation.ts`       | 46-51          | Type métier validation  |
-| `ValidationResult`                   | `services/import.validation.ts`       | 53-59          | Type métier validation  |
-| `ImportStats`                        | `services/import.orchestrator.ts`     | 61-71          | Type métier import      |
-| `ChangeDetail`                       | `services/import.orchestrator.ts`     | 73-82          | Type métier import      |
-| `ImportResult`                       | `services/import.orchestrator.ts`     | 84-89          | Type métier import      |
-| `AttributeMetadata`                  | `repositories/import.repository.ts`   | 91-106         | Type données (interne)  |
-| `PrismaTransaction`                  | `services/import.orchestrator.ts`     | 4-7            | Type transaction        |
-| **UTILITAIRES**                      |                                       |                |                         |
-| `convertToISODate()`                 | `services/import.validation.ts`       | 111-123        | Utilitaire validation   |
-| `parseValueAndUnit()`                | `services/import.validation.ts`       | 125-138        | Utilitaire validation   |
-| `findUnitId()`                       | `services/import.validation.ts`       | 140-162        | Utilitaire validation   |
-| `parseCSVNative()`                   | `services/import.validation.ts`       | 167-178        | Parse CSV               |
-| **PARSING**                          |                                       |                |                         |
-| `parseCSVContent()`                  | `services/import.validation.ts`       | 180-255        | Parse CSV principal     |
-| **VALIDATION CSV**                   |                                       |                |                         |
-| `validateCSVData()`                  | `services/import.validation.ts`       | 260-474        | Validation CSV complète |
-| **VALIDATION ATTRIBUTS**             |                                       |                |                         |
-| `loadAttributeReference()`           | `repositories/import.repository.ts`   | 479-492        | Charge référentiel      |
-| `loadAttributeUnitsEnriched()`       | `repositories/import.repository.ts`   | 494-536        | Charge référentiel      |
-| `loadAllowedValues()`                | `repositories/import.repository.ts`   | 538-560        | Charge référentiel      |
-| `getCategoryTotalAttributeCount()`   | `repositories/import.repository.ts`   | 570-602        | Calcul hiérarchie       |
-| `loadCategoriesMetadata()`           | `repositories/import.repository.ts`   | 612-657        | Charge référentiel      |
-| `loadRequiredAttributesByCategory()` | `repositories/import.repository.ts`   | 662-694        | Charge référentiel      |
-| `validateRequiredAttributes()`       | `services/import.validation.ts`       | 699-798        | Validation métier       |
-| `validateAttributes()`               | `services/import.validation.ts`       | 800-870        | Validation métier       |
-| **IMPORT BDD**                       |                                       |                |                         |
-| `importToDatabase()`                 | `services/import.orchestrator.ts`     | 875-1075       | Orchestrateur principal |
-| `findOrCreateSupplier()`             | `services/import.orchestrator.ts`     | 1077-1125      | CRUD entité             |
-| `findOrCreateKit()`                  | `services/import.orchestrator.ts`     | 1127-1148      | CRUD entité             |
-| `findOrCreateCategory()`             | `services/import.orchestrator.ts`     | 1150-1226      | CRUD entité             |
-| `autoLinkCategoryAttributes()`       | `services/import.orchestrator.ts`     | 1231-1292      | Logique métier import   |
-| `resolveFamilyHierarchy()`           | `services/import.orchestrator.ts`     | 1294-1335      | Logique hiérarchie      |
-| `findOrCreateFamily()`               | `services/import.orchestrator.ts`     | 1337-1375      | CRUD entité             |
-| `upsertProduct()`                    | `services/import.orchestrator.ts`     | 1377-1532      | CRUD produit            |
-| `upsertPricePurchase()`              | `services/import.orchestrator.ts`     | 1534-1640      | CRUD prix               |
-| `importAttributes()`                 | `services/import.orchestrator.ts`     | 1642-1796      | Import attributs        |
+| Fonction actuelle                    | Destination                         | Ligne actuelle | Raison                  |
+| ------------------------------------ | ----------------------------------- | -------------- | ----------------------- |
+| **TYPES**                            |                                     |                |                         |
+| `CSVRow`                             | `services/import.validation.ts`     | 12-27          | Type métier validation  |
+| `AttributePair`                      | `services/import.validation.ts`     | 29-32          | Type métier validation  |
+| `ProductAttributes`                  | `services/import.validation.ts`     | 34-37          | Type métier validation  |
+| `ParsedCSVData`                      | `services/import.validation.ts`     | 39-44          | Type métier validation  |
+| `ValidationError`                    | `services/import.validation.ts`     | 46-51          | Type métier validation  |
+| `ValidationResult`                   | `services/import.validation.ts`     | 53-59          | Type métier validation  |
+| `ImportStats`                        | `services/import.orchestrator.ts`   | 61-71          | Type métier import      |
+| `ChangeDetail`                       | `services/import.orchestrator.ts`   | 73-82          | Type métier import      |
+| `ImportResult`                       | `services/import.orchestrator.ts`   | 84-89          | Type métier import      |
+| `AttributeMetadata`                  | `repositories/import.repository.ts` | 91-106         | Type données (interne)  |
+| `PrismaTransaction`                  | `services/import.orchestrator.ts`   | 4-7            | Type transaction        |
+| **UTILITAIRES**                      |                                     |                |                         |
+| `convertToISODate()`                 | `services/import.validation.ts`     | 111-123        | Utilitaire validation   |
+| `parseValueAndUnit()`                | `services/import.validation.ts`     | 125-138        | Utilitaire validation   |
+| `findUnitId()`                       | `services/import.validation.ts`     | 140-162        | Utilitaire validation   |
+| `parseCSVNative()`                   | `services/import.validation.ts`     | 167-178        | Parse CSV               |
+| **PARSING**                          |                                     |                |                         |
+| `parseCSVContent()`                  | `services/import.validation.ts`     | 180-255        | Parse CSV principal     |
+| **VALIDATION CSV**                   |                                     |                |                         |
+| `validateCSVData()`                  | `services/import.validation.ts`     | 260-474        | Validation CSV complète |
+| **VALIDATION ATTRIBUTS**             |                                     |                |                         |
+| `loadAttributeReference()`           | `repositories/import.repository.ts` | 479-492        | Charge référentiel      |
+| `loadAttributeUnitsEnriched()`       | `repositories/import.repository.ts` | 494-536        | Charge référentiel      |
+| `loadAllowedValues()`                | `repositories/import.repository.ts` | 538-560        | Charge référentiel      |
+| `getCategoryTotalAttributeCount()`   | `repositories/import.repository.ts` | 570-602        | Calcul hiérarchie       |
+| `loadCategoriesMetadata()`           | `repositories/import.repository.ts` | 612-657        | Charge référentiel      |
+| `loadRequiredAttributesByCategory()` | `repositories/import.repository.ts` | 662-694        | Charge référentiel      |
+| `validateRequiredAttributes()`       | `services/import.validation.ts`     | 699-798        | Validation métier       |
+| `validateAttributes()`               | `services/import.validation.ts`     | 800-870        | Validation métier       |
+| **IMPORT BDD**                       |                                     |                |                         |
+| `importToDatabase()`                 | `services/import.orchestrator.ts`   | 875-1075       | Orchestrateur principal |
+| `findOrCreateSupplier()`             | `services/import.orchestrator.ts`   | 1077-1125      | CRUD entité             |
+| `findOrCreateKit()`                  | `services/import.orchestrator.ts`   | 1127-1148      | CRUD entité             |
+| `findOrCreateCategory()`             | `services/import.orchestrator.ts`   | 1150-1226      | CRUD entité             |
+| `autoLinkCategoryAttributes()`       | `services/import.orchestrator.ts`   | 1231-1292      | Logique métier import   |
+| `resolveFamilyHierarchy()`           | `services/import.orchestrator.ts`   | 1294-1335      | Logique hiérarchie      |
+| `findOrCreateFamily()`               | `services/import.orchestrator.ts`   | 1337-1375      | CRUD entité             |
+| `upsertProduct()`                    | `services/import.orchestrator.ts`   | 1377-1532      | CRUD produit            |
+| `upsertPricePurchase()`              | `services/import.orchestrator.ts`   | 1534-1640      | CRUD prix               |
+| `importAttributes()`                 | `services/import.orchestrator.ts`   | 1642-1796      | Import attributs        |
 
 ---
 
@@ -690,6 +690,7 @@ mkdir src/routes/importV2/repositories
 ```
 
 **Structure finale :**
+
 ```
 importV2/
 ├── services/           # ✨ NOUVEAU - Logique métier
