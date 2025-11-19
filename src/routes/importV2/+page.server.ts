@@ -5,11 +5,11 @@ import {
 	validateCSVData,
 	validateAttributes,
 	validateRequiredAttributes,
-	importToDatabase,
 	type ParsedCSVData,
 	type ValidationResult,
 	type ValidationError
-} from './import-logic';
+} from './services/import.validation';
+import { importToDatabase } from './services/import.orchestrator';
 import { getClient } from '$lib/prisma-meta';
 import type { PrismaClient as CenovDevPrismaClient } from '../../../prisma/cenov_dev/generated/index.js';
 

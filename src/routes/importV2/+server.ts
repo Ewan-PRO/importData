@@ -99,11 +99,12 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		// 6. Retourner le fichier CSV
 		const fileName = category.cat_label?.replaceAll(' ', '_') || cat_code;
+		const dbPrefix = database === 'cenov_preprod' ? 'preprod' : 'dev';
 		return new Response(csvContent, {
 			status: 200,
 			headers: {
 				'Content-Type': 'text/csv; charset=utf-8',
-				'Content-Disposition': `attachment; filename="template_${fileName}.csv"`
+				'Content-Disposition': `attachment; filename="template_${dbPrefix}_${fileName}.csv"`
 			}
 		});
 	} catch (err) {

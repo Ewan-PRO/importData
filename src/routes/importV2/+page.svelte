@@ -154,14 +154,20 @@
 			const downloadUrl = window.URL.createObjectURL(blob);
 			const link = document.createElement('a');
 			link.href = downloadUrl;
-			link.download = `template_${searchInput.replaceAll(' ', '_')}.csv`;
+
+			// ✅ Extraire le nom du fichier depuis le header Content-Disposition du serveur
+			const contentDisposition = response.headers.get('Content-Disposition');
+			const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+			const filename = filenameMatch?.[1] || `template_${searchInput.replaceAll(' ', '_')}.csv`;
+			link.download = filename;
+
 			document.body.appendChild(link);
 			link.click();
 			document.body.removeChild(link);
 			window.URL.revokeObjectURL(downloadUrl);
 
 			// Toast success seulement après téléchargement réussi
-			toast.success(`Template CSV "${searchInput}" téléchargé avec succès`);
+			toast.success(`Template CSV "${filename}" téléchargé avec succès`);
 		} catch (error) {
 			console.error('Erreur téléchargement template:', error);
 			toast.error(
@@ -445,7 +451,7 @@
 							</Button>
 						{:else}
 							<Button variant="noir" onclick={() => (step = 1)}>
-								Passer cette étape
+								Étape suivante
 								<CircleArrowRight class="ml-2 h-4 w-4" />
 							</Button>
 						{/if}
