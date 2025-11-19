@@ -6,7 +6,6 @@ import {
 	validateAttributes,
 	validateRequiredAttributes,
 	importToDatabase,
-	getCategoryTotalAttributeCount,
 	type ParsedCSVData,
 	type ValidationResult,
 	type ValidationError
@@ -218,7 +217,8 @@ export const actions: Actions = {
 // ============================================================================
 
 /**
- * Charge les catégories avec comptage d'attributs (DIRECTS + HÉRITÉS) pour une base donnée
+ * ✅ VERSION OPTIMISÉE - Charge les catégories avec comptage d'attributs (DIRECTS + HÉRITÉS)
+ * Utilise le batching pour éviter les problèmes de pool de connexions (2 requêtes au lieu de N×M)
  */
 async function loadCategoriesForDatabase(database: 'cenov_dev' | 'cenov_preprod'): Promise<
 	Array<{
@@ -230,27 +230,68 @@ async function loadCategoriesForDatabase(database: 'cenov_dev' | 'cenov_preprod'
 > {
 	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
 
-	// Charger toutes les catégories
+	// ✅ REQUÊTE 1 : Charger TOUTES les catégories avec fk_parent
 	const allCategories = await prisma.category.findMany({
 		select: {
 			cat_id: true,
 			cat_code: true,
-			cat_label: true
+			cat_label: true,
+			fk_parent: true // ← IMPORTANT : pour remonter la hiérarchie
 		}
 	});
 
-	// Calculer le comptage total (directs + hérités) pour CHAQUE catégorie
-	const categories = await Promise.all(
-		allCategories.map(async (cat) => {
-			const totalAttributeCount = await getCategoryTotalAttributeCount(cat.cat_id, database);
-			return {
-				cat_id: cat.cat_id,
-				cat_code: cat.cat_code,
-				cat_label: cat.cat_label,
-				attributeCount: totalAttributeCount // ✅ TOTAL (directs + hérités)
-			};
-		})
-	);
+	// ✅ REQUÊTE 2 : Charger TOUS les category_attributes
+	const allCategoryAttributes = await prisma.category_attribute.findMany({
+		select: {
+			fk_category: true,
+			fk_attribute: true
+		}
+	});
+
+	// 📊 Construire map : catId → parentId (pour remonter hiérarchie en mémoire)
+	const parentMap = new Map<number, number | null>();
+	for (const cat of allCategories) {
+		parentMap.set(cat.cat_id, cat.fk_parent);
+	}
+
+	// 📊 Construire map : catId → Set<attributeIds> (attributs directs)
+	const attributesMap = new Map<number, Set<number>>();
+	for (const ca of allCategoryAttributes) {
+		if (!attributesMap.has(ca.fk_category)) {
+			attributesMap.set(ca.fk_category, new Set());
+		}
+		attributesMap.get(ca.fk_category)!.add(ca.fk_attribute);
+	}
+
+	// 🔄 Calculer comptage pour chaque catégorie EN MÉMOIRE (0 requêtes SQL)
+	const categories = allCategories.map((cat) => {
+		// Remonter hiérarchie EN MÉMOIRE (pas de requêtes SQL !)
+		const hierarchy: number[] = [];
+		let currentCatId: number | null = cat.cat_id;
+
+		while (currentCatId !== null) {
+			hierarchy.push(currentCatId);
+			currentCatId = parentMap.get(currentCatId) ?? null;
+		}
+
+		// Collecter tous les attributs uniques de la hiérarchie
+		const uniqueAttributes = new Set<number>();
+		for (const catId of hierarchy) {
+			const attrs = attributesMap.get(catId);
+			if (attrs) {
+				for (const attrId of attrs) {
+					uniqueAttributes.add(attrId);
+				}
+			}
+		}
+
+		return {
+			cat_id: cat.cat_id,
+			cat_code: cat.cat_code,
+			cat_label: cat.cat_label,
+			attributeCount: uniqueAttributes.size // ✅ TOTAL (directs + hérités)
+		};
+	});
 
 	// Tri alphabétique case-insensitive
 	return categories.toSorted((a, b) =>
