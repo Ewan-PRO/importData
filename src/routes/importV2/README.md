@@ -51,6 +51,7 @@ importV2/
 ### 🎨 Présentation
 
 #### `+page.svelte` (Interface utilisateur)
+
 - Upload fichier CSV
 - Sélection base de données (dev/preprod)
 - Sélection catégorie
@@ -58,11 +59,13 @@ importV2/
 - Affichage résultats validation/import
 
 #### `+page.server.ts` (Actions SvelteKit)
+
 - **Action `validate`** : Valide fichier CSV uploadé
 - **Action `process`** : Importe données en base de données
 - **Load function** : Charge liste catégories (dev + preprod)
 
 #### `+server.ts` (API Template)
+
 - **GET** : Génère template CSV avec en-têtes pour catégorie sélectionnée
 - Inclut attributs hérités de la hiérarchie de catégories
 - Nom fichier : `template_{database}_{categorie}.csv`
@@ -70,35 +73,43 @@ importV2/
 ### 💼 Métier - Validation
 
 #### `services/import.validation.ts`
+
 **Responsabilité** : Parse et valide données CSV selon règles métier
 
 **Fonctions principales** :
+
 - `parseCSVContent()` - Parse CSV et extrait attributs dynamiques
 - `validateCSVData()` - Valide structure et champs obligatoires
 - `validateRequiredAttributes()` - Vérifie attributs obligatoires par catégorie
 - `validateAttributes()` - Valide valeurs, unités, listes fermées
 
 **Exports** :
+
 ```typescript
 // Types
-CSVRow, AttributePair, ProductAttributes, ParsedCSVData,
-ValidationError, ValidationResult
+(CSVRow, AttributePair, ProductAttributes, ParsedCSVData, ValidationError, ValidationResult);
 
 // Fonctions
-parseCSVContent(), validateCSVData(),
-validateRequiredAttributes(), validateAttributes(),
-parseValueAndUnit(), findUnitId()
+(parseCSVContent(),
+	validateCSVData(),
+	validateRequiredAttributes(),
+	validateAttributes(),
+	parseValueAndUnit(),
+	findUnitId());
 ```
 
 ### 💼 Métier - Orchestration
 
 #### `services/import.orchestrator.ts`
+
 **Responsabilité** : Orchestre import complet en base de données (transaction)
 
 **Fonction principale** :
+
 - `importToDatabase()` - Transaction principale d'import
 
 **Fonctions internes** :
+
 - `findOrCreateSupplier()` - Gestion fournisseurs
 - `findOrCreateKit()` - Gestion kits
 - `findOrCreateCategory()` - Gestion catégories + auto-link attributs
@@ -110,20 +121,23 @@ parseValueAndUnit(), findUnitId()
 - `importAttributes()` - Import attributs produits
 
 **Exports** :
+
 ```typescript
 // Types
-ImportStats, ChangeDetail, ImportResult
+(ImportStats, ChangeDetail, ImportResult);
 
 // Fonction
-importToDatabase()
+importToDatabase();
 ```
 
 ### 🗄️ Données
 
 #### `repositories/import.repository.ts`
+
 **Responsabilité** : Accès base de données (lecture seule)
 
 **Fonctions principales** :
+
 - `loadAttributeReference()` - Charge tous les attributs (Map)
 - `loadAttributeUnitsEnriched()` - Charge unités par attribut
 - `loadAllowedValues()` - Charge valeurs autorisées (listes fermées)
@@ -132,19 +146,24 @@ importToDatabase()
 - `getCategoryTotalAttributeCount()` - Compte attributs total (directs + hérités)
 
 **Exports** :
+
 ```typescript
 // Type
-AttributeMetadata
+AttributeMetadata;
 
 // Fonctions
-loadAttributeReference(), loadAttributeUnitsEnriched(),
-loadAllowedValues(), getCategoryRequiredAttributesWithInheritance(),
-loadCategoriesMetadata(), getCategoryTotalAttributeCount()
+(loadAttributeReference(),
+	loadAttributeUnitsEnriched(),
+	loadAllowedValues(),
+	getCategoryRequiredAttributesWithInheritance(),
+	loadCategoriesMetadata(),
+	getCategoryTotalAttributeCount());
 ```
 
 ## 🔄 Flux de Données
 
 ### 1. Téléchargement Template
+
 ```
 +page.svelte → +server.ts (GET)
                  ↓
@@ -154,6 +173,7 @@ loadCategoriesMetadata(), getCategoryTotalAttributeCount()
 ```
 
 ### 2. Validation CSV
+
 ```
 +page.svelte (upload) → +page.server.ts (action validate)
                               ↓
@@ -170,6 +190,7 @@ loadCategoriesMetadata(), getCategoryTotalAttributeCount()
 ```
 
 ### 3. Import BDD
+
 ```
 +page.svelte → +page.server.ts (action process)
                      ↓
@@ -199,11 +220,13 @@ Présentation → Métier → Données
 ```
 
 **Autorisé** :
+
 - ✅ Présentation peut importer Métier et Données
 - ✅ Métier peut importer Données
 - ✅ Métier peut importer types depuis autre service
 
 **Interdit** :
+
 - ❌ Données NE PEUT PAS importer Métier
 - ❌ Pas de dépendances circulaires
 - ❌ Présentation ne doit pas contenir logique métier complexe
@@ -211,9 +234,11 @@ Présentation → Métier → Données
 ## 🔑 Concepts Clés
 
 ### Héritage Attributs Catégories
+
 Les catégories héritent des attributs de leurs parents via `fk_parent`.
 
 **Exemple** : Catégorie "Pompe électrique" hérite de "Pompe" qui hérite de "Équipement"
+
 ```
 Équipement (PUISSANCE, TENSION)
     ↓
@@ -223,15 +248,19 @@ Pompe électrique (VITESSE) → Hérite PUISSANCE, TENSION, DEBIT_MAX
 ```
 
 ### Auto-Link Attributs
+
 Lors de la création d'une catégorie, tous les attributs du CSV sont automatiquement liés via `autoLinkCategoryAttributes()`.
 
 ### Validation à Trois Niveaux
+
 1. **Structure CSV** : Champs obligatoires, format dates/nombres
 2. **Attributs obligatoires** : Vérification présence (avec héritage)
 3. **Valeurs attributs** : Unités, listes fermées, types de données
 
 ### Gestion Changements
+
 L'import détecte et logue tous les changements :
+
 - Création/modification fournisseurs, kits, catégories, familles
 - Création/mise à jour produits et prix
 - Ajout/modification/suppression attributs
@@ -239,76 +268,82 @@ L'import détecte et logue tous les changements :
 ## 📊 Types de Données Principaux
 
 ### Validation
+
 ```typescript
 interface CSVRow {
-  pro_cenov_id: string;      // ID produit
-  pro_code: string;          // Code produit
-  sup_code: string;          // Code fournisseur
-  cat_code: string;          // Code catégorie
-  kit_label: string;         // Nom kit
-  famille?: string;          // Famille
-  sous_famille?: string;     // Sous-famille
-  sous_sous_famille?: string; // Sous-sous-famille
-  pp_amount: string;         // Prix
-  pp_date: string;           // Date prix
-  // + attributs dynamiques
+	pro_cenov_id: string; // ID produit
+	pro_code: string; // Code produit
+	sup_code: string; // Code fournisseur
+	cat_code: string; // Code catégorie
+	kit_label: string; // Nom kit
+	famille?: string; // Famille
+	sous_famille?: string; // Sous-famille
+	sous_sous_famille?: string; // Sous-sous-famille
+	pp_amount: string; // Prix
+	pp_date: string; // Date prix
+	// + attributs dynamiques
 }
 
 interface ValidationResult {
-  valid: boolean;
-  errors: ValidationError[];
-  warnings: string[];
+	valid: boolean;
+	errors: ValidationError[];
+	warnings: string[];
 }
 ```
 
 ### Import
+
 ```typescript
 interface ImportResult {
-  success: boolean;
-  stats: ImportStats;         // Compteurs (created, updated, deleted)
-  changes: ChangeDetail[];    // Détail changements
-  error?: string;
+	success: boolean;
+	stats: ImportStats; // Compteurs (created, updated, deleted)
+	changes: ChangeDetail[]; // Détail changements
+	error?: string;
 }
 ```
 
 ## 🚀 Utilisation
 
 ### Ajouter une Nouvelle Validation
+
 **Fichier** : `services/import.validation.ts`
 
 ```typescript
 // Dans validateCSVData()
 if (nouvelleCritere) {
-  errors.push({
-    line: i + 2,
-    field: 'champ',
-    value: row.champ,
-    error: 'Message erreur'
-  });
+	errors.push({
+		line: i + 2,
+		field: 'champ',
+		value: row.champ,
+		error: 'Message erreur'
+	});
 }
 ```
 
 ### Ajouter un Nouveau Champ Métier
+
 1. Modifier interface `CSVRow` dans `services/import.validation.ts`
 2. Ajouter validation dans `validateCSVData()`
 3. Ajouter logique import dans `services/import.orchestrator.ts`
 
 ### Ajouter une Nouvelle Fonction Repository
+
 **Fichier** : `repositories/import.repository.ts`
 
 ```typescript
 export async function loadNewData(
-  database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
+	database: 'cenov_dev' | 'cenov_preprod' = 'cenov_dev'
 ): Promise<Map<string, DataType>> {
-  const prisma = await getClient(database) as unknown as CenovDevPrismaClient;
-  // Requête Prisma...
-  return map;
+	const prisma = (await getClient(database)) as unknown as CenovDevPrismaClient;
+	// Requête Prisma...
+	return map;
 }
 ```
 
 ## 🔍 Debugging
 
 ### Logs Importants
+
 ```typescript
 // Validation
 console.log('📊 Données parsées:', data.length, 'lignes');
@@ -321,6 +356,7 @@ console.log('📝 Changements:', changes.length);
 ```
 
 ### Erreurs Courantes
+
 - **"Catégorie XXX introuvable"** → Vérifier `cat_code` existe en BDD
 - **"Attribut YYY obligatoire manquant"** → Vérifier héritage catégorie
 - **"Valeur non autorisée"** → Vérifier liste fermée dans `attribute_value`
@@ -329,17 +365,20 @@ console.log('📝 Changements:', changes.length);
 ## 📝 Notes Techniques
 
 ### Performance
+
 - **Load catégories** : 2 requêtes batch au lieu de N×M (optimisé)
 - **Validation attributs** : Chargement référentiels en amont (Maps)
 - **Import** : Transaction unique avec timeout 60s
 
 ### Bases de Données
+
 - **cenov_dev** : Développement/tests
 - **cenov_preprod** : Pré-production
 
 Les deux bases partagent le même schéma mais sont isolées.
 
 ### Gestion Erreurs
+
 - Validation : Accumule toutes les erreurs avant retour
 - Import : Transaction rollback automatique en cas d'erreur
 - Logs détaillés à chaque étape

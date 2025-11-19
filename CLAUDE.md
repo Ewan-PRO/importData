@@ -70,8 +70,8 @@ pnpm preview
 **Qualité du code :**
 
 ```bash
-pnpm lint      # Vérification Prettier + ESLint
-pnpm format    # Formatage avec Prettier
+pnpm format     # Vérification Prettier + ESLint
+pnpm lint   # Formatage avec Prettier
 pnpm check     # Type checking avec Svelte
 ```
 
