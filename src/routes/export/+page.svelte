@@ -407,10 +407,10 @@
 					<div class="mb-6 space-y-4">
 						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 							<!-- Card Type -->
-							<Card.Root class="h-52 border-sky-500 bg-sky-100 shadow-md">
+							<Card.Root class="h-52 border-blue-500 bg-blue-100 shadow-md">
 								<Card.Header>
-									<Card.Title class="flex items-center gap-2 text-xl text-sky-900">
-										<FileType class="h-6 w-6 text-sky-600" />
+									<Card.Title class="flex items-center gap-2 text-xl font-bold text-blue-700">
+										<FileType class="h-6 w-6 text-blue-600" />
 										Type de données :
 									</Card.Title>
 								</Card.Header>
@@ -463,7 +463,7 @@
 							<!-- Card Base de données -->
 							<Card.Root class="h-52 border-green-500 bg-green-100 shadow-md">
 								<Card.Header>
-									<Card.Title class="flex items-center gap-2 text-xl text-green-900">
+									<Card.Title class="flex items-center gap-2 text-xl font-bold text-green-700">
 										<Database class="h-6 w-6 text-green-600" />
 										Base de données :
 									</Card.Title>
@@ -508,7 +508,7 @@
 							<!-- Card Schéma -->
 							<Card.Root class="h-52 border-fuchsia-500 bg-fuchsia-100 shadow-md">
 								<Card.Header>
-									<Card.Title class="flex items-center gap-2 text-xl text-fuchsia-900">
+									<Card.Title class="flex items-center gap-2 text-xl font-bold text-fuchsia-700">
 										<Sheet class="h-6 w-6 text-fuchsia-600" />
 										Schéma :
 									</Card.Title>
@@ -609,9 +609,9 @@
 							</div>
 
 							<div
-								class="flex min-h-[42px] items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-6 py-3"
+								class="flex min-h-[42px] items-center justify-center rounded-lg border border-fuchsia-500 bg-fuchsia-100 px-6 py-3"
 							>
-								<div class="flex items-center gap-1 text-sm text-purple-800">
+								<div class="flex items-center gap-1 text-sm text-fuchsia-900">
 									<CheckCircle class="h-4 w-4" />
 									<span class="font-semibold">{selectedFilteredCount}</span> sélectionnées
 								</div>
