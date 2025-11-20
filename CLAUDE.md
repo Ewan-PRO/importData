@@ -623,6 +623,7 @@ globalThis.foo ??= defaultValue;
 ### Padding/Margin Cards - NE PAS EN RAJOUTER
 
 **Valeurs par défaut :**
+
 - `Card.Root` → `py-6` (24px vertical)
 - `Card.Content` → `px-6` (24px horizontal)
 
@@ -646,6 +647,7 @@ globalThis.foo ??= defaultValue;
 ```
 
 **Breakpoints :**
+
 - Mobile (< 640px) : `grid-cols-1`
 - Tablet (≥ 640px) : `sm:grid-cols-2`
 - Desktop (≥ 1024px) : `lg:grid-cols-4`

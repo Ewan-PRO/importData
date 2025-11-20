@@ -36,7 +36,7 @@
 	});
 </script>
 
-<div class="mx-auto max-w-3xl">
+<div class="mx-auto max-w-3xl p-6">
 	<h1 class="mb-6 text-3xl font-bold">Bienvenue sur CenovDistribution</h1>
 
 	{#if data.user}

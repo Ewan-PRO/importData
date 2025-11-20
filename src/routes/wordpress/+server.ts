@@ -12,16 +12,24 @@ import type { RequestHandler } from './$types';
  * Retourne : Fichier CSV wordpress_products_YYYY-MM-DD.csv
  */
 export const GET: RequestHandler = async (event) => {
-	await protect(event);
+	console.log('🟢 GET /wordpress endpoint appelé');
+	console.log('🟢 Query params:', event.url.searchParams.toString());
+	console.log('🟢 URL complète:', event.url.href);
 
 	try {
+		console.log('🔐 Vérification authentification...');
+		await protect(event);
+		console.log('✅ Authentification OK');
+
 		console.log('📥 Démarrage export WordPress (API GET)...');
 
 		// Récupérer tous les produits
+		console.log('🔵 Récupération produits depuis CENOV_DEV...');
 		const products = await getProductsForWordPress();
 		console.log(`✅ ${products.length} produits récupérés`);
 
 		// Générer le CSV
+		console.log('🔵 Génération du CSV...');
 		const csv = generateWordPressCSV(products);
 		console.log(`✅ CSV généré (${csv.length} caractères)`);
 
@@ -30,6 +38,7 @@ export const GET: RequestHandler = async (event) => {
 		const filename = `wordpress_products_${timestamp}.csv`;
 
 		console.log(`✅ Export WordPress terminé : ${filename}`);
+		console.log('🟢 Envoi de la réponse avec headers de téléchargement...');
 
 		// Retourner le fichier CSV
 		return new Response(csv, {
@@ -40,6 +49,7 @@ export const GET: RequestHandler = async (event) => {
 		});
 	} catch (err) {
 		console.error('❌ Erreur export WordPress (API GET):', err);
+		console.error('❌ Stack trace:', err instanceof Error ? err.stack : 'No stack');
 		throw error(500, 'Erreur lors de la génération du CSV');
 	}
 };

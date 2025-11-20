@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Download, Package, AlertCircle } from 'lucide-svelte';
@@ -75,28 +74,41 @@
 					</div>
 				{/if}
 
-				<!-- Formulaire de téléchargement -->
-				<form
-					method="POST"
-					action="?/download"
-					use:enhance={() => {
+				<!-- Bouton de téléchargement -->
+				<Button
+					variant="vert"
+					class="w-full"
+					disabled={isDownloading}
+					onclick={async () => {
+						console.log('🔵 Bouton cliqué - Début téléchargement WordPress');
 						isDownloading = true;
-						return async ({ update, result }) => {
-							isDownloading = false;
-							if (result.type === 'success') {
+						try {
+							console.log('🔵 Création lien de téléchargement...');
+
+							// Créer un lien temporaire pour déclencher le téléchargement
+							const link = document.createElement('a');
+							link.href = '/wordpress'; // Appelle le GET handler de +server.ts
+							link.download = ''; // Force le téléchargement
+							document.body.appendChild(link);
+							link.click();
+							document.body.removeChild(link);
+
+							console.log('✅ Téléchargement déclenché');
+
+							setTimeout(() => {
+								isDownloading = false;
 								toast.success('CSV WordPress téléchargé avec succès');
-							} else if (result.type === 'failure') {
-								toast.error('Erreur lors du téléchargement');
-							}
-							await update();
-						};
+							}, 1000);
+						} catch (err) {
+							console.error('❌ Erreur téléchargement:', err);
+							isDownloading = false;
+							toast.error('Erreur lors du téléchargement');
+						}
 					}}
 				>
-					<Button type="submit" variant="vert" class="w-full" disabled={isDownloading}>
-						<Download class="mr-2 h-5 w-5" />
-						{isDownloading ? 'Génération en cours...' : 'Télécharger CSV WordPress'}
-					</Button>
-				</form>
+					<Download class="mr-2 h-5 w-5" />
+					{isDownloading ? 'Génération en cours...' : 'Télécharger CSV WordPress'}
+				</Button>
 			</div>
 
 			<!-- Informations complémentaires -->
