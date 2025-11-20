@@ -27,7 +27,7 @@ export async function getProductsForWordPress(): Promise<WordPressProduct[]> {
     SELECT
       COALESCE(p.pro_type::text, 'simple') AS type,
       p.pro_cenov_id AS sku,
-      COALESCE(p.pro_name, p.pro_cenov_id) AS name,
+      p.pro_name AS name,
       COALESCE(p.is_published, false) AS published,
       COALESCE(p.is_featured, false) AS featured,
       COALESCE(p.pro_visibility::text, 'visible') AS visibility,

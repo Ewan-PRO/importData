@@ -63,9 +63,7 @@
 						</h3>
 						<ul class="space-y-1 text-sm text-orange-700">
 							{#if data.stats.missing_name > 0}
-								<li>
-									• {data.stats.missing_name} produits sans nom (UGS utilisé comme fallback)
-								</li>
+								<li>• {data.stats.missing_name} produits sans nom (champ vide)</li>
 							{/if}
 							{#if data.stats.missing_price > 0}
 								<li>• {data.stats.missing_price} produits sans prix</li>
@@ -121,7 +119,7 @@
 						Brand
 					</li>
 					<li>• Produits avec UGS uniquement (requis par WordPress)</li>
-					<li>• Nom par défaut = UGS si non renseigné</li>
+					<li>• Champ nom vide si non renseigné</li>
 				</ul>
 			</div>
 		</Card.Content>
