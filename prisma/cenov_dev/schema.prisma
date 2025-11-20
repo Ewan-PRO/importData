@@ -10,6 +10,26 @@ datasource cenov_dev_db {
   schemas  = ["produit", "public"]
 }
 
+enum ProductType {
+  simple
+  variable
+  grouped
+  external
+
+  @@map("product_type")
+  @@schema("produit")
+}
+
+enum ProductVisibility {
+  visible
+  catalog
+  search
+  hidden
+
+  @@map("product_visibility")
+  @@schema("produit")
+}
+
 model cross_ref {
   crf_id                Int       @default(autoincrement())
   fk_product            Int
@@ -148,6 +168,14 @@ model product {
   fk_ssfamily      Int?
   fk_sfamily       Int?
   cat_code         String?            @cenov_dev_db.VarChar(50)
+  pro_type              ProductType       @default(simple)
+  pro_name              String?           @cenov_dev_db.VarChar(255)
+  is_published          Boolean           @default(false)
+  is_featured           Boolean           @default(false)
+  pro_visibility        ProductVisibility @default(visible)
+  pro_short_description String?   @cenov_dev_db.Text
+  pro_description       String?   @cenov_dev_db.Text
+  in_stock              Boolean   @default(true)
   cross_ref        cross_ref[]
   price_purchase   price_purchase[]
   kit              kit?               @relation(fields: [fk_kit], references: [kit_id], onDelete: NoAction, onUpdate: NoAction, map: "product_fk_kit_fkey")
