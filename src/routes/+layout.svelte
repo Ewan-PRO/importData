@@ -25,12 +25,13 @@
 
 	// Navigation items avec types stricts pour resolve
 	const navItems: Array<{
-		href: '/' | '/importV2' | '/export';
+		href: '/' | '/importV2' | '/export' | '/wordpress';
 		label: string;
 	}> = [
 		{ href: '/', label: 'Accueil' },
 		{ href: '/importV2', label: 'Import CSV' },
-		{ href: '/export', label: 'Export' }
+		{ href: '/export', label: 'Export' },
+		{ href: '/wordpress', label: 'WordPress' }
 	];
 </script>
 

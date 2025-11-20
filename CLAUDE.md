@@ -620,6 +620,38 @@ globalThis.foo ??= defaultValue;
 
 **Bonne Pratique :** Toujours lire les classes CSS du composant avant d'ajouter style manuel. La plupart des composants UI gèrent les icônes nativement.
 
+### Padding/Margin Cards - NE PAS EN RAJOUTER
+
+**Valeurs par défaut :**
+- `Card.Root` → `py-6` (24px vertical)
+- `Card.Content` → `px-6` (24px horizontal)
+
+```svelte
+<!-- ❌ MAUVAIS -->
+<Card.Content class="pt-6">
+
+<!-- ✅ CORRECT -->
+<Card.Content>
+```
+
+**Règle :** Vérifier composant source avant d'ajouter padding/margin.
+
+### Responsive - Grilles Statistiques
+
+**Pattern obligatoire :**
+
+```svelte
+<!-- ✅ Mobile 1 col → Tablet 2 cols → Desktop 4 cols -->
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+```
+
+**Breakpoints :**
+- Mobile (< 640px) : `grid-cols-1`
+- Tablet (≥ 640px) : `sm:grid-cols-2`
+- Desktop (≥ 1024px) : `lg:grid-cols-4`
+
+**Règle :** Jamais plus de 2 colonnes sur mobile.
+
 ## Bonnes Pratiques Svelte - Clés dans les Boucles {#each}
 
 ### Problème : Erreur `svelte/require-each-key`
