@@ -76,15 +76,20 @@ function generateRow(product: WordPressProduct): string {
  * simple,PRO123,Pompe,1,0,visible,"Description courte","Description",1,1250.00,https://...,Brand
  * ```
  *
+ * ⚠️ BOM UTF-8 ajouté pour garantir encodage correct dans Excel/LibreOffice
+ *
  * @param products Liste des produits à exporter
- * @returns Contenu CSV complet avec en-têtes
+ * @returns Contenu CSV complet avec en-têtes et BOM UTF-8
  */
 export function generateWordPressCSV(products: WordPressProduct[]): string {
+	// BOM UTF-8 pour garantir encodage correct dans Excel/LibreOffice
+	const BOM = '\uFEFF';
+
 	const lines = [CSV_HEADERS.join(',')];
 
 	for (const product of products) {
 		lines.push(generateRow(product));
 	}
 
-	return lines.join('\n');
+	return BOM + lines.join('\n');
 }
