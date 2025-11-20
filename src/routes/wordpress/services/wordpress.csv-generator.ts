@@ -1,10 +1,10 @@
 import type { WordPressProduct } from '../repositories/wordpress.repository';
 
 /**
- * En-têtes CSV conformes au format WooCommerce
+ * En-têtes CSV fixes (colonnes de base du produit)
  * @see https://woocommerce.com/document/product-csv-import-schema/
  */
-const CSV_HEADERS = [
+const BASE_CSV_HEADERS = [
 	'Type',
 	'UGS',
 	'Nom',
@@ -43,15 +43,14 @@ function escapeCSV(value: string | null | undefined): string {
 }
 
 /**
- * Génère une ligne CSV pour un produit WordPress
- * Format booléen : 1 (true) / 0 (false)
- * Format décimal : . comme séparateur
- *
- * @param product Produit WordPress à convertir
+ * Génère une ligne CSV pour un produit WordPress avec attributs
+ * @param product Produit WordPress
+ * @param maxAttributes Nombre max d'attributs (pour padding)
  * @returns Ligne CSV formatée
  */
-function generateRow(product: WordPressProduct): string {
-	return [
+function generateRow(product: WordPressProduct, maxAttributes: number): string {
+	// Colonnes fixes de base
+	const baseColumns = [
 		escapeCSV(product.type),
 		escapeCSV(product.sku),
 		escapeCSV(product.name),
@@ -64,16 +63,37 @@ function generateRow(product: WordPressProduct): string {
 		escapeCSV(product.regular_price),
 		escapeCSV(product.images),
 		escapeCSV(product.brand)
-	].join(',');
+	];
+
+	// Colonnes attributs (4 colonnes par attribut : nom, valeur, visible, global)
+	const attributeColumns: string[] = [];
+
+	for (let i = 0; i < maxAttributes; i++) {
+		const attr = product.attributes[i];
+
+		if (attr) {
+			attributeColumns.push(
+				escapeCSV(attr.name),
+				escapeCSV(attr.value),
+				attr.visible ? '1' : '0',
+				attr.global ? '1' : '0'
+			);
+		} else {
+			// Padding : colonnes vides si produit a moins d'attributs
+			attributeColumns.push('', '', '', '');
+		}
+	}
+
+	return [...baseColumns, ...attributeColumns].join(',');
 }
 
 /**
- * Génère un fichier CSV complet pour import WordPress/WooCommerce
+ * Génère un fichier CSV complet pour import WordPress/WooCommerce avec attributs
  *
  * Format attendu :
  * ```csv
- * Type,UGS,Nom,Publié,Mis en avant ?,Visibilité dans le catalogue,...
- * simple,PRO123,Pompe,1,0,visible,"Description courte","Description",1,1250.00,https://...,Brand
+ * Type,UGS,Nom,...,Brand,Nom de l'attribut 1,Valeur(s) de l'attribut 1,Attribut 1 visible,Attribut 1 global,...
+ * simple,PRO123,Pompe,...,Brand,POIDS,4,1,1,TENSION,230,1,1
  * ```
  *
  * ⚠️ BOM UTF-8 ajouté pour garantir encodage correct dans Excel/LibreOffice
@@ -85,10 +105,26 @@ export function generateWordPressCSV(products: WordPressProduct[]): string {
 	// BOM UTF-8 pour garantir encodage correct dans Excel/LibreOffice
 	const BOM = '\uFEFF';
 
-	const lines = [CSV_HEADERS.join(',')];
+	// Calculer le nombre max d'attributs
+	const maxAttributes = Math.max(...products.map((p) => p.attributes.length), 0);
+
+	// Générer headers dynamiques
+	const headers: string[] = [...BASE_CSV_HEADERS];
+
+	for (let i = 1; i <= maxAttributes; i++) {
+		headers.push(
+			`Nom de l'attribut ${i}`,
+			`Valeur(s) de l'attribut ${i}`,
+			`Attribut ${i} visible`,
+			`Attribut ${i} global`
+		);
+	}
+
+	// Générer lignes
+	const lines = [headers.join(',')];
 
 	for (const product of products) {
-		lines.push(generateRow(product));
+		lines.push(generateRow(product, maxAttributes));
 	}
 
 	return BOM + lines.join('\n');

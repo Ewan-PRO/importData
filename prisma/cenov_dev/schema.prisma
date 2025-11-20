@@ -66,6 +66,8 @@ model kit_attribute {
   fk_attribute_characteristic                                    Int
   fk_attribute_unite                                             Int?
   kat_value                                                      String?    @cenov_dev_db.VarChar(50)
+  kat_visible                                                    Boolean?   @default(true)
+  kat_global                                                     Boolean?   @default(true)
   created_at                                                     DateTime?  @default(now()) @cenov_dev_db.Timestamp(6)
   updated_at                                                     DateTime?  @default(now()) @cenov_dev_db.Timestamp(6)
   kat_id                                                         Int        @id @default(autoincrement())

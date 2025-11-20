@@ -1,6 +1,13 @@
 import { getClient } from '$lib/prisma-meta';
 import type { PrismaClient as CenovDevPrismaClient } from '../../../../prisma/cenov_dev/generated';
 
+export interface WordPressAttribute {
+	name: string;
+	value: string;
+	visible: boolean;
+	global: boolean;
+}
+
 export interface WordPressProduct {
 	type: string;
 	sku: string;
@@ -14,6 +21,7 @@ export interface WordPressProduct {
 	regular_price: string | null;
 	images: string | null;
 	brand: string | null;
+	attributes: WordPressAttribute[];
 }
 
 export interface ProductSummary {
@@ -23,19 +31,97 @@ export interface ProductSummary {
 }
 
 /**
+ * Charge les attributs pour une liste de produits
+ * Filtre : ignore si kat_value NULL/!NP!/"NULL" ou atr_value NULL
+ * Tri : par kat_id croissant
+ * Transformation : virgules → points
+ */
+async function getProductAttributes(
+	productIds: number[]
+): Promise<Map<number, WordPressAttribute[]>> {
+	if (productIds.length === 0) return new Map();
+
+	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+
+	// Charger produits avec leurs kits et attributs
+	const products = await prisma.product.findMany({
+		where: { pro_id: { in: productIds } },
+		select: {
+			pro_id: true,
+			fk_kit: true,
+			kit: {
+				select: {
+					kit_attribute: {
+						where: {
+							AND: [
+								{ kat_value: { not: null } },
+								{ kat_value: { not: '!NP!' } },
+								{ kat_value: { not: 'NULL' } }
+							]
+						},
+						select: {
+							kat_id: true,
+							kat_value: true,
+							kat_visible: true,
+							kat_global: true,
+							attribute_kit_attribute_fk_attribute_characteristicToattribute: {
+								select: {
+									atr_value: true
+								}
+							}
+						},
+						orderBy: { kat_id: 'asc' }
+					}
+				}
+			}
+		}
+	});
+
+	// Grouper attributs par pro_id
+	const attributesMap = new Map<number, WordPressAttribute[]>();
+
+	for (const product of products) {
+		const attributes: WordPressAttribute[] = [];
+
+		if (product.kit) {
+			for (const ka of product.kit.kit_attribute) {
+				const atrValue =
+					ka.attribute_kit_attribute_fk_attribute_characteristicToattribute.atr_value;
+
+				// Ignorer si atr_value NULL
+				if (!atrValue) continue;
+
+				// Remplacer virgules par points
+				const value = (ka.kat_value || '').replace(/,/g, '.');
+
+				attributes.push({
+					name: atrValue,
+					value,
+					visible: ka.kat_visible ?? true,
+					global: ka.kat_global ?? true
+				});
+			}
+		}
+
+		attributesMap.set(product.pro_id, attributes);
+	}
+
+	return attributesMap;
+}
+
+/**
  * Récupère tous les produits formatés pour l'export WordPress/WooCommerce
  * @param productIds - Liste optionnelle d'IDs de produits à exporter (si vide, exporte tous)
  * @returns Liste des produits avec tous les champs requis par WordPress
  */
-export async function getProductsForWordPress(
-	productIds?: number[]
-): Promise<WordPressProduct[]> {
+export async function getProductsForWordPress(productIds?: number[]): Promise<WordPressProduct[]> {
 	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
 
 	// Si des IDs sont fournis, filtrer les produits
 	if (productIds && productIds.length > 0) {
-		const products = await prisma.$queryRaw<WordPressProduct[]>`
+		const products = await prisma.$queryRaw<Array<WordPressProduct & { pro_id: number }>>`
       SELECT
+        p.pro_id,
         COALESCE(p.pro_type::text, 'simple') AS type,
         p.pro_cenov_id AS sku,
         p.pro_name AS name,
@@ -78,12 +164,20 @@ export async function getProductsForWordPress(
       ORDER BY p.pro_id ASC;
     `;
 
-		return products;
+		// Charger attributs
+		const attributesMap = await getProductAttributes(productIds);
+
+		// Enrichir produits avec attributs
+		return products.map((p) => ({
+			...p,
+			attributes: attributesMap.get(p.pro_id) || []
+		}));
 	}
 
 	// Sinon, retourner tous les produits
-	const products = await prisma.$queryRaw<WordPressProduct[]>`
+	const products = await prisma.$queryRaw<Array<WordPressProduct & { pro_id: number }>>`
     SELECT
+      p.pro_id,
       COALESCE(p.pro_type::text, 'simple') AS type,
       p.pro_cenov_id AS sku,
       p.pro_name AS name,
@@ -125,7 +219,15 @@ export async function getProductsForWordPress(
     ORDER BY p.pro_id ASC;
   `;
 
-	return products;
+	// Charger attributs pour tous les produits
+	const allProductIds = products.map((p) => p.pro_id);
+	const attributesMap = await getProductAttributes(allProductIds);
+
+	// Enrichir produits avec attributs
+	return products.map((p) => ({
+		...p,
+		attributes: attributesMap.get(p.pro_id) || []
+	}));
 }
 
 /**

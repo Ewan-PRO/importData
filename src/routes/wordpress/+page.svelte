@@ -147,7 +147,7 @@
 	<!-- Card Sélection des produits -->
 	<Card.Root variant="blanc" class="mt-6 w-full max-w-none">
 		<Card.Content>
-			<h2 class="mb-4 text-xl font-semibold">📋 Sélection des produits</h2>
+			<h2 class="mb-4 text-xl font-semibold">📋 Sélection des produits :</h2>
 
 			<!-- Barre de recherche + bouton toggle -->
 			<div class="mb-4 flex items-center gap-2">
