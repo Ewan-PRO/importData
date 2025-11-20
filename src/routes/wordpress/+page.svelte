@@ -1,12 +1,81 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 	import * as Card from '$lib/components/ui/card';
-	import { Download, Package, AlertCircle } from 'lucide-svelte';
+	import { Download, Package, AlertCircle, Search } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 	let isDownloading = $state(false);
+
+	// État de sélection
+	let selectedIds = $state<Set<number>>(new Set());
+	let searchQuery = $state('');
+
+	// Filtrer produits selon recherche
+	let filteredProducts = $derived(
+		data.products.filter(
+			(p) =>
+				p.pro_cenov_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				p.pro_name?.toLowerCase().includes(searchQuery.toLowerCase())
+		)
+	);
+
+	// Toggle sélection individuelle
+	const toggleProduct = (id: number) => {
+		const newSet = new Set(selectedIds);
+		if (newSet.has(id)) {
+			newSet.delete(id);
+		} else {
+			newSet.add(id);
+		}
+		selectedIds = newSet; // Réassignation pour réactivité
+	};
+
+	// Toggle tout/aucun
+	const toggleAll = () => {
+		if (selectedIds.size === filteredProducts.length && filteredProducts.length > 0) {
+			selectedIds = new Set(); // Désélectionner tout
+		} else {
+			selectedIds = new Set(filteredProducts.map((p) => p.pro_id)); // Sélectionner tout
+		}
+	};
+
+	// Télécharger CSV
+	const downloadCSV = async () => {
+		console.log('🔵 Téléchargement:', selectedIds.size > 0 ? 'sélection' : 'tous');
+		isDownloading = true;
+
+		try {
+			const idsParam = selectedIds.size > 0 ? `?ids=${Array.from(selectedIds).join(',')}` : '';
+
+			const response = await fetch(`/wordpress${idsParam}`);
+			if (!response.ok) throw new Error(`Erreur: ${response.status}`);
+
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+			const contentDisposition = response.headers.get('Content-Disposition');
+			const filename =
+				contentDisposition?.match(/filename="(.+)"/)?.[1] || 'wordpress_products.csv';
+
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = filename;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(url);
+
+			const count = selectedIds.size || data.products.length;
+			toast.success(`CSV téléchargé : ${count} produit${count > 1 ? 's' : ''}`);
+		} catch (err) {
+			console.error('❌ Erreur:', err);
+			toast.error('Erreur lors du téléchargement');
+		} finally {
+			isDownloading = false;
+		}
+	};
 </script>
 
 <svelte:head>
@@ -17,10 +86,10 @@
 	<!-- Titre principal -->
 	<h1 class="mb-6 flex items-center gap-2 text-3xl font-bold">
 		<Package class="h-8 w-8" />
-		Export WordPress
+		Export WordPress :
 	</h1>
 
-	<!-- Card principale -->
+	<!-- Card Statistiques -->
 	<Card.Root variant="blanc" class="w-full max-w-none">
 		<Card.Content>
 			<!-- Section Statistiques -->
@@ -56,7 +125,7 @@
 
 				<!-- Avertissements -->
 				{#if data.stats.missing_name > 0 || data.stats.missing_price > 0}
-					<div class="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4">
+					<div class="rounded-lg border border-orange-200 bg-orange-50 p-4">
 						<h3 class="mb-2 flex items-center gap-2 font-medium text-orange-800">
 							<AlertCircle class="h-5 w-5" />
 							Avertissements
@@ -71,41 +140,82 @@
 						</ul>
 					</div>
 				{/if}
+			</div>
+		</Card.Content>
+	</Card.Root>
 
-				<!-- Bouton de téléchargement -->
+	<!-- Card Sélection des produits -->
+	<Card.Root variant="blanc" class="mt-6 w-full max-w-none">
+		<Card.Content>
+			<h2 class="mb-4 text-xl font-semibold">📋 Sélection des produits</h2>
+
+			<!-- Barre de recherche + bouton toggle -->
+			<div class="mb-4 flex items-center gap-2">
+				<div class="relative flex-1">
+					<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+					<Input
+						type="text"
+						placeholder="Rechercher par UGS ou nom..."
+						bind:value={searchQuery}
+						class="pl-10"
+					/>
+				</div>
 				<Button
-					variant="vert"
-					class="w-full"
-					disabled={isDownloading}
-					onclick={async () => {
-						console.log('🔵 Bouton cliqué - Début téléchargement WordPress');
-						isDownloading = true;
-						try {
-							console.log('🔵 Création lien de téléchargement...');
-
-							// Créer un lien temporaire pour déclencher le téléchargement
-							const link = document.createElement('a');
-							link.href = '/wordpress'; // Appelle le GET handler de +server.ts
-							link.download = ''; // Force le téléchargement
-							document.body.appendChild(link);
-							link.click();
-							document.body.removeChild(link);
-
-							console.log('✅ Téléchargement déclenché');
-
-							setTimeout(() => {
-								isDownloading = false;
-								toast.success('CSV WordPress téléchargé avec succès');
-							}, 1000);
-						} catch (err) {
-							console.error('❌ Erreur téléchargement:', err);
-							isDownloading = false;
-							toast.error('Erreur lors du téléchargement');
-						}
-					}}
+					variant={selectedIds.size === filteredProducts.length && filteredProducts.length > 0
+						? 'vert'
+						: 'noir'}
+					onclick={toggleAll}
+					class="whitespace-nowrap"
 				>
+					{selectedIds.size === filteredProducts.length && filteredProducts.length > 0
+						? '✓ Tout'
+						: '✖ Aucun'}
+				</Button>
+			</div>
+
+			<!-- Liste des produits avec scroll -->
+			<div
+				class="mb-4 max-h-[300px] space-y-2 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4"
+			>
+				{#each filteredProducts as product (product.pro_id)}
+					<label class="flex cursor-pointer items-center gap-3 rounded p-2 hover:bg-white">
+						<input
+							type="checkbox"
+							checked={selectedIds.has(product.pro_id)}
+							onchange={() => toggleProduct(product.pro_id)}
+							class="h-4 w-4 cursor-pointer"
+						/>
+						<span class="text-sm">
+							<span class="font-mono font-semibold text-blue-600"
+								>{product.pro_cenov_id || 'N/A'}</span
+							>
+							{#if product.pro_name}
+								- <span class="text-gray-700">{product.pro_name}</span>
+							{/if}
+						</span>
+					</label>
+				{/each}
+
+				{#if filteredProducts.length === 0}
+					<p class="py-4 text-center text-sm text-gray-500">Aucun produit trouvé</p>
+				{/if}
+			</div>
+
+			<!-- Compteur + bouton -->
+			<div class="flex items-center justify-between">
+				<p class="text-sm text-gray-600">
+					<strong>{selectedIds.size}</strong> produit{selectedIds.size > 1 ? 's' : ''} sélectionné{selectedIds.size >
+					1
+						? 's'
+						: ''}
+					{#if selectedIds.size === 0}
+						<span class="text-gray-500">(tous seront exportés)</span>
+					{/if}
+				</p>
+
+				<Button variant="vert" onclick={downloadCSV} disabled={isDownloading}>
 					<Download class="mr-2 h-5 w-5" />
-					{isDownloading ? 'Génération en cours...' : 'Télécharger CSV WordPress'}
+					{isDownloading ? 'Génération...' : `Télécharger CSV (${selectedIds.size})`}
 				</Button>
 			</div>
 
@@ -120,6 +230,7 @@
 					</li>
 					<li>• Produits avec UGS uniquement (requis par WordPress)</li>
 					<li>• Champ nom vide si non renseigné</li>
+					<li>• Sélection vide = export de tous les produits</li>
 				</ul>
 			</div>
 		</Card.Content>

@@ -23,9 +23,23 @@ export const GET: RequestHandler = async (event) => {
 
 		console.log('📥 Démarrage export WordPress (API GET)...');
 
-		// Récupérer tous les produits
+		// Parser les IDs depuis query params
+		const idsParam = event.url.searchParams.get('ids');
+		const productIds = idsParam
+			? idsParam
+					.split(',')
+					.map(Number)
+					.filter((id) => !Number.isNaN(id))
+			: undefined;
+
+		console.log(
+			'🔵 Export:',
+			productIds ? `${productIds.length} produits sélectionnés` : 'tous les produits'
+		);
+
+		// Récupérer les produits (filtrés ou tous)
 		console.log('🔵 Récupération produits depuis CENOV_DEV...');
-		const products = await getProductsForWordPress();
+		const products = await getProductsForWordPress(productIds);
 		console.log(`✅ ${products.length} produits récupérés`);
 
 		// Générer le CSV
@@ -35,7 +49,10 @@ export const GET: RequestHandler = async (event) => {
 
 		// Générer nom de fichier avec timestamp
 		const timestamp = new Date().toISOString().split('T')[0];
-		const filename = `wordpress_products_${timestamp}.csv`;
+		const filename =
+			productIds && productIds.length > 0
+				? `wordpress_products_selection_${timestamp}.csv`
+				: `wordpress_products_all_${timestamp}.csv`;
 
 		console.log(`✅ Export WordPress terminé : ${filename}`);
 		console.log('🟢 Envoi de la réponse avec headers de téléchargement...');

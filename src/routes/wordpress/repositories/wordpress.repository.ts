@@ -16,13 +16,72 @@ export interface WordPressProduct {
 	brand: string | null;
 }
 
+export interface ProductSummary {
+	pro_id: number;
+	pro_cenov_id: string | null;
+	pro_name: string | null;
+}
+
 /**
  * Récupère tous les produits formatés pour l'export WordPress/WooCommerce
+ * @param productIds - Liste optionnelle d'IDs de produits à exporter (si vide, exporte tous)
  * @returns Liste des produits avec tous les champs requis par WordPress
  */
-export async function getProductsForWordPress(): Promise<WordPressProduct[]> {
+export async function getProductsForWordPress(
+	productIds?: number[]
+): Promise<WordPressProduct[]> {
 	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
 
+	// Si des IDs sont fournis, filtrer les produits
+	if (productIds && productIds.length > 0) {
+		const products = await prisma.$queryRaw<WordPressProduct[]>`
+      SELECT
+        COALESCE(p.pro_type::text, 'simple') AS type,
+        p.pro_cenov_id AS sku,
+        p.pro_name AS name,
+        COALESCE(p.is_published, false) AS published,
+        COALESCE(p.is_featured, false) AS featured,
+        COALESCE(p.pro_visibility::text, 'visible') AS visibility,
+        p.pro_short_description AS short_description,
+        p.pro_description AS description,
+        COALESCE(p.in_stock, true) AS in_stock,
+        pp.pp_amount::TEXT AS regular_price,
+        d.doc_link_source AS images,
+        s.sup_label AS brand
+
+      FROM produit.product p
+
+      -- Dernier prix d'achat
+      LEFT JOIN LATERAL (
+        SELECT pp_amount
+        FROM produit.price_purchase
+        WHERE fk_product = p.pro_id
+        ORDER BY pp_date DESC
+        LIMIT 1
+      ) pp ON true
+
+      -- Première image active
+      LEFT JOIN LATERAL (
+        SELECT doc_link_source
+        FROM public.document
+        WHERE product_id = p.pro_id AND is_active = true
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) d ON true
+
+      -- Fournisseur (brand)
+      LEFT JOIN public.supplier s ON p.fk_supplier = s.sup_id
+
+      WHERE p.pro_cenov_id IS NOT NULL
+        AND p.pro_id = ANY(${productIds}::int[])
+
+      ORDER BY p.pro_id ASC;
+    `;
+
+		return products;
+	}
+
+	// Sinon, retourner tous les produits
 	const products = await prisma.$queryRaw<WordPressProduct[]>`
     SELECT
       COALESCE(p.pro_type::text, 'simple') AS type,
@@ -61,7 +120,7 @@ export async function getProductsForWordPress(): Promise<WordPressProduct[]> {
     -- Fournisseur (brand)
     LEFT JOIN public.supplier s ON p.fk_supplier = s.sup_id
 
-    WHERE p.pro_cenov_id IS NOT NULL  -- UGS obligatoire pour WordPress
+    WHERE p.pro_cenov_id IS NOT NULL
 
     ORDER BY p.pro_id ASC;
   `;
@@ -107,4 +166,22 @@ export async function getExportStats() {
 		missing_name: Number(missing_name),
 		missing_price: Number(missing_price)
 	};
+}
+
+/**
+ * Récupère la liste simplifiée de tous les produits pour la sélection
+ * @returns Liste des produits avec ID, UGS et nom uniquement
+ */
+export async function getAllProductsSummary(): Promise<ProductSummary[]> {
+	const prisma = (await getClient('cenov_dev')) as unknown as CenovDevPrismaClient;
+
+	return await prisma.product.findMany({
+		where: { pro_cenov_id: { not: null } },
+		select: {
+			pro_id: true,
+			pro_cenov_id: true,
+			pro_name: true
+		},
+		orderBy: { pro_id: 'asc' }
+	});
 }
